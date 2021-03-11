@@ -1,6 +1,6 @@
 {
   "name": "spitfirepm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Client API Tools for Spitfire Project Management",
   "main": "index.js",
   "scripts": {
