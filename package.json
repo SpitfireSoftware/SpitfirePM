@@ -1,0 +1,22 @@
+{
+  "name": "spitfirepm",
+  "version": "1.1.0",
+  "description": "Client API Tools for Spitfire Project Management",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpitfireSoftware/SpitfirePM.git"
+  },
+  "author": "Spitfire Management, LLC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SpitfireSoftware/SpitfirePM/issues"
+  },
+  "homepage": "https://github.com/SpitfireSoftware/SpitfirePM#readme",
+  "devDependencies": {
+    "@types/jquery": "^3.5.5"
+  }
+}
