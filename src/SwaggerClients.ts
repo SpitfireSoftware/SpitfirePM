@@ -709,7 +709,7 @@ export class LookupClient {
      * @param term (optional) Optional Partial match term to fitler suggestions
      * @param limit (optional) Optional Limit to result count; default is 20; use -1 for all
      */
-    getSuggestionsAll(lookupName: string, dataContext: string, term: string | null | undefined, limit: number | undefined) {
+    getSuggestionsAll(lookupName: string, dataContext: string, term?: string | null | undefined, limit?: number | undefined) {
         return new Promise<Suggestion[] | null>((resolve, reject) => {
             this.getSuggestionsAllWithCallbacks(lookupName, dataContext, term, limit, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -786,7 +786,7 @@ export class LookupClient {
      * @param term (optional) Optional Partial match term to fitler suggestions
      * @param limit (optional) Optional Limit to result count; default is 20; use -1 for all
      */
-    getSuggestions(lookupName: string, dataContext: string, depends1: string, term: string | null | undefined, limit: number | undefined) {
+    getSuggestions(lookupName: string, dataContext: string, depends1: string, term?: string | null | undefined, limit?: number | undefined) {
         return new Promise<Suggestion[] | null>((resolve, reject) => {
             this.getSuggestionsWithCallbacks(lookupName, dataContext, depends1, term, limit, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -867,7 +867,7 @@ export class LookupClient {
      * @param term (optional) Optional Partial match term to fitler suggestions
      * @param limit (optional) Optional Limit to result count; default is 20; use -1 for all
      */
-    getSuggestions2(lookupName: string, dataContext: string, depends1: string, depends2: string, term: string | null | undefined, limit: number | undefined) {
+    getSuggestions2(lookupName: string, dataContext: string, depends1: string, depends2: string, term?: string | null | undefined, limit?: number | undefined) {
         return new Promise<Suggestion[] | null>((resolve, reject) => {
             this.getSuggestions2WithCallbacks(lookupName, dataContext, depends1, depends2, term, limit, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -952,7 +952,7 @@ export class LookupClient {
      * @param term (optional) Optional Partial match term to fitler suggestions
      * @param limit (optional) Optional Limit to result count; default is 20; use -1 for all
      */
-    getSuggestions3(lookupName: string, dataContext: string, depends1: string, depends2: string, depends3: string, term: string | null | undefined, limit: number | undefined) {
+    getSuggestions3(lookupName: string, dataContext: string, depends1: string, depends2: string, depends3: string, term?: string | null | undefined, limit?: number | undefined) {
         return new Promise<Suggestion[] | null>((resolve, reject) => {
             this.getSuggestions3WithCallbacks(lookupName, dataContext, depends1, depends2, depends3, term, limit, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -1041,7 +1041,7 @@ export class LookupClient {
      * @param term (optional) Optional Partial match term to fitler suggestions
      * @param limit (optional) Optional Limit to result count; default is 20; use -1 for all
      */
-    getSuggestions4(lookupName: string, dataContext: string, depends1: string, depends2: string, depends3: string, depends4: string, term: string | null | undefined, limit: number | undefined) {
+    getSuggestions4(lookupName: string, dataContext: string, depends1: string, depends2: string, depends3: string, depends4: string, term?: string | null | undefined, limit?: number | undefined) {
         return new Promise<Suggestion[] | null>((resolve, reject) => {
             this.getSuggestions4WithCallbacks(lookupName, dataContext, depends1, depends2, depends3, depends4, term, limit, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -2105,7 +2105,7 @@ export class SessionClient {
      * Returns list of permissions by Module | Function
      * @param eTag (optional) Returns nothing if eTag matches supplied eTab
      */
-    getProjectPermitNameMap(eTag: string | null | undefined) {
+    getProjectPermitNameMap(eTag?: string | null | undefined) {
         return new Promise<any | null>((resolve, reject) => {
             this.getProjectPermitNameMapWithCallbacks(eTag, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -2226,7 +2226,7 @@ export class SessionClient {
      * Returns list of open tabs
      * @param forTabType (optional) optional tab type (project,other, otheruser,blank for all)
      */
-    getSessionTabs(forTabType: string | null | undefined) {
+    getSessionTabs(forTabType?: string | null | undefined) {
         return new Promise<TabStripDetails[] | null>((resolve, reject) => {
             this.getSessionTabsWithCallbacks(forTabType, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -2922,7 +2922,7 @@ export class ActionItemsClient {
      * @param actionData action is patch data
      * @param actionMode (optional) Mode is id,match,every
      */
-    patchUserActionItems(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined) {
+    patchUserActionItems(userID: string, routeID: string, actionData: RouteActionData, actionMode?: string | null | undefined) {
         return new Promise<HttpStatusCode>((resolve, reject) => {
             this.patchUserActionItemsWithCallbacks(userID, routeID, actionData, actionMode, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -3355,7 +3355,7 @@ export class AlertsClient {
      * Removes all alert item for the specified user
      * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
      */
-    deleteAllAlerts(forUserKey: string | undefined) {
+    deleteAllAlerts(forUserKey?: string | undefined) {
         return new Promise<HttpStatusCode>((resolve, reject) => {
             this.deleteAllAlertsWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -3435,7 +3435,7 @@ export class AlertsClient {
      * @param id Alert Key
      * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
      */
-    deleteAlert(id: string, forUserKey: string | undefined) {
+    deleteAlert(id: string, forUserKey?: string | undefined) {
         return new Promise<HttpStatusCode>((resolve, reject) => {
             this.deleteAlertWithCallbacks(id, forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -3541,7 +3541,7 @@ export class UICFGClient {
      * @param forDocType (optional) optional document type (guid format)
      * @param forContext (optional) optional context (subtype, container, etc)
      */
-    getLiveDisplay(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined) {
+    getLiveDisplay(partName: string, forDocType?: string | null | undefined, forContext?: string | null | undefined) {
         return new Promise<UIDisplayPart | null>((resolve, reject) => {
             this.getLiveDisplayWithCallbacks(partName, forDocType, forContext, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -3877,7 +3877,7 @@ export class ProjectToolsClient {
      * @param showUnits (optional) Show Units instead of dollars
      * @param showThousands (optional) Return amounts in Thousands
      */
-    getProjectCost(projectID: string, summaryByAccount: boolean | undefined, summaryByTask: boolean | undefined, showUnits: boolean | undefined, showThousands: boolean | undefined) {
+    getProjectCost(projectID: string, summaryByAccount?: boolean | undefined, summaryByTask?: boolean | undefined, showUnits?: boolean | undefined, showThousands?: boolean | undefined) {
         return new Promise<{ [key: string]: any; }[] | null>((resolve, reject) => {
             this.getProjectCostWithCallbacks(projectID, summaryByAccount, summaryByTask, showUnits, showThousands, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -3961,7 +3961,7 @@ export class ProjectToolsClient {
      * @param showUnits (optional) Show Units instead of dollars
      * @param showThousands (optional) Return amounts in Thousands
      */
-    getProjectCostFooters(projectID: string, summaryByAccount: boolean | undefined, summaryByTask: boolean | undefined, showUnits: boolean | undefined, showThousands: boolean | undefined) {
+    getProjectCostFooters(projectID: string, summaryByAccount?: boolean | undefined, summaryByTask?: boolean | undefined, showUnits?: boolean | undefined, showThousands?: boolean | undefined) {
         return new Promise<any | null>((resolve, reject) => {
             this.getProjectCostFootersWithCallbacks(projectID, summaryByAccount, summaryByTask, showUnits, showThousands, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
@@ -4415,7 +4415,7 @@ export class ProjectToolsClient {
      * @param refDMK (optional) Reference Document
      * @param refVendor (optional) Reference Vendor ID (or Contact Key)
      */
-    getProjectCostTransactions(projectID: string, forWBS: string | null | undefined, forAccount: string | null | undefined, forAccountType: string | null | undefined, forAccountClass: string | null | undefined, forPeriod: string | null | undefined, fromDate: string | null | undefined, thruDate: string | null | undefined, refDMK: string | null | undefined, refVendor: string | null | undefined) {
+    getProjectCostTransactions(projectID: string, forWBS?: string | null | undefined, forAccount?: string | null | undefined, forAccountType?: string | null | undefined, forAccountClass?: string | null | undefined, forPeriod?: string | null | undefined, fromDate?: string | null | undefined, thruDate?: string | null | undefined, refDMK?: string | null | undefined, refVendor?: string | null | undefined) {
         return new Promise<ProjectTranDetail[] | null>((resolve, reject) => {
             this.getProjectCostTransactionsWithCallbacks(projectID, forWBS, forAccount, forAccountType, forAccountClass, forPeriod, fromDate, thruDate, refDMK, refVendor, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
