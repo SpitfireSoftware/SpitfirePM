@@ -7,7 +7,7 @@
 //----------------------
 // ReSharper disable InconsistentNaming
 
-import * as jQuery from 'jquery';
+ 
 
 export class ProjectsClient {
     baseUrl: string;

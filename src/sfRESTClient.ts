@@ -1,7 +1,10 @@
 
+import { contains } from "jquery";
 import { GUID  } from "./global";
-import { String } from "./string.extensions";
-import { IUCPermit, LookupClient, Suggestion, UICFGClient, UIDisplayPart } from "./SwaggerClients"
+import { String, sfApplicationRootPath } from "./string.extensions";
+import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+//import * as $ from 'jquery';
+var $ : JQueryStatic;
 
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -13,11 +16,11 @@ import { IUCPermit, LookupClient, Suggestion, UICFGClient, UIDisplayPart } from 
 
 // script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
  
-import * as $ from 'jquery';
+
 
 
 class PartStorageData{
-    CFG : any;
+    CFG : UIDisplayPart | null;
     DataModels : Map<string,any>;
     ViewModels : Map<string,any>;
     RestClient : sfRestClient ;
@@ -34,7 +37,8 @@ class PartStorageData{
     }
 }
 
-const  sfApplicationRootPath = `${window.location.origin}/${window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"))}`;
+// cannot use const because of legacy js in main application 
+
 export type PartStorageList =  Map<string,PartStorageData>; 
 
 export class sfRestClient
@@ -61,7 +65,9 @@ export class sfRestClient
             var apiResult : Promise<UIDisplayPart | null> = api.getLiveDisplay(partName,forDocType ,thisPart!._CurrentContext);
             if (apiResult) {
                 requests.push(apiResult); 
-                thisPart!.CFG = apiResult.finally();
+                apiResult.then((r) => {
+                    thisPart!.CFG = r;
+                });
             }   
             
         }
@@ -70,7 +76,8 @@ export class sfRestClient
         thisPart!._PromiseList = [];
         $.when.apply($, requests)
             .done(function () {
-                thisPart!.CFG.UIItems.forEach(thisPart!.RestClient._ApplyUICFGtoRawData, thisPart);
+                if (!thisPart || !thisPart.CFG || !thisPart!.CFG.uIItems ) return;
+                thisPart.CFG.uIItems.forEach( element => thisPart!.RestClient._ApplyUICFGtoRawData(element,thisPart!));
 
                 $.when.apply($, thisPart!._PromiseList!)
                     .done(function () {
@@ -105,7 +112,7 @@ export class sfRestClient
         }
 
         var UCFK = "";
-        var ThisProjectPermitSet = {};
+        var ThisProjectPermitSet : UCPermitSet | undefined;
         var UCFKDeferredResult = $.Deferred();
         var UCFKPromise = UCFKDeferredResult.promise();
         var PPSDeferredResult = $.Deferred();
@@ -122,17 +129,23 @@ export class sfRestClient
             });
         }
 
-        if (!(optionalProject in RESTClient._LoadedPermits)) {
-            RESTClient._GetRequest("session/permits/project/" + optionalProject).done(function (r) {
-                console.log("Loaded Project {0} Permit set from server...".sfFormat(optionalProject));
-                RESTClient._LoadedPermits[optionalProject] = r.Permits;
-                ThisProjectPermitSet = r.Permits;
-                PPSDeferredResult.resolve(r.Permits);
-            });
+        if (!(optionalProject in RESTClient._LoadedPermits!)) {
+            var api = new SessionClient(sfApplicationRootPath);
+            var apiResult : Promise<UCPermitSet| null> = api.getProjectPermits(optionalProject);
+            if (apiResult) {
+                apiResult.then((r) => {
+                    if (r) {
+                        console.log("Loaded Project {0} Permit set from server...".sfFormat(optionalProject));
+                        RESTClient._LoadedPermits?.set(optionalProject, r);
+                        ThisProjectPermitSet = r!;
+                        PPSDeferredResult.resolve(r);  
+                    }
+                });
+            }   
         }
         else {
-            ThisProjectPermitSet = RESTClient._LoadedPermits[optionalProject];
-            PPSDeferredResult.resolve(RESTClient._LoadedPermits[optionalProject]);
+            ThisProjectPermitSet = RESTClient._LoadedPermits?.get(optionalProject);
+            PPSDeferredResult.resolve(ThisProjectPermitSet);
         }
 
         var finalCheck = [PPSDeferredResult, UCFKDeferredResult];
@@ -160,27 +173,27 @@ export class sfRestClient
             DeferredResult.resolve(finalPermit);
         });
         return permitCheck; // wait for .done, use (r)
+        
     }
-
+    // deprecated: use new ActionItemsClient().getUserActionItems()
     // GetActionItems(key: any) : Defered {
-    //     if (!key) key = this._EmptyKey;
-    //     return this._GetRequest("actionitems?forUserKey={0}".sfFormat(key));
+    //       deprecated: use new ActionItemsClient().getUserActionItems()
     // }
     // GetAlerts (key: any) {
-    //     if (!key) key = this._EmptyKey;
-    //     return this._GetRequest("alerts?forUserKey={0}".sfFormat(key));
+    //   deprecated: use new AlertsClient().getUserAlertList()
     // }
     // GetContact (key: any) {
-    //     return this._GetRequest("contact/{0}".sfFormat(key));
+    //  deprecated: use new ContactClient().getContact()
     // }
     GetDV  (displayName: any, keyValue: any, dependsOn: any, autoVary: any) : Promise<string | null> {
         // future: finish support for dependsOn list
         var DeferredResult: Promise<string>;
+        if (!keyValue) return Promise.resolve("");
+
         var requestData = this._getRequestData(displayName, keyValue, dependsOn);
+        if (autoVary)  requestData += "?{0}".sfFormat(this._getVaryByQValue());
         var cacheKey : string = "getDV:L{0}H{1}".sfFormat(requestData.length, requestData.sfHashCode());
-        if (autoVary)
-            requestData += "?{0}".sfFormat(this._getVaryByQValue());
-        else {
+        
             try {
                 var result : any = sessionStorage.getItem(cacheKey);
                 if (result === null) result = false;
@@ -193,8 +206,10 @@ export class sfRestClient
                     }
                 }
             }
-            catch (err2) { console.log("getDV() cache error: " + err2.message); }
-        }
+            catch (err2) {
+                 console.log("getDV() cache error: " + err2.message);
+            }
+        
 
         if (cacheKey in this._CachedDVRequests) {
             // console.log("getDV({0}:{1}) reused pending request ".format(displayName, keyValue, "request"));
@@ -204,7 +219,7 @@ export class sfRestClient
         var RESTClient :   sfRestClient = this;
         // future: add pd1...pd4
         var api : LookupClient = new LookupClient(sfApplicationRootPath);
-        var apiResultPromise : Promise<string | null> = api.getDisplayValue(displayName,"",keyValue,dependsOn,"","","");
+        var apiResultPromise : Promise<string | null> = api.getDisplayValue(displayName,"1",keyValue,dependsOn,"","","");
         if (apiResultPromise) {
              apiResultPromise.then(
                 (dvResult: string | null) =>{
@@ -312,7 +327,8 @@ export class sfRestClient
         }
         return dependsList;
     }
-    _getRequestData(displayName: string, pv: string | number | boolean, dependsOn: string | string[]) : string {
+    
+    protected _getRequestData(displayName: string, pv: string | number | boolean, dependsOn: string | string[]) : string {
         // consolidate request components into a single string - dv/displayName/pv/d1/d2/d3
         var url = 'dv/' + displayName + "/" + encodeURIComponent(pv);
         url += this._formatDependsList(true, dependsOn);
@@ -336,20 +352,26 @@ export class sfRestClient
 
     _LoadedParts : PartStorageList = new Map<string,PartStorageData>();
 
-    _LoadedPermits : any = {};
-   
-    _ApplyUICFGtoRawData(this:PartStorageData, item: { DV: any, LookupName: any, OtherProperties: { DataType: string }, DataField: string }, idx: any, ui: any) {
-        var thisPart : PartStorageData = this;
+    _LoadedPermits : Map<string,UCPermitSet> = new Map<string,UCPermitSet>();
 
-        if (item.DV || item.LookupName ||
-            (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
+    FieldValueFromRow( rawRow : any, fieldName : string) : any {
+        if (!(fieldName in rawRow)) {
+            fieldName = fieldName.substring(0,1).toLowerCase() + fieldName.substring(1);
+            if (!(fieldName in rawRow)) return undefined;
+        }
+        return rawRow[fieldName];
+    }
+   
+    _ApplyUICFGtoRawData(  item: UIDisplayConfig, thisPart: PartStorageData) {
+
+        if (item.dV || item.lookupName ||
+            (item.otherProperties && item.otherProperties.DataType && item.otherProperties.DataType === "Guid")) {
             console.log(item);
-            if (item.DV) {
-                thisPart.DataModels.get(thisPart._CurrentContext!).forEach(function (rawRow: { [x: string]: any; }, rawIdx: number, qq: any) {
-                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV, rawRow[item.DataField],undefined,undefined).then(function (r: any) {
-                       // I don't know how to do this yet
-                       throw new Error("Not Implimented!!!");
-                        // thisPart.DataModels.set(thisPart._CurrentContext!)[rawIdx][item.DataField + "_dv"] = r;
+            if (item.dV) {
+                thisPart.DataModels.get(thisPart._CurrentContext!).forEach(function DataModelRowDVApplication(rawRow: any) {
+                    var FieldValue : any = thisPart.RestClient.FieldValueFromRow(rawRow, item.dataField!)
+                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.dV,  FieldValue,"","").then(function (r: string | null) {
+                       rawRow[item.dataField + "_dv"] = r;
                     }));
                 });
             }
@@ -392,5 +414,3 @@ export class sfRestClient
     }
 };
 
-// top.sfRestClient.GetActionItems().done(function(a) { top.sfRestClient.BuildViewModel("ActionItems",top.sfRestClient._EmptyKey,a).done(function(v){ console.log(v); });});
-// top.sfRestClient.GetAlerts().done(function(a) { top.sfRestClient.BuildViewModel("AlertList",top.sfRestClient._EmptyKey,a).done(function(v){ console.log(v); });});

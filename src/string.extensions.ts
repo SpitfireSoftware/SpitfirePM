@@ -27,6 +27,6 @@ String.prototype.replaceAll = function replaceAll(this: string, pattern: string,
     return this.split(pattern).join(replacement);
 }
 
-
+export const  sfApplicationRootPath : string = `${window.location.origin}/${window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"))}`;    
 
 
