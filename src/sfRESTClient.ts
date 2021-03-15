@@ -1,11 +1,12 @@
 
 import { contains } from "jquery";
-import { GUID  } from "./global";
+import { GUID  } from "./globals";
 import { String, sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 //import * as $ from 'jquery';
 var $ : JQueryStatic;
 
+//export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
 /* eslint-disable prefer-spread */
@@ -38,6 +39,7 @@ class PartStorageData{
 }
 
 // cannot use const because of legacy js in main application 
+
 
 export type PartStorageList =  Map<string,PartStorageData>; 
 

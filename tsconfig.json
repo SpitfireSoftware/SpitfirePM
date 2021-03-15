@@ -7,6 +7,6 @@
     "sourceMap": true,
     "strict": true
   },
-  "include": [ "src", "dist/APIClient.js" ],
+  "include": [ "src" ],
   "exclude": [ "node_modules", "**/__tests__/*" ]
 }
