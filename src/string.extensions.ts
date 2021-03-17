@@ -28,6 +28,6 @@ String.prototype.replaceAll = function replaceAll(this: string, pattern: string,
 }
 
 export const  sfApplicationRootPath : string = (typeof window != "undefined" ?  `${window.location.origin}/${window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"))}` :
-"");
+"/sfPMS");
 
 

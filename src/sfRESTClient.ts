@@ -1,10 +1,10 @@
 
-import { contains } from "jquery";
+//import { contains } from "jquery";
 import { GUID  } from "./globals";
 import { String, sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
-//import * as $ from 'jquery';
-var $ : JQueryStatic;
+import * as $ from 'jquery';
+//var $ : JQueryStatic;
 
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
@@ -34,9 +34,12 @@ class PartStorageData{
         this.RestClient = client;
         this._CurrentContext = null;
         this._PromiseList = null;
-    
+       
     }
 }
+
+class WCCData { [key: string]: any; }
+
 
 // cannot use const because of legacy js in main application 
 
@@ -262,7 +265,10 @@ export class sfRestClient
             return permitCheck;
         }
 
-        var GetPermitMapRequest = RESTClient._GetRequest("session/permits/map?etag=" + Object.keys(RESTClient._UCPermitMap._etag)[0]).done(function DoneGetPermitMapRequest(r) {
+        // var api :  SessionClient = new SessionClient(sfApplicationRootPath);
+        // var apiResult : any = api.getProjectPermitNameMap( Object.keys(RESTClient._UCPermitMap._etag)[0]);
+
+        var GetPermitMapRequest = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(RESTClient._UCPermitMap._etag)[0]).done(function DoneGetPermitMapRequest(r) {
             if (GetPermitMapRequest.status !== 304) {
                 if (typeof r === "object" && typeof r._etag === "object") {
                     r._etag.w = Date.now();
@@ -282,19 +288,22 @@ export class sfRestClient
 
         return permitCheck;
     }
-    LoadUserSessionInfo() {
+    LoadUserSessionInfo() : Promise<WCCData> {
         var RESTClient :   sfRestClient = this;
         var DeferredResult = $.Deferred();
         var ResultCheck = DeferredResult.promise();
 
-        return RESTClient._GetRequest("session/who").done(function (r: any) {
-            if (typeof r === "object") {
-                $.each(r, function SetWCCProperties(pname : string | number, pvalue) {
-                    RESTClient._WCC[pname] = pvalue;
-                });
-                RESTClient._z.WCCLoaded = true;
-                RESTClient.LoadUCFunctionMap();
-            }
+        var api : SessionClient = new SessionClient(sfApplicationRootPath);
+        var apiResult  : WCCData | null = api.getWCC();
+        if (!apiResult) {
+            return new Promise<WCCData>( () => null );
+        }
+        return apiResult.then((r:WCCData ) => {
+            $.each(r, function SetWCCProperties(pname : string | number, pvalue) {
+                RESTClient._WCC[pname] = pvalue;
+            });
+            RESTClient._z.WCCLoaded = true;
+            RESTClient.LoadUCFunctionMap();
         });
     }
     _DVCacheLife: number = 16 * 60000; // 16 minutes
@@ -340,12 +349,18 @@ export class sfRestClient
     _getVaryByQValue() {
         return "zvqms={0}".sfFormat(new Date().valueOf());
     }
-    _GetRequest(url: any) {
+    // deprecated _GetRequest: use the API client!!
+    // _GetRequest(url: any) {
+    //     url = this._APIURL(url);
+    //     console.log(url);
+    //     return $.getJSON(url);
+    // }
+    protected _GetAPIXHR(url:string): JQueryXHR {
         url = this._APIURL(url);
         console.log(url);
         return $.getJSON(url);
     }
-    _APIURL(suffix: any) {
+    protected _APIURL(suffix: any) {
         if (this._BaseURL.length === 0) this._BaseURL = sfApplicationRootPath + '/api/';
         return this._BaseURL + suffix;
     }
@@ -401,7 +416,7 @@ export class sfRestClient
 
         return result;
     }
-    _WCC: any = {
+    _WCC: WCCData = {
         DocSessionKey: "00000000-0000-0000-0000-000000000000",
         DocTypeKey: "00000000-0000-0000-0000-000000000000",
         DevMode: false,
