@@ -16,7 +16,7 @@ import * as $ from 'jquery';
 /* eslint-disable no-var */
 
 // script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
- 
+
 
 
 
@@ -34,17 +34,17 @@ class PartStorageData{
         this.RestClient = client;
         this._CurrentContext = null;
         this._PromiseList = null;
-       
+
     }
 }
 
 class WCCData { [key: string]: any; }
 
 
-// cannot use const because of legacy js in main application 
+// cannot use const because of legacy js in main application
 
 
-export type PartStorageList =  Map<string,PartStorageData>; 
+export type PartStorageList =  Map<string,PartStorageData>;
 
 export class sfRestClient
 {
@@ -69,12 +69,12 @@ export class sfRestClient
             var api : UICFGClient = new UICFGClient(sfApplicationRootPath);
             var apiResult : Promise<UIDisplayPart | null> = api.getLiveDisplay(partName,forDocType ,thisPart!._CurrentContext);
             if (apiResult) {
-                requests.push(apiResult); 
+                requests.push(apiResult);
                 apiResult.then((r) => {
                     thisPart!.CFG = r;
                 });
-            }   
-            
+            }
+
         }
         thisPart!.DataModels.set(context, rawData)
         thisPart!._CurrentContext = context;
@@ -92,7 +92,7 @@ export class sfRestClient
 
         return ResultReady;
     }
-    CheckPermit(ucModule: string , ucFunction: string, optionalDTK: string, optionalProject: string, optionalReference: string) : JQueryPromise<number> {
+    CheckPermit(ucModule: string , ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string) : JQueryPromise<number> {
         var RESTClient : sfRestClient = this;
         var DeferredResult = $.Deferred();
         var permitCheck = DeferredResult.promise();
@@ -141,12 +141,12 @@ export class sfRestClient
                 apiResult.then((r) => {
                     if (r) {
                         console.log("Loaded Project {0} Permit set from server...".sfFormat(optionalProject));
-                        RESTClient._LoadedPermits?.set(optionalProject, r);
+                        RESTClient._LoadedPermits?.set(optionalProject!, r);
                         ThisProjectPermitSet = r!;
-                        PPSDeferredResult.resolve(r);  
+                        PPSDeferredResult.resolve(r);
                     }
                 });
-            }   
+            }
         }
         else {
             ThisProjectPermitSet = RESTClient._LoadedPermits?.get(optionalProject);
@@ -154,14 +154,14 @@ export class sfRestClient
         }
 
         var finalCheck = [PPSDeferredResult, UCFKDeferredResult];
-        
+
         $.when.apply($, finalCheck).done(function () {
             var finalPermit = 0;
             $.each(ThisProjectPermitSet, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
                 if (ThisUCFK === UCFK) {
                     $.each(capabilitySet, function OnePermitCheck(_n, p : IUCPermit) {
                         var thisPermitValue = 0;
-                        if (p.isGlobal || RESTClient._PermitMatches(p, optionalDTK, optionalReference)) {
+                        if (p.isGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
                             if (p.readOK) thisPermitValue += 1;
                             if (p.insOK) thisPermitValue += 2;
                             if (p.updOK) thisPermitValue += 4;
@@ -178,7 +178,7 @@ export class sfRestClient
             DeferredResult.resolve(finalPermit);
         });
         return permitCheck; // wait for .done, use (r)
-        
+
     }
     // deprecated: use new ActionItemsClient().getUserActionItems()
     // GetActionItems(key: any) : Defered {
@@ -198,7 +198,7 @@ export class sfRestClient
         var requestData = this._getRequestData(displayName, keyValue, dependsOn);
         if (autoVary)  requestData += "?{0}".sfFormat(this._getVaryByQValue());
         var cacheKey : string = "getDV:L{0}H{1}".sfFormat(requestData.length, requestData.sfHashCode());
-        
+
             try {
                 var result : any = sessionStorage.getItem(cacheKey);
                 if (result === null) result = false;
@@ -214,7 +214,7 @@ export class sfRestClient
             catch (err2) {
                  console.log("getDV() cache error: " + err2.message);
             }
-        
+
 
         if (cacheKey in this._CachedDVRequests) {
             // console.log("getDV({0}:{1}) reused pending request ".format(displayName, keyValue, "request"));
@@ -230,21 +230,21 @@ export class sfRestClient
                 (dvResult: string | null) =>{
                     if (dvResult) {
                         sessionStorage.setItem(cacheKey, JSON.stringify({ v: dvResult, w: Date.now() }));
-                        if (cacheKey in RESTClient._CachedDVRequests)   RESTClient._CachedDVRequests.delete(cacheKey);  
+                        if (cacheKey in RESTClient._CachedDVRequests)   RESTClient._CachedDVRequests.delete(cacheKey);
                     }
-        
+
             }
 
             );
-        }   
+        }
 
-         
+
         this._CachedDVRequests.set(cacheKey, apiResultPromise);
         return apiResultPromise;
     }
     // deprecated: use LookupClient.getSuggestions()
-    // GetSuggestions (lookupName: any, pageDSK: any, dependsOn: any) {      
-    //     throw console.error("deprecated: use LookupClient.getSuggestions()");   
+    // GetSuggestions (lookupName: any, pageDSK: any, dependsOn: any) {
+    //     throw console.error("deprecated: use LookupClient.getSuggestions()");
     //     //return this._GetRequest("suggestions/{0}/{1}/{2}".sfFormat(lookupName, pageDSK, this._formatDependsList(dependsOn)));
     // }
     LoadUCFunctionMap () {
@@ -338,7 +338,7 @@ export class sfRestClient
         }
         return dependsList;
     }
-    
+
     protected _getRequestData(displayName: string, pv: string | number | boolean, dependsOn: string | string[]) : string {
         // consolidate request components into a single string - dv/displayName/pv/d1/d2/d3
         var url = 'dv/' + displayName + "/" + encodeURIComponent(pv);
@@ -378,7 +378,7 @@ export class sfRestClient
         }
         return rawRow[fieldName];
     }
-   
+
     _ApplyUICFGtoRawData(  item: UIDisplayConfig, thisPart: PartStorageData) {
 
         if (item.dV || item.lookupName ||
@@ -404,7 +404,7 @@ export class sfRestClient
              }
     };
 
-    _PermitMatches(permit: IUCPermit, optionalDTK: GUID, optionalReference: GUID) : boolean {
+    _PermitMatches(permit: IUCPermit, optionalDTK?: GUID, optionalReference?: GUID) : boolean {
         // project match is assumed by this point (cached is by project)
         var result = true;
         if (permit.docTypeKey) {

@@ -7,9 +7,9 @@
 //----------------------
 // ReSharper disable InconsistentNaming
 
- 
+import * as jQuery from 'jquery';
 
-export class ProjectsClient {
+export class CatalogClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -19,22 +19,1309 @@ export class ProjectsClient {
     }
 
     /**
-     * Returns projects that match User and hidden filter
-     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     * @param includeHidden True to include hidden projects in the result
+     * Returns a history of access to the specified ID
+     * @param iD Catalog File Key
      */
-    getList(forUserKey: string, includeHidden: boolean) {
-        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
-            this.getListWithCallbacks(forUserKey, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getCatalogAccessHistory(iD: string) {
+        return new Promise<FileAccessHistory[] | null>((resolve, reject) => {
+            this.getCatalogAccessHistoryWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getListWithCallbacks(forUserKey: string, includeHidden: boolean, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/projects?";
+    private getCatalogAccessHistoryWithCallbacks(iD: string, onSuccess?: (result: FileAccessHistory[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/catalog/{ID}/AccessHistory";
+        if (iD === undefined || iD === null)
+            throw new Error("The parameter 'iD' must be defined.");
+        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCatalogAccessHistoryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetCatalogAccessHistory(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCatalogAccessHistory(xhr: any): FileAccessHistory[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FileAccessHistory.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns a list of versions for the specified ID
+     * @param iD Catalog File Key
+     */
+    getCatalogVersions(iD: string) {
+        return new Promise<FileVersion[] | null>((resolve, reject) => {
+            this.getCatalogVersionsWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCatalogVersionsWithCallbacks(iD: string, onSuccess?: (result: FileVersion[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/catalog/{ID}/versions";
+        if (iD === undefined || iD === null)
+            throw new Error("The parameter 'iD' must be defined.");
+        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCatalogVersionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetCatalogVersions(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCatalogVersions(xhr: any): FileVersion[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FileVersion.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class DocumentToolsClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns the header of the specified document, including a Document Session Key
+     * @param id Document Key
+     */
+    getDocWorkflowLog(id: string) {
+        return new Promise<string | null>((resolve, reject) => {
+            this.getDocWorkflowLogWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocWorkflowLogWithCallbacks(id: string, onSuccess?: (result: string | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/workflow/log/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocWorkflowLogWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocWorkflowLogWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocWorkflowLogWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetDocWorkflowLog(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocWorkflowLog(xhr: any): string | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the Document Session Key
+     * @param id Document Key
+     */
+    getDocSession(id: string) {
+        return new Promise<string | null>((resolve, reject) => {
+            this.getDocSessionWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocSessionWithCallbacks(id: string, onSuccess?: (result: string | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/session/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetDocSession(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocSession(xhr: any): string | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Given the specified session exists for the current user, associates the Document and Session Key
+     * @param id Document Key
+     * @param sessionID session id
+     */
+    patchDocSession(id: string, sessionID: string) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.patchDocSessionWithCallbacks(id, sessionID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchDocSessionWithCallbacks(id: string, sessionID: string, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/session/{id}/{sessionID}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (sessionID === undefined || sessionID === null)
+            throw new Error("The parameter 'sessionID' must be defined.");
+        url_ = url_.replace("{sessionID}", encodeURIComponent("" + sessionID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchDocSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPatchDocSession(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchDocSession(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the header of the specified document, including a Document Session Key
+     * @param id Document Key
+     */
+    getDocHeader(id: string) {
+        return new Promise<DocMasterDetail | null>((resolve, reject) => {
+            this.getDocHeaderWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocHeaderWithCallbacks(id: string, onSuccess?: (result: DocMasterDetail | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocHeaderWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetDocHeader(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocHeader(xhr: any): DocMasterDetail | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? DocMasterDetail.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the header of the specified document revision, including a Document Session Key
+     * @param id Document Key
+     * @param revKey Revision Key
+     */
+    getDocHeader2(id: string, revKey: string) {
+        return new Promise<DocMasterDetail | null>((resolve, reject) => {
+            this.getDocHeader2WithCallbacks(id, revKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocHeader2WithCallbacks(id: string, revKey: string, onSuccess?: (result: DocMasterDetail | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/{id}/{revKey}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (revKey === undefined || revKey === null)
+            throw new Error("The parameter 'revKey' must be defined.");
+        url_ = url_.replace("{revKey}", encodeURIComponent("" + revKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocHeader2WithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocHeader2WithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocHeader2WithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetDocHeader2(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocHeader2(xhr: any): DocMasterDetail | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? DocMasterDetail.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the header of the specified document, including a Document Session Key
+     * @param id Document Key
+     */
+    getDocItems(id: string) {
+        return new Promise<DocItem[] | null>((resolve, reject) => {
+            this.getDocItemsWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocItemsWithCallbacks(id: string, onSuccess?: (result: DocItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/{id}/Items";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetDocItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocItems(xhr: any): DocItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(DocItem.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class SessionClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns list of permissions for a project
+     * @param projectID Project ID
+     */
+    getProjectPermits(projectID: string) {
+        return new Promise<UCPermitSet | null>((resolve, reject) => {
+            this.getProjectPermitsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectPermitsWithCallbacks(projectID: string, onSuccess?: (result: UCPermitSet | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/permits/project/{projectID}";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectPermitsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectPermits(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetProjectPermits(xhr: any): UCPermitSet | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? UCPermitSet.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns list of permissions by Module | Function
+     * @param eTag (optional) Returns nothing if eTag matches supplied eTab
+     */
+    getProjectPermitNameMap(eTag?: string | null | undefined) {
+        return new Promise<any | null>((resolve, reject) => {
+            this.getProjectPermitNameMapWithCallbacks(eTag, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectPermitNameMapWithCallbacks(eTag: string | null | undefined, onSuccess?: (result: any | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/permits/map?";
+        if (eTag !== undefined && eTag !== null)
+            url_ += "eTag=" + encodeURIComponent("" + eTag) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectPermitNameMapWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectPermitNameMap(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetProjectPermitNameMap(xhr: any): any | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200 || status === 206) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns WCC Session data
+     */
+    getWCC() {
+        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
+            this.getWCCWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getWCCWithCallbacks(onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/who";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetWCCWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetWCC(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetWCC(xhr: any): { [key: string]: any; } | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        result200![key] = resultData200[key];
+                }
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns list of open tabs
+     * @param forTabType (optional) optional tab type (project,other, otheruser,blank for all)
+     */
+    getSessionTabs(forTabType?: string | null | undefined) {
+        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
+            this.getSessionTabsWithCallbacks(forTabType, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getSessionTabsWithCallbacks(forTabType: string | null | undefined, onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/tabs?";
+        if (forTabType !== undefined && forTabType !== null)
+            url_ += "forTabType=" + encodeURIComponent("" + forTabType) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetSessionTabsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetSessionTabs(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetSessionTabs(xhr: any): TabStripDetails[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TabStripDetails.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Logs the posted data
+     * @param logData Information to be logged
+     */
+    postToWebAppLog(logData: APIData) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.postToWebAppLogWithCallbacks(logData, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private postToWebAppLogWithCallbacks(logData: APIData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/log";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(logData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPostToWebAppLogWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPostToWebAppLog(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPostToWebAppLog(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Patches the value in the indicated resource
+     * @param tableName table
+     * @param fieldName field
+     * @param changeData Change information
+     */
+    patchFieldValue(tableName: string, fieldName: string, changeData: PDSData) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.patchFieldValueWithCallbacks(tableName, fieldName, changeData, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchFieldValueWithCallbacks(tableName: string, fieldName: string, changeData: PDSData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/value/{tableName}/{fieldName}";
+        if (tableName === undefined || tableName === null)
+            throw new Error("The parameter 'tableName' must be defined.");
+        url_ = url_.replace("{tableName}", encodeURIComponent("" + tableName));
+        if (fieldName === undefined || fieldName === null)
+            throw new Error("The parameter 'fieldName' must be defined.");
+        url_ = url_.replace("{fieldName}", encodeURIComponent("" + fieldName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(changeData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchFieldValueWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPatchFieldValue(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchFieldValue(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Ends this session
+     */
+    getEndOfSession() {
+        return new Promise<boolean>((resolve, reject) => {
+            this.getEndOfSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/Logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetEndOfSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetEndOfSession(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetEndOfSession(xhr: any): boolean | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class AlertsClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns alert items for a specified user
+     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    getUserAlertList(forUserKey: string) {
+        return new Promise<UserAlert[] | null>((resolve, reject) => {
+            this.getUserAlertListWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserAlertListWithCallbacks(forUserKey: string, onSuccess?: (result: UserAlert[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts?";
         if (forUserKey === undefined || forUserKey === null)
             throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
         else
             url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserAlertListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserAlertList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserAlertList(xhr: any): UserAlert[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserAlert.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Creates and stores an alert
+     * @param theAlert Model with new alert. Specify AlertText, Description.  UserKey, DocMasterKey, Project, Source, SourceKey and Info1 are optional;
+     */
+    createAlert(theAlert: UserAlert) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.createAlertWithCallbacks(theAlert, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private createAlertWithCallbacks(theAlert: UserAlert, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(theAlert);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processCreateAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processCreateAlert(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processCreateAlert(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result409 = resultData409 !== undefined ? resultData409 : <any>null;
+            return throwException("internal failure", status, _responseText, _headers, result409);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Removes all alert item for the specified user
+     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    deleteAllAlerts(forUserKey?: string | undefined) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.deleteAllAlertsWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteAllAlertsWithCallbacks(forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts/all?";
+        if (forUserKey === null)
+            throw new Error("The parameter 'forUserKey' cannot be null.");
+        else if (forUserKey !== undefined)
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAllAlertsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processDeleteAllAlerts(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAllAlerts(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result406 = resultData406 !== undefined ? resultData406 : <any>null;
+            return throwException("key required", status, _responseText, _headers, result406);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Removes a specific alert item for the specified user
+     * @param id Alert Key
+     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    deleteAlert(id: string, forUserKey?: string | undefined) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.deleteAlertWithCallbacks(id, forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteAlertWithCallbacks(id: string, forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts/{id}?";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (forUserKey === null)
+            throw new Error("The parameter 'forUserKey' cannot be null.");
+        else if (forUserKey !== undefined)
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processDeleteAlert(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAlert(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result409 = resultData409 !== undefined ? resultData409 : <any>null;
+            return throwException("internal failure", status, _responseText, _headers, result409);
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = resultData404 !== undefined ? resultData404 : <any>null;
+            return throwException("key not found", status, _responseText, _headers, result404);
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result406 = resultData406 !== undefined ? resultData406 : <any>null;
+            return throwException("key required", status, _responseText, _headers, result406);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ProjectTeamClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns members of the specified project team
+     * @param projectID Full Project ID
+     * @param includeHidden True to include hidden projects
+     */
+    getProjectTeamList(projectID: string, includeHidden: boolean) {
+        return new Promise<ProjectTeamMember[] | null>((resolve, reject) => {
+            this.getProjectTeamListWithCallbacks(projectID, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectTeamListWithCallbacks(projectID: string, includeHidden: boolean, onSuccess?: (result: ProjectTeamMember[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/Team?";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
         if (includeHidden === undefined || includeHidden === null)
             throw new Error("The parameter 'includeHidden' must be defined and cannot be null.");
         else
@@ -50,15 +1337,15 @@ export class ProjectsClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetProjectTeamListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetList(xhr);
+            let result = this.processGetProjectTeamList(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -67,7 +1354,7 @@ export class ProjectsClient {
         }
     }
 
-    protected processGetList(xhr: any): ProjectSummary[] | null | null {
+    protected processGetProjectTeamList(xhr: any): ProjectTeamMember[] | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -78,71 +1365,7 @@ export class ProjectsClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ProjectSummary.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns projects that match User, Program, hidden filter
-     */
-    getMatchingList(usingFilters: QueryFilters) {
-        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
-            this.getMatchingListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getMatchingListWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/projects";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(usingFilters);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetMatchingListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetMatchingList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetMatchingList(xhr: any): ProjectSummary[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProjectSummary.fromJS(item));
+                    result200!.push(ProjectTeamMember.fromJS(item));
             }
             return result200;
         } else if (status !== 200 && status !== 204) {
@@ -153,7 +1376,7 @@ export class ProjectsClient {
     }
 }
 
-export class ContactClient {
+export class UICFGClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -163,85 +1386,26 @@ export class ContactClient {
     }
 
     /**
-     * Returns contacts that match filters
-     * @param usingFilters Search Criteria
+     * Returns Live UI CFG data for this user for the requested part
+     * @param partName Part Name
+     * @param forDocType (optional) optional document type (guid format)
+     * @param forContext (optional) optional context (subtype, container, etc)
      */
-    matchingContactList(usingFilters: ContactFilters) {
-        return new Promise<ContactSummary[] | null>((resolve, reject) => {
-            this.matchingContactListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getLiveDisplay(partName: string, forDocType?: string | null | undefined, forContext?: string | null | undefined) {
+        return new Promise<UIDisplayPart | null>((resolve, reject) => {
+            this.getLiveDisplayWithCallbacks(partName, forDocType, forContext, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private matchingContactListWithCallbacks(usingFilters: ContactFilters, onSuccess?: (result: ContactSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/contact/list";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(usingFilters);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processMatchingContactListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processMatchingContactList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processMatchingContactList(xhr: any): ContactSummary[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ContactSummary.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the contact
-     * @param id Contact Key
-     */
-    getContact(id: string) {
-        return new Promise<Contact | null>((resolve, reject) => {
-            this.getContactWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getContactWithCallbacks(id: string, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/contact/{id}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+    private getLiveDisplayWithCallbacks(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/uicfg/live/{partName}?";
+        if (partName === undefined || partName === null)
+            throw new Error("The parameter 'partName' must be defined.");
+        url_ = url_.replace("{partName}", encodeURIComponent("" + partName));
+        if (forDocType !== undefined && forDocType !== null)
+            url_ += "forDocType=" + encodeURIComponent("" + forDocType) + "&";
+        if (forContext !== undefined && forContext !== null)
+            url_ += "forContext=" + encodeURIComponent("" + forContext) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         jQuery.ajax({
@@ -253,15 +1417,15 @@ export class ContactClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetContactWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetLiveDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetContact(xhr);
+            let result = this.processGetLiveDisplay(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -270,7 +1434,7 @@ export class ContactClient {
         }
     }
 
-    protected processGetContact(xhr: any): Contact | null | null {
+    protected processGetLiveDisplay(xhr: any): UIDisplayPart | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -278,7 +1442,951 @@ export class ContactClient {
             const _responseText = xhr.responseText;
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? Contact.fromJS(resultData200) : <any>null;
+            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns Live UI CFG data for this user for the requested part
+     * @param lookupName Part Name
+     */
+    getLookupDisplay(lookupName: string) {
+        return new Promise<UIDisplayPart | null>((resolve, reject) => {
+            this.getLookupDisplayWithCallbacks(lookupName, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getLookupDisplayWithCallbacks(lookupName: string, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/uicfg/lookup/{lookupName}";
+        if (lookupName === undefined || lookupName === null)
+            throw new Error("The parameter 'lookupName' must be defined.");
+        url_ = url_.replace("{lookupName}", encodeURIComponent("" + lookupName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLookupDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetLookupDisplay(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLookupDisplay(xhr: any): UIDisplayPart | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ActionItemsClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns action items for specified User
+     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    getUserActionItemsAll(forUserKey: string) {
+        return new Promise<UserActionItem[] | null>((resolve, reject) => {
+            this.getUserActionItemsAllWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserActionItemsAllWithCallbacks(forUserKey: string, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems?";
+        if (forUserKey === undefined || forUserKey === null)
+            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
+        else
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserActionItemsAllWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserActionItemsAll(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserActionItemsAll(xhr: any): UserActionItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserActionItem.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns action items that match filters ProjectLike, TitleLike, ForDocType, FromDate, ThruDate, NewOnly
+     */
+    getMatchingUserActionItems(usingFilters: QueryFilters) {
+        return new Promise<UserActionItem[] | null>((resolve, reject) => {
+            this.getMatchingUserActionItemsWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getMatchingUserActionItemsWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems/matching";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(usingFilters);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetMatchingUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetMatchingUserActionItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetMatchingUserActionItems(xhr: any): UserActionItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserActionItem.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns an action item for the specified User
+     * @param userID User Key or 1 for self
+     * @param routeID Route ID (guid)
+     */
+    getUserActionItems(userID: string, routeID: string) {
+        return new Promise<RouteActionInfo | null>((resolve, reject) => {
+            this.getUserActionItemsWithCallbacks(userID, routeID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserActionItemsWithCallbacks(userID: string, routeID: string, onSuccess?: (result: RouteActionInfo | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}";
+        if (userID === undefined || userID === null)
+            throw new Error("The parameter 'userID' must be defined.");
+        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
+        if (routeID === undefined || routeID === null)
+            throw new Error("The parameter 'routeID' must be defined.");
+        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserActionItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserActionItems(xhr: any): RouteActionInfo | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result500 = resultData500 !== undefined ? resultData500 : <any>null;
+            return throwException("internal failure", status, _responseText, _headers, result500);
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = resultData404 !== undefined ? resultData404 : <any>null;
+            return throwException("Requested route not found", status, _responseText, _headers, result404);
+        } else if (status === 503) {
+            const _responseText = xhr.responseText;
+            let result503: any = null;
+            let resultData503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result503 = resultData503 !== undefined ? resultData503 : <any>null;
+            return throwException("Try again after reauthentication", status, _responseText, _headers, result503);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? RouteActionInfo.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates an action item for the specified User
+     * @param userID User Key or 1 for self
+     * @param routeID Route ID (guid)
+     * @param actionData action is patch data
+     * @param actionMode (optional) Mode is id,match,every
+     */
+    patchUserActionItems(userID: string, routeID: string, actionData: RouteActionData, actionMode?: string | null | undefined) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.patchUserActionItemsWithCallbacks(userID, routeID, actionData, actionMode, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchUserActionItemsWithCallbacks(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}?";
+        if (userID === undefined || userID === null)
+            throw new Error("The parameter 'userID' must be defined.");
+        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
+        if (routeID === undefined || routeID === null)
+            throw new Error("The parameter 'routeID' must be defined.");
+        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
+        if (actionMode !== undefined && actionMode !== null)
+            url_ += "actionMode=" + encodeURIComponent("" + actionMode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(actionData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPatchUserActionItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchUserActionItems(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ProjectDocListClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns a summary of document processes on a project
+     * @param projectID Full Project ID
+     */
+    getProjectDocSummary(projectID: string) {
+        return new Promise<TypeSummary[] | null>((resolve, reject) => {
+            this.getProjectDocSummaryWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectDocSummaryWithCallbacks(projectID: string, onSuccess?: (result: TypeSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/TypeSummary";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectDocSummaryWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectDocSummaryWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectDocSummaryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectDocSummary(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetProjectDocSummary(xhr: any): TypeSummary[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TypeSummary.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns documents on a project that match the requested document type
+     * @param projectID Full Project ID
+     * @param forDocType Doc Type Key
+     */
+    getProjectDocList(projectID: string, forDocType: string) {
+        return new Promise<ProjectDocsOfType[] | null>((resolve, reject) => {
+            this.getProjectDocListWithCallbacks(projectID, forDocType, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectDocListWithCallbacks(projectID: string, forDocType: string, onSuccess?: (result: ProjectDocsOfType[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/Docs?";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+        if (forDocType === undefined || forDocType === null)
+            throw new Error("The parameter 'forDocType' must be defined and cannot be null.");
+        else
+            url_ += "forDocType=" + encodeURIComponent("" + forDocType) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectDocListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectDocList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetProjectDocList(xhr: any): ProjectDocsOfType[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProjectDocsOfType.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns documents on a project that match filters <b>INCOMPLETE</b>
+     */
+    matchingProjectDocList(projectID: string, usingFilters: QueryFilters) {
+        return new Promise<ProjectDocsOfType[] | null>((resolve, reject) => {
+            this.matchingProjectDocListWithCallbacks(projectID, usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private matchingProjectDocListWithCallbacks(projectID: string, usingFilters: QueryFilters, onSuccess?: (result: ProjectDocsOfType[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/Docs";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(usingFilters);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processMatchingProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processMatchingProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processMatchingProjectDocListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processMatchingProjectDocList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processMatchingProjectDocList(xhr: any): ProjectDocsOfType[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProjectDocsOfType.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class AccountClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Authenticates a session and generates a FormsAuthenticationTicket and cookie
+     */
+    postLogin(credentials: SiteLogin) {
+        return new Promise<string | null>((resolve, reject) => {
+            this.postLoginWithCallbacks(credentials, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private postLoginWithCallbacks(credentials: SiteLogin, onSuccess?: (result: string | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(credentials);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPostLoginWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPostLogin(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPostLogin(xhr: any): string | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns general information about the Authenticed user
+     */
+    getUserData() {
+        return new Promise<CurrentUser | null>((resolve, reject) => {
+            this.getUserDataWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserDataWithCallbacks(onSuccess?: (result: CurrentUser | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserDataWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserData(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserData(xhr: any): CurrentUser | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? CurrentUser.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Ends this session
+     */
+    getEndOfSession() {
+        return new Promise<boolean>((resolve, reject) => {
+            this.getEndOfSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account/Logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetEndOfSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetEndOfSession(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetEndOfSession(xhr: any): boolean | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns authorization flags for specified demand if they match or exceed the request
+     * @param demand Demand Context
+     */
+    getAccess(demand: PermissionContext) {
+        return new Promise<PermissionFlags>((resolve, reject) => {
+            this.getAccessWithCallbacks(demand, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getAccessWithCallbacks(demand: PermissionContext, onSuccess?: (result: PermissionFlags) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account/Authorized";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(demand);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetAccessWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetAccess(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetAccess(xhr: any): PermissionFlags | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    acquireTabList() {
+        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
+            this.acquireTabListWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private acquireTabListWithCallbacks(onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/Account";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processAcquireTabListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processAcquireTabList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processAcquireTabList(xhr: any): TabStripDetails[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TabStripDetails.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class Client {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    returns_information_about_password_composition() {
+        return new Promise<PasswordConfiguredOptions | null>((resolve, reject) => {
+            this.returns_information_about_password_compositionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private returns_information_about_password_compositionWithCallbacks(onSuccess?: (result: PasswordConfiguredOptions | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account/PasswordOptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processReturns_information_about_password_compositionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processReturns_information_about_password_composition(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processReturns_information_about_password_composition(xhr: any): PasswordConfiguredOptions | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? PasswordConfiguredOptions.fromJS(resultData200) : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -1275,7 +3383,7 @@ export class LookupClient {
     }
 }
 
-export class DocumentToolsClient {
+export class ProjectsClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -1285,1218 +3393,22 @@ export class DocumentToolsClient {
     }
 
     /**
-     * Returns the header of the specified document, including a Document Session Key
-     * @param id Document Key
+     * Returns projects that match User and hidden filter
+     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * @param includeHidden True to include hidden projects in the result
      */
-    getDocWorkflowLog(id: string) {
-        return new Promise<string | null>((resolve, reject) => {
-            this.getDocWorkflowLogWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getList(forUserKey: string, includeHidden: boolean) {
+        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
+            this.getListWithCallbacks(forUserKey, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getDocWorkflowLogWithCallbacks(id: string, onSuccess?: (result: string | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Document/workflow/log/{id}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocWorkflowLogWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocWorkflowLogWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocWorkflowLogWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetDocWorkflowLog(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocWorkflowLog(xhr: any): string | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the Document Session Key
-     * @param id Document Key
-     */
-    getDocSession(id: string) {
-        return new Promise<string | null>((resolve, reject) => {
-            this.getDocSessionWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocSessionWithCallbacks(id: string, onSuccess?: (result: string | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Document/session/{id}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetDocSession(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocSession(xhr: any): string | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Given the specified session exists for the current user, associates the Document and Session Key
-     * @param id Document Key
-     * @param sessionID session id
-     */
-    patchDocSession(id: string, sessionID: string) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.patchDocSessionWithCallbacks(id, sessionID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private patchDocSessionWithCallbacks(id: string, sessionID: string, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Document/session/{id}/{sessionID}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (sessionID === undefined || sessionID === null)
-            throw new Error("The parameter 'sessionID' must be defined.");
-        url_ = url_.replace("{sessionID}", encodeURIComponent("" + sessionID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "patch",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPatchDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPatchDocSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPatchDocSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPatchDocSession(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPatchDocSession(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the header of the specified document, including a Document Session Key
-     * @param id Document Key
-     */
-    getDocHeader(id: string) {
-        return new Promise<DocMasterDetail | null>((resolve, reject) => {
-            this.getDocHeaderWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocHeaderWithCallbacks(id: string, onSuccess?: (result: DocMasterDetail | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Document/{id}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocHeaderWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetDocHeader(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocHeader(xhr: any): DocMasterDetail | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? DocMasterDetail.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the header of the specified document revision, including a Document Session Key
-     * @param id Document Key
-     * @param revKey Revision Key
-     */
-    getDocHeader2(id: string, revKey: string) {
-        return new Promise<DocMasterDetail | null>((resolve, reject) => {
-            this.getDocHeader2WithCallbacks(id, revKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocHeader2WithCallbacks(id: string, revKey: string, onSuccess?: (result: DocMasterDetail | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Document/{id}/{revKey}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (revKey === undefined || revKey === null)
-            throw new Error("The parameter 'revKey' must be defined.");
-        url_ = url_.replace("{revKey}", encodeURIComponent("" + revKey));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocHeader2WithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocHeader2WithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocHeader2WithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetDocHeader2(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocHeader2(xhr: any): DocMasterDetail | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? DocMasterDetail.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the header of the specified document, including a Document Session Key
-     * @param id Document Key
-     */
-    getDocItems(id: string) {
-        return new Promise<DocItem[] | null>((resolve, reject) => {
-            this.getDocItemsWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocItemsWithCallbacks(id: string, onSuccess?: (result: DocItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Document/{id}/Items";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetDocItems(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocItems(xhr: any): DocItem[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(DocItem.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class AccountClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Authenticates a session and generates a FormsAuthenticationTicket and cookie
-     */
-    postLogin(credentials: SiteLogin) {
-        return new Promise<string | null>((resolve, reject) => {
-            this.postLoginWithCallbacks(credentials, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private postLoginWithCallbacks(credentials: SiteLogin, onSuccess?: (result: string | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(credentials);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPostLoginWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPostLogin(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPostLogin(xhr: any): string | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns general information about the Authenticed user
-     */
-    getUserData() {
-        return new Promise<CurrentUser | null>((resolve, reject) => {
-            this.getUserDataWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getUserDataWithCallbacks(onSuccess?: (result: CurrentUser | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserDataWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserData(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserData(xhr: any): CurrentUser | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? CurrentUser.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Ends this session
-     */
-    getEndOfSession() {
-        return new Promise<boolean>((resolve, reject) => {
-            this.getEndOfSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account/Logout";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetEndOfSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetEndOfSession(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetEndOfSession(xhr: any): boolean | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns authorization flags for specified demand if they match or exceed the request
-     * @param demand Demand Context
-     */
-    getAccess(demand: PermissionContext) {
-        return new Promise<PermissionFlags>((resolve, reject) => {
-            this.getAccessWithCallbacks(demand, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getAccessWithCallbacks(demand: PermissionContext, onSuccess?: (result: PermissionFlags) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account/Authorized";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(demand);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetAccessWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetAccess(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetAccess(xhr: any): PermissionFlags | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    acquireTabList() {
-        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
-            this.acquireTabListWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private acquireTabListWithCallbacks(onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/Account";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processAcquireTabListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processAcquireTabList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processAcquireTabList(xhr: any): TabStripDetails[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TabStripDetails.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class Client {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    returns_information_about_password_composition() {
-        return new Promise<PasswordConfiguredOptions | null>((resolve, reject) => {
-            this.returns_information_about_password_compositionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private returns_information_about_password_compositionWithCallbacks(onSuccess?: (result: PasswordConfiguredOptions | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account/PasswordOptions";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processReturns_information_about_password_compositionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processReturns_information_about_password_composition(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processReturns_information_about_password_composition(xhr: any): PasswordConfiguredOptions | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? PasswordConfiguredOptions.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class SessionClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns list of permissions for a project
-     * @param projectID Project ID
-     */
-    getProjectPermits(projectID: string) {
-        return new Promise<UCPermitSet | null>((resolve, reject) => {
-            this.getProjectPermitsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectPermitsWithCallbacks(projectID: string, onSuccess?: (result: UCPermitSet | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/permits/project/{projectID}";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectPermitsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectPermits(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetProjectPermits(xhr: any): UCPermitSet | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? UCPermitSet.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns list of permissions by Module | Function
-     * @param eTag (optional) Returns nothing if eTag matches supplied eTab
-     */
-    getProjectPermitNameMap(eTag?: string | null | undefined) {
-        return new Promise<any | null>((resolve, reject) => {
-            this.getProjectPermitNameMapWithCallbacks(eTag, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectPermitNameMapWithCallbacks(eTag: string | null | undefined, onSuccess?: (result: any | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/permits/map?";
-        if (eTag !== undefined && eTag !== null)
-            url_ += "eTag=" + encodeURIComponent("" + eTag) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectPermitNameMapWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectPermitNameMap(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetProjectPermitNameMap(xhr: any): any | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200 || status === 206) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns WCC Session data
-     */
-    getWCC() {
-        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
-            this.getWCCWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getWCCWithCallbacks(onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/who";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetWCCWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetWCC(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetWCC(xhr: any): { [key: string]: any; } | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (resultData200) {
-                result200 = {} as any;
-                for (let key in resultData200) {
-                    if (resultData200.hasOwnProperty(key))
-                        result200![key] = resultData200[key];
-                }
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns list of open tabs
-     * @param forTabType (optional) optional tab type (project,other, otheruser,blank for all)
-     */
-    getSessionTabs(forTabType?: string | null | undefined) {
-        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
-            this.getSessionTabsWithCallbacks(forTabType, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getSessionTabsWithCallbacks(forTabType: string | null | undefined, onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/tabs?";
-        if (forTabType !== undefined && forTabType !== null)
-            url_ += "forTabType=" + encodeURIComponent("" + forTabType) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetSessionTabsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetSessionTabs(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetSessionTabs(xhr: any): TabStripDetails[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TabStripDetails.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Logs the posted data
-     * @param logData Information to be logged
-     */
-    postToWebAppLog(logData: APIData) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.postToWebAppLogWithCallbacks(logData, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private postToWebAppLogWithCallbacks(logData: APIData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/log";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(logData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPostToWebAppLogWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPostToWebAppLog(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPostToWebAppLog(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Patches the value in the indicated resource
-     * @param tableName table
-     * @param fieldName field
-     * @param changeData Change information
-     */
-    patchFieldValue(tableName: string, fieldName: string, changeData: PDSData) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.patchFieldValueWithCallbacks(tableName, fieldName, changeData, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private patchFieldValueWithCallbacks(tableName: string, fieldName: string, changeData: PDSData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/value/{tableName}/{fieldName}";
-        if (tableName === undefined || tableName === null)
-            throw new Error("The parameter 'tableName' must be defined.");
-        url_ = url_.replace("{tableName}", encodeURIComponent("" + tableName));
-        if (fieldName === undefined || fieldName === null)
-            throw new Error("The parameter 'fieldName' must be defined.");
-        url_ = url_.replace("{fieldName}", encodeURIComponent("" + fieldName));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(changeData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "patch",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPatchFieldValueWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPatchFieldValue(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPatchFieldValue(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Ends this session
-     */
-    getEndOfSession() {
-        return new Promise<boolean>((resolve, reject) => {
-            this.getEndOfSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/Logout";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetEndOfSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetEndOfSession(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetEndOfSession(xhr: any): boolean | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class ProjectTeamClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns members of the specified project team
-     * @param projectID Full Project ID
-     * @param includeHidden True to include hidden projects
-     */
-    getProjectTeamList(projectID: string, includeHidden: boolean) {
-        return new Promise<ProjectTeamMember[] | null>((resolve, reject) => {
-            this.getProjectTeamListWithCallbacks(projectID, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectTeamListWithCallbacks(projectID: string, includeHidden: boolean, onSuccess?: (result: ProjectTeamMember[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/Team?";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+    private getListWithCallbacks(forUserKey: string, includeHidden: boolean, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/projects?";
+        if (forUserKey === undefined || forUserKey === null)
+            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
+        else
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
         if (includeHidden === undefined || includeHidden === null)
             throw new Error("The parameter 'includeHidden' must be defined and cannot be null.");
         else
@@ -2512,15 +3424,15 @@ export class ProjectTeamClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetProjectTeamListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetProjectTeamList(xhr);
+            let result = this.processGetList(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -2529,7 +3441,7 @@ export class ProjectTeamClient {
         }
     }
 
-    protected processGetProjectTeamList(xhr: any): ProjectTeamMember[] | null | null {
+    protected processGetList(xhr: any): ProjectSummary[] | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -2540,81 +3452,7 @@ export class ProjectTeamClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ProjectTeamMember.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class CatalogClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns a history of access to the specified ID
-     * @param iD Catalog File Key
-     */
-    getCatalogAccessHistory(iD: string) {
-        return new Promise<FileAccessHistory[] | null>((resolve, reject) => {
-            this.getCatalogAccessHistoryWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getCatalogAccessHistoryWithCallbacks(iD: string, onSuccess?: (result: FileAccessHistory[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/catalog/{ID}/AccessHistory";
-        if (iD === undefined || iD === null)
-            throw new Error("The parameter 'iD' must be defined.");
-        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetCatalogAccessHistoryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetCatalogAccessHistory(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetCatalogAccessHistory(xhr: any): FileAccessHistory[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(FileAccessHistory.fromJS(item));
+                    result200!.push(ProjectSummary.fromJS(item));
             }
             return result200;
         } else if (status !== 200 && status !== 204) {
@@ -2625,525 +3463,16 @@ export class CatalogClient {
     }
 
     /**
-     * Returns a list of versions for the specified ID
-     * @param iD Catalog File Key
+     * Returns projects that match User, Program, hidden filter
      */
-    getCatalogVersions(iD: string) {
-        return new Promise<FileVersion[] | null>((resolve, reject) => {
-            this.getCatalogVersionsWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getMatchingList(usingFilters: QueryFilters) {
+        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
+            this.getMatchingListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getCatalogVersionsWithCallbacks(iD: string, onSuccess?: (result: FileVersion[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/catalog/{ID}/versions";
-        if (iD === undefined || iD === null)
-            throw new Error("The parameter 'iD' must be defined.");
-        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetCatalogVersionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetCatalogVersions(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetCatalogVersions(xhr: any): FileVersion[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(FileVersion.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class ActionItemsClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns action items for specified User
-     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     */
-    getUserActionItemsAll(forUserKey: string) {
-        return new Promise<UserActionItem[] | null>((resolve, reject) => {
-            this.getUserActionItemsAllWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getUserActionItemsAllWithCallbacks(forUserKey: string, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems?";
-        if (forUserKey === undefined || forUserKey === null)
-            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
-        else
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserActionItemsAllWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserActionItemsAll(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserActionItemsAll(xhr: any): UserActionItem[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(UserActionItem.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns action items that match filters ProjectLike, TitleLike, ForDocType, FromDate, ThruDate, NewOnly
-     */
-    getMatchingUserActionItems(usingFilters: QueryFilters) {
-        return new Promise<UserActionItem[] | null>((resolve, reject) => {
-            this.getMatchingUserActionItemsWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getMatchingUserActionItemsWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems/matching";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(usingFilters);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetMatchingUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetMatchingUserActionItems(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetMatchingUserActionItems(xhr: any): UserActionItem[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(UserActionItem.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns an action item for the specified User
-     * @param userID User Key or 1 for self
-     * @param routeID Route ID (guid)
-     */
-    getUserActionItems(userID: string, routeID: string) {
-        return new Promise<RouteActionInfo | null>((resolve, reject) => {
-            this.getUserActionItemsWithCallbacks(userID, routeID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getUserActionItemsWithCallbacks(userID: string, routeID: string, onSuccess?: (result: RouteActionInfo | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}";
-        if (userID === undefined || userID === null)
-            throw new Error("The parameter 'userID' must be defined.");
-        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
-        if (routeID === undefined || routeID === null)
-            throw new Error("The parameter 'routeID' must be defined.");
-        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserActionItems(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserActionItems(xhr: any): RouteActionInfo | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result500 = resultData500 !== undefined ? resultData500 : <any>null;
-            return throwException("internal failure", status, _responseText, _headers, result500);
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result404 = resultData404 !== undefined ? resultData404 : <any>null;
-            return throwException("Requested route not found", status, _responseText, _headers, result404);
-        } else if (status === 503) {
-            const _responseText = xhr.responseText;
-            let result503: any = null;
-            let resultData503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result503 = resultData503 !== undefined ? resultData503 : <any>null;
-            return throwException("Try again after reauthentication", status, _responseText, _headers, result503);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? RouteActionInfo.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Updates an action item for the specified User
-     * @param userID User Key or 1 for self
-     * @param routeID Route ID (guid)
-     * @param actionData action is patch data
-     * @param actionMode (optional) Mode is id,match,every
-     */
-    patchUserActionItems(userID: string, routeID: string, actionData: RouteActionData, actionMode?: string | null | undefined) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.patchUserActionItemsWithCallbacks(userID, routeID, actionData, actionMode, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private patchUserActionItemsWithCallbacks(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}?";
-        if (userID === undefined || userID === null)
-            throw new Error("The parameter 'userID' must be defined.");
-        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
-        if (routeID === undefined || routeID === null)
-            throw new Error("The parameter 'routeID' must be defined.");
-        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
-        if (actionMode !== undefined && actionMode !== null)
-            url_ += "actionMode=" + encodeURIComponent("" + actionMode) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(actionData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "patch",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPatchUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPatchUserActionItems(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPatchUserActionItems(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class ProjectDocListClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns a summary of document processes on a project
-     * @param projectID Full Project ID
-     */
-    getProjectDocSummary(projectID: string) {
-        return new Promise<TypeSummary[] | null>((resolve, reject) => {
-            this.getProjectDocSummaryWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectDocSummaryWithCallbacks(projectID: string, onSuccess?: (result: TypeSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/TypeSummary";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectDocSummaryWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectDocSummaryWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectDocSummaryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectDocSummary(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetProjectDocSummary(xhr: any): TypeSummary[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TypeSummary.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns documents on a project that match the requested document type
-     * @param projectID Full Project ID
-     * @param forDocType Doc Type Key
-     */
-    getProjectDocList(projectID: string, forDocType: string) {
-        return new Promise<ProjectDocsOfType[] | null>((resolve, reject) => {
-            this.getProjectDocListWithCallbacks(projectID, forDocType, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectDocListWithCallbacks(projectID: string, forDocType: string, onSuccess?: (result: ProjectDocsOfType[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/Docs?";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        if (forDocType === undefined || forDocType === null)
-            throw new Error("The parameter 'forDocType' must be defined and cannot be null.");
-        else
-            url_ += "forDocType=" + encodeURIComponent("" + forDocType) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectDocListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectDocList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetProjectDocList(xhr: any): ProjectDocsOfType[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProjectDocsOfType.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns documents on a project that match filters <b>INCOMPLETE</b>
-     */
-    matchingProjectDocList(projectID: string, usingFilters: QueryFilters) {
-        return new Promise<ProjectDocsOfType[] | null>((resolve, reject) => {
-            this.matchingProjectDocListWithCallbacks(projectID, usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private matchingProjectDocListWithCallbacks(projectID: string, usingFilters: QueryFilters, onSuccess?: (result: ProjectDocsOfType[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/Docs";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+    private getMatchingListWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/projects";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(usingFilters);
@@ -3159,15 +3488,15 @@ export class ProjectDocListClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processMatchingProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processMatchingProjectDocListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processMatchingProjectDocListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetMatchingListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processMatchingProjectDocList(xhr);
+            let result = this.processGetMatchingList(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -3176,7 +3505,7 @@ export class ProjectDocListClient {
         }
     }
 
-    protected processMatchingProjectDocList(xhr: any): ProjectDocsOfType[] | null | null {
+    protected processGetMatchingList(xhr: any): ProjectSummary[] | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -3187,7 +3516,7 @@ export class ProjectDocListClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ProjectDocsOfType.fromJS(item));
+                    result200!.push(ProjectSummary.fromJS(item));
             }
             return result200;
         } else if (status !== 200 && status !== 204) {
@@ -3198,7 +3527,7 @@ export class ProjectDocListClient {
     }
 }
 
-export class AlertsClient {
+export class ContactClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -3208,85 +3537,20 @@ export class AlertsClient {
     }
 
     /**
-     * Returns alert items for a specified user
-     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * Returns contacts that match filters
+     * @param usingFilters Search Criteria
      */
-    getUserAlertList(forUserKey: string) {
-        return new Promise<UserAlert[] | null>((resolve, reject) => {
-            this.getUserAlertListWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+    matchingContactList(usingFilters: ContactFilters) {
+        return new Promise<ContactSummary[] | null>((resolve, reject) => {
+            this.matchingContactListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getUserAlertListWithCallbacks(forUserKey: string, onSuccess?: (result: UserAlert[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts?";
-        if (forUserKey === undefined || forUserKey === null)
-            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
-        else
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+    private matchingContactListWithCallbacks(usingFilters: ContactFilters, onSuccess?: (result: ContactSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/contact/list";
         url_ = url_.replace(/[?&]$/, "");
 
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserAlertListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserAlertList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserAlertList(xhr: any): UserAlert[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(UserAlert.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Creates and stores an alert
-     * @param theAlert Model with new alert. Specify AlertText, Description.  UserKey, DocMasterKey, Project, Source, SourceKey and Info1 are optional;
-     */
-    createAlert(theAlert: UserAlert) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.createAlertWithCallbacks(theAlert, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private createAlertWithCallbacks(theAlert: UserAlert, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(theAlert);
+        const content_ = JSON.stringify(usingFilters);
 
         jQuery.ajax({
             url: url_,
@@ -3299,15 +3563,15 @@ export class AlertsClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processCreateAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processMatchingContactListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processCreateAlert(xhr);
+            let result = this.processMatchingContactList(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -3316,112 +3580,19 @@ export class AlertsClient {
         }
     }
 
-    protected processCreateAlert(xhr: any): HttpStatusCode | null {
+    protected processMatchingContactList(xhr: any): ContactSummary[] | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result409 = resultData409 !== undefined ? resultData409 : <any>null;
-            return throwException("internal failure", status, _responseText, _headers, result409);
-        } else if (status === 200) {
+        if (status === 200) {
             const _responseText = xhr.responseText;
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Removes all alert item for the specified user
-     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     */
-    deleteAllAlerts(forUserKey?: string | undefined) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.deleteAllAlertsWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private deleteAllAlertsWithCallbacks(forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts/all?";
-        if (forUserKey === null)
-            throw new Error("The parameter 'forUserKey' cannot be null.");
-        else if (forUserKey !== undefined)
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ContactSummary.fromJS(item));
             }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteAllAlertsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processDeleteAllAlerts(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteAllAlerts(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result406 = resultData406 !== undefined ? resultData406 : <any>null;
-            return throwException("key required", status, _responseText, _headers, result406);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -3431,131 +3602,20 @@ export class AlertsClient {
     }
 
     /**
-     * Removes a specific alert item for the specified user
-     * @param id Alert Key
-     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * Returns the contact
+     * @param id Contact Key
      */
-    deleteAlert(id: string, forUserKey?: string | undefined) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.deleteAlertWithCallbacks(id, forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getContact(id: string) {
+        return new Promise<Contact | null>((resolve, reject) => {
+            this.getContactWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private deleteAlertWithCallbacks(id: string, forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts/{id}?";
+    private getContactWithCallbacks(id: string, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/contact/{id}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (forUserKey === null)
-            throw new Error("The parameter 'forUserKey' cannot be null.");
-        else if (forUserKey !== undefined)
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processDeleteAlert(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteAlert(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result409 = resultData409 !== undefined ? resultData409 : <any>null;
-            return throwException("internal failure", status, _responseText, _headers, result409);
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result404 = resultData404 !== undefined ? resultData404 : <any>null;
-            return throwException("key not found", status, _responseText, _headers, result404);
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result406 = resultData406 !== undefined ? resultData406 : <any>null;
-            return throwException("key required", status, _responseText, _headers, result406);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class UICFGClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns Live UI CFG data for this user for the requested part
-     * @param partName Part Name
-     * @param forDocType (optional) optional document type (guid format)
-     * @param forContext (optional) optional context (subtype, container, etc)
-     */
-    getLiveDisplay(partName: string, forDocType?: string | null | undefined, forContext?: string | null | undefined) {
-        return new Promise<UIDisplayPart | null>((resolve, reject) => {
-            this.getLiveDisplayWithCallbacks(partName, forDocType, forContext, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getLiveDisplayWithCallbacks(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/uicfg/live/{partName}?";
-        if (partName === undefined || partName === null)
-            throw new Error("The parameter 'partName' must be defined.");
-        url_ = url_.replace("{partName}", encodeURIComponent("" + partName));
-        if (forDocType !== undefined && forDocType !== null)
-            url_ += "forDocType=" + encodeURIComponent("" + forDocType) + "&";
-        if (forContext !== undefined && forContext !== null)
-            url_ += "forContext=" + encodeURIComponent("" + forContext) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         jQuery.ajax({
@@ -3567,15 +3627,15 @@ export class UICFGClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetLiveDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetContactWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetLiveDisplay(xhr);
+            let result = this.processGetContact(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -3584,7 +3644,7 @@ export class UICFGClient {
         }
     }
 
-    protected processGetLiveDisplay(xhr: any): UIDisplayPart | null | null {
+    protected processGetContact(xhr: any): Contact | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -3592,141 +3652,7 @@ export class UICFGClient {
             const _responseText = xhr.responseText;
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns Live UI CFG data for this user for the requested part
-     * @param lookupName Part Name
-     */
-    getLookupDisplay(lookupName: string) {
-        return new Promise<UIDisplayPart | null>((resolve, reject) => {
-            this.getLookupDisplayWithCallbacks(lookupName, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getLookupDisplayWithCallbacks(lookupName: string, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/uicfg/lookup/{lookupName}";
-        if (lookupName === undefined || lookupName === null)
-            throw new Error("The parameter 'lookupName' must be defined.");
-        url_ = url_.replace("{lookupName}", encodeURIComponent("" + lookupName));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetLookupDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetLookupDisplay(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetLookupDisplay(xhr: any): UIDisplayPart | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class ProjectKPIClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns list of KPI facts for the specified project
-     * @param projectID Full Project ID
-     */
-    getProjectKPIFacts(projectID: string) {
-        return new Promise<ProjKPIFact[] | null>((resolve, reject) => {
-            this.getProjectKPIFactsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectKPIFactsWithCallbacks(projectID: string, onSuccess?: (result: ProjKPIFact[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/KPI";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectKPIFactsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectKPIFacts(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetProjectKPIFacts(xhr: any): ProjKPIFact[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProjKPIFact.fromJS(item));
-            }
+            result200 = resultData200 ? Contact.fromJS(resultData200) : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -4494,322 +4420,104 @@ export class ProjectToolsClient {
     }
 }
 
-/** Primary Summary */
-export class ProjectSummary implements IProjectSummary {
-    /** Project ID */
-    project!: string;
-    /** Project Name */
-    projectName?: string | undefined;
-    /** Site Address Line 1 */
-    addr1?: string | undefined;
-    /** Site Address Line 2 */
-    addr2?: string | undefined;
-    /** Site Address City */
-    city?: string | undefined;
-    /** Site Address State */
-    state?: string | undefined;
-    /** Site Address Zip */
-    zip?: string | undefined;
-    /** County */
-    county?: string | undefined;
-    /** Description from Project Setup Scope */
-    description?: string | undefined;
-    /** Resolved Status */
-    statusText?: string | undefined;
-    /** External Status from Project Setup Tab */
-    externalStatus?: string | undefined;
-    /** External Schedule from Project Setup Tab */
-    externalSchedule?: string | undefined;
-    /** Person on Site Address */
-    person?: string | undefined;
-    /** Company */
-    company?: string | undefined;
-    /** Geo Latitude from Project Setup Tab */
-    latitude!: number;
-    /** Geo longitude from Project Setup Tab */
-    longitude!: number;
-    /** Start Date from Project Setup Dates tab */
-    startDate!: Date;
-    /** Finish Date from Project Setup Dates tab */
-    finishDate!: Date;
-    /** Key for this user on project team */
-    userProjectKey!: string;
-    /** Key for Project Setup Source Contact (Customer/Owner) */
-    sourceContact!: string;
-    /** Key for Image */
-    imageKey!: string;
-    /** TRUE if this project is on the user list */
-    userList!: boolean;
+export class ProjectKPIClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
-    constructor(data?: IProjectSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns list of KPI facts for the specified project
+     * @param projectID Full Project ID
+     */
+    getProjectKPIFacts(projectID: string) {
+        return new Promise<ProjKPIFact[] | null>((resolve, reject) => {
+            this.getProjectKPIFactsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectKPIFactsWithCallbacks(projectID: string, onSuccess?: (result: ProjKPIFact[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/KPI";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
             }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectKPIFactsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectKPIFacts(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
         }
     }
 
-    init(_data?: any) {
-        if (_data) {
-            this.project = _data["Project"];
-            this.projectName = _data["ProjectName"];
-            this.addr1 = _data["Addr1"];
-            this.addr2 = _data["Addr2"];
-            this.city = _data["City"];
-            this.state = _data["State"];
-            this.zip = _data["Zip"];
-            this.county = _data["County"];
-            this.description = _data["Description"];
-            this.statusText = _data["StatusText"];
-            this.externalStatus = _data["ExternalStatus"];
-            this.externalSchedule = _data["ExternalSchedule"];
-            this.person = _data["Person"];
-            this.company = _data["Company"];
-            this.latitude = _data["latitude"];
-            this.longitude = _data["longitude"];
-            this.startDate = _data["StartDate"] ? new Date(_data["StartDate"].toString()) : <any>undefined;
-            this.finishDate = _data["FinishDate"] ? new Date(_data["FinishDate"].toString()) : <any>undefined;
-            this.userProjectKey = _data["UserProjectKey"];
-            this.sourceContact = _data["SourceContact"];
-            this.imageKey = _data["ImageKey"];
-            this.userList = _data["UserList"];
-        }
-    }
+    protected processGetProjectKPIFacts(xhr: any): ProjKPIFact[] | null | null {
+        const status = xhr.status;
 
-    static fromJS(data: any): ProjectSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProjectSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["Project"] = this.project;
-        data["ProjectName"] = this.projectName;
-        data["Addr1"] = this.addr1;
-        data["Addr2"] = this.addr2;
-        data["City"] = this.city;
-        data["State"] = this.state;
-        data["Zip"] = this.zip;
-        data["County"] = this.county;
-        data["Description"] = this.description;
-        data["StatusText"] = this.statusText;
-        data["ExternalStatus"] = this.externalStatus;
-        data["ExternalSchedule"] = this.externalSchedule;
-        data["Person"] = this.person;
-        data["Company"] = this.company;
-        data["latitude"] = this.latitude;
-        data["longitude"] = this.longitude;
-        data["StartDate"] = this.startDate ? this.startDate.toISOString() : <any>undefined;
-        data["FinishDate"] = this.finishDate ? this.finishDate.toISOString() : <any>undefined;
-        data["UserProjectKey"] = this.userProjectKey;
-        data["SourceContact"] = this.sourceContact;
-        data["ImageKey"] = this.imageKey;
-        data["UserList"] = this.userList;
-        return data; 
-    }
-
-    clone(): ProjectSummary {
-        const json = this.toJSON();
-        let result = new ProjectSummary();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Primary Summary */
-export interface IProjectSummary {
-    /** Project ID */
-    project: string;
-    /** Project Name */
-    projectName?: string | undefined;
-    /** Site Address Line 1 */
-    addr1?: string | undefined;
-    /** Site Address Line 2 */
-    addr2?: string | undefined;
-    /** Site Address City */
-    city?: string | undefined;
-    /** Site Address State */
-    state?: string | undefined;
-    /** Site Address Zip */
-    zip?: string | undefined;
-    /** County */
-    county?: string | undefined;
-    /** Description from Project Setup Scope */
-    description?: string | undefined;
-    /** Resolved Status */
-    statusText?: string | undefined;
-    /** External Status from Project Setup Tab */
-    externalStatus?: string | undefined;
-    /** External Schedule from Project Setup Tab */
-    externalSchedule?: string | undefined;
-    /** Person on Site Address */
-    person?: string | undefined;
-    /** Company */
-    company?: string | undefined;
-    /** Geo Latitude from Project Setup Tab */
-    latitude: number;
-    /** Geo longitude from Project Setup Tab */
-    longitude: number;
-    /** Start Date from Project Setup Dates tab */
-    startDate: Date;
-    /** Finish Date from Project Setup Dates tab */
-    finishDate: Date;
-    /** Key for this user on project team */
-    userProjectKey: string;
-    /** Key for Project Setup Source Contact (Customer/Owner) */
-    sourceContact: string;
-    /** Key for Image */
-    imageKey: string;
-    /** TRUE if this project is on the user list */
-    userList: boolean;
-}
-
-/** Various common filters - not every filter is supported by every query */
-export class QueryFilters implements IQueryFilters {
-    /** Project Mask (eg GC%) */
-    projectLike?: string | undefined;
-    /** Applies to common text (title, description, etc) */
-    titleLike?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    userKey?: string | undefined;
-    /** Key must match an existing document type
-00000000-0000-0000-0000-000000000000   */
-    forDocType?: string | undefined;
-    /** Key for Program or empty key */
-    programKey?: string | undefined;
-    /** Default 2000-01-01 */
-    fromDate?: Date | undefined;
-    /** Default today */
-    thruDate?: Date | undefined;
-    /** Default is false */
-    newOnly!: boolean;
-    /** Default is false */
-    includeHidden!: boolean;
-    /** Name Value Pair filter values (semicolon separated) */
-    nvpFilters?: string | undefined;
-
-    constructor(data?: IQueryFilters) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProjKPIFact.fromJS(item));
             }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.projectLike = _data["ProjectLike"];
-            this.titleLike = _data["TitleLike"];
-            this.userKey = _data["UserKey"];
-            this.forDocType = _data["ForDocType"];
-            this.programKey = _data["ProgramKey"];
-            this.fromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
-            this.thruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
-            this.newOnly = _data["NewOnly"];
-            this.includeHidden = _data["IncludeHidden"];
-            this.nvpFilters = _data["nvpFilters"];
-        }
-    }
-
-    static fromJS(data: any): QueryFilters {
-        data = typeof data === 'object' ? data : {};
-        let result = new QueryFilters();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["ProjectLike"] = this.projectLike;
-        data["TitleLike"] = this.titleLike;
-        data["UserKey"] = this.userKey;
-        data["ForDocType"] = this.forDocType;
-        data["ProgramKey"] = this.programKey;
-        data["FromDate"] = this.fromDate ? this.fromDate.toISOString() : <any>undefined;
-        data["ThruDate"] = this.thruDate ? this.thruDate.toISOString() : <any>undefined;
-        data["NewOnly"] = this.newOnly;
-        data["IncludeHidden"] = this.includeHidden;
-        data["nvpFilters"] = this.nvpFilters;
-        return data; 
-    }
-
-    clone(): QueryFilters {
-        const json = this.toJSON();
-        let result = new QueryFilters();
-        result.init(json);
-        return result;
+        return null;
     }
 }
 
-/** Various common filters - not every filter is supported by every query */
-export interface IQueryFilters {
-    /** Project Mask (eg GC%) */
-    projectLike?: string | undefined;
-    /** Applies to common text (title, description, etc) */
-    titleLike?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    userKey?: string | undefined;
-    /** Key must match an existing document type
-00000000-0000-0000-0000-000000000000   */
-    forDocType?: string | undefined;
-    /** Key for Program or empty key */
-    programKey?: string | undefined;
-    /** Default 2000-01-01 */
-    fromDate?: Date | undefined;
-    /** Default today */
-    thruDate?: Date | undefined;
-    /** Default is false */
-    newOnly: boolean;
-    /** Default is false */
-    includeHidden: boolean;
-    /** Name Value Pair filter values (semicolon separated) */
-    nvpFilters?: string | undefined;
-}
-
-/** Summary information about a contact */
-export class ContactSummary implements IContactSummary {
-    /** Link to user/contact */
+/** Readonly description of an cost transaction posted to a project */
+export class FileAccessHistory implements IFileAccessHistory {
+    /** User Name   */
+    userName?: string | undefined;
+    /** File Name   */
+    fileName?: string | undefined;
+    /** File Revision number (starts with 1) */
+    revID!: number;
+    /** When this access transaction occurred */
+    accessed!: Date;
+    /** Type of Access */
+    accessType?: string | undefined;
+    /** The Long Title of the document in whose context the access took place */
+    withDocument?: string | undefined;
+    /** Additional information about access  */
+    accessInfo?: string | undefined;
+    /** Was the file in cache */
+    usedCache!: boolean;
+    /** User Key  for this transaction  */
     userKey!: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    userName?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    sortName?: string | undefined;
-    /** Standard SMTP Email Address */
-    email?: string | undefined;
-    /** Which phone is preferred */
-    usePhone?: string | undefined;
-    /** Predominantly Obsolete */
-    fax?: string | undefined;
-    /** When True, can log in to sfPMS */
-    sfUser!: boolean;
-    /** Emp, Vendor, Customer, Standard */
-    contactType?: string | undefined;
-    /** Bit coded  */
-    contactFlags!: number;
-    /** ID from external source (customer or vendor ID, revision or batch id) */
-    externalID?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    company?: string | undefined;
-    /** For Vendors, indicate related CSI  */
-    cSIList?: string | undefined;
-    /** When false, this row is ignored and ineffective */
-    active!: boolean;
-    /** When true, there are no references to this contact */
-    okToDelete!: boolean;
-    /** When true, this contact came from an external source */
-    isXTS!: boolean;
-    /** When true, external changes to this contact are currently ignored */
-    xTSBlockIn!: boolean;
-    /** When true, changes to this contact are not being shared with external peer */
-    xTSBlockOut!: boolean;
-    /** When true, this is the company contact - not a person at the company */
-    isPrimary!: boolean;
+    /** Document Key  for this transaction  */
+    docMasterKey?: string | undefined;
 
-    constructor(data?: IContactSummary) {
+    constructor(data?: IFileAccessHistory) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4820,641 +4528,101 @@ export class ContactSummary implements IContactSummary {
 
     init(_data?: any) {
         if (_data) {
-            this.userKey = _data["UserKey"];
             this.userName = _data["UserName"];
-            this.sortName = _data["SortName"];
-            this.email = _data["Email"];
-            this.usePhone = _data["UsePhone"];
-            this.fax = _data["Fax"];
-            this.sfUser = _data["sfUser"];
-            this.contactType = _data["ContactType"];
-            this.contactFlags = _data["ContactFlags"];
-            this.externalID = _data["ExternalID"];
-            this.company = _data["Company"];
-            this.cSIList = _data["CSIList"];
-            this.active = _data["Active"];
-            this.okToDelete = _data["OkToDelete"];
-            this.isXTS = _data["IsXTS"];
-            this.xTSBlockIn = _data["XTSBlockIn"];
-            this.xTSBlockOut = _data["XTSBlockOut"];
-            this.isPrimary = _data["IsPrimary"];
-        }
-    }
-
-    static fromJS(data: any): ContactSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new ContactSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserKey"] = this.userKey;
-        data["UserName"] = this.userName;
-        data["SortName"] = this.sortName;
-        data["Email"] = this.email;
-        data["UsePhone"] = this.usePhone;
-        data["Fax"] = this.fax;
-        data["sfUser"] = this.sfUser;
-        data["ContactType"] = this.contactType;
-        data["ContactFlags"] = this.contactFlags;
-        data["ExternalID"] = this.externalID;
-        data["Company"] = this.company;
-        data["CSIList"] = this.cSIList;
-        data["Active"] = this.active;
-        data["OkToDelete"] = this.okToDelete;
-        data["IsXTS"] = this.isXTS;
-        data["XTSBlockIn"] = this.xTSBlockIn;
-        data["XTSBlockOut"] = this.xTSBlockOut;
-        data["IsPrimary"] = this.isPrimary;
-        return data; 
-    }
-
-    clone(): ContactSummary {
-        const json = this.toJSON();
-        let result = new ContactSummary();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Summary information about a contact */
-export interface IContactSummary {
-    /** Link to user/contact */
-    userKey: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    userName?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    sortName?: string | undefined;
-    /** Standard SMTP Email Address */
-    email?: string | undefined;
-    /** Which phone is preferred */
-    usePhone?: string | undefined;
-    /** Predominantly Obsolete */
-    fax?: string | undefined;
-    /** When True, can log in to sfPMS */
-    sfUser: boolean;
-    /** Emp, Vendor, Customer, Standard */
-    contactType?: string | undefined;
-    /** Bit coded  */
-    contactFlags: number;
-    /** ID from external source (customer or vendor ID, revision or batch id) */
-    externalID?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    company?: string | undefined;
-    /** For Vendors, indicate related CSI  */
-    cSIList?: string | undefined;
-    /** When false, this row is ignored and ineffective */
-    active: boolean;
-    /** When true, there are no references to this contact */
-    okToDelete: boolean;
-    /** When true, this contact came from an external source */
-    isXTS: boolean;
-    /** When true, external changes to this contact are currently ignored */
-    xTSBlockIn: boolean;
-    /** When true, changes to this contact are not being shared with external peer */
-    xTSBlockOut: boolean;
-    /** When true, this is the company contact - not a person at the company */
-    isPrimary: boolean;
-}
-
-/** Various filters for contact search */
-export class ContactFilters implements IContactFilters {
-    /** Name like */
-    nameLike?: string | undefined;
-    /** Email  */
-    emailLike?: string | undefined;
-    /** Company like  */
-    companyLike?: string | undefined;
-    /** Location */
-    locationLike?: string | undefined;
-    /** ID like (vendor, customer, employee IDs) */
-    iDLike?: string | undefined;
-    /** For Vendors, specified related CSI  */
-    cSIListLike?: string | undefined;
-    /** Phone Like (matches any phone number) */
-    phoneLike?: string | undefined;
-    /** When true, result is limited to  */
-    users!: boolean;
-    /** When true, result is limited to  */
-    customers!: boolean;
-    /** When true, result is limited to  */
-    employee!: boolean;
-    /** When true, result is limited to  */
-    public!: boolean;
-    /** When true, result is limited to primary company contacts  */
-    company!: boolean;
-    /** When true, result is limited to  */
-    vendors!: boolean;
-    /** 1==Active;0==Inactive; 2==Both */
-    contactState!: number;
-    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
-    roleKey?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    userKey?: string | undefined;
-    /** Default 2000-01-01 */
-    fromDate?: Date | undefined;
-    /** Default today */
-    thruDate?: Date | undefined;
-
-    constructor(data?: IContactFilters) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.nameLike = _data["NameLike"];
-            this.emailLike = _data["EmailLike"];
-            this.companyLike = _data["CompanyLike"];
-            this.locationLike = _data["LocationLike"];
-            this.iDLike = _data["IDLike"];
-            this.cSIListLike = _data["CSIListLike"];
-            this.phoneLike = _data["PhoneLike"];
-            this.users = _data["Users"];
-            this.customers = _data["Customers"];
-            this.employee = _data["Employee"];
-            this.public = _data["Public"];
-            this.company = _data["Company"];
-            this.vendors = _data["Vendors"];
-            this.contactState = _data["ContactState"];
-            this.roleKey = _data["RoleKey"];
+            this.fileName = _data["FileName"];
+            this.revID = _data["RevID"];
+            this.accessed = _data["Accessed"] ? new Date(_data["Accessed"].toString()) : <any>undefined;
+            this.accessType = _data["AccessType"];
+            this.withDocument = _data["WithDocument"];
+            this.accessInfo = _data["AccessInfo"];
+            this.usedCache = _data["UsedCache"];
             this.userKey = _data["UserKey"];
-            this.fromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
-            this.thruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
+            this.docMasterKey = _data["DocMasterKey"];
         }
     }
 
-    static fromJS(data: any): ContactFilters {
+    static fromJS(data: any): FileAccessHistory {
         data = typeof data === 'object' ? data : {};
-        let result = new ContactFilters();
+        let result = new FileAccessHistory();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["NameLike"] = this.nameLike;
-        data["EmailLike"] = this.emailLike;
-        data["CompanyLike"] = this.companyLike;
-        data["LocationLike"] = this.locationLike;
-        data["IDLike"] = this.iDLike;
-        data["CSIListLike"] = this.cSIListLike;
-        data["PhoneLike"] = this.phoneLike;
-        data["Users"] = this.users;
-        data["Customers"] = this.customers;
-        data["Employee"] = this.employee;
-        data["Public"] = this.public;
-        data["Company"] = this.company;
-        data["Vendors"] = this.vendors;
-        data["ContactState"] = this.contactState;
-        data["RoleKey"] = this.roleKey;
-        data["UserKey"] = this.userKey;
-        data["FromDate"] = this.fromDate ? this.fromDate.toISOString() : <any>undefined;
-        data["ThruDate"] = this.thruDate ? this.thruDate.toISOString() : <any>undefined;
-        return data; 
-    }
-
-    clone(): ContactFilters {
-        const json = this.toJSON();
-        let result = new ContactFilters();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Various filters for contact search */
-export interface IContactFilters {
-    /** Name like */
-    nameLike?: string | undefined;
-    /** Email  */
-    emailLike?: string | undefined;
-    /** Company like  */
-    companyLike?: string | undefined;
-    /** Location */
-    locationLike?: string | undefined;
-    /** ID like (vendor, customer, employee IDs) */
-    iDLike?: string | undefined;
-    /** For Vendors, specified related CSI  */
-    cSIListLike?: string | undefined;
-    /** Phone Like (matches any phone number) */
-    phoneLike?: string | undefined;
-    /** When true, result is limited to  */
-    users: boolean;
-    /** When true, result is limited to  */
-    customers: boolean;
-    /** When true, result is limited to  */
-    employee: boolean;
-    /** When true, result is limited to  */
-    public: boolean;
-    /** When true, result is limited to primary company contacts  */
-    company: boolean;
-    /** When true, result is limited to  */
-    vendors: boolean;
-    /** 1==Active;0==Inactive; 2==Both */
-    contactState: number;
-    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
-    roleKey?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    userKey?: string | undefined;
-    /** Default 2000-01-01 */
-    fromDate?: Date | undefined;
-    /** Default today */
-    thruDate?: Date | undefined;
-}
-
-/** Describes a contact */
-export class Contact implements IContact {
-    /** Key for this user/contact */
-    userKey!: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    userName?: string | undefined;
-    /** Login name */
-    userLogin?: string | undefined;
-    /** Source of external authentication that points to this contact */
-    federatedIdentityInfo?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    sortName?: string | undefined;
-    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
-    familiarName?: string | undefined;
-    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
-    salutation?: string | undefined;
-    /** Short description */
-    title?: string | undefined;
-    /** Free form; replaces ~R placeholder in Salutation */
-    role?: string | undefined;
-    /** Standard SMTP Email Address */
-    eMail?: string | undefined;
-    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
-    phone?: string | undefined;
-    /** Predominantly Obsolete */
-    fax?: string | undefined;
-    /** Mobile phone number */
-    cell?: string | undefined;
-    /** Gets phone designation  */
-    pager?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    company?: string | undefined;
-    /** First line of address */
-    address?: string | undefined;
-    /** Second line of address */
-    address2?: string | undefined;
-    /** City (for address) */
-    city?: string | undefined;
-    /** For Address */
-    state?: string | undefined;
-    /** Zipcode for address */
-    zip?: string | undefined;
-    /** Uses xsfCodeSet, not used in address */
-    country?: string | undefined;
-    /** Applicable County / Organizational Juristiction (not used in address) */
-    county?: string | undefined;
-    /** EST, PST, etc */
-    timeZone?: string | undefined;
-    /** Instant Messaging Service */
-    iMService?: string | undefined;
-    /** Instant Messaging Handle */
-    iMHandle?: string | undefined;
-    /** URL */
-    webURL?: string | undefined;
-    /** Vendor Company ID */
-    vendorID?: string | undefined;
-    /** Weak link to Solomon */
-    employeeID?: string | undefined;
-    /** Emp, Vendor, Customer, Standard */
-    contactType?: string | undefined;
-    /** Web; E-mail; Fax; Hard Copy */
-    routeVia?: string | undefined;
-    /** 1=Phone; 2=Cell; 3-Pager */
-    showPhone!: number;
-    /** Key to role that defines who can proxy for this contact */
-    routeeProxy?: string | undefined;
-    /** A role with a responsibility */
-    defaultResponsibility!: string;
-    /** Key to primary company */
-    contactCompanyKey!: string;
-    /** HTML Markup for signature in templates */
-    signature?: string | undefined;
-    /** Key to file in catalog that contains image */
-    likeness?: string | undefined;
-    /** When TRUE, trigger updates address if company address changes */
-    useCompanyAddr!: boolean;
-    /** When true, new projects are added to the dashboard automatically */
-    showNewProjects!: boolean;
-    /** When True, can log in to dashboard */
-    sfUser!: boolean;
-    /** When true, this contact is included in lookups  */
-    isPublic!: boolean;
-    /** When false, this row is ignored and ineffective */
-    active!: boolean;
-    /** When true, is also an integrated DSL User */
-    solomonUser!: boolean;
-    /** When TRUE, expiration date is advanced each day the user logs in */
-    slidingExpiration!: boolean;
-    /** When TRUE, user must change password */
-    pWMustChange!: boolean;
-    /** When TRUE, user can be locked out because of password age */
-    pWAging!: boolean;
-    /** Company Division ID */
-    divisionID?: string | undefined;
-    /** Why user has been blocked */
-    lockoutReason?: string | undefined;
-    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
-    orgLevel!: number;
-    /** Checksum of all externally syched data */
-    synchCheck!: number;
-    /** Number of consecutive login failures (reset upon success) */
-    failedLoginRun!: number;
-    /** Email notifications suppressed until this time */
-    suppressNotifyUntil?: Date | undefined;
-    /** Set by data layer each time the user logs in */
-    lastLogin?: Date | undefined;
-    /** Date when password was last changed; can be null */
-    lastPWChange?: Date | undefined;
-    /** User cannot login until this time */
-    lockedOutUntil?: Date | undefined;
-    /** Date of Expiration for this account */
-    expiration?: Date | undefined;
-    /** When entity was first recorded; read only */
-    created!: Date;
-
-    constructor(data?: IContact) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userKey = _data["UserKey"];
-            this.userName = _data["UserName"];
-            this.userLogin = _data["UserLogin"];
-            this.federatedIdentityInfo = _data["FederatedIdentityInfo"];
-            this.sortName = _data["SortName"];
-            this.familiarName = _data["FamiliarName"];
-            this.salutation = _data["Salutation"];
-            this.title = _data["Title"];
-            this.role = _data["Role"];
-            this.eMail = _data["EMail"];
-            this.phone = _data["phone"];
-            this.fax = _data["fax"];
-            this.cell = _data["cell"];
-            this.pager = _data["pager"];
-            this.company = _data["Company"];
-            this.address = _data["address"];
-            this.address2 = _data["address2"];
-            this.city = _data["city"];
-            this.state = _data["state"];
-            this.zip = _data["zip"];
-            this.country = _data["Country"];
-            this.county = _data["County"];
-            this.timeZone = _data["TimeZone"];
-            this.iMService = _data["IMService"];
-            this.iMHandle = _data["IMHandle"];
-            this.webURL = _data["WebURL"];
-            this.vendorID = _data["VendorID"];
-            this.employeeID = _data["EmployeeID"];
-            this.contactType = _data["ContactType"];
-            this.routeVia = _data["RouteVia"];
-            this.showPhone = _data["ShowPhone"];
-            this.routeeProxy = _data["RouteeProxy"];
-            this.defaultResponsibility = _data["DefaultResponsibility"];
-            this.contactCompanyKey = _data["ContactCompanyKey"];
-            this.signature = _data["Signature"];
-            this.likeness = _data["Likeness"];
-            this.useCompanyAddr = _data["UseCompanyAddr"];
-            this.showNewProjects = _data["ShowNewProjects"];
-            this.sfUser = _data["sfUser"];
-            this.isPublic = _data["IsPublic"];
-            this.active = _data["Active"];
-            this.solomonUser = _data["SolomonUser"];
-            this.slidingExpiration = _data["SlidingExpiration"];
-            this.pWMustChange = _data["PWMustChange"];
-            this.pWAging = _data["PWAging"];
-            this.divisionID = _data["DivisionID"];
-            this.lockoutReason = _data["LockoutReason"];
-            this.orgLevel = _data["OrgLevel"];
-            this.synchCheck = _data["SynchCheck"];
-            this.failedLoginRun = _data["FailedLoginRun"];
-            this.suppressNotifyUntil = _data["SuppressNotifyUntil"] ? new Date(_data["SuppressNotifyUntil"].toString()) : <any>undefined;
-            this.lastLogin = _data["LastLogin"] ? new Date(_data["LastLogin"].toString()) : <any>undefined;
-            this.lastPWChange = _data["LastPWChange"] ? new Date(_data["LastPWChange"].toString()) : <any>undefined;
-            this.lockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
-            this.expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
-            this.created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): Contact {
-        data = typeof data === 'object' ? data : {};
-        let result = new Contact();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserKey"] = this.userKey;
         data["UserName"] = this.userName;
-        data["UserLogin"] = this.userLogin;
-        data["FederatedIdentityInfo"] = this.federatedIdentityInfo;
-        data["SortName"] = this.sortName;
-        data["FamiliarName"] = this.familiarName;
-        data["Salutation"] = this.salutation;
-        data["Title"] = this.title;
-        data["Role"] = this.role;
-        data["EMail"] = this.eMail;
-        data["phone"] = this.phone;
-        data["fax"] = this.fax;
-        data["cell"] = this.cell;
-        data["pager"] = this.pager;
-        data["Company"] = this.company;
-        data["address"] = this.address;
-        data["address2"] = this.address2;
-        data["city"] = this.city;
-        data["state"] = this.state;
-        data["zip"] = this.zip;
-        data["Country"] = this.country;
-        data["County"] = this.county;
-        data["TimeZone"] = this.timeZone;
-        data["IMService"] = this.iMService;
-        data["IMHandle"] = this.iMHandle;
-        data["WebURL"] = this.webURL;
-        data["VendorID"] = this.vendorID;
-        data["EmployeeID"] = this.employeeID;
-        data["ContactType"] = this.contactType;
-        data["RouteVia"] = this.routeVia;
-        data["ShowPhone"] = this.showPhone;
-        data["RouteeProxy"] = this.routeeProxy;
-        data["DefaultResponsibility"] = this.defaultResponsibility;
-        data["ContactCompanyKey"] = this.contactCompanyKey;
-        data["Signature"] = this.signature;
-        data["Likeness"] = this.likeness;
-        data["UseCompanyAddr"] = this.useCompanyAddr;
-        data["ShowNewProjects"] = this.showNewProjects;
-        data["sfUser"] = this.sfUser;
-        data["IsPublic"] = this.isPublic;
-        data["Active"] = this.active;
-        data["SolomonUser"] = this.solomonUser;
-        data["SlidingExpiration"] = this.slidingExpiration;
-        data["PWMustChange"] = this.pWMustChange;
-        data["PWAging"] = this.pWAging;
-        data["DivisionID"] = this.divisionID;
-        data["LockoutReason"] = this.lockoutReason;
-        data["OrgLevel"] = this.orgLevel;
-        data["SynchCheck"] = this.synchCheck;
-        data["FailedLoginRun"] = this.failedLoginRun;
-        data["SuppressNotifyUntil"] = this.suppressNotifyUntil ? this.suppressNotifyUntil.toISOString() : <any>undefined;
-        data["LastLogin"] = this.lastLogin ? this.lastLogin.toISOString() : <any>undefined;
-        data["LastPWChange"] = this.lastPWChange ? this.lastPWChange.toISOString() : <any>undefined;
-        data["LockedOutUntil"] = this.lockedOutUntil ? this.lockedOutUntil.toISOString() : <any>undefined;
-        data["Expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
-        data["Created"] = this.created ? this.created.toISOString() : <any>undefined;
+        data["FileName"] = this.fileName;
+        data["RevID"] = this.revID;
+        data["Accessed"] = this.accessed ? this.accessed.toISOString() : <any>undefined;
+        data["AccessType"] = this.accessType;
+        data["WithDocument"] = this.withDocument;
+        data["AccessInfo"] = this.accessInfo;
+        data["UsedCache"] = this.usedCache;
+        data["UserKey"] = this.userKey;
+        data["DocMasterKey"] = this.docMasterKey;
         return data; 
     }
 
-    clone(): Contact {
+    clone(): FileAccessHistory {
         const json = this.toJSON();
-        let result = new Contact();
+        let result = new FileAccessHistory();
         result.init(json);
         return result;
     }
 }
 
-/** Describes a contact */
-export interface IContact {
-    /** Key for this user/contact */
-    userKey: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+/** Readonly description of an cost transaction posted to a project */
+export interface IFileAccessHistory {
+    /** User Name   */
     userName?: string | undefined;
-    /** Login name */
-    userLogin?: string | undefined;
-    /** Source of external authentication that points to this contact */
-    federatedIdentityInfo?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    sortName?: string | undefined;
-    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
-    familiarName?: string | undefined;
-    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
-    salutation?: string | undefined;
-    /** Short description */
-    title?: string | undefined;
-    /** Free form; replaces ~R placeholder in Salutation */
-    role?: string | undefined;
-    /** Standard SMTP Email Address */
-    eMail?: string | undefined;
-    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
-    phone?: string | undefined;
-    /** Predominantly Obsolete */
-    fax?: string | undefined;
-    /** Mobile phone number */
-    cell?: string | undefined;
-    /** Gets phone designation  */
-    pager?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    company?: string | undefined;
-    /** First line of address */
-    address?: string | undefined;
-    /** Second line of address */
-    address2?: string | undefined;
-    /** City (for address) */
-    city?: string | undefined;
-    /** For Address */
-    state?: string | undefined;
-    /** Zipcode for address */
-    zip?: string | undefined;
-    /** Uses xsfCodeSet, not used in address */
-    country?: string | undefined;
-    /** Applicable County / Organizational Juristiction (not used in address) */
-    county?: string | undefined;
-    /** EST, PST, etc */
-    timeZone?: string | undefined;
-    /** Instant Messaging Service */
-    iMService?: string | undefined;
-    /** Instant Messaging Handle */
-    iMHandle?: string | undefined;
-    /** URL */
-    webURL?: string | undefined;
-    /** Vendor Company ID */
-    vendorID?: string | undefined;
-    /** Weak link to Solomon */
-    employeeID?: string | undefined;
-    /** Emp, Vendor, Customer, Standard */
-    contactType?: string | undefined;
-    /** Web; E-mail; Fax; Hard Copy */
-    routeVia?: string | undefined;
-    /** 1=Phone; 2=Cell; 3-Pager */
-    showPhone: number;
-    /** Key to role that defines who can proxy for this contact */
-    routeeProxy?: string | undefined;
-    /** A role with a responsibility */
-    defaultResponsibility: string;
-    /** Key to primary company */
-    contactCompanyKey: string;
-    /** HTML Markup for signature in templates */
-    signature?: string | undefined;
-    /** Key to file in catalog that contains image */
-    likeness?: string | undefined;
-    /** When TRUE, trigger updates address if company address changes */
-    useCompanyAddr: boolean;
-    /** When true, new projects are added to the dashboard automatically */
-    showNewProjects: boolean;
-    /** When True, can log in to dashboard */
-    sfUser: boolean;
-    /** When true, this contact is included in lookups  */
-    isPublic: boolean;
-    /** When false, this row is ignored and ineffective */
-    active: boolean;
-    /** When true, is also an integrated DSL User */
-    solomonUser: boolean;
-    /** When TRUE, expiration date is advanced each day the user logs in */
-    slidingExpiration: boolean;
-    /** When TRUE, user must change password */
-    pWMustChange: boolean;
-    /** When TRUE, user can be locked out because of password age */
-    pWAging: boolean;
-    /** Company Division ID */
-    divisionID?: string | undefined;
-    /** Why user has been blocked */
-    lockoutReason?: string | undefined;
-    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
-    orgLevel: number;
-    /** Checksum of all externally syched data */
-    synchCheck: number;
-    /** Number of consecutive login failures (reset upon success) */
-    failedLoginRun: number;
-    /** Email notifications suppressed until this time */
-    suppressNotifyUntil?: Date | undefined;
-    /** Set by data layer each time the user logs in */
-    lastLogin?: Date | undefined;
-    /** Date when password was last changed; can be null */
-    lastPWChange?: Date | undefined;
-    /** User cannot login until this time */
-    lockedOutUntil?: Date | undefined;
-    /** Date of Expiration for this account */
-    expiration?: Date | undefined;
-    /** When entity was first recorded; read only */
-    created: Date;
+    /** File Name   */
+    fileName?: string | undefined;
+    /** File Revision number (starts with 1) */
+    revID: number;
+    /** When this access transaction occurred */
+    accessed: Date;
+    /** Type of Access */
+    accessType?: string | undefined;
+    /** The Long Title of the document in whose context the access took place */
+    withDocument?: string | undefined;
+    /** Additional information about access  */
+    accessInfo?: string | undefined;
+    /** Was the file in cache */
+    usedCache: boolean;
+    /** User Key  for this transaction  */
+    userKey: string;
+    /** Document Key  for this transaction  */
+    docMasterKey?: string | undefined;
 }
 
-/** Attributes describing a member of a project team */
-export class Suggestion implements ISuggestion {
-    /** Key (empty if not applicable) */
-    key?: string | undefined;
-    /** display  */
-    label?: string | undefined;
-    /** value (if key is specified, this is the display value and key is the data value) */
-    value?: string | undefined;
+/** Information about file versions */
+export class FileVersion implements IFileVersion {
+    /** Link to xsfFileVersionInfo */
+    fileVerKey!: string;
+    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
+    revID!: number;
+    /** MD5 hash, combined with length and used for duplicate detection */
+    dataHash?: string | undefined;
+    /** External reference */
+    sourceRevision?: string | undefined;
+    /** When stored */
+    cataloged!: Date;
+    /** When Approved */
+    approved!: Date;
+    /** User that approved this */
+    approvedBy!: string;
+    /** Links to a user/contact  */
+    fromUser!: string;
+    /** text from binary (for index/search) */
+    txtData?: string | undefined;
+    /** Size of file binary data in bytes  */
+    binSize!: number;
+    /** True on the file version that is the newest one with approved not empty  */
+    isCurrentApprovedVersion!: boolean;
+    /** When not empty, reason this version cannot be removed */
+    noCanDelete?: string | undefined;
 
-    constructor(data?: ISuggestion) {
+    constructor(data?: IFileVersion) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5465,126 +4633,79 @@ export class Suggestion implements ISuggestion {
 
     init(_data?: any) {
         if (_data) {
-            this.key = _data["key"];
-            this.label = _data["label"];
-            this.value = _data["value"];
+            this.fileVerKey = _data["FileVerKey"];
+            this.revID = _data["RevID"];
+            this.dataHash = _data["DataHash"];
+            this.sourceRevision = _data["SourceRevision"];
+            this.cataloged = _data["Cataloged"] ? new Date(_data["Cataloged"].toString()) : <any>undefined;
+            this.approved = _data["Approved"] ? new Date(_data["Approved"].toString()) : <any>undefined;
+            this.approvedBy = _data["ApprovedBy"];
+            this.fromUser = _data["FromUser"];
+            this.txtData = _data["TxtData"];
+            this.binSize = _data["BinSize"];
+            this.isCurrentApprovedVersion = _data["IsCurrentApprovedVersion"];
+            this.noCanDelete = _data["NoCanDelete"];
         }
     }
 
-    static fromJS(data: any): Suggestion {
+    static fromJS(data: any): FileVersion {
         data = typeof data === 'object' ? data : {};
-        let result = new Suggestion();
+        let result = new FileVersion();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["key"] = this.key;
-        data["label"] = this.label;
-        data["value"] = this.value;
+        data["FileVerKey"] = this.fileVerKey;
+        data["RevID"] = this.revID;
+        data["DataHash"] = this.dataHash;
+        data["SourceRevision"] = this.sourceRevision;
+        data["Cataloged"] = this.cataloged ? this.cataloged.toISOString() : <any>undefined;
+        data["Approved"] = this.approved ? this.approved.toISOString() : <any>undefined;
+        data["ApprovedBy"] = this.approvedBy;
+        data["FromUser"] = this.fromUser;
+        data["TxtData"] = this.txtData;
+        data["BinSize"] = this.binSize;
+        data["IsCurrentApprovedVersion"] = this.isCurrentApprovedVersion;
+        data["NoCanDelete"] = this.noCanDelete;
         return data; 
     }
 
-    clone(): Suggestion {
+    clone(): FileVersion {
         const json = this.toJSON();
-        let result = new Suggestion();
+        let result = new FileVersion();
         result.init(json);
         return result;
     }
 }
 
-/** Attributes describing a member of a project team */
-export interface ISuggestion {
-    /** Key (empty if not applicable) */
-    key?: string | undefined;
-    /** display  */
-    label?: string | undefined;
-    /** value (if key is specified, this is the display value and key is the data value) */
-    value?: string | undefined;
-}
-
-/** Attributes describing a choice defined in Code Maintenance - for context UI */
-export class CodeChoice implements ICodeChoice {
-    /** Name for a set of choices */
-    setName!: string;
-    /** Code */
-    code!: string;
-    /** Display Value  */
-    description!: string;
-    /** For cascading codes, names the next code set */
-    nextSet?: string | undefined;
-    /** True if code is still active */
-    active!: boolean;
-    /** True if code is allowed for new records */
-    onAdd!: boolean;
-    /** Code Flag - use varies by code set */
-    codeFlag!: boolean;
-
-    constructor(data?: ICodeChoice) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.setName = _data["SetName"];
-            this.code = _data["Code"];
-            this.description = _data["Description"];
-            this.nextSet = _data["NextSet"];
-            this.active = _data["Active"];
-            this.onAdd = _data["OnAdd"];
-            this.codeFlag = _data["CodeFlag"];
-        }
-    }
-
-    static fromJS(data: any): CodeChoice {
-        data = typeof data === 'object' ? data : {};
-        let result = new CodeChoice();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["SetName"] = this.setName;
-        data["Code"] = this.code;
-        data["Description"] = this.description;
-        data["NextSet"] = this.nextSet;
-        data["Active"] = this.active;
-        data["OnAdd"] = this.onAdd;
-        data["CodeFlag"] = this.codeFlag;
-        return data; 
-    }
-
-    clone(): CodeChoice {
-        const json = this.toJSON();
-        let result = new CodeChoice();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Attributes describing a choice defined in Code Maintenance - for context UI */
-export interface ICodeChoice {
-    /** Name for a set of choices */
-    setName: string;
-    /** Code */
-    code: string;
-    /** Display Value  */
-    description: string;
-    /** For cascading codes, names the next code set */
-    nextSet?: string | undefined;
-    /** True if code is still active */
-    active: boolean;
-    /** True if code is allowed for new records */
-    onAdd: boolean;
-    /** Code Flag - use varies by code set */
-    codeFlag: boolean;
+/** Information about file versions */
+export interface IFileVersion {
+    /** Link to xsfFileVersionInfo */
+    fileVerKey: string;
+    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
+    revID: number;
+    /** MD5 hash, combined with length and used for duplicate detection */
+    dataHash?: string | undefined;
+    /** External reference */
+    sourceRevision?: string | undefined;
+    /** When stored */
+    cataloged: Date;
+    /** When Approved */
+    approved: Date;
+    /** User that approved this */
+    approvedBy: string;
+    /** Links to a user/contact  */
+    fromUser: string;
+    /** text from binary (for index/search) */
+    txtData?: string | undefined;
+    /** Size of file binary data in bytes  */
+    binSize: number;
+    /** True on the file version that is the newest one with approved not empty  */
+    isCurrentApprovedVersion: boolean;
+    /** When not empty, reason this version cannot be removed */
+    noCanDelete?: string | undefined;
 }
 
 export enum HttpStatusCode {
@@ -7196,443 +6317,6 @@ export interface IRelatedItemDetail {
     uOM?: string | undefined;
 }
 
-/** Legacy Site Authentication */
-export class SiteLogin implements ISiteLogin {
-    /** User ID EG: george@acme.com */
-    uID?: string | undefined;
-    /** Password */
-    pW?: string | undefined;
-    /** Set to TRUE if password has already been hashed (rare) */
-    isHashed!: boolean;
-
-    constructor(data?: ISiteLogin) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.uID = _data["UID"];
-            this.pW = _data["PW"];
-            this.isHashed = _data["IsHashed"];
-        }
-    }
-
-    static fromJS(data: any): SiteLogin {
-        data = typeof data === 'object' ? data : {};
-        let result = new SiteLogin();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UID"] = this.uID;
-        data["PW"] = this.pW;
-        data["IsHashed"] = this.isHashed;
-        return data; 
-    }
-
-    clone(): SiteLogin {
-        const json = this.toJSON();
-        let result = new SiteLogin();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Legacy Site Authentication */
-export interface ISiteLogin {
-    /** User ID EG: george@acme.com */
-    uID?: string | undefined;
-    /** Password */
-    pW?: string | undefined;
-    /** Set to TRUE if password has already been hashed (rare) */
-    isHashed: boolean;
-}
-
-/** Attributes describing the currently authenticated user */
-export class CurrentUser implements ICurrentUser {
-    /** User Key */
-    userKey!: string;
-    /** Login ID for user in name@domain.com or similar format */
-    userLoginName?: string | undefined;
-    /** Full name, eg John M. Smithe */
-    fullName?: string | undefined;
-    /** Email Address */
-    email?: string | undefined;
-    /** True if user will have to change PW soon */
-    pWMustChange!: boolean;
-    /** Three character time zone designation */
-    userTimeZone?: string | undefined;
-    /** +/- Time offset from server */
-    tZOffset!: number;
-    /** Password Aging is enabled for this user */
-    pWAging!: boolean;
-    /** Account expiration is enabled for this user if account is not regularly used */
-    slidingExpiration!: boolean;
-    /** When true, the user is currently locked out */
-    isLockedOut!: boolean;
-    /** When the current password will expire if PWAging is true */
-    pWExpires?: Date | undefined;
-    /** When this account will expire */
-    expiration?: Date | undefined;
-    /** When IsLockedOut, the lockout lasts until this date and time */
-    lockedOutUntil?: Date | undefined;
-    /** Text why the user is locked out (suitable for display) */
-    lockoutReason?: string | undefined;
-    /** How many bad password attempts in a row */
-    failedLoginRun!: number;
-    /** When true, this exact user ID is integrated with Accounting */
-    solomonUser!: boolean;
-    /** When true, this is the users first interactive session */
-    isFirstLogin!: boolean;
-    /** Current IIS Session ID */
-    masterSession?: string | undefined;
-    /** Guid for this session in xsfUserSession  */
-    userSessionKey!: string;
-    /** URI for an image of this user */
-    pictureURL?: string | undefined;
-    /** hmmm */
-    pDSKey?: string | undefined;
-    /** This data is locked in memory */
-    isDSProtected!: boolean;
-
-    constructor(data?: ICurrentUser) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userKey = _data["UserKey"];
-            this.userLoginName = _data["UserLoginName"];
-            this.fullName = _data["FullName"];
-            this.email = _data["email"];
-            this.pWMustChange = _data["PWMustChange"];
-            this.userTimeZone = _data["UserTimeZone"];
-            this.tZOffset = _data["TZOffset"];
-            this.pWAging = _data["PWAging"];
-            this.slidingExpiration = _data["SlidingExpiration"];
-            this.isLockedOut = _data["IsLockedOut"];
-            this.pWExpires = _data["PWExpires"] ? new Date(_data["PWExpires"].toString()) : <any>undefined;
-            this.expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
-            this.lockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
-            this.lockoutReason = _data["LockoutReason"];
-            this.failedLoginRun = _data["FailedLoginRun"];
-            this.solomonUser = _data["SolomonUser"];
-            this.isFirstLogin = _data["IsFirstLogin"];
-            this.masterSession = _data["MasterSession"];
-            this.userSessionKey = _data["UserSessionKey"];
-            this.pictureURL = _data["PictureURL"];
-            this.pDSKey = _data["PDSKey"];
-            this.isDSProtected = _data["IsDSProtected"];
-        }
-    }
-
-    static fromJS(data: any): CurrentUser {
-        data = typeof data === 'object' ? data : {};
-        let result = new CurrentUser();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserKey"] = this.userKey;
-        data["UserLoginName"] = this.userLoginName;
-        data["FullName"] = this.fullName;
-        data["email"] = this.email;
-        data["PWMustChange"] = this.pWMustChange;
-        data["UserTimeZone"] = this.userTimeZone;
-        data["TZOffset"] = this.tZOffset;
-        data["PWAging"] = this.pWAging;
-        data["SlidingExpiration"] = this.slidingExpiration;
-        data["IsLockedOut"] = this.isLockedOut;
-        data["PWExpires"] = this.pWExpires ? this.pWExpires.toISOString() : <any>undefined;
-        data["Expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
-        data["LockedOutUntil"] = this.lockedOutUntil ? this.lockedOutUntil.toISOString() : <any>undefined;
-        data["LockoutReason"] = this.lockoutReason;
-        data["FailedLoginRun"] = this.failedLoginRun;
-        data["SolomonUser"] = this.solomonUser;
-        data["IsFirstLogin"] = this.isFirstLogin;
-        data["MasterSession"] = this.masterSession;
-        data["UserSessionKey"] = this.userSessionKey;
-        data["PictureURL"] = this.pictureURL;
-        data["PDSKey"] = this.pDSKey;
-        data["IsDSProtected"] = this.isDSProtected;
-        return data; 
-    }
-
-    clone(): CurrentUser {
-        const json = this.toJSON();
-        let result = new CurrentUser();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Attributes describing the currently authenticated user */
-export interface ICurrentUser {
-    /** User Key */
-    userKey: string;
-    /** Login ID for user in name@domain.com or similar format */
-    userLoginName?: string | undefined;
-    /** Full name, eg John M. Smithe */
-    fullName?: string | undefined;
-    /** Email Address */
-    email?: string | undefined;
-    /** True if user will have to change PW soon */
-    pWMustChange: boolean;
-    /** Three character time zone designation */
-    userTimeZone?: string | undefined;
-    /** +/- Time offset from server */
-    tZOffset: number;
-    /** Password Aging is enabled for this user */
-    pWAging: boolean;
-    /** Account expiration is enabled for this user if account is not regularly used */
-    slidingExpiration: boolean;
-    /** When true, the user is currently locked out */
-    isLockedOut: boolean;
-    /** When the current password will expire if PWAging is true */
-    pWExpires?: Date | undefined;
-    /** When this account will expire */
-    expiration?: Date | undefined;
-    /** When IsLockedOut, the lockout lasts until this date and time */
-    lockedOutUntil?: Date | undefined;
-    /** Text why the user is locked out (suitable for display) */
-    lockoutReason?: string | undefined;
-    /** How many bad password attempts in a row */
-    failedLoginRun: number;
-    /** When true, this exact user ID is integrated with Accounting */
-    solomonUser: boolean;
-    /** When true, this is the users first interactive session */
-    isFirstLogin: boolean;
-    /** Current IIS Session ID */
-    masterSession?: string | undefined;
-    /** Guid for this session in xsfUserSession  */
-    userSessionKey: string;
-    /** URI for an image of this user */
-    pictureURL?: string | undefined;
-    /** hmmm */
-    pDSKey?: string | undefined;
-    /** This data is locked in memory */
-    isDSProtected: boolean;
-}
-
-export class PasswordConfiguredOptions implements IPasswordConfiguredOptions {
-
-    constructor(data?: IPasswordConfiguredOptions) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): PasswordConfiguredOptions {
-        data = typeof data === 'object' ? data : {};
-        let result = new PasswordConfiguredOptions();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data; 
-    }
-
-    clone(): PasswordConfiguredOptions {
-        const json = this.toJSON();
-        let result = new PasswordConfiguredOptions();
-        result.init(json);
-        return result;
-    }
-}
-
-export interface IPasswordConfiguredOptions {
-}
-
-/** Permission required flag -- bit flags can be combined */
-export enum PermissionFlags {
-    None = 0,
-    Read = 1,
-    Insert = 2,
-    Update = 4,
-    Delete = 8,
-    Blanket = 16,
-}
-
-/** Describes permission being demanded and the context */
-export class PermissionContext implements IPermissionContext {
-    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
-    uCModule!: string;
-    /** Internal Name (see xsfUCFunction) */
-    uCFunction!: string;
-    /** Project ID  */
-    project?: string | undefined;
-    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
-    docMasterKey!: string;
-    /** Document Type */
-    docTypeKey!: string;
-    /** Doc Reference (seldom used) */
-    docReference!: string;
-    /** Bit Coded R I U D S  */
-    permissionNeeded!: PermissionFlags;
-
-    constructor(data?: IPermissionContext) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.uCModule = _data["UCModule"];
-            this.uCFunction = _data["UCFunction"];
-            this.project = _data["Project"];
-            this.docMasterKey = _data["DocMasterKey"];
-            this.docTypeKey = _data["DocTypeKey"];
-            this.docReference = _data["DocReference"];
-            this.permissionNeeded = _data["PermissionNeeded"];
-        }
-    }
-
-    static fromJS(data: any): PermissionContext {
-        data = typeof data === 'object' ? data : {};
-        let result = new PermissionContext();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UCModule"] = this.uCModule;
-        data["UCFunction"] = this.uCFunction;
-        data["Project"] = this.project;
-        data["DocMasterKey"] = this.docMasterKey;
-        data["DocTypeKey"] = this.docTypeKey;
-        data["DocReference"] = this.docReference;
-        data["PermissionNeeded"] = this.permissionNeeded;
-        return data; 
-    }
-
-    clone(): PermissionContext {
-        const json = this.toJSON();
-        let result = new PermissionContext();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Describes permission being demanded and the context */
-export interface IPermissionContext {
-    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
-    uCModule: string;
-    /** Internal Name (see xsfUCFunction) */
-    uCFunction: string;
-    /** Project ID  */
-    project?: string | undefined;
-    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
-    docMasterKey: string;
-    /** Document Type */
-    docTypeKey: string;
-    /** Doc Reference (seldom used) */
-    docReference: string;
-    /** Bit Coded R I U D S  */
-    permissionNeeded: PermissionFlags;
-}
-
-export class TabStripDetails implements ITabStripDetails {
-    tabId!: number;
-    tabKey?: string | undefined;
-    tabText?: string | undefined;
-    tabOrder!: number;
-    tabType?: string | undefined;
-    authorizedRoles?: string | undefined;
-    linkURL?: string | undefined;
-    tip?: string | undefined;
-    isVisible!: boolean;
-
-    constructor(data?: ITabStripDetails) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.tabId = _data["TabId"];
-            this.tabKey = _data["TabKey"];
-            this.tabText = _data["TabText"];
-            this.tabOrder = _data["TabOrder"];
-            this.tabType = _data["TabType"];
-            this.authorizedRoles = _data["AuthorizedRoles"];
-            this.linkURL = _data["LinkURL"];
-            this.tip = _data["Tip"];
-            this.isVisible = _data["IsVisible"];
-        }
-    }
-
-    static fromJS(data: any): TabStripDetails {
-        data = typeof data === 'object' ? data : {};
-        let result = new TabStripDetails();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["TabId"] = this.tabId;
-        data["TabKey"] = this.tabKey;
-        data["TabText"] = this.tabText;
-        data["TabOrder"] = this.tabOrder;
-        data["TabType"] = this.tabType;
-        data["AuthorizedRoles"] = this.authorizedRoles;
-        data["LinkURL"] = this.linkURL;
-        data["Tip"] = this.tip;
-        data["IsVisible"] = this.isVisible;
-        return data; 
-    }
-
-    clone(): TabStripDetails {
-        const json = this.toJSON();
-        let result = new TabStripDetails();
-        result.init(json);
-        return result;
-    }
-}
-
-export interface ITabStripDetails {
-    tabId: number;
-    tabKey?: string | undefined;
-    tabText?: string | undefined;
-    tabOrder: number;
-    tabType?: string | undefined;
-    authorizedRoles?: string | undefined;
-    linkURL?: string | undefined;
-    tip?: string | undefined;
-    isVisible: boolean;
-}
-
 /** Describes a set of permissions for this user */
 export class UCPermitSet implements IUCPermitSet {
     /** Key of this item */
@@ -7796,6 +6480,81 @@ export interface IUCPermit {
     isGlobal: boolean;
 }
 
+export class TabStripDetails implements ITabStripDetails {
+    tabId!: number;
+    tabKey?: string | undefined;
+    tabText?: string | undefined;
+    tabOrder!: number;
+    tabType?: string | undefined;
+    authorizedRoles?: string | undefined;
+    linkURL?: string | undefined;
+    tip?: string | undefined;
+    isVisible!: boolean;
+
+    constructor(data?: ITabStripDetails) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.tabId = _data["TabId"];
+            this.tabKey = _data["TabKey"];
+            this.tabText = _data["TabText"];
+            this.tabOrder = _data["TabOrder"];
+            this.tabType = _data["TabType"];
+            this.authorizedRoles = _data["AuthorizedRoles"];
+            this.linkURL = _data["LinkURL"];
+            this.tip = _data["Tip"];
+            this.isVisible = _data["IsVisible"];
+        }
+    }
+
+    static fromJS(data: any): TabStripDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new TabStripDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["TabId"] = this.tabId;
+        data["TabKey"] = this.tabKey;
+        data["TabText"] = this.tabText;
+        data["TabOrder"] = this.tabOrder;
+        data["TabType"] = this.tabType;
+        data["AuthorizedRoles"] = this.authorizedRoles;
+        data["LinkURL"] = this.linkURL;
+        data["Tip"] = this.tip;
+        data["IsVisible"] = this.isVisible;
+        return data; 
+    }
+
+    clone(): TabStripDetails {
+        const json = this.toJSON();
+        let result = new TabStripDetails();
+        result.init(json);
+        return result;
+    }
+}
+
+export interface ITabStripDetails {
+    tabId: number;
+    tabKey?: string | undefined;
+    tabText?: string | undefined;
+    tabOrder: number;
+    tabType?: string | undefined;
+    authorizedRoles?: string | undefined;
+    linkURL?: string | undefined;
+    tip?: string | undefined;
+    isVisible: boolean;
+}
+
 /** Passes data to a simple API */
 export class APIData implements IAPIData {
     /** Raw Data */
@@ -7917,6 +6676,179 @@ export interface IPDSData extends IAPIData {
     type?: string | undefined;
     /** When TRUE target field can be read only and will be updated in memory */
     updateReadOnly: boolean;
+}
+
+/** Describes an Alert Condition */
+export class UserAlert implements IUserAlert {
+    /** Key for Alert */
+    alertKey!: string;
+    /** Key for User for whom the alert was generated */
+    userKey!: string;
+    /** Document about which the alert was generated */
+    docMasterKey!: string;
+    /** Status of Alert (New, etc) */
+    status?: string | undefined;
+    /** Notification type (M for email) */
+    notificationType?: string | undefined;
+    /** When this alert was created.  Alerts automatically expire in ??? days */
+    created!: Date;
+    /** For Email Notification Type, when was the email sent */
+    notified!: Date;
+    /** When was the alert viewed */
+    viewed!: Date;
+    /** When action is due */
+    due!: Date;
+    /** When closed (from document) */
+    closed!: Date;
+    /** Short Description of alert */
+    description?: string | undefined;
+    /** Long description (generated using AlertText rules) */
+    alertText?: string | undefined;
+    /** Project ID */
+    project?: string | undefined;
+    /** Source of alert (ATC, CloudStorage, etc) */
+    source?: string | undefined;
+    /** Key from source to indentify its alerts */
+    sourceKey?: string | undefined;
+    /** Extra info for categorization */
+    info1?: string | undefined;
+    /** Extra info 2 */
+    info2?: string | undefined;
+    /** Files attached to document */
+    filesAttached!: number;
+    /** unused */
+    msg_type?: string | undefined;
+    /** unused */
+    msg_key?: string | undefined;
+    /** unused */
+    msg_suffix?: string | undefined;
+    /** When true, this alert was from an external source (seldom used) */
+    sIVAlert!: boolean;
+
+    constructor(data?: IUserAlert) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.alertKey = _data["AlertKey"];
+            this.userKey = _data["UserKey"];
+            this.docMasterKey = _data["DocMasterKey"];
+            this.status = _data["Status"];
+            this.notificationType = _data["NotificationType"];
+            this.created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
+            this.notified = _data["Notified"] ? new Date(_data["Notified"].toString()) : <any>undefined;
+            this.viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
+            this.due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
+            this.closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
+            this.description = _data["Description"];
+            this.alertText = _data["AlertText"];
+            this.project = _data["Project"];
+            this.source = _data["Source"];
+            this.sourceKey = _data["SourceKey"];
+            this.info1 = _data["Info1"];
+            this.info2 = _data["Info2"];
+            this.filesAttached = _data["FilesAttached"];
+            this.msg_type = _data["msg_type"];
+            this.msg_key = _data["msg_key"];
+            this.msg_suffix = _data["msg_suffix"];
+            this.sIVAlert = _data["SIVAlert"];
+        }
+    }
+
+    static fromJS(data: any): UserAlert {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserAlert();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["AlertKey"] = this.alertKey;
+        data["UserKey"] = this.userKey;
+        data["DocMasterKey"] = this.docMasterKey;
+        data["Status"] = this.status;
+        data["NotificationType"] = this.notificationType;
+        data["Created"] = this.created ? this.created.toISOString() : <any>undefined;
+        data["Notified"] = this.notified ? this.notified.toISOString() : <any>undefined;
+        data["Viewed"] = this.viewed ? this.viewed.toISOString() : <any>undefined;
+        data["Due"] = this.due ? this.due.toISOString() : <any>undefined;
+        data["Closed"] = this.closed ? this.closed.toISOString() : <any>undefined;
+        data["Description"] = this.description;
+        data["AlertText"] = this.alertText;
+        data["Project"] = this.project;
+        data["Source"] = this.source;
+        data["SourceKey"] = this.sourceKey;
+        data["Info1"] = this.info1;
+        data["Info2"] = this.info2;
+        data["FilesAttached"] = this.filesAttached;
+        data["msg_type"] = this.msg_type;
+        data["msg_key"] = this.msg_key;
+        data["msg_suffix"] = this.msg_suffix;
+        data["SIVAlert"] = this.sIVAlert;
+        return data; 
+    }
+
+    clone(): UserAlert {
+        const json = this.toJSON();
+        let result = new UserAlert();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes an Alert Condition */
+export interface IUserAlert {
+    /** Key for Alert */
+    alertKey: string;
+    /** Key for User for whom the alert was generated */
+    userKey: string;
+    /** Document about which the alert was generated */
+    docMasterKey: string;
+    /** Status of Alert (New, etc) */
+    status?: string | undefined;
+    /** Notification type (M for email) */
+    notificationType?: string | undefined;
+    /** When this alert was created.  Alerts automatically expire in ??? days */
+    created: Date;
+    /** For Email Notification Type, when was the email sent */
+    notified: Date;
+    /** When was the alert viewed */
+    viewed: Date;
+    /** When action is due */
+    due: Date;
+    /** When closed (from document) */
+    closed: Date;
+    /** Short Description of alert */
+    description?: string | undefined;
+    /** Long description (generated using AlertText rules) */
+    alertText?: string | undefined;
+    /** Project ID */
+    project?: string | undefined;
+    /** Source of alert (ATC, CloudStorage, etc) */
+    source?: string | undefined;
+    /** Key from source to indentify its alerts */
+    sourceKey?: string | undefined;
+    /** Extra info for categorization */
+    info1?: string | undefined;
+    /** Extra info 2 */
+    info2?: string | undefined;
+    /** Files attached to document */
+    filesAttached: number;
+    /** unused */
+    msg_type?: string | undefined;
+    /** unused */
+    msg_key?: string | undefined;
+    /** unused */
+    msg_suffix?: string | undefined;
+    /** When true, this alert was from an external source (seldom used) */
+    sIVAlert: boolean;
 }
 
 /** Attributes describing a member of a project team */
@@ -8200,30 +7132,31 @@ export interface IProjectTeamMember {
     csWhen?: Date | undefined;
 }
 
-/** Readonly description of an cost transaction posted to a project */
-export class FileAccessHistory implements IFileAccessHistory {
-    /** User Name   */
-    userName?: string | undefined;
-    /** File Name   */
-    fileName?: string | undefined;
-    /** File Revision number (starts with 1) */
-    revID!: number;
-    /** When this access transaction occurred */
-    accessed!: Date;
-    /** Type of Access */
-    accessType?: string | undefined;
-    /** The Long Title of the document in whose context the access took place */
-    withDocument?: string | undefined;
-    /** Additional information about access  */
-    accessInfo?: string | undefined;
-    /** Was the file in cache */
-    usedCache!: boolean;
-    /** User Key  for this transaction  */
-    userKey!: string;
-    /** Document Key  for this transaction  */
-    docMasterKey?: string | undefined;
+/** Describes a Part, including the fields available to this user */
+export class UIDisplayPart implements IUIDisplayPart {
+    /** Reference to UI Part by name (Alternate Key) */
+    partName?: string | undefined;
+    /** Display Name  */
+    displayName?: string | undefined;
+    /** Free form explaination or generic description   */
+    description?: string | undefined;
+    /** API hint */
+    getAPI?: string | undefined;
+    /** When not empty, provides hint as to initial sort */
+    sortHint?: string | undefined;
+    /** G(rid);F(ilters);P(anel);T(abs)
+D(ashboard);L(ayout);N(avigation);GG: multiple grid; CC: Combo Control */
+    partType?: string | undefined;
+    /** List of UI Items  */
+    uIItems?: UIDisplayConfig[] | undefined;
+    /** List of UI filters  */
+    uIFilters?: UIDisplayFilter[] | undefined;
+    /** When true, configurable for legacy UI */
+    viaUI!: boolean;
+    /** When true, configurable for WebIX UI */
+    wbxUI!: boolean;
 
-    constructor(data?: IFileAccessHistory) {
+    constructor(data?: IUIDisplayPart) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -8234,101 +7167,154 @@ export class FileAccessHistory implements IFileAccessHistory {
 
     init(_data?: any) {
         if (_data) {
-            this.userName = _data["UserName"];
-            this.fileName = _data["FileName"];
-            this.revID = _data["RevID"];
-            this.accessed = _data["Accessed"] ? new Date(_data["Accessed"].toString()) : <any>undefined;
-            this.accessType = _data["AccessType"];
-            this.withDocument = _data["WithDocument"];
-            this.accessInfo = _data["AccessInfo"];
-            this.usedCache = _data["UsedCache"];
-            this.userKey = _data["UserKey"];
-            this.docMasterKey = _data["DocMasterKey"];
+            this.partName = _data["PartName"];
+            this.displayName = _data["DisplayName"];
+            this.description = _data["Description"];
+            this.getAPI = _data["GetAPI"];
+            this.sortHint = _data["SortHint"];
+            this.partType = _data["PartType"];
+            if (Array.isArray(_data["UIItems"])) {
+                this.uIItems = [] as any;
+                for (let item of _data["UIItems"])
+                    this.uIItems!.push(UIDisplayConfig.fromJS(item));
+            }
+            if (Array.isArray(_data["UIFilters"])) {
+                this.uIFilters = [] as any;
+                for (let item of _data["UIFilters"])
+                    this.uIFilters!.push(UIDisplayFilter.fromJS(item));
+            }
+            this.viaUI = _data["ViaUI"];
+            this.wbxUI = _data["wbxUI"];
         }
     }
 
-    static fromJS(data: any): FileAccessHistory {
+    static fromJS(data: any): UIDisplayPart {
         data = typeof data === 'object' ? data : {};
-        let result = new FileAccessHistory();
+        let result = new UIDisplayPart();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["UserName"] = this.userName;
-        data["FileName"] = this.fileName;
-        data["RevID"] = this.revID;
-        data["Accessed"] = this.accessed ? this.accessed.toISOString() : <any>undefined;
-        data["AccessType"] = this.accessType;
-        data["WithDocument"] = this.withDocument;
-        data["AccessInfo"] = this.accessInfo;
-        data["UsedCache"] = this.usedCache;
-        data["UserKey"] = this.userKey;
-        data["DocMasterKey"] = this.docMasterKey;
+        data["PartName"] = this.partName;
+        data["DisplayName"] = this.displayName;
+        data["Description"] = this.description;
+        data["GetAPI"] = this.getAPI;
+        data["SortHint"] = this.sortHint;
+        data["PartType"] = this.partType;
+        if (Array.isArray(this.uIItems)) {
+            data["UIItems"] = [];
+            for (let item of this.uIItems)
+                data["UIItems"].push(item.toJSON());
+        }
+        if (Array.isArray(this.uIFilters)) {
+            data["UIFilters"] = [];
+            for (let item of this.uIFilters)
+                data["UIFilters"].push(item.toJSON());
+        }
+        data["ViaUI"] = this.viaUI;
+        data["wbxUI"] = this.wbxUI;
         return data; 
     }
 
-    clone(): FileAccessHistory {
+    clone(): UIDisplayPart {
         const json = this.toJSON();
-        let result = new FileAccessHistory();
+        let result = new UIDisplayPart();
         result.init(json);
         return result;
     }
 }
 
-/** Readonly description of an cost transaction posted to a project */
-export interface IFileAccessHistory {
-    /** User Name   */
-    userName?: string | undefined;
-    /** File Name   */
-    fileName?: string | undefined;
-    /** File Revision number (starts with 1) */
-    revID: number;
-    /** When this access transaction occurred */
-    accessed: Date;
-    /** Type of Access */
-    accessType?: string | undefined;
-    /** The Long Title of the document in whose context the access took place */
-    withDocument?: string | undefined;
-    /** Additional information about access  */
-    accessInfo?: string | undefined;
-    /** Was the file in cache */
-    usedCache: boolean;
-    /** User Key  for this transaction  */
-    userKey: string;
-    /** Document Key  for this transaction  */
-    docMasterKey?: string | undefined;
+/** Describes a Part, including the fields available to this user */
+export interface IUIDisplayPart {
+    /** Reference to UI Part by name (Alternate Key) */
+    partName?: string | undefined;
+    /** Display Name  */
+    displayName?: string | undefined;
+    /** Free form explaination or generic description   */
+    description?: string | undefined;
+    /** API hint */
+    getAPI?: string | undefined;
+    /** When not empty, provides hint as to initial sort */
+    sortHint?: string | undefined;
+    /** G(rid);F(ilters);P(anel);T(abs)
+D(ashboard);L(ayout);N(avigation);GG: multiple grid; CC: Combo Control */
+    partType?: string | undefined;
+    /** List of UI Items  */
+    uIItems?: UIDisplayConfig[] | undefined;
+    /** List of UI filters  */
+    uIFilters?: UIDisplayFilter[] | undefined;
+    /** When true, configurable for legacy UI */
+    viaUI: boolean;
+    /** When true, configurable for WebIX UI */
+    wbxUI: boolean;
 }
 
-/** Information about file versions */
-export class FileVersion implements IFileVersion {
-    /** Link to xsfFileVersionInfo */
-    fileVerKey!: string;
-    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
-    revID!: number;
-    /** MD5 hash, combined with length and used for duplicate detection */
-    dataHash?: string | undefined;
-    /** External reference */
-    sourceRevision?: string | undefined;
-    /** When stored */
-    cataloged!: Date;
-    /** When Approved */
-    approved!: Date;
-    /** User that approved this */
-    approvedBy!: string;
-    /** Links to a user/contact  */
-    fromUser!: string;
-    /** text from binary (for index/search) */
-    txtData?: string | undefined;
-    /** Size of file binary data in bytes  */
-    binSize!: number;
-    /** True on the file version that is the newest one with approved not empty  */
-    isCurrentApprovedVersion!: boolean;
-    /** When not empty, reason this version cannot be removed */
-    noCanDelete?: string | undefined;
+/** Describes the live configuration for a UI element (not for edit, see UIPartConfig) */
+export class UIDisplayConfig implements IUIDisplayConfig {
+    /** Key for this Configuration Entry (for link to edit mode) */
+    partConfigKey!: string;
+    /** One of the UI item names listed in Page.Config (PartCfgItem) */
+    itemName?: string | undefined;
+    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
+    dataMember?: string | undefined;
+    /** Name of a field in the schema */
+    dataField?: string | undefined;
+    /** The visible label for this entry */
+    label?: string | undefined;
+    /** Name of lookup */
+    lookupName?: string | undefined;
+    /** F2, C4, etc, plus some special cases (see KBA) */
+    displayFormat?: string | undefined;
+    /** see KBA-01336 (AuxData Name-Value Pairs) */
+    otherProperties?: { [key: string]: any; } | undefined;
+    /** Click Action */
+    clickAction?: string | undefined;
+    /** For quick help */
+    helpText?: string | undefined;
+    /** For overriding length, in characters allowed in this field.  See also MaxChars */
+    limitTo!: number;
+    /** Max characters, for character types, this is from database size */
+    maxChars!: number;
+    /** For indicating a value is (or can sometimes be) required (zero is not required) */
+    requiredBefore!: number;
+    /** For controling tab order */
+    seqData!: number;
+    /** When TRUE, UI will be read only */
+    isReadOnly!: boolean;
+    /** Controls the visible attribute (or sets a boolean value) */
+    visible!: boolean;
+    /** When true, this data is object is from internal defaults */
+    isInternalDefault!: boolean;
+    /** CSS to be applied */
+    cSS?: string | undefined;
+    /** Client Side Describe Value name */
+    dV?: string | undefined;
+    /** Lookups and DV depend on these fields (up to 4) */
+    dependsOn?: string | undefined;
+    /** When 1, allow HTML */
+    hTML!: boolean;
+    /** HTML 5 Placeholder text */
+    overlay?: string | undefined;
+    /** Limits Visibility to certain conditions */
+    shownWhen?: string | undefined;
+    /** DV function used to validate */
+    validateAgainst?: string | undefined;
+    /** DV function used to validate alternate text (such as email -&gt; contact) */
+    validateTextAgainst?: string | undefined;
+    /** Max */
+    validationMax?: string | undefined;
+    /** Min */
+    validationMin?: string | undefined;
+    /** Width expressed in Pixels (if possible) */
+    width!: number;
+    /** HTML friendly, CSS compliant width; eg 20ex or 40% */
+    widthCSS?: string | undefined;
+    /** textbox, freeform, checkbox, contact, selectone (see ENUM UITypeNames) */
+    uIType?: string | undefined;
 
-    constructor(data?: IFileVersion) {
+    constructor(data?: IUIDisplayConfig) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -8339,79 +7325,318 @@ export class FileVersion implements IFileVersion {
 
     init(_data?: any) {
         if (_data) {
-            this.fileVerKey = _data["FileVerKey"];
-            this.revID = _data["RevID"];
-            this.dataHash = _data["DataHash"];
-            this.sourceRevision = _data["SourceRevision"];
-            this.cataloged = _data["Cataloged"] ? new Date(_data["Cataloged"].toString()) : <any>undefined;
-            this.approved = _data["Approved"] ? new Date(_data["Approved"].toString()) : <any>undefined;
-            this.approvedBy = _data["ApprovedBy"];
-            this.fromUser = _data["FromUser"];
-            this.txtData = _data["TxtData"];
-            this.binSize = _data["BinSize"];
-            this.isCurrentApprovedVersion = _data["IsCurrentApprovedVersion"];
-            this.noCanDelete = _data["NoCanDelete"];
+            this.partConfigKey = _data["PartConfigKey"];
+            this.itemName = _data["ItemName"];
+            this.dataMember = _data["DataMember"];
+            this.dataField = _data["DataField"];
+            this.label = _data["Label"];
+            this.lookupName = _data["LookupName"];
+            this.displayFormat = _data["DisplayFormat"];
+            if (_data["OtherProperties"]) {
+                this.otherProperties = {} as any;
+                for (let key in _data["OtherProperties"]) {
+                    if (_data["OtherProperties"].hasOwnProperty(key))
+                        this.otherProperties![key] = _data["OtherProperties"][key];
+                }
+            }
+            this.clickAction = _data["ClickAction"];
+            this.helpText = _data["HelpText"];
+            this.limitTo = _data["LimitTo"];
+            this.maxChars = _data["MaxChars"];
+            this.requiredBefore = _data["RequiredBefore"];
+            this.seqData = _data["SeqData"];
+            this.isReadOnly = _data["IsReadOnly"];
+            this.visible = _data["Visible"];
+            this.isInternalDefault = _data["IsInternalDefault"];
+            this.cSS = _data["CSS"];
+            this.dV = _data["DV"];
+            this.dependsOn = _data["DependsOn"];
+            this.hTML = _data["HTML"];
+            this.overlay = _data["Overlay"];
+            this.shownWhen = _data["ShownWhen"];
+            this.validateAgainst = _data["ValidateAgainst"];
+            this.validateTextAgainst = _data["ValidateTextAgainst"];
+            this.validationMax = _data["ValidationMax"];
+            this.validationMin = _data["ValidationMin"];
+            this.width = _data["Width"];
+            this.widthCSS = _data["WidthCSS"];
+            this.uIType = _data["UIType"];
         }
     }
 
-    static fromJS(data: any): FileVersion {
+    static fromJS(data: any): UIDisplayConfig {
         data = typeof data === 'object' ? data : {};
-        let result = new FileVersion();
+        let result = new UIDisplayConfig();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["FileVerKey"] = this.fileVerKey;
-        data["RevID"] = this.revID;
-        data["DataHash"] = this.dataHash;
-        data["SourceRevision"] = this.sourceRevision;
-        data["Cataloged"] = this.cataloged ? this.cataloged.toISOString() : <any>undefined;
-        data["Approved"] = this.approved ? this.approved.toISOString() : <any>undefined;
-        data["ApprovedBy"] = this.approvedBy;
-        data["FromUser"] = this.fromUser;
-        data["TxtData"] = this.txtData;
-        data["BinSize"] = this.binSize;
-        data["IsCurrentApprovedVersion"] = this.isCurrentApprovedVersion;
-        data["NoCanDelete"] = this.noCanDelete;
+        data["PartConfigKey"] = this.partConfigKey;
+        data["ItemName"] = this.itemName;
+        data["DataMember"] = this.dataMember;
+        data["DataField"] = this.dataField;
+        data["Label"] = this.label;
+        data["LookupName"] = this.lookupName;
+        data["DisplayFormat"] = this.displayFormat;
+        if (this.otherProperties) {
+            data["OtherProperties"] = {};
+            for (let key in this.otherProperties) {
+                if (this.otherProperties.hasOwnProperty(key))
+                    data["OtherProperties"][key] = this.otherProperties[key];
+            }
+        }
+        data["ClickAction"] = this.clickAction;
+        data["HelpText"] = this.helpText;
+        data["LimitTo"] = this.limitTo;
+        data["MaxChars"] = this.maxChars;
+        data["RequiredBefore"] = this.requiredBefore;
+        data["SeqData"] = this.seqData;
+        data["IsReadOnly"] = this.isReadOnly;
+        data["Visible"] = this.visible;
+        data["IsInternalDefault"] = this.isInternalDefault;
+        data["CSS"] = this.cSS;
+        data["DV"] = this.dV;
+        data["DependsOn"] = this.dependsOn;
+        data["HTML"] = this.hTML;
+        data["Overlay"] = this.overlay;
+        data["ShownWhen"] = this.shownWhen;
+        data["ValidateAgainst"] = this.validateAgainst;
+        data["ValidateTextAgainst"] = this.validateTextAgainst;
+        data["ValidationMax"] = this.validationMax;
+        data["ValidationMin"] = this.validationMin;
+        data["Width"] = this.width;
+        data["WidthCSS"] = this.widthCSS;
+        data["UIType"] = this.uIType;
         return data; 
     }
 
-    clone(): FileVersion {
+    clone(): UIDisplayConfig {
         const json = this.toJSON();
-        let result = new FileVersion();
+        let result = new UIDisplayConfig();
         result.init(json);
         return result;
     }
 }
 
-/** Information about file versions */
-export interface IFileVersion {
-    /** Link to xsfFileVersionInfo */
-    fileVerKey: string;
-    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
-    revID: number;
-    /** MD5 hash, combined with length and used for duplicate detection */
-    dataHash?: string | undefined;
-    /** External reference */
-    sourceRevision?: string | undefined;
-    /** When stored */
-    cataloged: Date;
-    /** When Approved */
-    approved: Date;
-    /** User that approved this */
-    approvedBy: string;
-    /** Links to a user/contact  */
-    fromUser: string;
-    /** text from binary (for index/search) */
-    txtData?: string | undefined;
-    /** Size of file binary data in bytes  */
-    binSize: number;
-    /** True on the file version that is the newest one with approved not empty  */
-    isCurrentApprovedVersion: boolean;
-    /** When not empty, reason this version cannot be removed */
-    noCanDelete?: string | undefined;
+/** Describes the live configuration for a UI element (not for edit, see UIPartConfig) */
+export interface IUIDisplayConfig {
+    /** Key for this Configuration Entry (for link to edit mode) */
+    partConfigKey: string;
+    /** One of the UI item names listed in Page.Config (PartCfgItem) */
+    itemName?: string | undefined;
+    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
+    dataMember?: string | undefined;
+    /** Name of a field in the schema */
+    dataField?: string | undefined;
+    /** The visible label for this entry */
+    label?: string | undefined;
+    /** Name of lookup */
+    lookupName?: string | undefined;
+    /** F2, C4, etc, plus some special cases (see KBA) */
+    displayFormat?: string | undefined;
+    /** see KBA-01336 (AuxData Name-Value Pairs) */
+    otherProperties?: { [key: string]: any; } | undefined;
+    /** Click Action */
+    clickAction?: string | undefined;
+    /** For quick help */
+    helpText?: string | undefined;
+    /** For overriding length, in characters allowed in this field.  See also MaxChars */
+    limitTo: number;
+    /** Max characters, for character types, this is from database size */
+    maxChars: number;
+    /** For indicating a value is (or can sometimes be) required (zero is not required) */
+    requiredBefore: number;
+    /** For controling tab order */
+    seqData: number;
+    /** When TRUE, UI will be read only */
+    isReadOnly: boolean;
+    /** Controls the visible attribute (or sets a boolean value) */
+    visible: boolean;
+    /** When true, this data is object is from internal defaults */
+    isInternalDefault: boolean;
+    /** CSS to be applied */
+    cSS?: string | undefined;
+    /** Client Side Describe Value name */
+    dV?: string | undefined;
+    /** Lookups and DV depend on these fields (up to 4) */
+    dependsOn?: string | undefined;
+    /** When 1, allow HTML */
+    hTML: boolean;
+    /** HTML 5 Placeholder text */
+    overlay?: string | undefined;
+    /** Limits Visibility to certain conditions */
+    shownWhen?: string | undefined;
+    /** DV function used to validate */
+    validateAgainst?: string | undefined;
+    /** DV function used to validate alternate text (such as email -&gt; contact) */
+    validateTextAgainst?: string | undefined;
+    /** Max */
+    validationMax?: string | undefined;
+    /** Min */
+    validationMin?: string | undefined;
+    /** Width expressed in Pixels (if possible) */
+    width: number;
+    /** HTML friendly, CSS compliant width; eg 20ex or 40% */
+    widthCSS?: string | undefined;
+    /** textbox, freeform, checkbox, contact, selectone (see ENUM UITypeNames) */
+    uIType?: string | undefined;
+}
+
+/** Describes the live configuration for a UI filter (not for edit, see UIPartConfig) */
+export class UIDisplayFilter implements IUIDisplayFilter {
+    /** Key for this Configuration Entry (for link to edit mode) */
+    partConfigKey!: string;
+    /** One of the UI item names   */
+    itemName?: string | undefined;
+    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
+    dataMember?: string | undefined;
+    /** Name of a field in the schema */
+    dataField?: string | undefined;
+    /** The visible label for this entry */
+    label?: string | undefined;
+    /** Name of lookup */
+    lookupName?: string | undefined;
+    /** F2, C4, etc, plus some special cases (see KBA) */
+    displayFormat?: string | undefined;
+    /** see KBA-01336 */
+    auxData?: { [key: string]: any; } | undefined;
+    /** For quick help */
+    helpText?: string | undefined;
+    /** For overriding allowed length */
+    limitTo!: number;
+    /** Provides a default for a filter ( 1 for true/checked ) */
+    defaultValue?: string | undefined;
+    /** Controls the visible attribute (or sets a boolean value) */
+    visible!: boolean;
+    /** When true, this data is object is from internal defaults */
+    isInternalDefault!: boolean;
+    /** CSS to be applied */
+    cSS?: string | undefined;
+    /** Client Side Describe Value name */
+    dV?: string | undefined;
+    /** Lookups and DV depend on these fields (up to 4) */
+    dependsOn?: string | undefined;
+    /** HTML 5 Placeholder text */
+    overlay?: string | undefined;
+
+    constructor(data?: IUIDisplayFilter) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.partConfigKey = _data["PartConfigKey"];
+            this.itemName = _data["ItemName"];
+            this.dataMember = _data["DataMember"];
+            this.dataField = _data["DataField"];
+            this.label = _data["Label"];
+            this.lookupName = _data["LookupName"];
+            this.displayFormat = _data["DisplayFormat"];
+            if (_data["AuxData"]) {
+                this.auxData = {} as any;
+                for (let key in _data["AuxData"]) {
+                    if (_data["AuxData"].hasOwnProperty(key))
+                        this.auxData![key] = _data["AuxData"][key];
+                }
+            }
+            this.helpText = _data["HelpText"];
+            this.limitTo = _data["LimitTo"];
+            this.defaultValue = _data["DefaultValue"];
+            this.visible = _data["Visible"];
+            this.isInternalDefault = _data["IsInternalDefault"];
+            this.cSS = _data["CSS"];
+            this.dV = _data["DV"];
+            this.dependsOn = _data["DependsOn"];
+            this.overlay = _data["Overlay"];
+        }
+    }
+
+    static fromJS(data: any): UIDisplayFilter {
+        data = typeof data === 'object' ? data : {};
+        let result = new UIDisplayFilter();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["PartConfigKey"] = this.partConfigKey;
+        data["ItemName"] = this.itemName;
+        data["DataMember"] = this.dataMember;
+        data["DataField"] = this.dataField;
+        data["Label"] = this.label;
+        data["LookupName"] = this.lookupName;
+        data["DisplayFormat"] = this.displayFormat;
+        if (this.auxData) {
+            data["AuxData"] = {};
+            for (let key in this.auxData) {
+                if (this.auxData.hasOwnProperty(key))
+                    data["AuxData"][key] = this.auxData[key];
+            }
+        }
+        data["HelpText"] = this.helpText;
+        data["LimitTo"] = this.limitTo;
+        data["DefaultValue"] = this.defaultValue;
+        data["Visible"] = this.visible;
+        data["IsInternalDefault"] = this.isInternalDefault;
+        data["CSS"] = this.cSS;
+        data["DV"] = this.dV;
+        data["DependsOn"] = this.dependsOn;
+        data["Overlay"] = this.overlay;
+        return data; 
+    }
+
+    clone(): UIDisplayFilter {
+        const json = this.toJSON();
+        let result = new UIDisplayFilter();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes the live configuration for a UI filter (not for edit, see UIPartConfig) */
+export interface IUIDisplayFilter {
+    /** Key for this Configuration Entry (for link to edit mode) */
+    partConfigKey: string;
+    /** One of the UI item names   */
+    itemName?: string | undefined;
+    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
+    dataMember?: string | undefined;
+    /** Name of a field in the schema */
+    dataField?: string | undefined;
+    /** The visible label for this entry */
+    label?: string | undefined;
+    /** Name of lookup */
+    lookupName?: string | undefined;
+    /** F2, C4, etc, plus some special cases (see KBA) */
+    displayFormat?: string | undefined;
+    /** see KBA-01336 */
+    auxData?: { [key: string]: any; } | undefined;
+    /** For quick help */
+    helpText?: string | undefined;
+    /** For overriding allowed length */
+    limitTo: number;
+    /** Provides a default for a filter ( 1 for true/checked ) */
+    defaultValue?: string | undefined;
+    /** Controls the visible attribute (or sets a boolean value) */
+    visible: boolean;
+    /** When true, this data is object is from internal defaults */
+    isInternalDefault: boolean;
+    /** CSS to be applied */
+    cSS?: string | undefined;
+    /** Client Side Describe Value name */
+    dV?: string | undefined;
+    /** Lookups and DV depend on these fields (up to 4) */
+    dependsOn?: string | undefined;
+    /** HTML 5 Placeholder text */
+    overlay?: string | undefined;
 }
 
 /** A document currently routed to a specific user */
@@ -8591,6 +7816,109 @@ export interface IUserActionItem {
     isRecent: boolean;
     /** How many files are attached */
     filesAttached: number;
+}
+
+/** Various common filters - not every filter is supported by every query */
+export class QueryFilters implements IQueryFilters {
+    /** Project Mask (eg GC%) */
+    projectLike?: string | undefined;
+    /** Applies to common text (title, description, etc) */
+    titleLike?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    userKey?: string | undefined;
+    /** Key must match an existing document type
+00000000-0000-0000-0000-000000000000   */
+    forDocType?: string | undefined;
+    /** Key for Program or empty key */
+    programKey?: string | undefined;
+    /** Default 2000-01-01 */
+    fromDate?: Date | undefined;
+    /** Default today */
+    thruDate?: Date | undefined;
+    /** Default is false */
+    newOnly!: boolean;
+    /** Default is false */
+    includeHidden!: boolean;
+    /** Name Value Pair filter values (semicolon separated) */
+    nvpFilters?: string | undefined;
+
+    constructor(data?: IQueryFilters) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.projectLike = _data["ProjectLike"];
+            this.titleLike = _data["TitleLike"];
+            this.userKey = _data["UserKey"];
+            this.forDocType = _data["ForDocType"];
+            this.programKey = _data["ProgramKey"];
+            this.fromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
+            this.thruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
+            this.newOnly = _data["NewOnly"];
+            this.includeHidden = _data["IncludeHidden"];
+            this.nvpFilters = _data["nvpFilters"];
+        }
+    }
+
+    static fromJS(data: any): QueryFilters {
+        data = typeof data === 'object' ? data : {};
+        let result = new QueryFilters();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["ProjectLike"] = this.projectLike;
+        data["TitleLike"] = this.titleLike;
+        data["UserKey"] = this.userKey;
+        data["ForDocType"] = this.forDocType;
+        data["ProgramKey"] = this.programKey;
+        data["FromDate"] = this.fromDate ? this.fromDate.toISOString() : <any>undefined;
+        data["ThruDate"] = this.thruDate ? this.thruDate.toISOString() : <any>undefined;
+        data["NewOnly"] = this.newOnly;
+        data["IncludeHidden"] = this.includeHidden;
+        data["nvpFilters"] = this.nvpFilters;
+        return data; 
+    }
+
+    clone(): QueryFilters {
+        const json = this.toJSON();
+        let result = new QueryFilters();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Various common filters - not every filter is supported by every query */
+export interface IQueryFilters {
+    /** Project Mask (eg GC%) */
+    projectLike?: string | undefined;
+    /** Applies to common text (title, description, etc) */
+    titleLike?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    userKey?: string | undefined;
+    /** Key must match an existing document type
+00000000-0000-0000-0000-000000000000   */
+    forDocType?: string | undefined;
+    /** Key for Program or empty key */
+    programKey?: string | undefined;
+    /** Default 2000-01-01 */
+    fromDate?: Date | undefined;
+    /** Default today */
+    thruDate?: Date | undefined;
+    /** Default is false */
+    newOnly: boolean;
+    /** Default is false */
+    includeHidden: boolean;
+    /** Name Value Pair filter values (semicolon separated) */
+    nvpFilters?: string | undefined;
 }
 
 export class RouteActionInfo implements IRouteActionInfo {
@@ -9304,54 +8632,113 @@ export interface IProjectDocsOfType {
     filesAttached: number;
 }
 
-/** Describes an Alert Condition */
-export class UserAlert implements IUserAlert {
-    /** Key for Alert */
-    alertKey!: string;
-    /** Key for User for whom the alert was generated */
+/** Legacy Site Authentication */
+export class SiteLogin implements ISiteLogin {
+    /** User ID EG: george@acme.com */
+    uID?: string | undefined;
+    /** Password */
+    pW?: string | undefined;
+    /** Set to TRUE if password has already been hashed (rare) */
+    isHashed!: boolean;
+
+    constructor(data?: ISiteLogin) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.uID = _data["UID"];
+            this.pW = _data["PW"];
+            this.isHashed = _data["IsHashed"];
+        }
+    }
+
+    static fromJS(data: any): SiteLogin {
+        data = typeof data === 'object' ? data : {};
+        let result = new SiteLogin();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UID"] = this.uID;
+        data["PW"] = this.pW;
+        data["IsHashed"] = this.isHashed;
+        return data; 
+    }
+
+    clone(): SiteLogin {
+        const json = this.toJSON();
+        let result = new SiteLogin();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Legacy Site Authentication */
+export interface ISiteLogin {
+    /** User ID EG: george@acme.com */
+    uID?: string | undefined;
+    /** Password */
+    pW?: string | undefined;
+    /** Set to TRUE if password has already been hashed (rare) */
+    isHashed: boolean;
+}
+
+/** Attributes describing the currently authenticated user */
+export class CurrentUser implements ICurrentUser {
+    /** User Key */
     userKey!: string;
-    /** Document about which the alert was generated */
-    docMasterKey!: string;
-    /** Status of Alert (New, etc) */
-    status?: string | undefined;
-    /** Notification type (M for email) */
-    notificationType?: string | undefined;
-    /** When this alert was created.  Alerts automatically expire in ??? days */
-    created!: Date;
-    /** For Email Notification Type, when was the email sent */
-    notified!: Date;
-    /** When was the alert viewed */
-    viewed!: Date;
-    /** When action is due */
-    due!: Date;
-    /** When closed (from document) */
-    closed!: Date;
-    /** Short Description of alert */
-    description?: string | undefined;
-    /** Long description (generated using AlertText rules) */
-    alertText?: string | undefined;
-    /** Project ID */
-    project?: string | undefined;
-    /** Source of alert (ATC, CloudStorage, etc) */
-    source?: string | undefined;
-    /** Key from source to indentify its alerts */
-    sourceKey?: string | undefined;
-    /** Extra info for categorization */
-    info1?: string | undefined;
-    /** Extra info 2 */
-    info2?: string | undefined;
-    /** Files attached to document */
-    filesAttached!: number;
-    /** unused */
-    msg_type?: string | undefined;
-    /** unused */
-    msg_key?: string | undefined;
-    /** unused */
-    msg_suffix?: string | undefined;
-    /** When true, this alert was from an external source (seldom used) */
-    sIVAlert!: boolean;
+    /** Login ID for user in name@domain.com or similar format */
+    userLoginName?: string | undefined;
+    /** Full name, eg John M. Smithe */
+    fullName?: string | undefined;
+    /** Email Address */
+    email?: string | undefined;
+    /** True if user will have to change PW soon */
+    pWMustChange!: boolean;
+    /** Three character time zone designation */
+    userTimeZone?: string | undefined;
+    /** +/- Time offset from server */
+    tZOffset!: number;
+    /** Password Aging is enabled for this user */
+    pWAging!: boolean;
+    /** Account expiration is enabled for this user if account is not regularly used */
+    slidingExpiration!: boolean;
+    /** When true, the user is currently locked out */
+    isLockedOut!: boolean;
+    /** When the current password will expire if PWAging is true */
+    pWExpires?: Date | undefined;
+    /** When this account will expire */
+    expiration?: Date | undefined;
+    /** When IsLockedOut, the lockout lasts until this date and time */
+    lockedOutUntil?: Date | undefined;
+    /** Text why the user is locked out (suitable for display) */
+    lockoutReason?: string | undefined;
+    /** How many bad password attempts in a row */
+    failedLoginRun!: number;
+    /** When true, this exact user ID is integrated with Accounting */
+    solomonUser!: boolean;
+    /** When true, this is the users first interactive session */
+    isFirstLogin!: boolean;
+    /** Current IIS Session ID */
+    masterSession?: string | undefined;
+    /** Guid for this session in xsfUserSession  */
+    userSessionKey!: string;
+    /** URI for an image of this user */
+    pictureURL?: string | undefined;
+    /** hmmm */
+    pDSKey?: string | undefined;
+    /** This data is locked in memory */
+    isDSProtected!: boolean;
 
-    constructor(data?: IUserAlert) {
+    constructor(data?: ICurrentUser) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -9362,146 +8749,186 @@ export class UserAlert implements IUserAlert {
 
     init(_data?: any) {
         if (_data) {
-            this.alertKey = _data["AlertKey"];
             this.userKey = _data["UserKey"];
-            this.docMasterKey = _data["DocMasterKey"];
-            this.status = _data["Status"];
-            this.notificationType = _data["NotificationType"];
-            this.created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
-            this.notified = _data["Notified"] ? new Date(_data["Notified"].toString()) : <any>undefined;
-            this.viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
-            this.due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
-            this.closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
-            this.description = _data["Description"];
-            this.alertText = _data["AlertText"];
-            this.project = _data["Project"];
-            this.source = _data["Source"];
-            this.sourceKey = _data["SourceKey"];
-            this.info1 = _data["Info1"];
-            this.info2 = _data["Info2"];
-            this.filesAttached = _data["FilesAttached"];
-            this.msg_type = _data["msg_type"];
-            this.msg_key = _data["msg_key"];
-            this.msg_suffix = _data["msg_suffix"];
-            this.sIVAlert = _data["SIVAlert"];
+            this.userLoginName = _data["UserLoginName"];
+            this.fullName = _data["FullName"];
+            this.email = _data["email"];
+            this.pWMustChange = _data["PWMustChange"];
+            this.userTimeZone = _data["UserTimeZone"];
+            this.tZOffset = _data["TZOffset"];
+            this.pWAging = _data["PWAging"];
+            this.slidingExpiration = _data["SlidingExpiration"];
+            this.isLockedOut = _data["IsLockedOut"];
+            this.pWExpires = _data["PWExpires"] ? new Date(_data["PWExpires"].toString()) : <any>undefined;
+            this.expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
+            this.lockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
+            this.lockoutReason = _data["LockoutReason"];
+            this.failedLoginRun = _data["FailedLoginRun"];
+            this.solomonUser = _data["SolomonUser"];
+            this.isFirstLogin = _data["IsFirstLogin"];
+            this.masterSession = _data["MasterSession"];
+            this.userSessionKey = _data["UserSessionKey"];
+            this.pictureURL = _data["PictureURL"];
+            this.pDSKey = _data["PDSKey"];
+            this.isDSProtected = _data["IsDSProtected"];
         }
     }
 
-    static fromJS(data: any): UserAlert {
+    static fromJS(data: any): CurrentUser {
         data = typeof data === 'object' ? data : {};
-        let result = new UserAlert();
+        let result = new CurrentUser();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["AlertKey"] = this.alertKey;
         data["UserKey"] = this.userKey;
-        data["DocMasterKey"] = this.docMasterKey;
-        data["Status"] = this.status;
-        data["NotificationType"] = this.notificationType;
-        data["Created"] = this.created ? this.created.toISOString() : <any>undefined;
-        data["Notified"] = this.notified ? this.notified.toISOString() : <any>undefined;
-        data["Viewed"] = this.viewed ? this.viewed.toISOString() : <any>undefined;
-        data["Due"] = this.due ? this.due.toISOString() : <any>undefined;
-        data["Closed"] = this.closed ? this.closed.toISOString() : <any>undefined;
-        data["Description"] = this.description;
-        data["AlertText"] = this.alertText;
-        data["Project"] = this.project;
-        data["Source"] = this.source;
-        data["SourceKey"] = this.sourceKey;
-        data["Info1"] = this.info1;
-        data["Info2"] = this.info2;
-        data["FilesAttached"] = this.filesAttached;
-        data["msg_type"] = this.msg_type;
-        data["msg_key"] = this.msg_key;
-        data["msg_suffix"] = this.msg_suffix;
-        data["SIVAlert"] = this.sIVAlert;
+        data["UserLoginName"] = this.userLoginName;
+        data["FullName"] = this.fullName;
+        data["email"] = this.email;
+        data["PWMustChange"] = this.pWMustChange;
+        data["UserTimeZone"] = this.userTimeZone;
+        data["TZOffset"] = this.tZOffset;
+        data["PWAging"] = this.pWAging;
+        data["SlidingExpiration"] = this.slidingExpiration;
+        data["IsLockedOut"] = this.isLockedOut;
+        data["PWExpires"] = this.pWExpires ? this.pWExpires.toISOString() : <any>undefined;
+        data["Expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
+        data["LockedOutUntil"] = this.lockedOutUntil ? this.lockedOutUntil.toISOString() : <any>undefined;
+        data["LockoutReason"] = this.lockoutReason;
+        data["FailedLoginRun"] = this.failedLoginRun;
+        data["SolomonUser"] = this.solomonUser;
+        data["IsFirstLogin"] = this.isFirstLogin;
+        data["MasterSession"] = this.masterSession;
+        data["UserSessionKey"] = this.userSessionKey;
+        data["PictureURL"] = this.pictureURL;
+        data["PDSKey"] = this.pDSKey;
+        data["IsDSProtected"] = this.isDSProtected;
         return data; 
     }
 
-    clone(): UserAlert {
+    clone(): CurrentUser {
         const json = this.toJSON();
-        let result = new UserAlert();
+        let result = new CurrentUser();
         result.init(json);
         return result;
     }
 }
 
-/** Describes an Alert Condition */
-export interface IUserAlert {
-    /** Key for Alert */
-    alertKey: string;
-    /** Key for User for whom the alert was generated */
+/** Attributes describing the currently authenticated user */
+export interface ICurrentUser {
+    /** User Key */
     userKey: string;
-    /** Document about which the alert was generated */
-    docMasterKey: string;
-    /** Status of Alert (New, etc) */
-    status?: string | undefined;
-    /** Notification type (M for email) */
-    notificationType?: string | undefined;
-    /** When this alert was created.  Alerts automatically expire in ??? days */
-    created: Date;
-    /** For Email Notification Type, when was the email sent */
-    notified: Date;
-    /** When was the alert viewed */
-    viewed: Date;
-    /** When action is due */
-    due: Date;
-    /** When closed (from document) */
-    closed: Date;
-    /** Short Description of alert */
-    description?: string | undefined;
-    /** Long description (generated using AlertText rules) */
-    alertText?: string | undefined;
-    /** Project ID */
+    /** Login ID for user in name@domain.com or similar format */
+    userLoginName?: string | undefined;
+    /** Full name, eg John M. Smithe */
+    fullName?: string | undefined;
+    /** Email Address */
+    email?: string | undefined;
+    /** True if user will have to change PW soon */
+    pWMustChange: boolean;
+    /** Three character time zone designation */
+    userTimeZone?: string | undefined;
+    /** +/- Time offset from server */
+    tZOffset: number;
+    /** Password Aging is enabled for this user */
+    pWAging: boolean;
+    /** Account expiration is enabled for this user if account is not regularly used */
+    slidingExpiration: boolean;
+    /** When true, the user is currently locked out */
+    isLockedOut: boolean;
+    /** When the current password will expire if PWAging is true */
+    pWExpires?: Date | undefined;
+    /** When this account will expire */
+    expiration?: Date | undefined;
+    /** When IsLockedOut, the lockout lasts until this date and time */
+    lockedOutUntil?: Date | undefined;
+    /** Text why the user is locked out (suitable for display) */
+    lockoutReason?: string | undefined;
+    /** How many bad password attempts in a row */
+    failedLoginRun: number;
+    /** When true, this exact user ID is integrated with Accounting */
+    solomonUser: boolean;
+    /** When true, this is the users first interactive session */
+    isFirstLogin: boolean;
+    /** Current IIS Session ID */
+    masterSession?: string | undefined;
+    /** Guid for this session in xsfUserSession  */
+    userSessionKey: string;
+    /** URI for an image of this user */
+    pictureURL?: string | undefined;
+    /** hmmm */
+    pDSKey?: string | undefined;
+    /** This data is locked in memory */
+    isDSProtected: boolean;
+}
+
+export class PasswordConfiguredOptions implements IPasswordConfiguredOptions {
+
+    constructor(data?: IPasswordConfiguredOptions) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): PasswordConfiguredOptions {
+        data = typeof data === 'object' ? data : {};
+        let result = new PasswordConfiguredOptions();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        return data; 
+    }
+
+    clone(): PasswordConfiguredOptions {
+        const json = this.toJSON();
+        let result = new PasswordConfiguredOptions();
+        result.init(json);
+        return result;
+    }
+}
+
+export interface IPasswordConfiguredOptions {
+}
+
+/** Permission required flag -- bit flags can be combined */
+export enum PermissionFlags {
+    None = 0,
+    Read = 1,
+    Insert = 2,
+    Update = 4,
+    Delete = 8,
+    Blanket = 16,
+}
+
+/** Describes permission being demanded and the context */
+export class PermissionContext implements IPermissionContext {
+    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
+    uCModule!: string;
+    /** Internal Name (see xsfUCFunction) */
+    uCFunction!: string;
+    /** Project ID  */
     project?: string | undefined;
-    /** Source of alert (ATC, CloudStorage, etc) */
-    source?: string | undefined;
-    /** Key from source to indentify its alerts */
-    sourceKey?: string | undefined;
-    /** Extra info for categorization */
-    info1?: string | undefined;
-    /** Extra info 2 */
-    info2?: string | undefined;
-    /** Files attached to document */
-    filesAttached: number;
-    /** unused */
-    msg_type?: string | undefined;
-    /** unused */
-    msg_key?: string | undefined;
-    /** unused */
-    msg_suffix?: string | undefined;
-    /** When true, this alert was from an external source (seldom used) */
-    sIVAlert: boolean;
-}
+    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
+    docMasterKey!: string;
+    /** Document Type */
+    docTypeKey!: string;
+    /** Doc Reference (seldom used) */
+    docReference!: string;
+    /** Bit Coded R I U D S  */
+    permissionNeeded!: PermissionFlags;
 
-/** Describes a Part, including the fields available to this user */
-export class UIDisplayPart implements IUIDisplayPart {
-    /** Reference to UI Part by name (Alternate Key) */
-    partName?: string | undefined;
-    /** Display Name  */
-    displayName?: string | undefined;
-    /** Free form explaination or generic description   */
-    description?: string | undefined;
-    /** API hint */
-    getAPI?: string | undefined;
-    /** When not empty, provides hint as to initial sort */
-    sortHint?: string | undefined;
-    /** G(rid);F(ilters);P(anel);T(abs)
-D(ashboard);L(ayout);N(avigation);GG: multiple grid; CC: Combo Control */
-    partType?: string | undefined;
-    /** List of UI Items  */
-    uIItems?: UIDisplayConfig[] | undefined;
-    /** List of UI filters  */
-    uIFilters?: UIDisplayFilter[] | undefined;
-    /** When true, configurable for legacy UI */
-    viaUI!: boolean;
-    /** When true, configurable for WebIX UI */
-    wbxUI!: boolean;
-
-    constructor(data?: IUIDisplayPart) {
+    constructor(data?: IPermissionContext) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -9512,152 +8939,251 @@ D(ashboard);L(ayout);N(avigation);GG: multiple grid; CC: Combo Control */
 
     init(_data?: any) {
         if (_data) {
-            this.partName = _data["PartName"];
-            this.displayName = _data["DisplayName"];
+            this.uCModule = _data["UCModule"];
+            this.uCFunction = _data["UCFunction"];
+            this.project = _data["Project"];
+            this.docMasterKey = _data["DocMasterKey"];
+            this.docTypeKey = _data["DocTypeKey"];
+            this.docReference = _data["DocReference"];
+            this.permissionNeeded = _data["PermissionNeeded"];
+        }
+    }
+
+    static fromJS(data: any): PermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new PermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UCModule"] = this.uCModule;
+        data["UCFunction"] = this.uCFunction;
+        data["Project"] = this.project;
+        data["DocMasterKey"] = this.docMasterKey;
+        data["DocTypeKey"] = this.docTypeKey;
+        data["DocReference"] = this.docReference;
+        data["PermissionNeeded"] = this.permissionNeeded;
+        return data; 
+    }
+
+    clone(): PermissionContext {
+        const json = this.toJSON();
+        let result = new PermissionContext();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes permission being demanded and the context */
+export interface IPermissionContext {
+    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
+    uCModule: string;
+    /** Internal Name (see xsfUCFunction) */
+    uCFunction: string;
+    /** Project ID  */
+    project?: string | undefined;
+    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
+    docMasterKey: string;
+    /** Document Type */
+    docTypeKey: string;
+    /** Doc Reference (seldom used) */
+    docReference: string;
+    /** Bit Coded R I U D S  */
+    permissionNeeded: PermissionFlags;
+}
+
+/** Attributes describing a member of a project team */
+export class Suggestion implements ISuggestion {
+    /** Key (empty if not applicable) */
+    key?: string | undefined;
+    /** display  */
+    label?: string | undefined;
+    /** value (if key is specified, this is the display value and key is the data value) */
+    value?: string | undefined;
+
+    constructor(data?: ISuggestion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.key = _data["key"];
+            this.label = _data["label"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): Suggestion {
+        data = typeof data === 'object' ? data : {};
+        let result = new Suggestion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["key"] = this.key;
+        data["label"] = this.label;
+        data["value"] = this.value;
+        return data; 
+    }
+
+    clone(): Suggestion {
+        const json = this.toJSON();
+        let result = new Suggestion();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Attributes describing a member of a project team */
+export interface ISuggestion {
+    /** Key (empty if not applicable) */
+    key?: string | undefined;
+    /** display  */
+    label?: string | undefined;
+    /** value (if key is specified, this is the display value and key is the data value) */
+    value?: string | undefined;
+}
+
+/** Attributes describing a choice defined in Code Maintenance - for context UI */
+export class CodeChoice implements ICodeChoice {
+    /** Name for a set of choices */
+    setName!: string;
+    /** Code */
+    code!: string;
+    /** Display Value  */
+    description!: string;
+    /** For cascading codes, names the next code set */
+    nextSet?: string | undefined;
+    /** True if code is still active */
+    active!: boolean;
+    /** True if code is allowed for new records */
+    onAdd!: boolean;
+    /** Code Flag - use varies by code set */
+    codeFlag!: boolean;
+
+    constructor(data?: ICodeChoice) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.setName = _data["SetName"];
+            this.code = _data["Code"];
             this.description = _data["Description"];
-            this.getAPI = _data["GetAPI"];
-            this.sortHint = _data["SortHint"];
-            this.partType = _data["PartType"];
-            if (Array.isArray(_data["UIItems"])) {
-                this.uIItems = [] as any;
-                for (let item of _data["UIItems"])
-                    this.uIItems!.push(UIDisplayConfig.fromJS(item));
-            }
-            if (Array.isArray(_data["UIFilters"])) {
-                this.uIFilters = [] as any;
-                for (let item of _data["UIFilters"])
-                    this.uIFilters!.push(UIDisplayFilter.fromJS(item));
-            }
-            this.viaUI = _data["ViaUI"];
-            this.wbxUI = _data["wbxUI"];
+            this.nextSet = _data["NextSet"];
+            this.active = _data["Active"];
+            this.onAdd = _data["OnAdd"];
+            this.codeFlag = _data["CodeFlag"];
         }
     }
 
-    static fromJS(data: any): UIDisplayPart {
+    static fromJS(data: any): CodeChoice {
         data = typeof data === 'object' ? data : {};
-        let result = new UIDisplayPart();
+        let result = new CodeChoice();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["PartName"] = this.partName;
-        data["DisplayName"] = this.displayName;
+        data["SetName"] = this.setName;
+        data["Code"] = this.code;
         data["Description"] = this.description;
-        data["GetAPI"] = this.getAPI;
-        data["SortHint"] = this.sortHint;
-        data["PartType"] = this.partType;
-        if (Array.isArray(this.uIItems)) {
-            data["UIItems"] = [];
-            for (let item of this.uIItems)
-                data["UIItems"].push(item.toJSON());
-        }
-        if (Array.isArray(this.uIFilters)) {
-            data["UIFilters"] = [];
-            for (let item of this.uIFilters)
-                data["UIFilters"].push(item.toJSON());
-        }
-        data["ViaUI"] = this.viaUI;
-        data["wbxUI"] = this.wbxUI;
+        data["NextSet"] = this.nextSet;
+        data["Active"] = this.active;
+        data["OnAdd"] = this.onAdd;
+        data["CodeFlag"] = this.codeFlag;
         return data; 
     }
 
-    clone(): UIDisplayPart {
+    clone(): CodeChoice {
         const json = this.toJSON();
-        let result = new UIDisplayPart();
+        let result = new CodeChoice();
         result.init(json);
         return result;
     }
 }
 
-/** Describes a Part, including the fields available to this user */
-export interface IUIDisplayPart {
-    /** Reference to UI Part by name (Alternate Key) */
-    partName?: string | undefined;
-    /** Display Name  */
-    displayName?: string | undefined;
-    /** Free form explaination or generic description   */
+/** Attributes describing a choice defined in Code Maintenance - for context UI */
+export interface ICodeChoice {
+    /** Name for a set of choices */
+    setName: string;
+    /** Code */
+    code: string;
+    /** Display Value  */
+    description: string;
+    /** For cascading codes, names the next code set */
+    nextSet?: string | undefined;
+    /** True if code is still active */
+    active: boolean;
+    /** True if code is allowed for new records */
+    onAdd: boolean;
+    /** Code Flag - use varies by code set */
+    codeFlag: boolean;
+}
+
+/** Primary Summary */
+export class ProjectSummary implements IProjectSummary {
+    /** Project ID */
+    project!: string;
+    /** Project Name */
+    projectName?: string | undefined;
+    /** Site Address Line 1 */
+    addr1?: string | undefined;
+    /** Site Address Line 2 */
+    addr2?: string | undefined;
+    /** Site Address City */
+    city?: string | undefined;
+    /** Site Address State */
+    state?: string | undefined;
+    /** Site Address Zip */
+    zip?: string | undefined;
+    /** County */
+    county?: string | undefined;
+    /** Description from Project Setup Scope */
     description?: string | undefined;
-    /** API hint */
-    getAPI?: string | undefined;
-    /** When not empty, provides hint as to initial sort */
-    sortHint?: string | undefined;
-    /** G(rid);F(ilters);P(anel);T(abs)
-D(ashboard);L(ayout);N(avigation);GG: multiple grid; CC: Combo Control */
-    partType?: string | undefined;
-    /** List of UI Items  */
-    uIItems?: UIDisplayConfig[] | undefined;
-    /** List of UI filters  */
-    uIFilters?: UIDisplayFilter[] | undefined;
-    /** When true, configurable for legacy UI */
-    viaUI: boolean;
-    /** When true, configurable for WebIX UI */
-    wbxUI: boolean;
-}
+    /** Resolved Status */
+    statusText?: string | undefined;
+    /** External Status from Project Setup Tab */
+    externalStatus?: string | undefined;
+    /** External Schedule from Project Setup Tab */
+    externalSchedule?: string | undefined;
+    /** Person on Site Address */
+    person?: string | undefined;
+    /** Company */
+    company?: string | undefined;
+    /** Geo Latitude from Project Setup Tab */
+    latitude!: number;
+    /** Geo longitude from Project Setup Tab */
+    longitude!: number;
+    /** Start Date from Project Setup Dates tab */
+    startDate!: Date;
+    /** Finish Date from Project Setup Dates tab */
+    finishDate!: Date;
+    /** Key for this user on project team */
+    userProjectKey!: string;
+    /** Key for Project Setup Source Contact (Customer/Owner) */
+    sourceContact!: string;
+    /** Key for Image */
+    imageKey!: string;
+    /** TRUE if this project is on the user list */
+    userList!: boolean;
 
-/** Describes the live configuration for a UI element (not for edit, see UIPartConfig) */
-export class UIDisplayConfig implements IUIDisplayConfig {
-    /** Key for this Configuration Entry (for link to edit mode) */
-    partConfigKey!: string;
-    /** One of the UI item names listed in Page.Config (PartCfgItem) */
-    itemName?: string | undefined;
-    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
-    dataMember?: string | undefined;
-    /** Name of a field in the schema */
-    dataField?: string | undefined;
-    /** The visible label for this entry */
-    label?: string | undefined;
-    /** Name of lookup */
-    lookupName?: string | undefined;
-    /** F2, C4, etc, plus some special cases (see KBA) */
-    displayFormat?: string | undefined;
-    /** see KBA-01336 (AuxData Name-Value Pairs) */
-    otherProperties?: { [key: string]: any; } | undefined;
-    /** Click Action */
-    clickAction?: string | undefined;
-    /** For quick help */
-    helpText?: string | undefined;
-    /** For overriding length, in characters allowed in this field.  See also MaxChars */
-    limitTo!: number;
-    /** Max characters, for character types, this is from database size */
-    maxChars!: number;
-    /** For indicating a value is (or can sometimes be) required (zero is not required) */
-    requiredBefore!: number;
-    /** For controling tab order */
-    seqData!: number;
-    /** When TRUE, UI will be read only */
-    isReadOnly!: boolean;
-    /** Controls the visible attribute (or sets a boolean value) */
-    visible!: boolean;
-    /** When true, this data is object is from internal defaults */
-    isInternalDefault!: boolean;
-    /** CSS to be applied */
-    cSS?: string | undefined;
-    /** Client Side Describe Value name */
-    dV?: string | undefined;
-    /** Lookups and DV depend on these fields (up to 4) */
-    dependsOn?: string | undefined;
-    /** When 1, allow HTML */
-    hTML!: boolean;
-    /** HTML 5 Placeholder text */
-    overlay?: string | undefined;
-    /** Limits Visibility to certain conditions */
-    shownWhen?: string | undefined;
-    /** DV function used to validate */
-    validateAgainst?: string | undefined;
-    /** DV function used to validate alternate text (such as email -&gt; contact) */
-    validateTextAgainst?: string | undefined;
-    /** Max */
-    validationMax?: string | undefined;
-    /** Min */
-    validationMin?: string | undefined;
-    /** Width expressed in Pixels (if possible) */
-    width!: number;
-    /** HTML friendly, CSS compliant width; eg 20ex or 40% */
-    widthCSS?: string | undefined;
-
-    constructor(data?: IUIDisplayConfig) {
+    constructor(data?: IProjectSummary) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -9668,199 +9194,161 @@ export class UIDisplayConfig implements IUIDisplayConfig {
 
     init(_data?: any) {
         if (_data) {
-            this.partConfigKey = _data["PartConfigKey"];
-            this.itemName = _data["ItemName"];
-            this.dataMember = _data["DataMember"];
-            this.dataField = _data["DataField"];
-            this.label = _data["Label"];
-            this.lookupName = _data["LookupName"];
-            this.displayFormat = _data["DisplayFormat"];
-            if (_data["OtherProperties"]) {
-                this.otherProperties = {} as any;
-                for (let key in _data["OtherProperties"]) {
-                    if (_data["OtherProperties"].hasOwnProperty(key))
-                        this.otherProperties![key] = _data["OtherProperties"][key];
-                }
-            }
-            this.clickAction = _data["ClickAction"];
-            this.helpText = _data["HelpText"];
-            this.limitTo = _data["LimitTo"];
-            this.maxChars = _data["MaxChars"];
-            this.requiredBefore = _data["RequiredBefore"];
-            this.seqData = _data["SeqData"];
-            this.isReadOnly = _data["IsReadOnly"];
-            this.visible = _data["Visible"];
-            this.isInternalDefault = _data["IsInternalDefault"];
-            this.cSS = _data["CSS"];
-            this.dV = _data["DV"];
-            this.dependsOn = _data["DependsOn"];
-            this.hTML = _data["HTML"];
-            this.overlay = _data["Overlay"];
-            this.shownWhen = _data["ShownWhen"];
-            this.validateAgainst = _data["ValidateAgainst"];
-            this.validateTextAgainst = _data["ValidateTextAgainst"];
-            this.validationMax = _data["ValidationMax"];
-            this.validationMin = _data["ValidationMin"];
-            this.width = _data["Width"];
-            this.widthCSS = _data["WidthCSS"];
+            this.project = _data["Project"];
+            this.projectName = _data["ProjectName"];
+            this.addr1 = _data["Addr1"];
+            this.addr2 = _data["Addr2"];
+            this.city = _data["City"];
+            this.state = _data["State"];
+            this.zip = _data["Zip"];
+            this.county = _data["County"];
+            this.description = _data["Description"];
+            this.statusText = _data["StatusText"];
+            this.externalStatus = _data["ExternalStatus"];
+            this.externalSchedule = _data["ExternalSchedule"];
+            this.person = _data["Person"];
+            this.company = _data["Company"];
+            this.latitude = _data["latitude"];
+            this.longitude = _data["longitude"];
+            this.startDate = _data["StartDate"] ? new Date(_data["StartDate"].toString()) : <any>undefined;
+            this.finishDate = _data["FinishDate"] ? new Date(_data["FinishDate"].toString()) : <any>undefined;
+            this.userProjectKey = _data["UserProjectKey"];
+            this.sourceContact = _data["SourceContact"];
+            this.imageKey = _data["ImageKey"];
+            this.userList = _data["UserList"];
         }
     }
 
-    static fromJS(data: any): UIDisplayConfig {
+    static fromJS(data: any): ProjectSummary {
         data = typeof data === 'object' ? data : {};
-        let result = new UIDisplayConfig();
+        let result = new ProjectSummary();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["PartConfigKey"] = this.partConfigKey;
-        data["ItemName"] = this.itemName;
-        data["DataMember"] = this.dataMember;
-        data["DataField"] = this.dataField;
-        data["Label"] = this.label;
-        data["LookupName"] = this.lookupName;
-        data["DisplayFormat"] = this.displayFormat;
-        if (this.otherProperties) {
-            data["OtherProperties"] = {};
-            for (let key in this.otherProperties) {
-                if (this.otherProperties.hasOwnProperty(key))
-                    data["OtherProperties"][key] = this.otherProperties[key];
-            }
-        }
-        data["ClickAction"] = this.clickAction;
-        data["HelpText"] = this.helpText;
-        data["LimitTo"] = this.limitTo;
-        data["MaxChars"] = this.maxChars;
-        data["RequiredBefore"] = this.requiredBefore;
-        data["SeqData"] = this.seqData;
-        data["IsReadOnly"] = this.isReadOnly;
-        data["Visible"] = this.visible;
-        data["IsInternalDefault"] = this.isInternalDefault;
-        data["CSS"] = this.cSS;
-        data["DV"] = this.dV;
-        data["DependsOn"] = this.dependsOn;
-        data["HTML"] = this.hTML;
-        data["Overlay"] = this.overlay;
-        data["ShownWhen"] = this.shownWhen;
-        data["ValidateAgainst"] = this.validateAgainst;
-        data["ValidateTextAgainst"] = this.validateTextAgainst;
-        data["ValidationMax"] = this.validationMax;
-        data["ValidationMin"] = this.validationMin;
-        data["Width"] = this.width;
-        data["WidthCSS"] = this.widthCSS;
+        data["Project"] = this.project;
+        data["ProjectName"] = this.projectName;
+        data["Addr1"] = this.addr1;
+        data["Addr2"] = this.addr2;
+        data["City"] = this.city;
+        data["State"] = this.state;
+        data["Zip"] = this.zip;
+        data["County"] = this.county;
+        data["Description"] = this.description;
+        data["StatusText"] = this.statusText;
+        data["ExternalStatus"] = this.externalStatus;
+        data["ExternalSchedule"] = this.externalSchedule;
+        data["Person"] = this.person;
+        data["Company"] = this.company;
+        data["latitude"] = this.latitude;
+        data["longitude"] = this.longitude;
+        data["StartDate"] = this.startDate ? this.startDate.toISOString() : <any>undefined;
+        data["FinishDate"] = this.finishDate ? this.finishDate.toISOString() : <any>undefined;
+        data["UserProjectKey"] = this.userProjectKey;
+        data["SourceContact"] = this.sourceContact;
+        data["ImageKey"] = this.imageKey;
+        data["UserList"] = this.userList;
         return data; 
     }
 
-    clone(): UIDisplayConfig {
+    clone(): ProjectSummary {
         const json = this.toJSON();
-        let result = new UIDisplayConfig();
+        let result = new ProjectSummary();
         result.init(json);
         return result;
     }
 }
 
-/** Describes the live configuration for a UI element (not for edit, see UIPartConfig) */
-export interface IUIDisplayConfig {
-    /** Key for this Configuration Entry (for link to edit mode) */
-    partConfigKey: string;
-    /** One of the UI item names listed in Page.Config (PartCfgItem) */
-    itemName?: string | undefined;
-    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
-    dataMember?: string | undefined;
-    /** Name of a field in the schema */
-    dataField?: string | undefined;
-    /** The visible label for this entry */
-    label?: string | undefined;
-    /** Name of lookup */
-    lookupName?: string | undefined;
-    /** F2, C4, etc, plus some special cases (see KBA) */
-    displayFormat?: string | undefined;
-    /** see KBA-01336 (AuxData Name-Value Pairs) */
-    otherProperties?: { [key: string]: any; } | undefined;
-    /** Click Action */
-    clickAction?: string | undefined;
-    /** For quick help */
-    helpText?: string | undefined;
-    /** For overriding length, in characters allowed in this field.  See also MaxChars */
-    limitTo: number;
-    /** Max characters, for character types, this is from database size */
-    maxChars: number;
-    /** For indicating a value is (or can sometimes be) required (zero is not required) */
-    requiredBefore: number;
-    /** For controling tab order */
-    seqData: number;
-    /** When TRUE, UI will be read only */
-    isReadOnly: boolean;
-    /** Controls the visible attribute (or sets a boolean value) */
-    visible: boolean;
-    /** When true, this data is object is from internal defaults */
-    isInternalDefault: boolean;
-    /** CSS to be applied */
-    cSS?: string | undefined;
-    /** Client Side Describe Value name */
-    dV?: string | undefined;
-    /** Lookups and DV depend on these fields (up to 4) */
-    dependsOn?: string | undefined;
-    /** When 1, allow HTML */
-    hTML: boolean;
-    /** HTML 5 Placeholder text */
-    overlay?: string | undefined;
-    /** Limits Visibility to certain conditions */
-    shownWhen?: string | undefined;
-    /** DV function used to validate */
-    validateAgainst?: string | undefined;
-    /** DV function used to validate alternate text (such as email -&gt; contact) */
-    validateTextAgainst?: string | undefined;
-    /** Max */
-    validationMax?: string | undefined;
-    /** Min */
-    validationMin?: string | undefined;
-    /** Width expressed in Pixels (if possible) */
-    width: number;
-    /** HTML friendly, CSS compliant width; eg 20ex or 40% */
-    widthCSS?: string | undefined;
+/** Primary Summary */
+export interface IProjectSummary {
+    /** Project ID */
+    project: string;
+    /** Project Name */
+    projectName?: string | undefined;
+    /** Site Address Line 1 */
+    addr1?: string | undefined;
+    /** Site Address Line 2 */
+    addr2?: string | undefined;
+    /** Site Address City */
+    city?: string | undefined;
+    /** Site Address State */
+    state?: string | undefined;
+    /** Site Address Zip */
+    zip?: string | undefined;
+    /** County */
+    county?: string | undefined;
+    /** Description from Project Setup Scope */
+    description?: string | undefined;
+    /** Resolved Status */
+    statusText?: string | undefined;
+    /** External Status from Project Setup Tab */
+    externalStatus?: string | undefined;
+    /** External Schedule from Project Setup Tab */
+    externalSchedule?: string | undefined;
+    /** Person on Site Address */
+    person?: string | undefined;
+    /** Company */
+    company?: string | undefined;
+    /** Geo Latitude from Project Setup Tab */
+    latitude: number;
+    /** Geo longitude from Project Setup Tab */
+    longitude: number;
+    /** Start Date from Project Setup Dates tab */
+    startDate: Date;
+    /** Finish Date from Project Setup Dates tab */
+    finishDate: Date;
+    /** Key for this user on project team */
+    userProjectKey: string;
+    /** Key for Project Setup Source Contact (Customer/Owner) */
+    sourceContact: string;
+    /** Key for Image */
+    imageKey: string;
+    /** TRUE if this project is on the user list */
+    userList: boolean;
 }
 
-/** Describes the live configuration for a UI filter (not for edit, see UIPartConfig) */
-export class UIDisplayFilter implements IUIDisplayFilter {
-    /** Key for this Configuration Entry (for link to edit mode) */
-    partConfigKey!: string;
-    /** One of the UI item names   */
-    itemName?: string | undefined;
-    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
-    dataMember?: string | undefined;
-    /** Name of a field in the schema */
-    dataField?: string | undefined;
-    /** The visible label for this entry */
-    label?: string | undefined;
-    /** Name of lookup */
-    lookupName?: string | undefined;
-    /** F2, C4, etc, plus some special cases (see KBA) */
-    displayFormat?: string | undefined;
-    /** see KBA-01336 */
-    auxData?: { [key: string]: any; } | undefined;
-    /** For quick help */
-    helpText?: string | undefined;
-    /** For overriding allowed length */
-    limitTo!: number;
-    /** Provides a default for a filter ( 1 for true/checked ) */
-    defaultValue?: string | undefined;
-    /** Controls the visible attribute (or sets a boolean value) */
-    visible!: boolean;
-    /** When true, this data is object is from internal defaults */
-    isInternalDefault!: boolean;
-    /** CSS to be applied */
-    cSS?: string | undefined;
-    /** Client Side Describe Value name */
-    dV?: string | undefined;
-    /** Lookups and DV depend on these fields (up to 4) */
-    dependsOn?: string | undefined;
-    /** HTML 5 Placeholder text */
-    overlay?: string | undefined;
+/** Summary information about a contact */
+export class ContactSummary implements IContactSummary {
+    /** Link to user/contact */
+    userKey!: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    userName?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    sortName?: string | undefined;
+    /** Standard SMTP Email Address */
+    email?: string | undefined;
+    /** Which phone is preferred */
+    usePhone?: string | undefined;
+    /** Predominantly Obsolete */
+    fax?: string | undefined;
+    /** When True, can log in to sfPMS */
+    sfUser!: boolean;
+    /** Emp, Vendor, Customer, Standard */
+    contactType?: string | undefined;
+    /** Bit coded  */
+    contactFlags!: number;
+    /** ID from external source (customer or vendor ID, revision or batch id) */
+    externalID?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    company?: string | undefined;
+    /** For Vendors, indicate related CSI  */
+    cSIList?: string | undefined;
+    /** When false, this row is ignored and ineffective */
+    active!: boolean;
+    /** When true, there are no references to this contact */
+    okToDelete!: boolean;
+    /** When true, this contact came from an external source */
+    isXTS!: boolean;
+    /** When true, external changes to this contact are currently ignored */
+    xTSBlockIn!: boolean;
+    /** When true, changes to this contact are not being shared with external peer */
+    xTSBlockOut!: boolean;
+    /** When true, this is the company contact - not a person at the company */
+    isPrimary!: boolean;
 
-    constructor(data?: IUIDisplayFilter) {
+    constructor(data?: IContactSummary) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -9871,132 +9359,145 @@ export class UIDisplayFilter implements IUIDisplayFilter {
 
     init(_data?: any) {
         if (_data) {
-            this.partConfigKey = _data["PartConfigKey"];
-            this.itemName = _data["ItemName"];
-            this.dataMember = _data["DataMember"];
-            this.dataField = _data["DataField"];
-            this.label = _data["Label"];
-            this.lookupName = _data["LookupName"];
-            this.displayFormat = _data["DisplayFormat"];
-            if (_data["AuxData"]) {
-                this.auxData = {} as any;
-                for (let key in _data["AuxData"]) {
-                    if (_data["AuxData"].hasOwnProperty(key))
-                        this.auxData![key] = _data["AuxData"][key];
-                }
-            }
-            this.helpText = _data["HelpText"];
-            this.limitTo = _data["LimitTo"];
-            this.defaultValue = _data["DefaultValue"];
-            this.visible = _data["Visible"];
-            this.isInternalDefault = _data["IsInternalDefault"];
-            this.cSS = _data["CSS"];
-            this.dV = _data["DV"];
-            this.dependsOn = _data["DependsOn"];
-            this.overlay = _data["Overlay"];
+            this.userKey = _data["UserKey"];
+            this.userName = _data["UserName"];
+            this.sortName = _data["SortName"];
+            this.email = _data["Email"];
+            this.usePhone = _data["UsePhone"];
+            this.fax = _data["Fax"];
+            this.sfUser = _data["sfUser"];
+            this.contactType = _data["ContactType"];
+            this.contactFlags = _data["ContactFlags"];
+            this.externalID = _data["ExternalID"];
+            this.company = _data["Company"];
+            this.cSIList = _data["CSIList"];
+            this.active = _data["Active"];
+            this.okToDelete = _data["OkToDelete"];
+            this.isXTS = _data["IsXTS"];
+            this.xTSBlockIn = _data["XTSBlockIn"];
+            this.xTSBlockOut = _data["XTSBlockOut"];
+            this.isPrimary = _data["IsPrimary"];
         }
     }
 
-    static fromJS(data: any): UIDisplayFilter {
+    static fromJS(data: any): ContactSummary {
         data = typeof data === 'object' ? data : {};
-        let result = new UIDisplayFilter();
+        let result = new ContactSummary();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["PartConfigKey"] = this.partConfigKey;
-        data["ItemName"] = this.itemName;
-        data["DataMember"] = this.dataMember;
-        data["DataField"] = this.dataField;
-        data["Label"] = this.label;
-        data["LookupName"] = this.lookupName;
-        data["DisplayFormat"] = this.displayFormat;
-        if (this.auxData) {
-            data["AuxData"] = {};
-            for (let key in this.auxData) {
-                if (this.auxData.hasOwnProperty(key))
-                    data["AuxData"][key] = this.auxData[key];
-            }
-        }
-        data["HelpText"] = this.helpText;
-        data["LimitTo"] = this.limitTo;
-        data["DefaultValue"] = this.defaultValue;
-        data["Visible"] = this.visible;
-        data["IsInternalDefault"] = this.isInternalDefault;
-        data["CSS"] = this.cSS;
-        data["DV"] = this.dV;
-        data["DependsOn"] = this.dependsOn;
-        data["Overlay"] = this.overlay;
+        data["UserKey"] = this.userKey;
+        data["UserName"] = this.userName;
+        data["SortName"] = this.sortName;
+        data["Email"] = this.email;
+        data["UsePhone"] = this.usePhone;
+        data["Fax"] = this.fax;
+        data["sfUser"] = this.sfUser;
+        data["ContactType"] = this.contactType;
+        data["ContactFlags"] = this.contactFlags;
+        data["ExternalID"] = this.externalID;
+        data["Company"] = this.company;
+        data["CSIList"] = this.cSIList;
+        data["Active"] = this.active;
+        data["OkToDelete"] = this.okToDelete;
+        data["IsXTS"] = this.isXTS;
+        data["XTSBlockIn"] = this.xTSBlockIn;
+        data["XTSBlockOut"] = this.xTSBlockOut;
+        data["IsPrimary"] = this.isPrimary;
         return data; 
     }
 
-    clone(): UIDisplayFilter {
+    clone(): ContactSummary {
         const json = this.toJSON();
-        let result = new UIDisplayFilter();
+        let result = new ContactSummary();
         result.init(json);
         return result;
     }
 }
 
-/** Describes the live configuration for a UI filter (not for edit, see UIPartConfig) */
-export interface IUIDisplayFilter {
-    /** Key for this Configuration Entry (for link to edit mode) */
-    partConfigKey: string;
-    /** One of the UI item names   */
-    itemName?: string | undefined;
-    /** Name of a table in the XSF schema (similar to SQL table name; may not match API model name) */
-    dataMember?: string | undefined;
-    /** Name of a field in the schema */
-    dataField?: string | undefined;
-    /** The visible label for this entry */
-    label?: string | undefined;
-    /** Name of lookup */
-    lookupName?: string | undefined;
-    /** F2, C4, etc, plus some special cases (see KBA) */
-    displayFormat?: string | undefined;
-    /** see KBA-01336 */
-    auxData?: { [key: string]: any; } | undefined;
-    /** For quick help */
-    helpText?: string | undefined;
-    /** For overriding allowed length */
-    limitTo: number;
-    /** Provides a default for a filter ( 1 for true/checked ) */
-    defaultValue?: string | undefined;
-    /** Controls the visible attribute (or sets a boolean value) */
-    visible: boolean;
-    /** When true, this data is object is from internal defaults */
-    isInternalDefault: boolean;
-    /** CSS to be applied */
-    cSS?: string | undefined;
-    /** Client Side Describe Value name */
-    dV?: string | undefined;
-    /** Lookups and DV depend on these fields (up to 4) */
-    dependsOn?: string | undefined;
-    /** HTML 5 Placeholder text */
-    overlay?: string | undefined;
+/** Summary information about a contact */
+export interface IContactSummary {
+    /** Link to user/contact */
+    userKey: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    userName?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    sortName?: string | undefined;
+    /** Standard SMTP Email Address */
+    email?: string | undefined;
+    /** Which phone is preferred */
+    usePhone?: string | undefined;
+    /** Predominantly Obsolete */
+    fax?: string | undefined;
+    /** When True, can log in to sfPMS */
+    sfUser: boolean;
+    /** Emp, Vendor, Customer, Standard */
+    contactType?: string | undefined;
+    /** Bit coded  */
+    contactFlags: number;
+    /** ID from external source (customer or vendor ID, revision or batch id) */
+    externalID?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    company?: string | undefined;
+    /** For Vendors, indicate related CSI  */
+    cSIList?: string | undefined;
+    /** When false, this row is ignored and ineffective */
+    active: boolean;
+    /** When true, there are no references to this contact */
+    okToDelete: boolean;
+    /** When true, this contact came from an external source */
+    isXTS: boolean;
+    /** When true, external changes to this contact are currently ignored */
+    xTSBlockIn: boolean;
+    /** When true, changes to this contact are not being shared with external peer */
+    xTSBlockOut: boolean;
+    /** When true, this is the company contact - not a person at the company */
+    isPrimary: boolean;
 }
 
-/** Primary Site Weather Now */
-export class ProjKPIFact implements IProjKPIFact {
-    /** Target which KPI column */
-    column?: string | undefined;
-    /** Label  */
-    label?: string | undefined;
-    /** Value to display */
-    value?: string | undefined;
-    /** Set if value has a click action */
-    action?: string | undefined;
-    /** Display Format (C2) */
-    dForm?: string | undefined;
-    /** CSS to apply */
-    tForm?: string | undefined;
-    negative!: boolean;
-    /** UI CFG Item Name */
-    itemName?: string | undefined;
+/** Various filters for contact search */
+export class ContactFilters implements IContactFilters {
+    /** Name like */
+    nameLike?: string | undefined;
+    /** Email  */
+    emailLike?: string | undefined;
+    /** Company like  */
+    companyLike?: string | undefined;
+    /** Location */
+    locationLike?: string | undefined;
+    /** ID like (vendor, customer, employee IDs) */
+    iDLike?: string | undefined;
+    /** For Vendors, specified related CSI  */
+    cSIListLike?: string | undefined;
+    /** Phone Like (matches any phone number) */
+    phoneLike?: string | undefined;
+    /** When true, result is limited to  */
+    users!: boolean;
+    /** When true, result is limited to  */
+    customers!: boolean;
+    /** When true, result is limited to  */
+    employee!: boolean;
+    /** When true, result is limited to  */
+    public!: boolean;
+    /** When true, result is limited to primary company contacts  */
+    company!: boolean;
+    /** When true, result is limited to  */
+    vendors!: boolean;
+    /** 1==Active;0==Inactive; 2==Both */
+    contactState!: number;
+    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
+    roleKey?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    userKey?: string | undefined;
+    /** Default 2000-01-01 */
+    fromDate?: Date | undefined;
+    /** Default today */
+    thruDate?: Date | undefined;
 
-    constructor(data?: IProjKPIFact) {
+    constructor(data?: IContactFilters) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -10007,62 +9508,480 @@ export class ProjKPIFact implements IProjKPIFact {
 
     init(_data?: any) {
         if (_data) {
-            this.column = _data["Column"];
-            this.label = _data["Label"];
-            this.value = _data["Value"];
-            this.action = _data["Action"];
-            this.dForm = _data["DForm"];
-            this.tForm = _data["TForm"];
-            this.negative = _data["Negative"];
-            this.itemName = _data["ItemName"];
+            this.nameLike = _data["NameLike"];
+            this.emailLike = _data["EmailLike"];
+            this.companyLike = _data["CompanyLike"];
+            this.locationLike = _data["LocationLike"];
+            this.iDLike = _data["IDLike"];
+            this.cSIListLike = _data["CSIListLike"];
+            this.phoneLike = _data["PhoneLike"];
+            this.users = _data["Users"];
+            this.customers = _data["Customers"];
+            this.employee = _data["Employee"];
+            this.public = _data["Public"];
+            this.company = _data["Company"];
+            this.vendors = _data["Vendors"];
+            this.contactState = _data["ContactState"];
+            this.roleKey = _data["RoleKey"];
+            this.userKey = _data["UserKey"];
+            this.fromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
+            this.thruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
         }
     }
 
-    static fromJS(data: any): ProjKPIFact {
+    static fromJS(data: any): ContactFilters {
         data = typeof data === 'object' ? data : {};
-        let result = new ProjKPIFact();
+        let result = new ContactFilters();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["Column"] = this.column;
-        data["Label"] = this.label;
-        data["Value"] = this.value;
-        data["Action"] = this.action;
-        data["DForm"] = this.dForm;
-        data["TForm"] = this.tForm;
-        data["Negative"] = this.negative;
-        data["ItemName"] = this.itemName;
+        data["NameLike"] = this.nameLike;
+        data["EmailLike"] = this.emailLike;
+        data["CompanyLike"] = this.companyLike;
+        data["LocationLike"] = this.locationLike;
+        data["IDLike"] = this.iDLike;
+        data["CSIListLike"] = this.cSIListLike;
+        data["PhoneLike"] = this.phoneLike;
+        data["Users"] = this.users;
+        data["Customers"] = this.customers;
+        data["Employee"] = this.employee;
+        data["Public"] = this.public;
+        data["Company"] = this.company;
+        data["Vendors"] = this.vendors;
+        data["ContactState"] = this.contactState;
+        data["RoleKey"] = this.roleKey;
+        data["UserKey"] = this.userKey;
+        data["FromDate"] = this.fromDate ? this.fromDate.toISOString() : <any>undefined;
+        data["ThruDate"] = this.thruDate ? this.thruDate.toISOString() : <any>undefined;
         return data; 
     }
 
-    clone(): ProjKPIFact {
+    clone(): ContactFilters {
         const json = this.toJSON();
-        let result = new ProjKPIFact();
+        let result = new ContactFilters();
         result.init(json);
         return result;
     }
 }
 
-/** Primary Site Weather Now */
-export interface IProjKPIFact {
-    /** Target which KPI column */
-    column?: string | undefined;
-    /** Label  */
-    label?: string | undefined;
-    /** Value to display */
-    value?: string | undefined;
-    /** Set if value has a click action */
-    action?: string | undefined;
-    /** Display Format (C2) */
-    dForm?: string | undefined;
-    /** CSS to apply */
-    tForm?: string | undefined;
-    negative: boolean;
-    /** UI CFG Item Name */
-    itemName?: string | undefined;
+/** Various filters for contact search */
+export interface IContactFilters {
+    /** Name like */
+    nameLike?: string | undefined;
+    /** Email  */
+    emailLike?: string | undefined;
+    /** Company like  */
+    companyLike?: string | undefined;
+    /** Location */
+    locationLike?: string | undefined;
+    /** ID like (vendor, customer, employee IDs) */
+    iDLike?: string | undefined;
+    /** For Vendors, specified related CSI  */
+    cSIListLike?: string | undefined;
+    /** Phone Like (matches any phone number) */
+    phoneLike?: string | undefined;
+    /** When true, result is limited to  */
+    users: boolean;
+    /** When true, result is limited to  */
+    customers: boolean;
+    /** When true, result is limited to  */
+    employee: boolean;
+    /** When true, result is limited to  */
+    public: boolean;
+    /** When true, result is limited to primary company contacts  */
+    company: boolean;
+    /** When true, result is limited to  */
+    vendors: boolean;
+    /** 1==Active;0==Inactive; 2==Both */
+    contactState: number;
+    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
+    roleKey?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    userKey?: string | undefined;
+    /** Default 2000-01-01 */
+    fromDate?: Date | undefined;
+    /** Default today */
+    thruDate?: Date | undefined;
+}
+
+/** Describes a contact */
+export class Contact implements IContact {
+    /** Key for this user/contact */
+    userKey!: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    userName?: string | undefined;
+    /** Login name */
+    userLogin?: string | undefined;
+    /** Source of external authentication that points to this contact */
+    federatedIdentityInfo?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    sortName?: string | undefined;
+    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
+    familiarName?: string | undefined;
+    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
+    salutation?: string | undefined;
+    /** Short description */
+    title?: string | undefined;
+    /** Free form; replaces ~R placeholder in Salutation */
+    role?: string | undefined;
+    /** Standard SMTP Email Address */
+    eMail?: string | undefined;
+    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
+    phone?: string | undefined;
+    /** Predominantly Obsolete */
+    fax?: string | undefined;
+    /** Mobile phone number */
+    cell?: string | undefined;
+    /** Gets phone designation  */
+    pager?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    company?: string | undefined;
+    /** First line of address */
+    address?: string | undefined;
+    /** Second line of address */
+    address2?: string | undefined;
+    /** City (for address) */
+    city?: string | undefined;
+    /** For Address */
+    state?: string | undefined;
+    /** Zipcode for address */
+    zip?: string | undefined;
+    /** Uses xsfCodeSet, not used in address */
+    country?: string | undefined;
+    /** Applicable County / Organizational Juristiction (not used in address) */
+    county?: string | undefined;
+    /** EST, PST, etc */
+    timeZone?: string | undefined;
+    /** Instant Messaging Service */
+    iMService?: string | undefined;
+    /** Instant Messaging Handle */
+    iMHandle?: string | undefined;
+    /** URL */
+    webURL?: string | undefined;
+    /** Vendor Company ID */
+    vendorID?: string | undefined;
+    /** Weak link to Solomon */
+    employeeID?: string | undefined;
+    /** Emp, Vendor, Customer, Standard */
+    contactType?: string | undefined;
+    /** Web; E-mail; Fax; Hard Copy */
+    routeVia?: string | undefined;
+    /** 1=Phone; 2=Cell; 3-Pager */
+    showPhone!: number;
+    /** Key to role that defines who can proxy for this contact */
+    routeeProxy?: string | undefined;
+    /** A role with a responsibility */
+    defaultResponsibility!: string;
+    /** Key to primary company */
+    contactCompanyKey!: string;
+    /** HTML Markup for signature in templates */
+    signature?: string | undefined;
+    /** Key to file in catalog that contains image */
+    likeness?: string | undefined;
+    /** When TRUE, trigger updates address if company address changes */
+    useCompanyAddr!: boolean;
+    /** When true, new projects are added to the dashboard automatically */
+    showNewProjects!: boolean;
+    /** When True, can log in to dashboard */
+    sfUser!: boolean;
+    /** When true, this contact is included in lookups  */
+    isPublic!: boolean;
+    /** When false, this row is ignored and ineffective */
+    active!: boolean;
+    /** When true, is also an integrated DSL User */
+    solomonUser!: boolean;
+    /** When TRUE, expiration date is advanced each day the user logs in */
+    slidingExpiration!: boolean;
+    /** When TRUE, user must change password */
+    pWMustChange!: boolean;
+    /** When TRUE, user can be locked out because of password age */
+    pWAging!: boolean;
+    /** Company Division ID */
+    divisionID?: string | undefined;
+    /** Why user has been blocked */
+    lockoutReason?: string | undefined;
+    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
+    orgLevel!: number;
+    /** Checksum of all externally syched data */
+    synchCheck!: number;
+    /** Number of consecutive login failures (reset upon success) */
+    failedLoginRun!: number;
+    /** Email notifications suppressed until this time */
+    suppressNotifyUntil?: Date | undefined;
+    /** Set by data layer each time the user logs in */
+    lastLogin?: Date | undefined;
+    /** Date when password was last changed; can be null */
+    lastPWChange?: Date | undefined;
+    /** User cannot login until this time */
+    lockedOutUntil?: Date | undefined;
+    /** Date of Expiration for this account */
+    expiration?: Date | undefined;
+    /** When entity was first recorded; read only */
+    created!: Date;
+
+    constructor(data?: IContact) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userKey = _data["UserKey"];
+            this.userName = _data["UserName"];
+            this.userLogin = _data["UserLogin"];
+            this.federatedIdentityInfo = _data["FederatedIdentityInfo"];
+            this.sortName = _data["SortName"];
+            this.familiarName = _data["FamiliarName"];
+            this.salutation = _data["Salutation"];
+            this.title = _data["Title"];
+            this.role = _data["Role"];
+            this.eMail = _data["EMail"];
+            this.phone = _data["phone"];
+            this.fax = _data["fax"];
+            this.cell = _data["cell"];
+            this.pager = _data["pager"];
+            this.company = _data["Company"];
+            this.address = _data["address"];
+            this.address2 = _data["address2"];
+            this.city = _data["city"];
+            this.state = _data["state"];
+            this.zip = _data["zip"];
+            this.country = _data["Country"];
+            this.county = _data["County"];
+            this.timeZone = _data["TimeZone"];
+            this.iMService = _data["IMService"];
+            this.iMHandle = _data["IMHandle"];
+            this.webURL = _data["WebURL"];
+            this.vendorID = _data["VendorID"];
+            this.employeeID = _data["EmployeeID"];
+            this.contactType = _data["ContactType"];
+            this.routeVia = _data["RouteVia"];
+            this.showPhone = _data["ShowPhone"];
+            this.routeeProxy = _data["RouteeProxy"];
+            this.defaultResponsibility = _data["DefaultResponsibility"];
+            this.contactCompanyKey = _data["ContactCompanyKey"];
+            this.signature = _data["Signature"];
+            this.likeness = _data["Likeness"];
+            this.useCompanyAddr = _data["UseCompanyAddr"];
+            this.showNewProjects = _data["ShowNewProjects"];
+            this.sfUser = _data["sfUser"];
+            this.isPublic = _data["IsPublic"];
+            this.active = _data["Active"];
+            this.solomonUser = _data["SolomonUser"];
+            this.slidingExpiration = _data["SlidingExpiration"];
+            this.pWMustChange = _data["PWMustChange"];
+            this.pWAging = _data["PWAging"];
+            this.divisionID = _data["DivisionID"];
+            this.lockoutReason = _data["LockoutReason"];
+            this.orgLevel = _data["OrgLevel"];
+            this.synchCheck = _data["SynchCheck"];
+            this.failedLoginRun = _data["FailedLoginRun"];
+            this.suppressNotifyUntil = _data["SuppressNotifyUntil"] ? new Date(_data["SuppressNotifyUntil"].toString()) : <any>undefined;
+            this.lastLogin = _data["LastLogin"] ? new Date(_data["LastLogin"].toString()) : <any>undefined;
+            this.lastPWChange = _data["LastPWChange"] ? new Date(_data["LastPWChange"].toString()) : <any>undefined;
+            this.lockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
+            this.expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
+            this.created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): Contact {
+        data = typeof data === 'object' ? data : {};
+        let result = new Contact();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UserKey"] = this.userKey;
+        data["UserName"] = this.userName;
+        data["UserLogin"] = this.userLogin;
+        data["FederatedIdentityInfo"] = this.federatedIdentityInfo;
+        data["SortName"] = this.sortName;
+        data["FamiliarName"] = this.familiarName;
+        data["Salutation"] = this.salutation;
+        data["Title"] = this.title;
+        data["Role"] = this.role;
+        data["EMail"] = this.eMail;
+        data["phone"] = this.phone;
+        data["fax"] = this.fax;
+        data["cell"] = this.cell;
+        data["pager"] = this.pager;
+        data["Company"] = this.company;
+        data["address"] = this.address;
+        data["address2"] = this.address2;
+        data["city"] = this.city;
+        data["state"] = this.state;
+        data["zip"] = this.zip;
+        data["Country"] = this.country;
+        data["County"] = this.county;
+        data["TimeZone"] = this.timeZone;
+        data["IMService"] = this.iMService;
+        data["IMHandle"] = this.iMHandle;
+        data["WebURL"] = this.webURL;
+        data["VendorID"] = this.vendorID;
+        data["EmployeeID"] = this.employeeID;
+        data["ContactType"] = this.contactType;
+        data["RouteVia"] = this.routeVia;
+        data["ShowPhone"] = this.showPhone;
+        data["RouteeProxy"] = this.routeeProxy;
+        data["DefaultResponsibility"] = this.defaultResponsibility;
+        data["ContactCompanyKey"] = this.contactCompanyKey;
+        data["Signature"] = this.signature;
+        data["Likeness"] = this.likeness;
+        data["UseCompanyAddr"] = this.useCompanyAddr;
+        data["ShowNewProjects"] = this.showNewProjects;
+        data["sfUser"] = this.sfUser;
+        data["IsPublic"] = this.isPublic;
+        data["Active"] = this.active;
+        data["SolomonUser"] = this.solomonUser;
+        data["SlidingExpiration"] = this.slidingExpiration;
+        data["PWMustChange"] = this.pWMustChange;
+        data["PWAging"] = this.pWAging;
+        data["DivisionID"] = this.divisionID;
+        data["LockoutReason"] = this.lockoutReason;
+        data["OrgLevel"] = this.orgLevel;
+        data["SynchCheck"] = this.synchCheck;
+        data["FailedLoginRun"] = this.failedLoginRun;
+        data["SuppressNotifyUntil"] = this.suppressNotifyUntil ? this.suppressNotifyUntil.toISOString() : <any>undefined;
+        data["LastLogin"] = this.lastLogin ? this.lastLogin.toISOString() : <any>undefined;
+        data["LastPWChange"] = this.lastPWChange ? this.lastPWChange.toISOString() : <any>undefined;
+        data["LockedOutUntil"] = this.lockedOutUntil ? this.lockedOutUntil.toISOString() : <any>undefined;
+        data["Expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
+        data["Created"] = this.created ? this.created.toISOString() : <any>undefined;
+        return data; 
+    }
+
+    clone(): Contact {
+        const json = this.toJSON();
+        let result = new Contact();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes a contact */
+export interface IContact {
+    /** Key for this user/contact */
+    userKey: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    userName?: string | undefined;
+    /** Login name */
+    userLogin?: string | undefined;
+    /** Source of external authentication that points to this contact */
+    federatedIdentityInfo?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    sortName?: string | undefined;
+    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
+    familiarName?: string | undefined;
+    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
+    salutation?: string | undefined;
+    /** Short description */
+    title?: string | undefined;
+    /** Free form; replaces ~R placeholder in Salutation */
+    role?: string | undefined;
+    /** Standard SMTP Email Address */
+    eMail?: string | undefined;
+    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
+    phone?: string | undefined;
+    /** Predominantly Obsolete */
+    fax?: string | undefined;
+    /** Mobile phone number */
+    cell?: string | undefined;
+    /** Gets phone designation  */
+    pager?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    company?: string | undefined;
+    /** First line of address */
+    address?: string | undefined;
+    /** Second line of address */
+    address2?: string | undefined;
+    /** City (for address) */
+    city?: string | undefined;
+    /** For Address */
+    state?: string | undefined;
+    /** Zipcode for address */
+    zip?: string | undefined;
+    /** Uses xsfCodeSet, not used in address */
+    country?: string | undefined;
+    /** Applicable County / Organizational Juristiction (not used in address) */
+    county?: string | undefined;
+    /** EST, PST, etc */
+    timeZone?: string | undefined;
+    /** Instant Messaging Service */
+    iMService?: string | undefined;
+    /** Instant Messaging Handle */
+    iMHandle?: string | undefined;
+    /** URL */
+    webURL?: string | undefined;
+    /** Vendor Company ID */
+    vendorID?: string | undefined;
+    /** Weak link to Solomon */
+    employeeID?: string | undefined;
+    /** Emp, Vendor, Customer, Standard */
+    contactType?: string | undefined;
+    /** Web; E-mail; Fax; Hard Copy */
+    routeVia?: string | undefined;
+    /** 1=Phone; 2=Cell; 3-Pager */
+    showPhone: number;
+    /** Key to role that defines who can proxy for this contact */
+    routeeProxy?: string | undefined;
+    /** A role with a responsibility */
+    defaultResponsibility: string;
+    /** Key to primary company */
+    contactCompanyKey: string;
+    /** HTML Markup for signature in templates */
+    signature?: string | undefined;
+    /** Key to file in catalog that contains image */
+    likeness?: string | undefined;
+    /** When TRUE, trigger updates address if company address changes */
+    useCompanyAddr: boolean;
+    /** When true, new projects are added to the dashboard automatically */
+    showNewProjects: boolean;
+    /** When True, can log in to dashboard */
+    sfUser: boolean;
+    /** When true, this contact is included in lookups  */
+    isPublic: boolean;
+    /** When false, this row is ignored and ineffective */
+    active: boolean;
+    /** When true, is also an integrated DSL User */
+    solomonUser: boolean;
+    /** When TRUE, expiration date is advanced each day the user logs in */
+    slidingExpiration: boolean;
+    /** When TRUE, user must change password */
+    pWMustChange: boolean;
+    /** When TRUE, user can be locked out because of password age */
+    pWAging: boolean;
+    /** Company Division ID */
+    divisionID?: string | undefined;
+    /** Why user has been blocked */
+    lockoutReason?: string | undefined;
+    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
+    orgLevel: number;
+    /** Checksum of all externally syched data */
+    synchCheck: number;
+    /** Number of consecutive login failures (reset upon success) */
+    failedLoginRun: number;
+    /** Email notifications suppressed until this time */
+    suppressNotifyUntil?: Date | undefined;
+    /** Set by data layer each time the user logs in */
+    lastLogin?: Date | undefined;
+    /** Date when password was last changed; can be null */
+    lastPWChange?: Date | undefined;
+    /** User cannot login until this time */
+    lockedOutUntil?: Date | undefined;
+    /** Date of Expiration for this account */
+    expiration?: Date | undefined;
+    /** When entity was first recorded; read only */
+    created: Date;
 }
 
 /** Abstracted information about a project */
@@ -11534,6 +11453,93 @@ export interface IProjectTranDetail {
     acct_TranClass?: string | undefined;
     /** Account Class (L, B, E, etc) */
     acct_Class?: string | undefined;
+}
+
+/** Primary Site Weather Now */
+export class ProjKPIFact implements IProjKPIFact {
+    /** Target which KPI column */
+    column?: string | undefined;
+    /** Label  */
+    label?: string | undefined;
+    /** Value to display */
+    value?: string | undefined;
+    /** Set if value has a click action */
+    action?: string | undefined;
+    /** Display Format (C2) */
+    dForm?: string | undefined;
+    /** CSS to apply */
+    tForm?: string | undefined;
+    negative!: boolean;
+    /** UI CFG Item Name */
+    itemName?: string | undefined;
+
+    constructor(data?: IProjKPIFact) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.column = _data["Column"];
+            this.label = _data["Label"];
+            this.value = _data["Value"];
+            this.action = _data["Action"];
+            this.dForm = _data["DForm"];
+            this.tForm = _data["TForm"];
+            this.negative = _data["Negative"];
+            this.itemName = _data["ItemName"];
+        }
+    }
+
+    static fromJS(data: any): ProjKPIFact {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProjKPIFact();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["Column"] = this.column;
+        data["Label"] = this.label;
+        data["Value"] = this.value;
+        data["Action"] = this.action;
+        data["DForm"] = this.dForm;
+        data["TForm"] = this.tForm;
+        data["Negative"] = this.negative;
+        data["ItemName"] = this.itemName;
+        return data; 
+    }
+
+    clone(): ProjKPIFact {
+        const json = this.toJSON();
+        let result = new ProjKPIFact();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Primary Site Weather Now */
+export interface IProjKPIFact {
+    /** Target which KPI column */
+    column?: string | undefined;
+    /** Label  */
+    label?: string | undefined;
+    /** Value to display */
+    value?: string | undefined;
+    /** Set if value has a click action */
+    action?: string | undefined;
+    /** Display Format (C2) */
+    dForm?: string | undefined;
+    /** CSS to apply */
+    tForm?: string | undefined;
+    negative: boolean;
+    /** UI CFG Item Name */
+    itemName?: string | undefined;
 }
 
 export class ApiException extends Error {
