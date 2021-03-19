@@ -1,9 +1,10 @@
 
 //import { contains } from "jquery";
 import { GUID  } from "./globals";
-import { String, sfApplicationRootPath } from "./string.extensions";
+import { String } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as $ from 'jquery';
+import { Deferred } from "jquery";
 //var $ : JQueryStatic;
 
 //export type GUID = string //& { isGuid: true };
@@ -66,7 +67,7 @@ export class sfRestClient
             thisPart!.CFG = cfg;
         }
         if (!thisPart?.CFG) {
-            var api : UICFGClient = new UICFGClient(sfApplicationRootPath);
+            var api : UICFGClient = new UICFGClient(this._SiteURL);
             var apiResult : Promise<UIDisplayPart | null> = api.getLiveDisplay(partName,forDocType ,thisPart!._CurrentContext);
             if (apiResult) {
                 requests.push(apiResult);
@@ -81,8 +82,8 @@ export class sfRestClient
         thisPart!._PromiseList = [];
         $.when.apply($, requests)
             .done(function () {
-                if (!thisPart || !thisPart.CFG || !thisPart!.CFG.uIItems ) return;
-                thisPart.CFG.uIItems.forEach( element => thisPart!.RestClient._ApplyUICFGtoRawData(element,thisPart!));
+                if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems ) return;
+                thisPart.CFG.UIItems.forEach( element => thisPart!.RestClient._ApplyUICFGtoRawData(element,thisPart!));
 
                 $.when.apply($, thisPart!._PromiseList!)
                     .done(function () {
@@ -135,7 +136,7 @@ export class sfRestClient
         }
 
         if (!(optionalProject in RESTClient._LoadedPermits!)) {
-            var api = new SessionClient(sfApplicationRootPath);
+            var api = new SessionClient(this._SiteURL);
             var apiResult : Promise<UCPermitSet| null> = api.getProjectPermits(optionalProject);
             if (apiResult) {
                 apiResult.then((r) => {
@@ -161,12 +162,12 @@ export class sfRestClient
                 if (ThisUCFK === UCFK) {
                     $.each(capabilitySet, function OnePermitCheck(_n, p : IUCPermit) {
                         var thisPermitValue = 0;
-                        if (p.isGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
-                            if (p.readOK) thisPermitValue += 1;
-                            if (p.insOK) thisPermitValue += 2;
-                            if (p.updOK) thisPermitValue += 4;
-                            if (p.delOK) thisPermitValue += 8;
-                            if (p.blanketOK) thisPermitValue += 16;
+                        if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
+                            if (p.ReadOK) thisPermitValue += 1;
+                            if (p.InsOK) thisPermitValue += 2;
+                            if (p.UpdOK) thisPermitValue += 4;
+                            if (p.DelOK) thisPermitValue += 8;
+                            if (p.BlanketOK) thisPermitValue += 16;
                         }
                         finalPermit |= thisPermitValue;
                         return (finalPermit !== 31);
@@ -192,7 +193,7 @@ export class sfRestClient
     // }
     GetDV  (displayName: any, keyValue: any, dependsOn: any, autoVary: any) : Promise<string | null> {
         // future: finish support for dependsOn list
-        var DeferredResult: Promise<string>;
+        var apiResultPromise :  Promise<string | null>
         if (!keyValue) return Promise.resolve("");
 
         var requestData = this._getRequestData(displayName, keyValue, dependsOn);
@@ -206,8 +207,8 @@ export class sfRestClient
                     result = JSON.parse(result);
 
                     if (Date.now() - result.w < this._DVCacheLife) {
-                        DeferredResult = new Promise<string>(() => {return result.v});
-                        return DeferredResult;
+                        apiResultPromise =  new Promise<string| null>((resolve) => resolve( result.v));
+                        return apiResultPromise;
                     }
                 }
             }
@@ -223,7 +224,7 @@ export class sfRestClient
 
         var RESTClient :   sfRestClient = this;
         // future: add pd1...pd4
-        var api : LookupClient = new LookupClient(sfApplicationRootPath);
+        var api : LookupClient = new LookupClient(this._SiteURL);
         var apiResultPromise : Promise<string | null> = api.getDisplayValue(displayName,"1",keyValue,dependsOn,"","","");
         if (apiResultPromise) {
              apiResultPromise.then(
@@ -265,8 +266,6 @@ export class sfRestClient
             return permitCheck;
         }
 
-        // var api :  SessionClient = new SessionClient(sfApplicationRootPath);
-        // var apiResult : any = api.getProjectPermitNameMap( Object.keys(RESTClient._UCPermitMap._etag)[0]);
 
         var GetPermitMapRequest = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(RESTClient._UCPermitMap._etag)[0]).done(function DoneGetPermitMapRequest(r) {
             if (GetPermitMapRequest.status !== 304) {
@@ -293,7 +292,7 @@ export class sfRestClient
         var DeferredResult = $.Deferred();
         var ResultCheck = DeferredResult.promise();
 
-        var api : SessionClient = new SessionClient(sfApplicationRootPath);
+        var api : SessionClient = new SessionClient(this._SiteURL);
         var apiResult  : WCCData | null = api.getWCC();
         if (!apiResult) {
             return new Promise<WCCData>( () => null );
@@ -349,23 +348,17 @@ export class sfRestClient
     _getVaryByQValue() {
         return "zvqms={0}".sfFormat(new Date().valueOf());
     }
-    // deprecated _GetRequest: use the API client!!
-    // _GetRequest(url: any) {
-    //     url = this._APIURL(url);
-    //     console.log(url);
-    //     return $.getJSON(url);
-    // }
+
     protected _GetAPIXHR(url:string): JQueryXHR {
         url = this._APIURL(url);
         console.log(url);
         return $.getJSON(url);
     }
     protected _APIURL(suffix: any) {
-        if (this._BaseURL.length === 0) this._BaseURL = sfApplicationRootPath + '/api/';
-        return this._BaseURL + suffix;
+        return this._SiteURL + '/api/' + suffix;
     }
 
-    _BaseURL : string = "";
+    protected _SiteURL : string ;
 
     _LoadedParts : PartStorageList = new Map<string,PartStorageData>();
 
@@ -381,20 +374,28 @@ export class sfRestClient
 
     _ApplyUICFGtoRawData(  item: UIDisplayConfig, thisPart: PartStorageData) {
 
-        if (item.dV || item.lookupName ||
-            (item.otherProperties && item.otherProperties.DataType && item.otherProperties.DataType === "Guid")) {
+        if (item.DV || item.LookupName ||
+            (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
             console.log(item);
-            if (item.dV) {
-                thisPart.DataModels.get(thisPart._CurrentContext!).forEach(function DataModelRowDVApplication(rawRow: any) {
-                    var FieldValue : any = thisPart.RestClient.FieldValueFromRow(rawRow, item.dataField!)
-                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.dV,  FieldValue,"","").then(function (r: string | null) {
-                       rawRow[item.dataField + "_dv"] = r;
+            if (item.DV) {
+                thisPart.DataModels.get(thisPart._CurrentContext!).forEach(function DataModelRowDVApplication(rawRow: any, index: number) {
+                    var FieldValue : any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!)
+                    //thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV,  FieldValue,"","").then(function (r: string | null) {
+                      // rawRow[item.DataField + "_dv"] = r;
+                    //}));
+                    // vlad:
+                      thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV, FieldValue, "", "").then(function (r) {
+                        thisPart.RestClient._AddDVValueToDataModel(thisPart, index, item.DataField!, r);
                     }));
                 });
             }
             // future: finish support for resolution using LookupName ...
         }
     }
+    protected _AddDVValueToDataModel(thisPart: PartStorageData, index : number, DataField: string, newValue: string | null) {
+        thisPart.DataModels.get(thisPart._CurrentContext!)[index][DataField + "_dv"] = newValue;
+    }
+
     readonly _EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     _CachedDVRequests: Map<string,Promise<string | null>>  = new Map<string,Promise<string | null>>();
     _UserPermitResultCache: Map<string,number> = new Map<string,number>();
@@ -407,11 +408,11 @@ export class sfRestClient
     _PermitMatches(permit: IUCPermit, optionalDTK?: GUID, optionalReference?: GUID) : boolean {
         // project match is assumed by this point (cached is by project)
         var result = true;
-        if (permit.docTypeKey) {
-            if (!optionalDTK || optionalDTK !== permit.docTypeKey) result = false;
+        if (permit.DocTypeKey) {
+            if (!optionalDTK || optionalDTK !== permit.DocTypeKey) result = false;
         }
-        if (permit.docReference) {
-            if (!optionalReference || optionalReference !== permit.docReference) result = false;
+        if (permit.DocReference) {
+            if (!optionalReference || optionalReference !== permit.DocReference) result = false;
         }
 
         return result;
@@ -428,6 +429,13 @@ export class sfRestClient
             api_session_permits_map:  "sfUCFunctionNameMap"
             },
         WCCLoaded : false
+    }
+
+
+
+    constructor() {
+        var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
+        this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
     }
 };
 
