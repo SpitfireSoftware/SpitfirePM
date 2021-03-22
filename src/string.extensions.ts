@@ -27,7 +27,7 @@ String.prototype.replaceAll = function replaceAll(this: string, pattern: string,
     return this.split(pattern).join(replacement);
 }
 
-export const sfApplicationNamePart : string =  window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));  // sfPMS
-export const sfApplicationRootPath : string = `${window.location.origin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
-
-
+var HTTPApplicationName = (typeof window !== "undefined" ?window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/")) : "sfPMS");
+var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");
+export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
+export const sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS

@@ -1,8 +1,8 @@
 
 //import { contains } from "jquery";
-import { GUID  } from "./globals";
+import { GUID } from "./globals";
 import { String } from "./string.extensions";
-import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, SessionClient, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as $ from 'jquery';
 import { Deferred } from "jquery";
 //var $ : JQueryStatic;
@@ -22,35 +22,35 @@ export enum LoggingLevels {
     None,
     Verbose,
     Debug
-  }
+}
 
-type PartStorageList =  Map<PartContextKey,PartStorageData>;
-type DVCacheEntry = {w:number,v:string};
-class PartStorageData{
+type PartStorageList = Map<PartContextKey, PartStorageData>;
+type DVCacheEntry = { w: number, v: string };
+class PartStorageData {
 
-    CFG : UIDisplayPart | null;
-    DataModels : Map<string,DataModelCollection>;
-    RestClient : sfRestClient ;
-    _PromiseList : Promise<any>[] | null  ;
-    protected _InitializationResultPromise :Promise<UIDisplayPart | null> | null;
+    CFG: UIDisplayPart | null;
+    DataModels: Map<string, DataModelCollection>;
+    RestClient: sfRestClient;
+    _PromiseList: Promise<any>[] | null;
+    protected _InitializationResultPromise: Promise<UIDisplayPart | null> | null;
     protected _ReferenceKey: PartContextKey;
-    protected static _SiteURL : string;
-    protected static _DMCount : number = 0;
+    protected static _SiteURL: string;
+    protected static _DMCount: number = 0;
 
     public CFGLoader(): Promise<UIDisplayPart | null> {
         if (!this._InitializationResultPromise) throw new Error("This part was never initialized: " + this._ReferenceKey);
         return this._InitializationResultPromise;
     }
 
-    static _LoadedParts: PartStorageList =  new Map<PartContextKey,PartStorageData>();
-    public static PartStorageDataFactory(client: sfRestClient,partName: string, forDocType: GUID | undefined, context: string | undefined):PartStorageData  {
-        var ReferenceKey : PartContextKey = PartStorageData.GetPartContextKey(partName,forDocType, context);
-        var thisPart : PartStorageData;
+    static _LoadedParts: PartStorageList = new Map<PartContextKey, PartStorageData>();
+    public static PartStorageDataFactory(client: sfRestClient, partName: string, forDocType: GUID | undefined, context: string | undefined): PartStorageData {
+        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, context);
+        var thisPart: PartStorageData;
         if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
         else {
             thisPart = new PartStorageData(client, partName, forDocType, context);
-            var api : UICFGClient = new UICFGClient(PartStorageData._SiteURL);
-            thisPart._InitializationResultPromise  = api.getLiveDisplay(partName,forDocType ,context);
+            var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
+            thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType, context);
             if (thisPart._InitializationResultPromise) {
                 thisPart._InitializationResultPromise.then((r) => {
                     thisPart!.CFG = r;
@@ -60,22 +60,22 @@ class PartStorageData{
         return thisPart;
     }
 
-    public static GetPartContextKey(  partName: string, forDocType: GUID | undefined, context: string | undefined) : PartContextKey {
-        return   "{0}[{2}]::{1}".sfFormat(partName,forDocType,context);
+    public static GetPartContextKey(partName: string, forDocType: GUID | undefined, context: string | undefined): PartContextKey {
+        return "{0}[{2}]::{1}".sfFormat(partName, forDocType, context);
     }
 
-    public static GetDataModelBuildContextKey() : string {
+    public static GetDataModelBuildContextKey(): string {
         this._DMCount++;
         return "DVM#{0}".sfFormat(this._DMCount);
     }
 
-    protected constructor(client: sfRestClient,partName: string, forDocType: GUID | undefined, context: string | undefined) {
-       this.CFG = null;
-        this.DataModels = new Map<string,any[]>();
+    protected constructor(client: sfRestClient, partName: string, forDocType: GUID | undefined, context: string | undefined) {
+        this.CFG = null;
+        this.DataModels = new Map<string, any[]>();
         this.RestClient = client;
         this._PromiseList = null;
-        this._ReferenceKey = PartStorageData.GetPartContextKey(partName,forDocType, context);
-        PartStorageData._LoadedParts.set(this._ReferenceKey,this);
+        this._ReferenceKey = PartStorageData.GetPartContextKey(partName, forDocType, context);
+        PartStorageData._LoadedParts.set(this._ReferenceKey, this);
         this._InitializationResultPromise = null;
 
         if (!PartStorageData._SiteURL) {
@@ -88,73 +88,76 @@ class PartStorageData{
 
 export class WCCData { [key: string]: any; }
 export class DataModelRow { [key: string]: any; };
-export class DataModelCollection  { [key: string]: any; }[];
+export class DataModelCollection { [key: string]: any; } [];
 export type PartContextKey = string // PartName[context]::dtk
 
 
-export class sfRestClient
-{
+export class sfRestClient {
     version = 2020;
-    /*
-    Async builds a View Model for the rawData, given part context.  - use .then()
-    */
-    BuildViewModelForContext(partName: string, context: string , forDocType : GUID | undefined,rawData: any) : Promise<DataModelCollection> {
+    /**
+      *  Async builds a View Model for the rawData, given part context.  - use .then()
+      */
+    BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: any): Promise<DataModelCollection> {
         if (!this._z.WCCLoaded) this.LoadUserSessionInfo();
-        var thisPart : PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this,partName,forDocType,context);
-        if (!thisPart) new Error("Count not resolve part {0}".sfFormat( PartStorageData.GetPartContextKey(partName,forDocType,context) ));
-        var FinalViewModelPromise :Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve)=>{
-            thisPart!.CFGLoader().then( () => {
-                var ViewModelPromise : Promise<DataModelCollection> = this._ConstructViewModel(thisPart!,rawData );
-                ViewModelPromise.then( (r) => finalResolve(r));
-                });
+        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
+        if (!thisPart) new Error("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, context)));
+        var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
+            thisPart!.CFGLoader().then(() => {
+                var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData);
+                ViewModelPromise.then((r) => finalResolve(r));
             });
+        });
         return FinalViewModelPromise;
     }
 
-    /*
-    Legacy version of BuildViewModelForContext  - use .done()
-    */
-    BuildViewModel(partName: string, context: string , rawData: any, unusedCfgData: undefined, forDocType : GUID | undefined) : JQueryPromise<any> {
+    /**
+     *  Legacy version of BuildViewModelForContext  - use .done()
+     */
+    BuildViewModel(partName: string, context: string, rawData: any, unusedCfgData: undefined, forDocType: GUID | undefined): JQueryPromise<any> {
         if (!this._z.WCCLoaded) this.LoadUserSessionInfo();
-        var thisPart : PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this,partName,forDocType,context);
+        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
         var darnSoon = $.Deferred();
         var ResultReady = darnSoon.promise();
         // what purpose would this serve?? if (cfg) thisPart.CFGLoader = cfg;
-        thisPart.CFGLoader().then( () => {
-                this._ConstructViewModel(thisPart!,rawData )
-                        .then((r) => darnSoon.resolve(r) )
-            }
-                );
-        return ResultReady;
+        thisPart.CFGLoader().then(() => {
+            this._ConstructViewModel(thisPart!, rawData)
+                .then((r) => darnSoon.resolve(r))
         }
+        );
+        return ResultReady;
+    }
 
 
-
-    protected _ConstructViewModel( thisPart: PartStorageData, rawData: any) : Promise< DataModelCollection>{
-        if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems ) new Error("Cannot construct this ViewModel");
-        var StartAtTicks : number = Date.now();
-        var DataModelBuildKey : string = PartStorageData.GetDataModelBuildContextKey();
+    /**
+     *  Applies CFG data to raw Data Model, returns promise that resolves when View Model is ready
+     */
+    protected _ConstructViewModel(thisPart: PartStorageData, rawData: any): Promise<DataModelCollection> {
+        if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) new Error("Cannot construct this ViewModel");
+        var StartAtTicks: number = Date.now();
+        var DataModelBuildKey: string = PartStorageData.GetDataModelBuildContextKey();
         thisPart!.DataModels.set(DataModelBuildKey, rawData)
         thisPart!._PromiseList = [];
 
         // this loop builds PromiseList
-        thisPart!.CFG!.UIItems!.forEach( element => thisPart!.RestClient._ApplyUICFGtoRawData(element,thisPart!,DataModelBuildKey));
+        thisPart!.CFG!.UIItems!.forEach(element => thisPart!.RestClient._ApplyUICFGtoRawData(element, thisPart!, DataModelBuildKey));
 
-        var ViewModelPromise : Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve)=>{
+        var ViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => {
             $.when.apply($, thisPart!._PromiseList!)
-            .done(function () {
-                resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
-                thisPart!.DataModels.delete(DataModelBuildKey);
-                if (thisPart!.RestClient._LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
-            });
+                .done(function () {
+                    resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
+                    thisPart!.DataModels.delete(DataModelBuildKey);
+                    if (thisPart!.RestClient._LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
+                });
         });
         return ViewModelPromise;
 
     }
 
-    // async: returns an numerc bit-flag indicating the user's permission level (RIUDS)
-    CheckPermit(ucModule: string , ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string) : JQueryPromise<number> {
-        var RESTClient : sfRestClient = this;
+    /**
+    * async: returns an numerc bit-flag indicating the user's permission level (R=1,I=2,U=4,D=8,S=16)
+    */
+    CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): JQueryPromise<number> {
+        var RESTClient: sfRestClient = this;
         var DeferredResult = $.Deferred();
         var permitCheck = DeferredResult.promise();
         if (!RESTClient._z.WCCLoaded) RESTClient.LoadUserSessionInfo();
@@ -172,7 +175,7 @@ export class sfRestClient
         }
 
         var UCFK = "";
-        var ThisProjectPermitSet : UCPermitSet | undefined;
+        var ThisProjectPermitSet: UCPermitSet | undefined;
         var UCFKDeferredResult = $.Deferred();
         var UCFKPromise = UCFKDeferredResult.promise();
         var PPSDeferredResult = $.Deferred();
@@ -182,16 +185,16 @@ export class sfRestClient
             UCFKDeferredResult.resolve(UCFK);
         }
         else {
-            RESTClient.LoadUCFunctionMap().done(function (r) {
+            RESTClient.LoadUCFunctionMap().done(function () {
                 UCFK = RESTClient._UCPermitMap[ucModule][ucFunction];
                 if (!UCFK) console.warn("CheckPermit could not find {0}|{1} - verify proper case!".sfFormat(ucModule, ucFunction));
                 UCFKDeferredResult.resolve(UCFK);
             });
         }
 
-        if (!(RESTClient._LoadedPermits.has(optionalProject) )) {
+        if (!(RESTClient._LoadedPermits.has(optionalProject))) {
             var api = new SessionClient(this._SiteURL);
-            var apiResult : Promise<UCPermitSet| null> = api.getProjectPermits(optionalProject);
+            var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits(optionalProject);
             if (apiResult) {
                 apiResult.then((r) => {
                     if (r) {
@@ -214,7 +217,7 @@ export class sfRestClient
             var finalPermit = 0;
             $.each(ThisProjectPermitSet?.Permits, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
                 if (ThisUCFK === UCFK) {
-                    $.each(capabilitySet, function OnePermitCheck(_n, p : IUCPermit) {
+                    $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
                         var thisPermitValue = 0;
                         if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
                             if (p.ReadOK) thisPermitValue += 1;
@@ -235,34 +238,44 @@ export class sfRestClient
         return permitCheck; // wait for .done, use (r)
 
     }
-    /// Get Display Valud using DV-Name and key value, with 0 to 4 dependencies.
-    GetDV(displayName: string, keyValue: string, dependsOn: string | string[], autoVary?: boolean | undefined) : Promise<string | null> {
+    /**
+     * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
+    */
+    GetDV(displayName: string, keyValue: string,
+        /**
+         * either a string or string array (up to 4 elements)
+        */
+        dependsOn: string | string[] | undefined,
+        /**
+         * when true, a unique value is added to defeat cache
+        */
+        autoVary?: boolean | undefined): Promise<string | null> {
         // future: finish support for dependsOn list
-        var apiResultPromise :  Promise<string | null>
-        if (!keyValue) return new Promise<string| null>((resolve) => resolve( ""));
+        var apiResultPromise: Promise<string | null>
+        if (!keyValue) return new Promise<string | null>((resolve) => resolve(""));
 
-        var requestData = this._getRequestData(displayName, keyValue, dependsOn);
-        if (autoVary)  requestData += "?{0}".sfFormat(this._getVaryByQValue());
-        var cacheKey : string = "GetDV:L{0}H{1}".sfFormat(requestData.length, requestData.sfHashCode());
+        var requestData = this._getDVRequestString(displayName, keyValue, dependsOn);
+        if (autoVary) requestData += "?{0}".sfFormat(this._getVaryByQValue());
+        var cacheKey: string = "GetDV:L{0}H{1}".sfFormat(requestData.length, requestData.sfHashCode());
 
-            try {
-                var result : string | null  = sessionStorage.getItem(cacheKey);
-                if (!result) {
-                    // continues below - must get value
-                }
-                if (typeof result === "string") {
-                    var CacheResult : DVCacheEntry = JSON.parse(result);
-
-                    if ((Date.now() - CacheResult.w) < this._DVCacheLife) {
-                        apiResultPromise =  new Promise<string| null>((resolve) => resolve( CacheResult.v));
-                        return apiResultPromise;
-                    }
-                }
-                 // if falls through, we get a fresh value
+        try {
+            var result: string | null = sessionStorage.getItem(cacheKey);
+            if (!result) {
+                // continues below - must get value
             }
-            catch (err2) {
-                 new Error("GetDV() cache error: " + err2.message);
+            if (typeof result === "string") {
+                var CacheResult: DVCacheEntry = JSON.parse(result);
+
+                if ((Date.now() - CacheResult.w) < this._DVCacheLife) {
+                    apiResultPromise = new Promise<string | null>((resolve) => resolve(CacheResult.v));
+                    return apiResultPromise;
+                }
             }
+            // if falls through, we get a fresh value
+        }
+        catch (err2) {
+            new Error("GetDV() cache error: " + err2.message);
+        }
 
 
         if (this._CachedDVRequests.has(cacheKey)) {
@@ -270,37 +283,41 @@ export class sfRestClient
             return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
         }
 
-        var RESTClient :   sfRestClient = this;
-        var api : LookupClient = new LookupClient(this._SiteURL);
-        var DependsOnSet : string[] = ["","","",""];
+        var RESTClient: sfRestClient = this;
+        var api: LookupClient = new LookupClient(this._SiteURL);
+        var DependsOnSet: string[] = ["", "", "", ""];
         if (Array.isArray(dependsOn)) {
             $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
         }
-        else DependsOnSet[0] = dependsOn;
-        var apiResultPromise : Promise<string | null> = api.getDisplayValue(displayName,"1",keyValue,DependsOnSet[0],DependsOnSet[1],DependsOnSet[2],DependsOnSet[3]);
+        else if (dependsOn) DependsOnSet[0] = dependsOn;
+        var apiResultPromise: Promise<string | null> = api.getDisplayValue(displayName, "1", keyValue, DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3]);
         if (apiResultPromise) {
-             apiResultPromise.then(
-                (dvResult: string | null) =>{
+            apiResultPromise.then(
+                (dvResult: string | null) => {
                     if (dvResult) {
                         sessionStorage.setItem(cacheKey, JSON.stringify({ v: dvResult, w: Date.now() }));
-                        if (RESTClient._CachedDVRequests.has(cacheKey))   RESTClient._CachedDVRequests.delete(cacheKey);
+                        if (RESTClient._CachedDVRequests.has(cacheKey)) RESTClient._CachedDVRequests.delete(cacheKey);
                     }
 
-            }
-
+                }
             );
         }
         this._CachedDVRequests.set(cacheKey, apiResultPromise);
         return apiResultPromise;
     }
-
-    GetPartCFG( partName: string, forDocType: GUID, partContext : string) : Promise<UIDisplayPart | null> {
-        var thisPart : PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this,partName,forDocType,partContext);
+    /**
+     * Async Get Part Configuration Data given part name, doc type and context
+    */
+    GetPartCFG(partName: string, forDocType?: GUID, partContext?: string): Promise<UIDisplayPart | null> {
+        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, partContext);
         return thisPart.CFGLoader();
     }
 
-    LoadUCFunctionMap () {
-        var RESTClient :   sfRestClient = this;
+    /**
+     * Loads UC Function Keys and corresponding Module/System Names
+    */
+    protected LoadUCFunctionMap(): JQueryPromise<any> {
+        var RESTClient: sfRestClient = this;
         var DeferredResult = $.Deferred();
         var permitCheck = DeferredResult.promise();
 
@@ -338,24 +355,29 @@ export class sfRestClient
 
         return permitCheck;
     }
-    LoadUserSessionInfo() : Promise<WCCData> {
-        var RESTClient :   sfRestClient = this;
+    /**
+     * Loads or Updates WCC session attributes
+    */
+    LoadUserSessionInfo(): Promise<WCCData> {
+        var RESTClient: sfRestClient = this;
 
-        var api : SessionClient = new SessionClient(this._SiteURL);
-        var apiResult  : WCCData | null = api.getWCC();
+        var api: SessionClient = new SessionClient(this._SiteURL);
+        var apiResult: WCCData | null = api.getWCC();
         if (!apiResult) new Error("LoadUserSessionInfo failed to getWCC");
-        return apiResult.then((r:WCCData ) => {
-            $.each(r, function SetWCCProperties(pname : string | number, pvalue) {
+        return apiResult.then((r: WCCData) => {
+            $.each(r, function SetWCCProperties(pname: string | number, pvalue) {
                 RESTClient._WCC[pname] = pvalue;
             });
             RESTClient._z.WCCLoaded = true;
-            RESTClient.LoadUCFunctionMap();
         });
     }
 
-    public SetOptions( options: {[key:string]:any}): void {
+    /**
+     * Sets sfRestClient Options, eg { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000}
+    */
+    public SetOptions(options: { [key: string]: any }): void {
         Object.keys(options).forEach((key) => {
-            var PropName = '_'+key;
+            var PropName = '_' + key;
             //    if ((typeof this[PropName] !== "undefined"  &&  typeof this[key] === typeof options[key] ) {
             //         this[PropName] = options[key];
             //    }
@@ -364,23 +386,35 @@ export class sfRestClient
         });
     }
 
+    /**
+     * How long (in milliseconds) should a DV result be cached for reuse
+    */
     _DVCacheLife: number = 16 * 60000; // 16 minutes
 
-
-    protected _addQueryValue (asPath : boolean, priorList: string | string[], idx : number, dv : any) : string {
+    /**
+     * Builds a query friendly string, also great for hashing or cache keys
+    */
+    protected _addQueryValue(
+        /**
+ * When true, query string is in form a/b/c, when false Aand priorList contains a ?, then &d1=a&d2=b&d3=c
+*/
+        asPath: boolean, priorList: string | string[], idx: number, dv: any): string {
         if (dv) {
             if (typeof dv === "string")
                 if (dv.indexOf("$") >= 0) dv = dv.replaceAll("$DTK", this._WCC.DocTypeKey);
         }
         if (asPath) asPath = (priorList.indexOf("?") < 0);
-        var parmSep : string = '&';
+        var parmSep: string = '&';
         if ((asPath) && ((dv === "?") || (dv === "&") || (dv === "%"))) {
             asPath = false;
             parmSep = '?';
         }
         return priorList + (asPath ? "/" : parmSep + "d" + (idx) + "=") + encodeURIComponent(dv);
     }
-    protected _formatDependsList(asPath: any, depends1: string | string[], dep2?: string, dep3?: string, dep4?: string) : string {
+    /**
+     * Builds a query friendly string 1 to 4 inputs by using _addQueryValue
+    */
+    protected _formatDependsList(asPath: boolean, depends1: string | string[], dep2?: string, dep3?: string, dep4?: string): string {
         var dependsList = "";
         var RESTClient = this;
         if (Array.isArray(depends1)) {
@@ -397,24 +431,23 @@ export class sfRestClient
         }
         return dependsList;
     }
-
-    protected _getRequestData(displayName: string, pv: string | number | boolean, dependsOn: string | string[]) : string {
-        // consolidate request components into a single string - dv/displayName/pv/d1/d2/d3
+    /**
+     *  consolidate request components into a single string - dv/displayName/pv/d1/d2/d3
+     */
+    protected _getDVRequestString(displayName: string, pv: string | number | boolean, dependsOn: string | string[] | undefined): string {
         var url = 'dv/' + displayName + "/" + encodeURIComponent(pv);
-        url += this._formatDependsList(true, dependsOn);
-
+        if (dependsOn) url += this._formatDependsList(true, dependsOn);
         return url;
-
     }
 
     /**
      *  Returns query-suitable string to make HTTP GET defeat cache
      */
-    _getVaryByQValue():string {
+    _getVaryByQValue(): string {
         return "zvqms={0}".sfFormat(new Date().valueOf());
     }
 
-    protected _GetAPIXHR(url:string): JQueryXHR {
+    protected _GetAPIXHR(url: string): JQueryXHR {
         url = this._APIURL(url);
         if (this._LogLevel >= LoggingLevels.Verbose) console.log(url);
         return $.getJSON(url);
@@ -423,33 +456,33 @@ export class sfRestClient
         return this._SiteURL + '/api/' + suffix;
     }
 
-    protected _SiteURL : string ;
+    protected _SiteURL: string;
 
 
 
-    _LoadedPermits : Map<string,UCPermitSet> = new Map<string,UCPermitSet>();
+    _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
 
     /**
      *  Returns value from object that matches the field/property name
      */
-    FieldValueFromRow( rawRow : any, fieldName : string) : any {
+    FieldValueFromRow(rawRow: any, fieldName: string): any {
         if (!(fieldName in rawRow)) {
-            fieldName = fieldName.substring(0,1).toLowerCase() + fieldName.substring(1);
+            fieldName = fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
             if (!(fieldName in rawRow)) return undefined;
         }
         return rawRow[fieldName];
     }
 
-    _ApplyUICFGtoRawData(  item: UIDisplayConfig, thisPart: PartStorageData,DataModelBuildKey: string) {
+    _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, DataModelBuildKey: string) {
 
         if (item.DV || item.LookupName ||
             (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
             if (item.DV) {
-                if (this._LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName,item.DV));
+                if (this._LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
                 thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) {
-                    var FieldValue : any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
+                    var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
                     ///!!! future: handle depends on
-                      thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, "", false).then( function then_AddDVToDModel(r) {
+                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, "", false).then(function then_AddDVToDModel(r) {
                         thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, r);
                     }));
                 });
@@ -457,21 +490,22 @@ export class sfRestClient
             // future: finish support for resolution using LookupName ...
         }
     }
-    protected _AddDVValueToDataModel(thisPart: PartStorageData,DataModelBuildKey: string, index : number, DataField: string, newValue: string | null) {
+    protected _AddDVValueToDataModel(thisPart: PartStorageData, DataModelBuildKey: string, index: number, DataField: string, newValue: string | null) {
         //if (this._LogLevel >= LoggingLevels.Debug) console.log("Row {0}, adding {1}_dv = {2} ".sfFormat(index,DataField,newValue ));
         thisPart.DataModels.get(DataModelBuildKey)![index][DataField + "_dv"] = newValue;
     }
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
-    _CachedDVRequests: Map<string,Promise<string | null>>  = new Map<string,Promise<string | null>>();
-    _UserPermitResultCache: Map<string,number> = new Map<string,number>();
-    _UCPermitMap: any = {
-        _etag : { empty : 0,
-             w  : 0
-             }
+    protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
+    protected _UserPermitResultCache: Map<string, number> = new Map<string, number>();
+    protected _UCPermitMap: any = {
+        _etag: {
+            empty: 0,
+            w: 0
+        }
     };
 
-    _PermitMatches(permit: IUCPermit, optionalDTK?: GUID, optionalReference?: GUID) : boolean {
+    protected _PermitMatches(permit: IUCPermit, optionalDTK?: GUID, optionalReference?: GUID): boolean {
         // project match is assumed by this point (cached is by project)
         var result = true;
         if (permit.DocTypeKey) {
@@ -490,11 +524,11 @@ export class sfRestClient
         dsCacheKey: "1",
         UserKey: "00000000-0000-0000-0000-000000000000"
     }
-    _z: any = {
+    protected _z: any = {
         lsKeys: {
-            api_session_permits_map:  "sfUCFunctionNameMap"
-            },
-        WCCLoaded : false
+            api_session_permits_map: "sfUCFunctionNameMap"
+        },
+        WCCLoaded: false
     }
     protected _LogLevel: LoggingLevels = LoggingLevels.None
 
@@ -502,7 +536,7 @@ export class sfRestClient
     constructor() {
         var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
         this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
-        this.LoadUserSessionInfo().then( () => this.LoadUCFunctionMap());
+        this.LoadUserSessionInfo().then(() => this.LoadUCFunctionMap());
 
     }
 };
