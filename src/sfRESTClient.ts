@@ -1,10 +1,10 @@
 
 //import { contains } from "jquery";
 import { GUID } from "./globals";
-import { String } from "./string.extensions";
+import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, SessionClient, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as $ from 'jquery';
-import { Deferred } from "jquery";
+
 //var $ : JQueryStatic;
 
 //export type GUID = string //& { isGuid: true };
@@ -534,10 +534,14 @@ export class sfRestClient {
 
 
     constructor() {
-        var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
-        this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
+        if (typeof sfApplicationRootPath === "string") {
+            this._SiteURL = sfApplicationRootPath;
+        }
+        else {
+            var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
+            this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
+        }
         this.LoadUserSessionInfo().then(() => this.LoadUCFunctionMap());
-
     }
 };
 
