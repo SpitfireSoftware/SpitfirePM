@@ -52,10 +52,10 @@ if (!Date.prototype.isMidnight) {
     };
 }
 if (!Date.prototype.isDate) {
-    Date.prototype.isDate = function (d) {
+    Date.prototype.isDate = function (d? : string | Date) {
         var result = false;
         if (!d) d = this;
-        if (typeof d === "string") d = new Date(d);
+        if (typeof d === "string" && d.length > 3) d = new Date(d);
         //if (Object.prototype.toString.call(d) === "[object Date]") {
         if (d instanceof Date) {
             // it is a date

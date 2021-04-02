@@ -7,8 +7,6 @@ import * as $ from 'jquery';
 
 
 
-//var $ : JQueryStatic;
-
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -22,6 +20,7 @@ import * as $ from 'jquery';
 
 export enum LoggingLevels {
     None,
+    Normal,
     Verbose,
     Debug
 }
@@ -88,78 +87,112 @@ class PartStorageData {
 
 }
 
+/**
+ * Options for QAPopInfo
+ */
 class QAInfoOptions {
-    DialogTitle: string // "Routes that Reference Role" ;
-    DialogCSS: string // "sfUIShowInfo";
-    EmptyDialogText: string // "No route references were found." ;
-   // URLCallback: () => string
-
-    dvFor:string // "*";
+    /**
+     * Title for JQueryUI dialog, eg "Routes that Reference Role: $V"; $V is replace by value text (see ValueCSS)
+     */
+    DialogTitle: string;
+    /**
+     * Applied to DIV around table.  Default is sfUIShowInfo
+     */
+    DialogCSS: string;
+    /**
+     * Shown if no results.  Example: "No route references were found."  Default: Nothing to see here...
+     */
+    EmptyDialogText: string ;
+    /**
+     * HTTP GET query that returns JSON; $K is replaced by key from callback
+     */
     QueryURL:string // "util/jstNodes.ashx/qa/RoleMemberInfo/$K
+    /**
+     * When not empty, used to find value for $V
+     */
+     ValueCSS: string | undefined;
+
+    // URLCallback: () => string
+    //dvFor:string // "*";
 
 /**
  *  Finds closest element with .sfUIPopQA and its matching .uiQA-xxx and creates options class from CSS -- attributes
  *
  *
  *  .sfQA-RoleRouteInfo {
+ *
  *      --dialog-title:"Routes that Reference Role" ;
- *      --dialog-class:"sfUIShowInfo";
+ *      --dialog-class:sfUIShowInfo;
+ *      --dialog-value-class: false
  *      --dialog-empty-text:"No route references were found." ;
  *      --dialogQueryL:"util/jstNodes.ashx/qa/RoleMemberInfo/$K";
  *  }
  */
  public static QAInfoOptionsFromCSSFactory(forElement: JQuery<HTMLElement>): QAInfoOptions | null {
         var thisPart: QAInfoOptions;
-        var title: string, cssClass: string, emptyText: string, queryURL: string;
+        var title: string="", cssClass: string="sfUIShowInfo", emptyText: string="Nothing to see here!", queryURL: string="",ValueCSS="";
         if (!forElement.hasClass("sfUIPopQA") )         forElement = forElement.closest(".sfUIPopQA")
         if (forElement.length === 0) {
             console.log("QAInfoOptionsFromCSSFactory() could not find .sfUIPopQA ");
             return null;
         }
 
-        title = forElement.css("--dialog-title");
-        cssClass = forElement.css("--dialog-class");
-        emptyText = forElement.css("--dialog-empty-text");
-        queryURL = "";
-        var QueryProperty : string =forElement.css("--dialog-query");
-        if (QueryProperty) {
-            try {
-                QueryProperty = eval(QueryProperty);
-            } catch (ex) {
-                console.warn("QAInfoOptionsFromCSSFactory could not resolve {0}".sfFormat(QueryProperty));
-            }
-            queryURL = QueryProperty;
-        }
-
-        // forElement.attr('class')?.trim().split(/\s+/).forEach(element => {
-        //         if (element.startsWith("sfQA-")) {
-
-        //             return false;
-        //         }
-        // });
+        title = QAInfoOptions.CSSPropertyValueOrEmpty(forElement,"--dialog-title");
+        cssClass = QAInfoOptions.CSSPropertyValueOrEmpty(forElement,"--dialog-class",cssClass);
+        ValueCSS = QAInfoOptions.CSSPropertyValueOrEmpty(forElement,"--dialog-value-class");
+        emptyText = QAInfoOptions.CSSPropertyValueOrEmpty(forElement,"--dialog-empty-text",emptyText);
+        queryURL = QAInfoOptions.CSSPropertyValueOrEmpty(forElement,"--dialog-query");
 
         thisPart = new QAInfoOptions(title, cssClass, emptyText, queryURL);
+        if (ValueCSS) thisPart.ValueCSS = ValueCSS.trim();
         thisPart.LoadFromDataAttributes(forElement);
         return thisPart;
+    }
+
+    /**
+     *
+     * @param fromElement
+     * @param cssName
+     * @param defaultValue Specify if default is not empty string
+     * @returns
+     */
+    protected static CSSPropertyValueOrEmpty(fromElement:JQuery<HTMLElement> , cssName:string, defaultValue?: string) : string{
+        var CSSValue;
+        CSSValue= fromElement.css(cssName);
+        if (CSSValue) {
+            CSSValue = CSSValue.trim();
+            if (CSSValue.startsWith("'") || CSSValue.startsWith("\"")) {
+                try {
+                    CSSValue = eval(CSSValue);
+                    CSSValue = CSSValue.trim();
+                } catch (ex) {
+                    console.warn("CSSPropertyValueOrEmpty could not EVAL {0}".sfFormat(CSSValue));
+                }
+            }
+        }
+        else if (defaultValue) CSSValue = defaultValue;
+        else if (!defaultValue) CSSValue = "";
+        return CSSValue;
     }
 
     LoadFromDataAttributes( fromElement : JQuery<HTMLElement>):void {
         var elementData = fromElement.data();
         if ("dialogtitle" in elementData) this.DialogTitle = elementData.dialogtitle;
         if ("dialogcss" in elementData) this.DialogCSS = elementData.dialogcss.trim();
+        if ("valuecss" in elementData) this.ValueCSS = elementData.valuecss.trim();
         if ("emptydialogtext" in elementData) this.EmptyDialogText = elementData.emptydialogtext.trim();
         if ("dialogtitle" in elementData) {
             this.DialogTitle = elementData.dialogtitle;
-            if(this.DialogTitle.indexOf("$V")) this.DialogTitle = this.DialogTitle.replaceAll("$V", fromElement.text());
         }
     }
 
     constructor(title: string, cssClass: string, emptyText: string, queryURL: string) {
 //, urlCallback: () => string ) {
         this.DialogTitle = title;  // "Routes that Reference Role" ;
-        this.DialogCSS = cssClass.trim(); // "sfUIShowInfo";
+        this.DialogCSS = "sfUIShowInfo";
+        if (cssClass) this.DialogCSS = cssClass.trim(); // "sfUIShowInfo";
         this.EmptyDialogText = emptyText; // "No route references were found." ;
-        this.dvFor = "*";
+        //this.dvFor = "*";
         //this.URLCallback = urlCallback;
         this.QueryURL = queryURL;
          if (!this.DialogCSS) this.DialogCSS = "sfUIShowInfo";
@@ -406,6 +439,7 @@ export class sfRestClient {
     */
     PopQAInfo( forElement : JQuery<HTMLElement> , queryOptions?: QAInfoOptions,
         resolveKey?: (forElement: JQuery<HTMLElement>) => string,
+        resolveValue?: (forElement: JQuery<HTMLElement>, queryOptions: QAInfoOptions) => string,
         onPostback?: (eventTarget: string, eventArgs: string) => void                ) : JQuery<HTMLElement> {
 
     var RESTClient : sfRestClient = this;
@@ -418,7 +452,7 @@ export class sfRestClient {
     }
 
     queryOptions.LoadFromDataAttributes(forElement);
-    var url = queryOptions.QueryURL
+    var url = queryOptions.QueryURL;
     if (!url) {
         if (this._LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
         return forElement;
@@ -426,6 +460,10 @@ export class sfRestClient {
     if (url.indexOf("$K")) {
         if (typeof resolveKey === "undefined") throw new Error("PopQAInfo requires resolveKey callback when URL includes $K");
         url = url.replaceAll("$K", resolveKey(forElement));
+    }
+    if (queryOptions.DialogTitle.indexOf("$V")) {
+        if (typeof resolveValue === "undefined") throw new Error("PopQAInfo requires resolveValue callback when options include $V");
+        queryOptions.DialogTitle = queryOptions.DialogTitle.replaceAll("$V",resolveValue(forElement,queryOptions));
     }
 
     // search for already open popup querys
@@ -450,15 +488,18 @@ export class sfRestClient {
     );
     if (RESTClient._LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
     if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
-    $GCI.load(url, function (responseText, textStatus, jqXHR) {
+    $GCI.load(url, function (responseText, textStatus, jqXHR: JQuery.jqXHR) {
+        var isEmpty = false;
         if (responseText.startsWith("[{")) {
             var ldata = JSON.parse(responseText);
             var table = RESTClient.MakeTable(ldata);
             $GCI.html(table.prop("outerHTML"));
+            isEmpty = ($GCI.html() == "" || $GCI.html() == "[]")
         }
-        else if (textStatus) $GCI.html(textStatus);
-        if ($GCI.html() == "" || $GCI.html() == "[]") {
-            $GCI.html(forElement.data(queryOptions?.EmptyDialogText!));
+        else if (jqXHR.status !== 200 && textStatus) $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
+        else if (!responseText || (typeof responseText === "string" && responseText === "[]")) isEmpty = true;
+        if (isEmpty) {
+            $GCI.html(queryOptions?.EmptyDialogText!);
         }
     });
 
@@ -481,7 +522,7 @@ export class sfRestClient {
             $.each(value, function (key, val : any) {
                 if ((typeof (val) === "string")  ) {
                     var when = new Date(val);
-                    if (when.isDate()) {
+                    if (val.length > 3 && when.isDate()) {
                         TableRow += "<td >{0} {1}</td>".sfFormat($.datepicker.formatDate('M d yy', when),
                                                                 when.isMidnight() ? "" : when.toLocaleTimeString());
 
@@ -742,7 +783,7 @@ export class sfRestClient {
         },
         WCCLoaded: false
     }
-    protected _LogLevel: LoggingLevels = LoggingLevels.None
+    protected _LogLevel: LoggingLevels = LoggingLevels.None;
 
 
     constructor() {
