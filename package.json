@@ -23,7 +23,8 @@
   },
   "homepage": "https://github.com/SpitfireSoftware/SpitfirePM#readme",
   "devDependencies": {
-    "@types/jquery": "^3.5.5"
+    "@types/jquery": "^3.5.5",
+    "jquery-ui": "^1.12.1"
   },
   "browserslist": [
     "last 2 Chrome versions"

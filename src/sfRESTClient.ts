@@ -5,6 +5,8 @@ import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, SessionClient, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as $ from 'jquery';
 
+
+
 //var $ : JQueryStatic;
 
 //export type GUID = string //& { isGuid: true };
@@ -84,6 +86,85 @@ class PartStorageData {
         }
     }
 
+}
+
+class QAInfoOptions {
+    DialogTitle: string // "Routes that Reference Role" ;
+    DialogCSS: string // "sfUIShowInfo";
+    EmptyDialogText: string // "No route references were found." ;
+   // URLCallback: () => string
+
+    dvFor:string // "*";
+    QueryURL:string // "util/jstNodes.ashx/qa/RoleMemberInfo/$K
+
+/**
+ *  Finds closest element with .sfUIPopQA and its matching .uiQA-xxx and creates options class from CSS -- attributes
+ *
+ *
+ *  .sfQA-RoleRouteInfo {
+ *      --dialog-title:"Routes that Reference Role" ;
+ *      --dialog-class:"sfUIShowInfo";
+ *      --dialog-empty-text:"No route references were found." ;
+ *      --dialogQueryL:"util/jstNodes.ashx/qa/RoleMemberInfo/$K";
+ *  }
+ */
+ public static QAInfoOptionsFromCSSFactory(forElement: JQuery<HTMLElement>): QAInfoOptions | null {
+        var thisPart: QAInfoOptions;
+        var title: string, cssClass: string, emptyText: string, queryURL: string;
+        if (!forElement.hasClass("sfUIPopQA") )         forElement = forElement.closest(".sfUIPopQA")
+        if (forElement.length === 0) {
+            console.log("QAInfoOptionsFromCSSFactory() could not find .sfUIPopQA ");
+            return null;
+        }
+
+        title = forElement.css("--dialog-title");
+        cssClass = forElement.css("--dialog-class");
+        emptyText = forElement.css("--dialog-empty-text");
+        queryURL = "";
+        var QueryProperty : string =forElement.css("--dialog-query");
+        if (QueryProperty) {
+            try {
+                QueryProperty = eval(QueryProperty);
+            } catch (ex) {
+                console.warn("QAInfoOptionsFromCSSFactory could not resolve {0}".sfFormat(QueryProperty));
+            }
+            queryURL = QueryProperty;
+        }
+
+        // forElement.attr('class')?.trim().split(/\s+/).forEach(element => {
+        //         if (element.startsWith("sfQA-")) {
+
+        //             return false;
+        //         }
+        // });
+
+        thisPart = new QAInfoOptions(title, cssClass, emptyText, queryURL);
+        thisPart.LoadFromDataAttributes(forElement);
+        return thisPart;
+    }
+
+    LoadFromDataAttributes( fromElement : JQuery<HTMLElement>):void {
+        var elementData = fromElement.data();
+        if ("dialogtitle" in elementData) this.DialogTitle = elementData.dialogtitle;
+        if ("dialogcss" in elementData) this.DialogCSS = elementData.dialogcss.trim();
+        if ("emptydialogtext" in elementData) this.EmptyDialogText = elementData.emptydialogtext.trim();
+        if ("dialogtitle" in elementData) {
+            this.DialogTitle = elementData.dialogtitle;
+            if(this.DialogTitle.indexOf("$V")) this.DialogTitle = this.DialogTitle.replaceAll("$V", fromElement.text());
+        }
+    }
+
+    constructor(title: string, cssClass: string, emptyText: string, queryURL: string) {
+//, urlCallback: () => string ) {
+        this.DialogTitle = title;  // "Routes that Reference Role" ;
+        this.DialogCSS = cssClass.trim(); // "sfUIShowInfo";
+        this.EmptyDialogText = emptyText; // "No route references were found." ;
+        this.dvFor = "*";
+        //this.URLCallback = urlCallback;
+        this.QueryURL = queryURL;
+         if (!this.DialogCSS) this.DialogCSS = "sfUIShowInfo";
+         if (!this.EmptyDialogText) this.EmptyDialogText = "Nothing to see here...";
+    }
 }
 
 export class WCCData { [key: string]: any; }
@@ -311,6 +392,137 @@ export class sfRestClient {
     GetPartCFG(partName: string, forDocType?: GUID, partContext?: string): Promise<UIDisplayPart | null> {
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, partContext);
         return thisPart.CFGLoader();
+    }
+
+ /**
+     * Pops up a dialog showing result of a qAlias query
+     *
+     * @param forElement either an JQuery element or QAInfoOptions object
+     * @param queryOptions? if specified, passes Query URL, title and other options
+     * @param resolveKey callback function that resolves $K for the URL
+     * @param onPostback not currently used, typically (t,a)=> __doPostback(t,a);
+     * @returns forElement (which may now have a .dialog)
+     *
+    */
+    PopQAInfo( forElement : JQuery<HTMLElement> , queryOptions?: QAInfoOptions,
+        resolveKey?: (forElement: JQuery<HTMLElement>) => string,
+        onPostback?: (eventTarget: string, eventArgs: string) => void                ) : JQuery<HTMLElement> {
+
+    var RESTClient : sfRestClient = this;
+                    if (typeof queryOptions === "undefined")
+     {
+        var TempOptions : QAInfoOptions | null;
+        TempOptions =   QAInfoOptions.QAInfoOptionsFromCSSFactory(forElement);
+        if (!TempOptions) return forElement;
+        queryOptions =   TempOptions;
+    }
+
+    queryOptions.LoadFromDataAttributes(forElement);
+    var url = queryOptions.QueryURL
+    if (!url) {
+        if (this._LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
+        return forElement;
+    }
+    if (url.indexOf("$K")) {
+        if (typeof resolveKey === "undefined") throw new Error("PopQAInfo requires resolveKey callback when URL includes $K");
+        url = url.replaceAll("$K", resolveKey(forElement));
+    }
+
+    // search for already open popup querys
+    var $GCI : JQuery<HTMLElement> = $('.{0}'.sfFormat(queryOptions.DialogCSS.replace(' ', '.')));
+    if ($GCI.length > 0) {
+        $GCI.dialog('close');
+        $GCI[0].remove();
+    }
+
+    // open div in the top window, not the current dialog (no nesting)
+    $GCI = window.top.$("<div class='{0}' />".sfFormat(queryOptions.DialogCSS));
+    $GCI.html("Loading....");
+    // //width: window.top.$(window.top).width() * 0.88
+
+    $GCI.dialog({
+        title: queryOptions.DialogTitle, height: "auto", width: "auto", position: "top center"
+        , show: { effect: "blind", duration: 100 }
+        , close: function (event?:any, ui?:any) {
+            $GCI.dialog('destroy');
+            }
+        }
+    );
+    if (RESTClient._LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
+    if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
+    $GCI.load(url, function (responseText, textStatus, jqXHR) {
+        if (responseText.startsWith("[{")) {
+            var ldata = JSON.parse(responseText);
+            var table = RESTClient.MakeTable(ldata);
+            $GCI.html(table.prop("outerHTML"));
+        }
+        else if (textStatus) $GCI.html(textStatus);
+        if ($GCI.html() == "" || $GCI.html() == "[]") {
+            $GCI.html(forElement.data(queryOptions?.EmptyDialogText!));
+        }
+    });
+
+    return forElement;
+    }
+
+    /**
+     * Converts a JSON set into rows of an HTML Table.
+     * @param mydata an array of JSON objects
+     * @returns JQuery<HTMLTableElement> TABLE that has not been inserted into DOM
+     */
+    MakeTable = function (mydata : JSON[]) : JQuery<HTMLTableElement > {
+        var table: JQuery<HTMLTableElement> = $('<table border="1px">');
+        var tblHeader = "<tr>";
+        for (var k in mydata[0]) tblHeader += "<th>" + k.replaceAll("_", " ") + "</th>";
+        tblHeader += "</tr>";
+        $(tblHeader).appendTo(table);
+        $.each(mydata, function (index, value) {
+            var TableRow = "<tr>";
+            $.each(value, function (key, val : any) {
+                if ((typeof (val) === "string")  ) {
+                    var when = new Date(val);
+                    if (when.isDate()) {
+                        TableRow += "<td >{0} {1}</td>".sfFormat($.datepicker.formatDate('M d yy', when),
+                                                                when.isMidnight() ? "" : when.toLocaleTimeString());
+
+                    }
+                    else {
+                        TableRow += "<td>{0}</td>".sfFormat(val);
+                    }
+
+                }
+                else if (typeof val === "number") {
+                    if (val == 0) TableRow += "<td></td>";
+                    else {
+                        var dPlaces = ((val % 1 != 0) ? 2 : 0);
+                        var NumericValue = val;
+                        TableRow += "<td class='clsNumericReadOnly'>{0}</td>".sfFormat(NumericValue.toFixed(dPlaces) ) ;
+                    }
+                }
+                else if (typeof val === "object" && val === null) {
+                    TableRow += "<td></td>";
+                }
+                else {
+                    console.log("makeTable processed type {0}".sfFormat(typeof (val)));
+                    TableRow += "<td>{0}</td>".sfFormat( val );
+                }
+            });
+            TableRow += "</tr>";
+            $(table).append(TableRow);
+        });
+        return table;
+    };
+
+ /**
+     * Make sure the URL starts with application root path
+    */
+    MakeSiteRelativeURL(url:string):string {
+        if (typeof sfApplicationRootPath !== 'undefined') {
+            if (url.startsWith("../")) url = url.substring(3);
+            if (url.toUpperCase().startsWith(sfApplicationRootPath.toUpperCase())) return url;
+            url = sfApplicationRootPath + '/' + url;
+        }
+        return url;
     }
 
     /**
