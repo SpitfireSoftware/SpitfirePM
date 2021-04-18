@@ -249,6 +249,7 @@ export class sfRestClient {
         if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) new Error("Cannot construct this ViewModel");
         var StartAtTicks: number = Date.now();
         var DataModelBuildKey: string = PartStorageData.GetDataModelBuildContextKey();
+        var FailCount: number= 0;
         thisPart!.DataModels.set(DataModelBuildKey, rawData)
         thisPart!._PromiseList = [];
 
@@ -261,6 +262,13 @@ export class sfRestClient {
                     resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
                     thisPart!.DataModels.delete(DataModelBuildKey);
                     if (thisPart!.RestClient._LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
+                }).fail(function() {
+                    if (FailCount === 0) {
+                        resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
+                        thisPart!.DataModels.delete(DataModelBuildKey);
+                        FailCount++;
+                    }
+                    console.warn("ViewModel {0} failed to complete cleanly; {2} fails; {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks,FailCount));
                 });
         });
         return ViewModelPromise;
@@ -354,7 +362,12 @@ export class sfRestClient {
     }
     /**
      * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
-    */
+     * @param displayName the name of a display value rule (eg sfUser, RoleName, etc)
+     * @param keyValue the primary or most significant key
+     * @param dependsOn optional array of context values (multi-part key); 0 to 4 elements allowed
+     * @param autoVary force bypass of cache
+     * @returns Promise for String
+     */
     GetDV(displayName: string, keyValue: string,
         /**
          * either a string or string array (up to 4 elements)
@@ -729,6 +742,28 @@ export class sfRestClient {
         return rawRow[fieldName];
     }
 
+    /**
+     * Builds a string array of values that help define the context of a lookup or evaluation
+     * @param dependsOnList semicolon separated list of related field and constants. eg #Project;=Subtype
+     * @param rawRow primary source of data
+     */
+    GatherDependsOnValues(dependsOnList:string, rawRow: any) : string[] {
+        var result: string[] = [];
+
+        dependsOnList.split(";").forEach(element => {
+            if (element.startsWith("=")) result.push(element.substring(1));
+            if (element.startsWith("#")) {
+                element = element.substring(1);
+                if (element.indexOf(".")> 0 ) {
+                    throw new Error("Not implemented yet: Depends on a related row of data: " + element);
+                }
+                result.push(this.FieldValueFromRow(rawRow,element));
+            }
+        });
+        return result;
+    }
+
+
     _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, DataModelBuildKey: string) {
 
         if (item.DV || item.LookupName ||
@@ -736,21 +771,29 @@ export class sfRestClient {
             if (item.DV) {
                 if (this._LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
                 thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
-                    var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
-                    ///!!! future: handle depends on
-                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, "", false).then(function then_AddDVToDModel(r) : void {
-                        thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, "_dv", r);
-                    }));
+                    var ThisSuffix : string = "_dv";
+                    if (!((item.DataField + ThisSuffix) in rawRow)) {
+                        var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
+                        ///!!! future: handle depends on #DocMasterDetail.project
+                        var DependsOn : string[] | undefined;
+                        if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
+                        thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
+                            thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, ThisSuffix, r);
+                        }));
+                    }
                 });
             }
             if (item.UIType === "contact") {
                 thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVContactActiveCheck(rawRow: any, index: number) : void {
-                    var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
-                    if (!FieldValue) return;
-                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV("sfUserActive", FieldValue, "", false).then(function then_AddDVActiveToDModel(r) {
-                        if(!r)
-                            thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, "_IsInactive" ,true);
-                    }));
+                    var ThisSuffix : string = "_IsInactive";
+                    if (!((item.DataField + ThisSuffix) in rawRow)) {
+                        var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
+                        if (!FieldValue) return;
+                        thisPart._PromiseList!.push(thisPart.RestClient.GetDV("sfUserActive", FieldValue, "", false).then(function then_AddDVActiveToDModel(r) {
+                            if(!r)
+                                thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, ThisSuffix ,true);
+                        }));
+                    }
                 });
             }
             // future: finish support for resolution using LookupName ...
