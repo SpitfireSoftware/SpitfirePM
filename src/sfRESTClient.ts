@@ -496,7 +496,10 @@ export class sfRestClient {
             $GCI.html(table.prop("outerHTML"));
             isEmpty = ($GCI.html() == "" || $GCI.html() == "[]")
         }
-        else if (jqXHR.status !== 200 && textStatus) $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
+        else if (jqXHR.status !== 200 && textStatus) {
+            $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
+            if (jqXHR.responseText.length > 1234) $GCI.css("width",$(window.top).width()! - 48);
+        }
         else if (!responseText || (typeof responseText === "string" && responseText === "[]")) isEmpty = true;
         if (isEmpty) {
             $GCI.html(queryOptions?.EmptyDialogText!);
@@ -732,20 +735,30 @@ export class sfRestClient {
             (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
             if (item.DV) {
                 if (this._LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
-                thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) {
+                thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
                     var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
                     ///!!! future: handle depends on
-                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, "", false).then(function then_AddDVToDModel(r) {
-                        thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, r);
+                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, "", false).then(function then_AddDVToDModel(r) : void {
+                        thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, "_dv", r);
+                    }));
+                });
+            }
+            if (item.UIType === "contact") {
+                thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVContactActiveCheck(rawRow: any, index: number) : void {
+                    var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
+                    if (!FieldValue) return;
+                    thisPart._PromiseList!.push(thisPart.RestClient.GetDV("sfUserActive", FieldValue, "", false).then(function then_AddDVActiveToDModel(r) {
+                        if(!r)
+                            thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, "_IsInactive" ,true);
                     }));
                 });
             }
             // future: finish support for resolution using LookupName ...
         }
     }
-    protected _AddDVValueToDataModel(thisPart: PartStorageData, DataModelBuildKey: string, index: number, DataField: string, newValue: string | null) {
+    protected _AddDVValueToDataModel(thisPart: PartStorageData, dataModelBuildKey: string, index: number, dataField: string, suffix : string, newValue: string | boolean | null) {
         //if (this._LogLevel >= LoggingLevels.Debug) console.log("Row {0}, adding {1}_dv = {2} ".sfFormat(index,DataField,newValue ));
-        thisPart.DataModels.get(DataModelBuildKey)![index][DataField + "_dv"] = newValue;
+        thisPart.DataModels.get(dataModelBuildKey)![index][dataField + suffix] = newValue;
     }
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";

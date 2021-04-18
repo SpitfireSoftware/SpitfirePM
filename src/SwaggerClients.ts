@@ -9,7 +9,7 @@
 
 import * as jQuery from 'jquery';
 
-export class DocumentToolsClient {
+export class ActionItemsClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -19,7 +19,503 @@ export class DocumentToolsClient {
     }
 
     /**
-     * Returns the header of the specified document, including a Document Session Key
+     * Returns action items for specified User
+     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    getUserActionItemsAll(forUserKey: string) {
+        return new Promise<UserActionItem[] | null>((resolve, reject) => {
+            this.getUserActionItemsAllWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserActionItemsAllWithCallbacks(forUserKey: string, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems?";
+        if (forUserKey === undefined || forUserKey === null)
+            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
+        else
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserActionItemsAllWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserActionItemsAll(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserActionItemsAll(xhr: any): UserActionItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserActionItem.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns action items that match filters ProjectLike, TitleLike, ForDocType, FromDate, ThruDate, NewOnly
+     */
+    getMatchingUserActionItems(usingFilters: QueryFilters) {
+        return new Promise<UserActionItem[] | null>((resolve, reject) => {
+            this.getMatchingUserActionItemsWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getMatchingUserActionItemsWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems/matching";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(usingFilters);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetMatchingUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetMatchingUserActionItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetMatchingUserActionItems(xhr: any): UserActionItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserActionItem.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns an action item for the specified User
+     * @param userID User Key or 1 for self
+     * @param routeID Route ID (guid)
+     */
+    getUserActionItems(userID: string, routeID: string) {
+        return new Promise<RouteActionInfo | null>((resolve, reject) => {
+            this.getUserActionItemsWithCallbacks(userID, routeID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserActionItemsWithCallbacks(userID: string, routeID: string, onSuccess?: (result: RouteActionInfo | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}";
+        if (userID === undefined || userID === null)
+            throw new Error("The parameter 'userID' must be defined.");
+        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
+        if (routeID === undefined || routeID === null)
+            throw new Error("The parameter 'routeID' must be defined.");
+        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserActionItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserActionItems(xhr: any): RouteActionInfo | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result500 = resultData500 !== undefined ? resultData500 : <any>null;
+            return throwException("internal failure", status, _responseText, _headers, result500);
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = resultData404 !== undefined ? resultData404 : <any>null;
+            return throwException("Requested route not found", status, _responseText, _headers, result404);
+        } else if (status === 503) {
+            const _responseText = xhr.responseText;
+            let result503: any = null;
+            let resultData503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result503 = resultData503 !== undefined ? resultData503 : <any>null;
+            return throwException("Try again after reauthentication", status, _responseText, _headers, result503);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? RouteActionInfo.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates an action item for the specified User
+     * @param userID User Key or 1 for self
+     * @param routeID Route ID (guid)
+     * @param actionData action is patch data
+     * @param actionMode (optional) Mode is id,match,every
+     */
+    patchUserActionItems(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.patchUserActionItemsWithCallbacks(userID, routeID, actionData, actionMode, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchUserActionItemsWithCallbacks(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}?";
+        if (userID === undefined || userID === null)
+            throw new Error("The parameter 'userID' must be defined.");
+        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
+        if (routeID === undefined || routeID === null)
+            throw new Error("The parameter 'routeID' must be defined.");
+        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
+        if (actionMode !== undefined && actionMode !== null)
+            url_ += "actionMode=" + encodeURIComponent("" + actionMode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(actionData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPatchUserActionItems(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchUserActionItems(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class CatalogClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns a history of access to the specified ID
+     * @param iD Catalog File Key
+     */
+    getCatalogAccessHistory(iD: string) {
+        return new Promise<FileAccessHistory[] | null>((resolve, reject) => {
+            this.getCatalogAccessHistoryWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCatalogAccessHistoryWithCallbacks(iD: string, onSuccess?: (result: FileAccessHistory[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/catalog/{ID}/AccessHistory";
+        if (iD === undefined || iD === null)
+            throw new Error("The parameter 'iD' must be defined.");
+        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCatalogAccessHistoryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetCatalogAccessHistory(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCatalogAccessHistory(xhr: any): FileAccessHistory[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FileAccessHistory.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns a list of versions for the specified ID
+     * @param iD Catalog File Key
+     */
+    getCatalogVersions(iD: string) {
+        return new Promise<FileVersion[] | null>((resolve, reject) => {
+            this.getCatalogVersionsWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCatalogVersionsWithCallbacks(iD: string, onSuccess?: (result: FileVersion[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/catalog/{ID}/versions";
+        if (iD === undefined || iD === null)
+            throw new Error("The parameter 'iD' must be defined.");
+        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCatalogVersionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetCatalogVersions(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCatalogVersions(xhr: any): FileVersion[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FileVersion.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class DocumentToolsClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    docDetailStateTable() {
+        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
+            this.docDetailStateTableWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private docDetailStateTableWithCallbacks(onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/DocumentTools";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDocDetailStateTableWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDocDetailStateTableWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDocDetailStateTableWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processDocDetailStateTable(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDocDetailStateTable(xhr: any): { [key: string]: any; } | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        result200![key] = resultData200[key];
+                }
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the ATC Workflow log for the current document session
      * @param id Document Key
      */
     getDocWorkflowLog(id: string) {
@@ -389,32 +885,22 @@ export class DocumentToolsClient {
         }
         return null;
     }
-}
-
-export class CatalogClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
 
     /**
-     * Returns a history of access to the specified ID
-     * @param iD Catalog File Key
+     * Returns the route on the specified document
+     * @param id Document Key
      */
-    getCatalogAccessHistory(iD: string) {
-        return new Promise<FileAccessHistory[] | null>((resolve, reject) => {
-            this.getCatalogAccessHistoryWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getDocRoute(id: string) {
+        return new Promise<DocRoute[] | null>((resolve, reject) => {
+            this.getDocRouteWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getCatalogAccessHistoryWithCallbacks(iD: string, onSuccess?: (result: FileAccessHistory[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/catalog/{ID}/AccessHistory";
-        if (iD === undefined || iD === null)
-            throw new Error("The parameter 'iD' must be defined.");
-        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
+    private getDocRouteWithCallbacks(id: string, onSuccess?: (result: DocRoute[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Document/{id}/Route";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
         url_ = url_.replace(/[?&]$/, "");
 
         jQuery.ajax({
@@ -426,15 +912,15 @@ export class CatalogClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetCatalogAccessHistoryWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetCatalogAccessHistoryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetCatalogAccessHistory(xhr);
+            let result = this.processGetDocRoute(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -443,7 +929,7 @@ export class CatalogClient {
         }
     }
 
-    protected processGetCatalogAccessHistory(xhr: any): FileAccessHistory[] | null | null {
+    protected processGetDocRoute(xhr: any): DocRoute[] | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -454,71 +940,7 @@ export class CatalogClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(FileAccessHistory.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns a list of versions for the specified ID
-     * @param iD Catalog File Key
-     */
-    getCatalogVersions(iD: string) {
-        return new Promise<FileVersion[] | null>((resolve, reject) => {
-            this.getCatalogVersionsWithCallbacks(iD, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getCatalogVersionsWithCallbacks(iD: string, onSuccess?: (result: FileVersion[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/catalog/{ID}/versions";
-        if (iD === undefined || iD === null)
-            throw new Error("The parameter 'iD' must be defined.");
-        url_ = url_.replace("{ID}", encodeURIComponent("" + iD));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetCatalogVersionsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetCatalogVersionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetCatalogVersions(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetCatalogVersions(xhr: any): FileVersion[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(FileVersion.fromJS(item));
+                    result200!.push(DocRoute.fromJS(item));
             }
             return result200;
         } else if (status !== 200 && status !== 204) {
@@ -529,7 +951,7 @@ export class CatalogClient {
     }
 }
 
-export class ActionItemsClient {
+export class AccountClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -539,89 +961,24 @@ export class ActionItemsClient {
     }
 
     /**
-     * Returns action items for specified User
-     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * Authenticates a session and generates a FormsAuthenticationTicket and cookie
      */
-    getUserActionItemsAll(forUserKey: string) {
-        return new Promise<UserActionItem[] | null>((resolve, reject) => {
-            this.getUserActionItemsAllWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+    postLogin(credentials: SiteLogin) {
+        return new Promise<string | null>((resolve, reject) => {
+            this.postLoginWithCallbacks(credentials, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getUserActionItemsAllWithCallbacks(forUserKey: string, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems?";
-        if (forUserKey === undefined || forUserKey === null)
-            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
-        else
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+    private postLoginWithCallbacks(credentials: SiteLogin, onSuccess?: (result: string | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account";
         url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(credentials);
 
         jQuery.ajax({
             url: url_,
             beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserActionItemsAllWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserActionItemsAllWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserActionItemsAll(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserActionItemsAll(xhr: any): UserActionItem[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(UserActionItem.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns action items that match filters ProjectLike, TitleLike, ForDocType, FromDate, ThruDate, NewOnly
-     */
-    getMatchingUserActionItems(usingFilters: QueryFilters) {
-        return new Promise<UserActionItem[] | null>((resolve, reject) => {
-            this.getMatchingUserActionItemsWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getMatchingUserActionItemsWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: UserActionItem[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems/matching";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(usingFilters);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
+            type: "post",
             data: content_,
             dataType: "text",
             headers: {
@@ -629,15 +986,15 @@ export class ActionItemsClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetMatchingUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetMatchingUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processPostLoginWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetMatchingUserActionItems(xhr);
+            let result = this.processPostLogin(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -646,75 +1003,7 @@ export class ActionItemsClient {
         }
     }
 
-    protected processGetMatchingUserActionItems(xhr: any): UserActionItem[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(UserActionItem.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns an action item for the specified User
-     * @param userID User Key or 1 for self
-     * @param routeID Route ID (guid)
-     */
-    getUserActionItems(userID: string, routeID: string) {
-        return new Promise<RouteActionInfo | null>((resolve, reject) => {
-            this.getUserActionItemsWithCallbacks(userID, routeID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getUserActionItemsWithCallbacks(userID: string, routeID: string, onSuccess?: (result: RouteActionInfo | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}";
-        if (userID === undefined || userID === null)
-            throw new Error("The parameter 'userID' must be defined.");
-        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
-        if (routeID === undefined || routeID === null)
-            throw new Error("The parameter 'routeID' must be defined.");
-        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserActionItems(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserActionItems(xhr: any): RouteActionInfo | null | null {
+    protected processPostLogin(xhr: any): string | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -724,29 +1013,17 @@ export class ActionItemsClient {
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result401 = resultData401 !== undefined ? resultData401 : <any>null;
             return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 500) {
+        } else if (status === 400) {
             const _responseText = xhr.responseText;
-            let result500: any = null;
-            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result500 = resultData500 !== undefined ? resultData500 : <any>null;
-            return throwException("internal failure", status, _responseText, _headers, result500);
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result404 = resultData404 !== undefined ? resultData404 : <any>null;
-            return throwException("Requested route not found", status, _responseText, _headers, result404);
-        } else if (status === 503) {
-            const _responseText = xhr.responseText;
-            let result503: any = null;
-            let resultData503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result503 = resultData503 !== undefined ? resultData503 : <any>null;
-            return throwException("Try again after reauthentication", status, _responseText, _headers, result503);
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
         } else if (status === 200) {
             const _responseText = xhr.responseText;
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? RouteActionInfo.fromJS(resultData200) : <any>null;
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -756,52 +1033,36 @@ export class ActionItemsClient {
     }
 
     /**
-     * Updates an action item for the specified User
-     * @param userID User Key or 1 for self
-     * @param routeID Route ID (guid)
-     * @param actionData action is patch data
-     * @param actionMode (optional) Mode is id,match,every
+     * Returns general information about the Authenticed user
      */
-    patchUserActionItems(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.patchUserActionItemsWithCallbacks(userID, routeID, actionData, actionMode, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getUserData() {
+        return new Promise<CurrentUser | null>((resolve, reject) => {
+            this.getUserDataWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private patchUserActionItemsWithCallbacks(userID: string, routeID: string, actionData: RouteActionData, actionMode: string | null | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/ActionItems/{userID}/{routeID}?";
-        if (userID === undefined || userID === null)
-            throw new Error("The parameter 'userID' must be defined.");
-        url_ = url_.replace("{userID}", encodeURIComponent("" + userID));
-        if (routeID === undefined || routeID === null)
-            throw new Error("The parameter 'routeID' must be defined.");
-        url_ = url_.replace("{routeID}", encodeURIComponent("" + routeID));
-        if (actionMode !== undefined && actionMode !== null)
-            url_ += "actionMode=" + encodeURIComponent("" + actionMode) + "&";
+    private getUserDataWithCallbacks(onSuccess?: (result: CurrentUser | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account";
         url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(actionData);
 
         jQuery.ajax({
             url: url_,
             beforeSend: this.beforeSend,
-            type: "patch",
-            data: content_,
+            type: "get",
             dataType: "text",
             headers: {
-                "Content-Type": "application/json",
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processPatchUserActionItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processPatchUserActionItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetUserDataWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processPatchUserActionItems(xhr);
+            let result = this.processGetUserData(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -810,7 +1071,63 @@ export class ActionItemsClient {
         }
     }
 
-    protected processPatchUserActionItems(xhr: any): HttpStatusCode | null {
+    protected processGetUserData(xhr: any): CurrentUser | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? CurrentUser.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Ends this session
+     */
+    getEndOfSession() {
+        return new Promise<boolean>((resolve, reject) => {
+            this.getEndOfSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account/Logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetEndOfSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetEndOfSession(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetEndOfSession(xhr: any): boolean | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -826,9 +1143,190 @@ export class ActionItemsClient {
         }
         return null;
     }
+
+    /**
+     * Returns authorization flags for specified demand if they match or exceed the request
+     * @param demand Demand Context
+     */
+    getAccess(demand: PermissionContext) {
+        return new Promise<PermissionFlags>((resolve, reject) => {
+            this.getAccessWithCallbacks(demand, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getAccessWithCallbacks(demand: PermissionContext, onSuccess?: (result: PermissionFlags) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account/Authorized";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(demand);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetAccessWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetAccess(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetAccess(xhr: any): PermissionFlags | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    acquireTabList() {
+        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
+            this.acquireTabListWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private acquireTabListWithCallbacks(onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/Account";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processAcquireTabListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processAcquireTabList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processAcquireTabList(xhr: any): TabStripDetails[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TabStripDetails.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
 }
 
-export class ProjectsClient {
+export class Client {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    returns_information_about_password_composition() {
+        return new Promise<PasswordConfiguredOptions | null>((resolve, reject) => {
+            this.returns_information_about_password_compositionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private returns_information_about_password_compositionWithCallbacks(onSuccess?: (result: PasswordConfiguredOptions | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Account/PasswordOptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processReturns_information_about_password_compositionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processReturns_information_about_password_composition(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processReturns_information_about_password_composition(xhr: any): PasswordConfiguredOptions | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? PasswordConfiguredOptions.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ProjectTeamClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -838,22 +1336,21 @@ export class ProjectsClient {
     }
 
     /**
-     * Returns projects that match User and hidden filter
-     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     * @param includeHidden True to include hidden projects in the result
+     * Returns members of the specified project team
+     * @param projectID Full Project ID
+     * @param includeHidden True to include hidden projects
      */
-    getList(forUserKey: string, includeHidden: boolean) {
-        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
-            this.getListWithCallbacks(forUserKey, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getProjectTeamList(projectID: string, includeHidden: boolean) {
+        return new Promise<ProjectTeamMember[] | null>((resolve, reject) => {
+            this.getProjectTeamListWithCallbacks(projectID, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getListWithCallbacks(forUserKey: string, includeHidden: boolean, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/projects?";
-        if (forUserKey === undefined || forUserKey === null)
-            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
-        else
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+    private getProjectTeamListWithCallbacks(projectID: string, includeHidden: boolean, onSuccess?: (result: ProjectTeamMember[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/Team?";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
         if (includeHidden === undefined || includeHidden === null)
             throw new Error("The parameter 'includeHidden' must be defined and cannot be null.");
         else
@@ -869,15 +1366,15 @@ export class ProjectsClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetProjectTeamListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetList(xhr);
+            let result = this.processGetProjectTeamList(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -886,7 +1383,7 @@ export class ProjectsClient {
         }
     }
 
-    protected processGetList(xhr: any): ProjectSummary[] | null | null {
+    protected processGetProjectTeamList(xhr: any): ProjectTeamMember[] | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -897,536 +1394,8 @@ export class ProjectsClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ProjectSummary.fromJS(item));
+                    result200!.push(ProjectTeamMember.fromJS(item));
             }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns projects that match User, Program, hidden filter
-     */
-    getMatchingList(usingFilters: QueryFilters) {
-        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
-            this.getMatchingListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getMatchingListWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/projects";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(usingFilters);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetMatchingListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetMatchingList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetMatchingList(xhr: any): ProjectSummary[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProjectSummary.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class AlertsClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns alert items for a specified user
-     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     */
-    getUserAlertList(forUserKey: string) {
-        return new Promise<UserAlert[] | null>((resolve, reject) => {
-            this.getUserAlertListWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getUserAlertListWithCallbacks(forUserKey: string, onSuccess?: (result: UserAlert[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts?";
-        if (forUserKey === undefined || forUserKey === null)
-            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
-        else
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetUserAlertListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetUserAlertList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetUserAlertList(xhr: any): UserAlert[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(UserAlert.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Creates and stores an alert
-     * @param theAlert Model with new alert. Specify AlertText, Description.  UserKey, DocMasterKey, Project, Source, SourceKey and Info1 are optional;
-     */
-    createAlert(theAlert: UserAlert) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.createAlertWithCallbacks(theAlert, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private createAlertWithCallbacks(theAlert: UserAlert, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(theAlert);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processCreateAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processCreateAlert(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processCreateAlert(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result409 = resultData409 !== undefined ? resultData409 : <any>null;
-            return throwException("internal failure", status, _responseText, _headers, result409);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Removes all alert item for the specified user
-     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     */
-    deleteAllAlerts(forUserKey: string | undefined) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.deleteAllAlertsWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private deleteAllAlertsWithCallbacks(forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts/all?";
-        if (forUserKey === null)
-            throw new Error("The parameter 'forUserKey' cannot be null.");
-        else if (forUserKey !== undefined)
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteAllAlertsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processDeleteAllAlerts(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteAllAlerts(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result406 = resultData406 !== undefined ? resultData406 : <any>null;
-            return throwException("key required", status, _responseText, _headers, result406);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Removes a specific alert item for the specified user
-     * @param id Alert Key
-     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
-     */
-    deleteAlert(id: string, forUserKey: string | undefined) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.deleteAlertWithCallbacks(id, forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private deleteAlertWithCallbacks(id: string, forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Alerts/{id}?";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (forUserKey === null)
-            throw new Error("The parameter 'forUserKey' cannot be null.");
-        else if (forUserKey !== undefined)
-            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processDeleteAlert(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteAlert(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result401 = resultData401 !== undefined ? resultData401 : <any>null;
-            return throwException("unusable credentials", status, _responseText, _headers, result401);
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = resultData400 !== undefined ? resultData400 : <any>null;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result409 = resultData409 !== undefined ? resultData409 : <any>null;
-            return throwException("internal failure", status, _responseText, _headers, result409);
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result404 = resultData404 !== undefined ? resultData404 : <any>null;
-            return throwException("key not found", status, _responseText, _headers, result404);
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result406 = resultData406 !== undefined ? resultData406 : <any>null;
-            return throwException("key required", status, _responseText, _headers, result406);
-        } else if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class UICFGClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns Live UI CFG data for this user for the requested part
-     * @param partName Part Name
-     * @param forDocType (optional) optional document type (guid format)
-     * @param forContext (optional) optional context (subtype, container, etc)
-     */
-    getLiveDisplay(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined) {
-        return new Promise<UIDisplayPart | null>((resolve, reject) => {
-            this.getLiveDisplayWithCallbacks(partName, forDocType, forContext, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getLiveDisplayWithCallbacks(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/uicfg/live/{partName}?";
-        if (partName === undefined || partName === null)
-            throw new Error("The parameter 'partName' must be defined.");
-        url_ = url_.replace("{partName}", encodeURIComponent("" + partName));
-        if (forDocType !== undefined && forDocType !== null)
-            url_ += "forDocType=" + encodeURIComponent("" + forDocType) + "&";
-        if (forContext !== undefined && forContext !== null)
-            url_ += "forContext=" + encodeURIComponent("" + forContext) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetLiveDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetLiveDisplay(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetLiveDisplay(xhr: any): UIDisplayPart | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns Live UI CFG data for this user for the requested part
-     * @param lookupName Part Name
-     */
-    getLookupDisplay(lookupName: string) {
-        return new Promise<UIDisplayPart | null>((resolve, reject) => {
-            this.getLookupDisplayWithCallbacks(lookupName, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getLookupDisplayWithCallbacks(lookupName: string, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/uicfg/lookup/{lookupName}";
-        if (lookupName === undefined || lookupName === null)
-            throw new Error("The parameter 'lookupName' must be defined.");
-        url_ = url_.replace("{lookupName}", encodeURIComponent("" + lookupName));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetLookupDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetLookupDisplay(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetLookupDisplay(xhr: any): UIDisplayPart | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -1636,6 +1605,150 @@ export class ProjectDocListClient {
                 result200 = [] as any;
                 for (let item of resultData200)
                     result200!.push(ProjectDocsOfType.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ProjectsClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns projects that match User and hidden filter
+     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * @param includeHidden True to include hidden projects in the result
+     */
+    getList(forUserKey: string, includeHidden: boolean) {
+        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
+            this.getListWithCallbacks(forUserKey, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getListWithCallbacks(forUserKey: string, includeHidden: boolean, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/projects?";
+        if (forUserKey === undefined || forUserKey === null)
+            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
+        else
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        if (includeHidden === undefined || includeHidden === null)
+            throw new Error("The parameter 'includeHidden' must be defined and cannot be null.");
+        else
+            url_ += "includeHidden=" + encodeURIComponent("" + includeHidden) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetList(xhr: any): ProjectSummary[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProjectSummary.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns projects that match User, Program, hidden filter
+     */
+    getMatchingList(usingFilters: QueryFilters) {
+        return new Promise<ProjectSummary[] | null>((resolve, reject) => {
+            this.getMatchingListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getMatchingListWithCallbacks(usingFilters: QueryFilters, onSuccess?: (result: ProjectSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/projects";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(usingFilters);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetMatchingListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetMatchingListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetMatchingList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetMatchingList(xhr: any): ProjectSummary[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProjectSummary.fromJS(item));
             }
             return result200;
         } else if (status !== 200 && status !== 204) {
@@ -2633,7 +2746,7 @@ export class LookupClient {
     }
 }
 
-export class AccountClient {
+export class UICFGClient {
     baseUrl: string;
     beforeSend: any = undefined;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -2643,19 +2756,230 @@ export class AccountClient {
     }
 
     /**
-     * Authenticates a session and generates a FormsAuthenticationTicket and cookie
+     * Returns Live UI CFG data for this user for the requested part
+     * @param partName Part Name
+     * @param forDocType (optional) optional document type (guid format)
+     * @param forContext (optional) optional context (subtype, container, etc)
      */
-    postLogin(credentials: SiteLogin) {
-        return new Promise<string | null>((resolve, reject) => {
-            this.postLoginWithCallbacks(credentials, (result) => resolve(result), (exception, _reason) => reject(exception));
+    getLiveDisplay(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined) {
+        return new Promise<UIDisplayPart | null>((resolve, reject) => {
+            this.getLiveDisplayWithCallbacks(partName, forDocType, forContext, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private postLoginWithCallbacks(credentials: SiteLogin, onSuccess?: (result: string | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account";
+    private getLiveDisplayWithCallbacks(partName: string, forDocType: string | null | undefined, forContext: string | null | undefined, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/uicfg/live/{partName}?";
+        if (partName === undefined || partName === null)
+            throw new Error("The parameter 'partName' must be defined.");
+        url_ = url_.replace("{partName}", encodeURIComponent("" + partName));
+        if (forDocType !== undefined && forDocType !== null)
+            url_ += "forDocType=" + encodeURIComponent("" + forDocType) + "&";
+        if (forContext !== undefined && forContext !== null)
+            url_ += "forContext=" + encodeURIComponent("" + forContext) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(credentials);
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLiveDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLiveDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetLiveDisplay(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLiveDisplay(xhr: any): UIDisplayPart | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns Live UI CFG data for this user for the requested part
+     * @param lookupName Part Name
+     */
+    getLookupDisplay(lookupName: string) {
+        return new Promise<UIDisplayPart | null>((resolve, reject) => {
+            this.getLookupDisplayWithCallbacks(lookupName, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getLookupDisplayWithCallbacks(lookupName: string, onSuccess?: (result: UIDisplayPart | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/uicfg/lookup/{lookupName}";
+        if (lookupName === undefined || lookupName === null)
+            throw new Error("The parameter 'lookupName' must be defined.");
+        url_ = url_.replace("{lookupName}", encodeURIComponent("" + lookupName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLookupDisplayWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLookupDisplayWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetLookupDisplay(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLookupDisplay(xhr: any): UIDisplayPart | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? UIDisplayPart.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ProjectKPIClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns list of KPI facts for the specified project
+     * @param projectID Full Project ID
+     */
+    getProjectKPIFacts(projectID: string) {
+        return new Promise<ProjKPIFact[] | null>((resolve, reject) => {
+            this.getProjectKPIFactsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectKPIFactsWithCallbacks(projectID: string, onSuccess?: (result: ProjKPIFact[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Project/{projectID}/KPI";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectKPIFactsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectKPIFacts(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetProjectKPIFacts(xhr: any): ProjKPIFact[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProjKPIFact.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ContactClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns contacts that match filters
+     * @param usingFilters Search Criteria
+     */
+    matchingContactList(usingFilters: ContactFilters) {
+        return new Promise<ContactSummary[] | null>((resolve, reject) => {
+            this.matchingContactListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private matchingContactListWithCallbacks(usingFilters: ContactFilters, onSuccess?: (result: ContactSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/contact/list";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(usingFilters);
 
         jQuery.ajax({
             url: url_,
@@ -2668,15 +2992,15 @@ export class AccountClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processPostLoginWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processPostLoginWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processMatchingContactListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processPostLogin(xhr);
+            let result = this.processMatchingContactList(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -2685,7 +3009,207 @@ export class AccountClient {
         }
     }
 
-    protected processPostLogin(xhr: any): string | null | null {
+    protected processMatchingContactList(xhr: any): ContactSummary[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ContactSummary.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the contact
+     * @param id Contact Key
+     */
+    getContact(id: string) {
+        return new Promise<Contact | null>((resolve, reject) => {
+            this.getContactWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getContactWithCallbacks(id: string, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/contact/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetContactWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetContact(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetContact(xhr: any): Contact | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 ? Contact.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class AlertsClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns alert items for a specified user
+     * @param forUserKey User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    getUserAlertList(forUserKey: string) {
+        return new Promise<UserAlert[] | null>((resolve, reject) => {
+            this.getUserAlertListWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getUserAlertListWithCallbacks(forUserKey: string, onSuccess?: (result: UserAlert[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts?";
+        if (forUserKey === undefined || forUserKey === null)
+            throw new Error("The parameter 'forUserKey' must be defined and cannot be null.");
+        else
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetUserAlertListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetUserAlertListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetUserAlertList(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetUserAlertList(xhr: any): UserAlert[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserAlert.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Creates and stores an alert
+     * @param theAlert Model with new alert. Specify AlertText, Description.  UserKey, DocMasterKey, Project, Source, SourceKey and Info1 are optional;
+     */
+    createAlert(theAlert: UserAlert) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.createAlertWithCallbacks(theAlert, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private createAlertWithCallbacks(theAlert: UserAlert, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(theAlert);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processCreateAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processCreateAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processCreateAlert(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processCreateAlert(xhr: any): HttpStatusCode | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -2701,6 +3225,12 @@ export class AccountClient {
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result400 = resultData400 !== undefined ? resultData400 : <any>null;
             return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result409 = resultData409 !== undefined ? resultData409 : <any>null;
+            return throwException("internal failure", status, _responseText, _headers, result409);
         } else if (status === 200) {
             const _responseText = xhr.responseText;
             let result200: any = null;
@@ -2715,16 +3245,204 @@ export class AccountClient {
     }
 
     /**
-     * Returns general information about the Authenticed user
+     * Removes all alert item for the specified user
+     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
      */
-    getUserData() {
-        return new Promise<CurrentUser | null>((resolve, reject) => {
-            this.getUserDataWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+    deleteAllAlerts(forUserKey: string | undefined) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.deleteAllAlertsWithCallbacks(forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getUserDataWithCallbacks(onSuccess?: (result: CurrentUser | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account";
+    private deleteAllAlertsWithCallbacks(forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts/all?";
+        if (forUserKey === null)
+            throw new Error("The parameter 'forUserKey' cannot be null.");
+        else if (forUserKey !== undefined)
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAllAlertsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAllAlertsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processDeleteAllAlerts(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAllAlerts(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result406 = resultData406 !== undefined ? resultData406 : <any>null;
+            return throwException("key required", status, _responseText, _headers, result406);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Removes a specific alert item for the specified user
+     * @param id Alert Key
+     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     */
+    deleteAlert(id: string, forUserKey: string | undefined) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.deleteAlertWithCallbacks(id, forUserKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteAlertWithCallbacks(id: string, forUserKey: string | undefined, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/Alerts/{id}?";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (forUserKey === null)
+            throw new Error("The parameter 'forUserKey' cannot be null.");
+        else if (forUserKey !== undefined)
+            url_ += "forUserKey=" + encodeURIComponent("" + forUserKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAlertWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAlertWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processDeleteAlert(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAlert(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = resultData401 !== undefined ? resultData401 : <any>null;
+            return throwException("unusable credentials", status, _responseText, _headers, result401);
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = resultData400 !== undefined ? resultData400 : <any>null;
+            return throwException("not allowed now", status, _responseText, _headers, result400);
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result409 = resultData409 !== undefined ? resultData409 : <any>null;
+            return throwException("internal failure", status, _responseText, _headers, result409);
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = resultData404 !== undefined ? resultData404 : <any>null;
+            return throwException("key not found", status, _responseText, _headers, result404);
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result406 = resultData406 !== undefined ? resultData406 : <any>null;
+            return throwException("key required", status, _responseText, _headers, result406);
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class SessionClient {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
+    }
+
+    /**
+     * Returns list of permissions for a project
+     * @param projectID Project ID
+     */
+    getProjectPermits(projectID: string) {
+        return new Promise<UCPermitSet | null>((resolve, reject) => {
+            this.getProjectPermitsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectPermitsWithCallbacks(projectID: string, onSuccess?: (result: UCPermitSet | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/permits/project/{projectID}";
+        if (projectID === undefined || projectID === null)
+            throw new Error("The parameter 'projectID' must be defined.");
+        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
         url_ = url_.replace(/[?&]$/, "");
 
         jQuery.ajax({
@@ -2736,15 +3454,15 @@ export class AccountClient {
                 "Accept": "application/json"
             }
         }).done((_data, _textStatus, xhr) => {
-            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
         }).fail((xhr) => {
-            this.processGetUserDataWithCallbacks(url_, xhr, onSuccess, onFail);
+            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
         });
     }
 
-    private processGetUserDataWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+    private processGetProjectPermitsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
         try {
-            let result = this.processGetUserData(xhr);
+            let result = this.processGetProjectPermits(xhr);
             if (onSuccess !== undefined)
                 onSuccess(result);
         } catch (e) {
@@ -2753,7 +3471,7 @@ export class AccountClient {
         }
     }
 
-    protected processGetUserData(xhr: any): CurrentUser | null | null {
+    protected processGetProjectPermits(xhr: any): UCPermitSet | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -2761,7 +3479,321 @@ export class AccountClient {
             const _responseText = xhr.responseText;
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? CurrentUser.fromJS(resultData200) : <any>null;
+            result200 = resultData200 ? UCPermitSet.fromJS(resultData200) : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns list of permissions by Module | Function
+     * @param eTag (optional) Returns nothing if eTag matches supplied eTab
+     */
+    getProjectPermitNameMap(eTag: string | null | undefined) {
+        return new Promise<any | null>((resolve, reject) => {
+            this.getProjectPermitNameMapWithCallbacks(eTag, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getProjectPermitNameMapWithCallbacks(eTag: string | null | undefined, onSuccess?: (result: any | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/permits/map?";
+        if (eTag !== undefined && eTag !== null)
+            url_ += "eTag=" + encodeURIComponent("" + eTag) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetProjectPermitNameMapWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetProjectPermitNameMap(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetProjectPermitNameMap(xhr: any): any | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200 || status === 206) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns WCC Session data
+     */
+    getWCC() {
+        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
+            this.getWCCWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getWCCWithCallbacks(onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/who";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetWCCWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetWCC(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetWCC(xhr: any): { [key: string]: any; } | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        result200![key] = resultData200[key];
+                }
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns list of open tabs
+     * @param forTabType (optional) optional tab type (project,other, otheruser,blank for all)
+     */
+    getSessionTabs(forTabType: string | null | undefined) {
+        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
+            this.getSessionTabsWithCallbacks(forTabType, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getSessionTabsWithCallbacks(forTabType: string | null | undefined, onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/tabs?";
+        if (forTabType !== undefined && forTabType !== null)
+            url_ += "forTabType=" + encodeURIComponent("" + forTabType) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetSessionTabsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processGetSessionTabs(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetSessionTabs(xhr: any): TabStripDetails[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TabStripDetails.fromJS(item));
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Logs the posted data
+     * @param logData Information to be logged
+     */
+    postToWebAppLog(logData: APIData) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.postToWebAppLogWithCallbacks(logData, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private postToWebAppLogWithCallbacks(logData: APIData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/log";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(logData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPostToWebAppLogWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPostToWebAppLog(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPostToWebAppLog(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Patches the value in the indicated resource
+     * @param tableName table
+     * @param fieldName field
+     * @param changeData Change information
+     */
+    patchFieldValue(tableName: string, fieldName: string, changeData: PDSData) {
+        return new Promise<HttpStatusCode>((resolve, reject) => {
+            this.patchFieldValueWithCallbacks(tableName, fieldName, changeData, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchFieldValueWithCallbacks(tableName: string, fieldName: string, changeData: PDSData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/session/value/{tableName}/{fieldName}";
+        if (tableName === undefined || tableName === null)
+            throw new Error("The parameter 'tableName' must be defined.");
+        url_ = url_.replace("{tableName}", encodeURIComponent("" + tableName));
+        if (fieldName === undefined || fieldName === null)
+            throw new Error("The parameter 'fieldName' must be defined.");
+        url_ = url_.replace("{fieldName}", encodeURIComponent("" + fieldName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(changeData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchFieldValueWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.processPatchFieldValue(xhr);
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchFieldValue(xhr: any): HttpStatusCode | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = resultData200 !== undefined ? resultData200 : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -2780,7 +3812,7 @@ export class AccountClient {
     }
 
     private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account/Logout";
+        let url_ = this.baseUrl + "/api/session/Logout";
         url_ = url_.replace(/[?&]$/, "");
 
         jQuery.ajax({
@@ -2818,187 +3850,6 @@ export class AccountClient {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns authorization flags for specified demand if they match or exceed the request
-     * @param demand Demand Context
-     */
-    getAccess(demand: PermissionContext) {
-        return new Promise<PermissionFlags>((resolve, reject) => {
-            this.getAccessWithCallbacks(demand, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getAccessWithCallbacks(demand: PermissionContext, onSuccess?: (result: PermissionFlags) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account/Authorized";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(demand);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetAccessWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetAccessWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetAccess(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetAccess(xhr: any): PermissionFlags | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    acquireTabList() {
-        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
-            this.acquireTabListWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private acquireTabListWithCallbacks(onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/Account";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processAcquireTabListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processAcquireTabListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processAcquireTabList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processAcquireTabList(xhr: any): TabStripDetails[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TabStripDetails.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-}
-
-export class Client {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    returns_information_about_password_composition() {
-        return new Promise<PasswordConfiguredOptions | null>((resolve, reject) => {
-            this.returns_information_about_password_compositionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private returns_information_about_password_compositionWithCallbacks(onSuccess?: (result: PasswordConfiguredOptions | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Account/PasswordOptions";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processReturns_information_about_password_compositionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processReturns_information_about_password_compositionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processReturns_information_about_password_composition(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processReturns_information_about_password_composition(xhr: any): PasswordConfiguredOptions | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? PasswordConfiguredOptions.fromJS(resultData200) : <any>null;
             return result200;
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -3766,732 +4617,556 @@ export class ProjectToolsClient {
     }
 }
 
-export class SessionClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+/** A document currently routed to a specific user */
+export class UserActionItem implements IUserActionItem {
+    /** Key for the document */
+    DocMasterKey!: string;
+    /** key for the route on the document */
+    RouteID!: string;
+    /** key for the type of document */
+    DocTypeKey!: string;
+    /** Resolved Name of the document/process type */
+    DocType?: string | undefined;
+    /** Project ID */
+    Project?: string | undefined;
+    /** Document Number */
+    DocNo?: string | undefined;
+    /** Document Batch (seldom used) */
+    DocBatchNo?: string | undefined;
+    /** Due Date */
+    Due?: Date | undefined;
+    /** Title */
+    Title?: string | undefined;
+    /** Key for Contact this document is "from" */
+    FromUser!: string;
+    /** Key for Primary contact on this document */
+    PrimaryContact!: string;
+    /** Priority (1=high) */
+    Priority!: number;
+    /** Date this route was viewed */
+    Viewed?: Date | undefined;
+    /** Date this document was closed (or null) */
+    Closed?: Date | undefined;
+    /** Date this route was reaced */
+    Reached!: Date;
+    /** Route Instructions */
+    Note?: string | undefined;
+    /** Resolved Status of document */
+    StatusText?: string | undefined;
+    /** Status Code */
+    Status?: string | undefined;
+    /** Company Name */
+    Company?: string | undefined;
+    /** Current Route Sequence */
+    Sequence!: number;
+    /** When TRUE, it is OK to release this document without opening it */
+    OkToRelease!: boolean;
+    /** When True, is recent  */
+    IsRecent!: boolean;
+    /** How many files are attached */
+    FilesAttached!: number;
 
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
-
-    /**
-     * Returns list of permissions for a project
-     * @param projectID Project ID
-     */
-    getProjectPermits(projectID: string) {
-        return new Promise<UCPermitSet | null>((resolve, reject) => {
-            this.getProjectPermitsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectPermitsWithCallbacks(projectID: string, onSuccess?: (result: UCPermitSet | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/permits/project/{projectID}";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
+    constructor(data?: IUserActionItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
             }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectPermitsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectPermitsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectPermits(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
         }
     }
 
-    protected processGetProjectPermits(xhr: any): UCPermitSet | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? UCPermitSet.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns list of permissions by Module | Function
-     * @param eTag (optional) Returns nothing if eTag matches supplied eTab
-     */
-    getProjectPermitNameMap(eTag: string | null | undefined) {
-        return new Promise<any | null>((resolve, reject) => {
-            this.getProjectPermitNameMapWithCallbacks(eTag, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectPermitNameMapWithCallbacks(eTag: string | null | undefined, onSuccess?: (result: any | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/permits/map?";
-        if (eTag !== undefined && eTag !== null)
-            url_ += "eTag=" + encodeURIComponent("" + eTag) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectPermitNameMapWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectPermitNameMapWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectPermitNameMap(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
+    init(_data?: any) {
+        if (_data) {
+            this.DocMasterKey = _data["DocMasterKey"];
+            this.RouteID = _data["RouteID"];
+            this.DocTypeKey = _data["DocTypeKey"];
+            this.DocType = _data["DocType"];
+            this.Project = _data["Project"];
+            this.DocNo = _data["DocNo"];
+            this.DocBatchNo = _data["DocBatchNo"];
+            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
+            this.Title = _data["Title"];
+            this.FromUser = _data["FromUser"];
+            this.PrimaryContact = _data["PrimaryContact"];
+            this.Priority = _data["Priority"];
+            this.Viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
+            this.Closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
+            this.Reached = _data["Reached"] ? new Date(_data["Reached"].toString()) : <any>undefined;
+            this.Note = _data["Note"];
+            this.StatusText = _data["StatusText"];
+            this.Status = _data["Status"];
+            this.Company = _data["Company"];
+            this.Sequence = _data["Sequence"];
+            this.OkToRelease = _data["OkToRelease"];
+            this.IsRecent = _data["IsRecent"];
+            this.FilesAttached = _data["FilesAttached"];
         }
     }
 
-    protected processGetProjectPermitNameMap(xhr: any): any | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200 || status === 206) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
+    static fromJS(data: any): UserActionItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserActionItem();
+        result.init(data);
+        return result;
     }
 
-    /**
-     * Returns WCC Session data
-     */
-    getWCC() {
-        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
-            this.getWCCWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["DocMasterKey"] = this.DocMasterKey;
+        data["RouteID"] = this.RouteID;
+        data["DocTypeKey"] = this.DocTypeKey;
+        data["DocType"] = this.DocType;
+        data["Project"] = this.Project;
+        data["DocNo"] = this.DocNo;
+        data["DocBatchNo"] = this.DocBatchNo;
+        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
+        data["Title"] = this.Title;
+        data["FromUser"] = this.FromUser;
+        data["PrimaryContact"] = this.PrimaryContact;
+        data["Priority"] = this.Priority;
+        data["Viewed"] = this.Viewed ? this.Viewed.toISOString() : <any>undefined;
+        data["Closed"] = this.Closed ? this.Closed.toISOString() : <any>undefined;
+        data["Reached"] = this.Reached ? this.Reached.toISOString() : <any>undefined;
+        data["Note"] = this.Note;
+        data["StatusText"] = this.StatusText;
+        data["Status"] = this.Status;
+        data["Company"] = this.Company;
+        data["Sequence"] = this.Sequence;
+        data["OkToRelease"] = this.OkToRelease;
+        data["IsRecent"] = this.IsRecent;
+        data["FilesAttached"] = this.FilesAttached;
+        return data; 
     }
 
-    private getWCCWithCallbacks(onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/who";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetWCCWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetWCCWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetWCC(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetWCC(xhr: any): { [key: string]: any; } | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (resultData200) {
-                result200 = {} as any;
-                for (let key in resultData200) {
-                    if (resultData200.hasOwnProperty(key))
-                        result200![key] = resultData200[key];
-                }
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns list of open tabs
-     * @param forTabType (optional) optional tab type (project,other, otheruser,blank for all)
-     */
-    getSessionTabs(forTabType: string | null | undefined) {
-        return new Promise<TabStripDetails[] | null>((resolve, reject) => {
-            this.getSessionTabsWithCallbacks(forTabType, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getSessionTabsWithCallbacks(forTabType: string | null | undefined, onSuccess?: (result: TabStripDetails[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/tabs?";
-        if (forTabType !== undefined && forTabType !== null)
-            url_ += "forTabType=" + encodeURIComponent("" + forTabType) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetSessionTabsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetSessionTabsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetSessionTabs(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetSessionTabs(xhr: any): TabStripDetails[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(TabStripDetails.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Logs the posted data
-     * @param logData Information to be logged
-     */
-    postToWebAppLog(logData: APIData) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.postToWebAppLogWithCallbacks(logData, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private postToWebAppLogWithCallbacks(logData: APIData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/log";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(logData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPostToWebAppLogWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPostToWebAppLogWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPostToWebAppLog(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPostToWebAppLog(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Patches the value in the indicated resource
-     * @param tableName table
-     * @param fieldName field
-     * @param changeData Change information
-     */
-    patchFieldValue(tableName: string, fieldName: string, changeData: PDSData) {
-        return new Promise<HttpStatusCode>((resolve, reject) => {
-            this.patchFieldValueWithCallbacks(tableName, fieldName, changeData, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private patchFieldValueWithCallbacks(tableName: string, fieldName: string, changeData: PDSData, onSuccess?: (result: HttpStatusCode) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/value/{tableName}/{fieldName}";
-        if (tableName === undefined || tableName === null)
-            throw new Error("The parameter 'tableName' must be defined.");
-        url_ = url_.replace("{tableName}", encodeURIComponent("" + tableName));
-        if (fieldName === undefined || fieldName === null)
-            throw new Error("The parameter 'fieldName' must be defined.");
-        url_ = url_.replace("{fieldName}", encodeURIComponent("" + fieldName));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(changeData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "patch",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processPatchFieldValueWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processPatchFieldValueWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processPatchFieldValue(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processPatchFieldValue(xhr: any): HttpStatusCode | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Ends this session
-     */
-    getEndOfSession() {
-        return new Promise<boolean>((resolve, reject) => {
-            this.getEndOfSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getEndOfSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/session/Logout";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetEndOfSessionWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetEndOfSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetEndOfSession(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetEndOfSession(xhr: any): boolean | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 !== undefined ? resultData200 : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
+    clone(): UserActionItem {
+        const json = this.toJSON();
+        let result = new UserActionItem();
+        result.init(json);
+        return result;
     }
 }
 
-export class ContactClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+/** A document currently routed to a specific user */
+export interface IUserActionItem {
+    /** Key for the document */
+    DocMasterKey: string;
+    /** key for the route on the document */
+    RouteID: string;
+    /** key for the type of document */
+    DocTypeKey: string;
+    /** Resolved Name of the document/process type */
+    DocType?: string | undefined;
+    /** Project ID */
+    Project?: string | undefined;
+    /** Document Number */
+    DocNo?: string | undefined;
+    /** Document Batch (seldom used) */
+    DocBatchNo?: string | undefined;
+    /** Due Date */
+    Due?: Date | undefined;
+    /** Title */
+    Title?: string | undefined;
+    /** Key for Contact this document is "from" */
+    FromUser: string;
+    /** Key for Primary contact on this document */
+    PrimaryContact: string;
+    /** Priority (1=high) */
+    Priority: number;
+    /** Date this route was viewed */
+    Viewed?: Date | undefined;
+    /** Date this document was closed (or null) */
+    Closed?: Date | undefined;
+    /** Date this route was reaced */
+    Reached: Date;
+    /** Route Instructions */
+    Note?: string | undefined;
+    /** Resolved Status of document */
+    StatusText?: string | undefined;
+    /** Status Code */
+    Status?: string | undefined;
+    /** Company Name */
+    Company?: string | undefined;
+    /** Current Route Sequence */
+    Sequence: number;
+    /** When TRUE, it is OK to release this document without opening it */
+    OkToRelease: boolean;
+    /** When True, is recent  */
+    IsRecent: boolean;
+    /** How many files are attached */
+    FilesAttached: number;
+}
 
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
+/** Various common filters - not every filter is supported by every query */
+export class QueryFilters implements IQueryFilters {
+    /** Project Mask (eg GC%) */
+    ProjectLike?: string | undefined;
+    /** Applies to common text (title, description, etc) */
+    TitleLike?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    UserKey?: string | undefined;
+    /** Key must match an existing document type
+00000000-0000-0000-0000-000000000000   */
+    ForDocType?: string | undefined;
+    /** Key for Program or empty key */
+    ProgramKey?: string | undefined;
+    /** Default 2000-01-01 */
+    FromDate?: Date | undefined;
+    /** Default today */
+    ThruDate?: Date | undefined;
+    /** Default is false */
+    NewOnly!: boolean;
+    /** Default is false */
+    IncludeHidden!: boolean;
+    /** Name Value Pair filter values (semicolon separated) */
+    nvpFilters?: string | undefined;
 
-    /**
-     * Returns contacts that match filters
-     * @param usingFilters Search Criteria
-     */
-    matchingContactList(usingFilters: ContactFilters) {
-        return new Promise<ContactSummary[] | null>((resolve, reject) => {
-            this.matchingContactListWithCallbacks(usingFilters, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private matchingContactListWithCallbacks(usingFilters: ContactFilters, onSuccess?: (result: ContactSummary[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/contact/list";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(usingFilters);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
+    constructor(data?: IQueryFilters) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
             }
-        }).done((_data, _textStatus, xhr) => {
-            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processMatchingContactListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processMatchingContactListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processMatchingContactList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
         }
     }
 
-    protected processMatchingContactList(xhr: any): ContactSummary[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ContactSummary.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the contact
-     * @param id Contact Key
-     */
-    getContact(id: string) {
-        return new Promise<Contact | null>((resolve, reject) => {
-            this.getContactWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getContactWithCallbacks(id: string, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/contact/{id}";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetContactWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetContactWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetContact(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
+    init(_data?: any) {
+        if (_data) {
+            this.ProjectLike = _data["ProjectLike"];
+            this.TitleLike = _data["TitleLike"];
+            this.UserKey = _data["UserKey"];
+            this.ForDocType = _data["ForDocType"];
+            this.ProgramKey = _data["ProgramKey"];
+            this.FromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
+            this.ThruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
+            this.NewOnly = _data["NewOnly"];
+            this.IncludeHidden = _data["IncludeHidden"];
+            this.nvpFilters = _data["nvpFilters"];
         }
     }
 
-    protected processGetContact(xhr: any): Contact | null | null {
-        const status = xhr.status;
+    static fromJS(data: any): QueryFilters {
+        data = typeof data === 'object' ? data : {};
+        let result = new QueryFilters();
+        result.init(data);
+        return result;
+    }
 
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = resultData200 ? Contact.fromJS(resultData200) : <any>null;
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["ProjectLike"] = this.ProjectLike;
+        data["TitleLike"] = this.TitleLike;
+        data["UserKey"] = this.UserKey;
+        data["ForDocType"] = this.ForDocType;
+        data["ProgramKey"] = this.ProgramKey;
+        data["FromDate"] = this.FromDate ? this.FromDate.toISOString() : <any>undefined;
+        data["ThruDate"] = this.ThruDate ? this.ThruDate.toISOString() : <any>undefined;
+        data["NewOnly"] = this.NewOnly;
+        data["IncludeHidden"] = this.IncludeHidden;
+        data["nvpFilters"] = this.nvpFilters;
+        return data; 
+    }
+
+    clone(): QueryFilters {
+        const json = this.toJSON();
+        let result = new QueryFilters();
+        result.init(json);
+        return result;
     }
 }
 
-export class ProjectKPIClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+/** Various common filters - not every filter is supported by every query */
+export interface IQueryFilters {
+    /** Project Mask (eg GC%) */
+    ProjectLike?: string | undefined;
+    /** Applies to common text (title, description, etc) */
+    TitleLike?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    UserKey?: string | undefined;
+    /** Key must match an existing document type
+00000000-0000-0000-0000-000000000000   */
+    ForDocType?: string | undefined;
+    /** Key for Program or empty key */
+    ProgramKey?: string | undefined;
+    /** Default 2000-01-01 */
+    FromDate?: Date | undefined;
+    /** Default today */
+    ThruDate?: Date | undefined;
+    /** Default is false */
+    NewOnly: boolean;
+    /** Default is false */
+    IncludeHidden: boolean;
+    /** Name Value Pair filter values (semicolon separated) */
+    nvpFilters?: string | undefined;
+}
 
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
+export class RouteActionInfo implements IRouteActionInfo {
+    DocMasterKey!: string;
+    UserName?: string | undefined;
+    Title?: string | undefined;
+    DocNo?: string | undefined;
+    Type?: string | undefined;
+    Project?: string | undefined;
+    Status?: string | undefined;
+    Company?: string | undefined;
+    Priority!: number;
+    Sequence!: number;
+    Due?: string | undefined;
+    Viewed?: string | undefined;
+    Alerted?: string | undefined;
+    Downloaded?: string | undefined;
+    FromActed?: string | undefined;
+    CreatorActed?: string | undefined;
+    OkToRelease!: boolean;
+    ShowRouteResponseCode!: boolean;
+    ShowRouteResponseArea!: boolean;
+    HardCopyCount!: number;
+    OkToReleaseCount!: number;
+    ReleaseMatchCount!: number;
+    ResponseCode?: string | undefined;
+    Note?: string | undefined;
+    Response?: string | undefined;
+    Instructions?: string | undefined;
+    FromWho?: string | undefined;
+    CreatedBy?: string | undefined;
+    NextWho?: string | undefined;
+    AccessSummary?: string | undefined;
+    DocAccessHistoryReportURL?: string | undefined;
+    LastSaved?: string | undefined;
+    ExclusiveTo?: string | undefined;
+    DocTypeKey!: string;
+    StatusChoices?: SelectCodeNode[] | undefined;
+    ResponseCodeChoices?: SelectCodeNode[] | undefined;
+    MatchingDocs?: SelectCodeNode[] | undefined;
+    EligibleDocs?: SelectCodeNode[] | undefined;
 
-    /**
-     * Returns list of KPI facts for the specified project
-     * @param projectID Full Project ID
-     */
-    getProjectKPIFacts(projectID: string) {
-        return new Promise<ProjKPIFact[] | null>((resolve, reject) => {
-            this.getProjectKPIFactsWithCallbacks(projectID, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectKPIFactsWithCallbacks(projectID: string, onSuccess?: (result: ProjKPIFact[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/KPI";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
+    constructor(data?: IRouteActionInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
             }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectKPIFactsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectKPIFactsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectKPIFacts(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
         }
     }
 
-    protected processGetProjectKPIFacts(xhr: any): ProjKPIFact[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProjKPIFact.fromJS(item));
+    init(_data?: any) {
+        if (_data) {
+            this.DocMasterKey = _data["DocMasterKey"];
+            this.UserName = _data["UserName"];
+            this.Title = _data["Title"];
+            this.DocNo = _data["DocNo"];
+            this.Type = _data["Type"];
+            this.Project = _data["Project"];
+            this.Status = _data["Status"];
+            this.Company = _data["Company"];
+            this.Priority = _data["Priority"];
+            this.Sequence = _data["Sequence"];
+            this.Due = _data["Due"];
+            this.Viewed = _data["Viewed"];
+            this.Alerted = _data["Alerted"];
+            this.Downloaded = _data["Downloaded"];
+            this.FromActed = _data["FromActed"];
+            this.CreatorActed = _data["CreatorActed"];
+            this.OkToRelease = _data["OkToRelease"];
+            this.ShowRouteResponseCode = _data["ShowRouteResponseCode"];
+            this.ShowRouteResponseArea = _data["ShowRouteResponseArea"];
+            this.HardCopyCount = _data["HardCopyCount"];
+            this.OkToReleaseCount = _data["OkToReleaseCount"];
+            this.ReleaseMatchCount = _data["ReleaseMatchCount"];
+            this.ResponseCode = _data["ResponseCode"];
+            this.Note = _data["Note"];
+            this.Response = _data["Response"];
+            this.Instructions = _data["Instructions"];
+            this.FromWho = _data["FromWho"];
+            this.CreatedBy = _data["CreatedBy"];
+            this.NextWho = _data["NextWho"];
+            this.AccessSummary = _data["AccessSummary"];
+            this.DocAccessHistoryReportURL = _data["DocAccessHistoryReportURL"];
+            this.LastSaved = _data["LastSaved"];
+            this.ExclusiveTo = _data["ExclusiveTo"];
+            this.DocTypeKey = _data["DocTypeKey"];
+            if (Array.isArray(_data["StatusChoices"])) {
+                this.StatusChoices = [] as any;
+                for (let item of _data["StatusChoices"])
+                    this.StatusChoices!.push(SelectCodeNode.fromJS(item));
             }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            if (Array.isArray(_data["ResponseCodeChoices"])) {
+                this.ResponseCodeChoices = [] as any;
+                for (let item of _data["ResponseCodeChoices"])
+                    this.ResponseCodeChoices!.push(SelectCodeNode.fromJS(item));
+            }
+            if (Array.isArray(_data["MatchingDocs"])) {
+                this.MatchingDocs = [] as any;
+                for (let item of _data["MatchingDocs"])
+                    this.MatchingDocs!.push(SelectCodeNode.fromJS(item));
+            }
+            if (Array.isArray(_data["EligibleDocs"])) {
+                this.EligibleDocs = [] as any;
+                for (let item of _data["EligibleDocs"])
+                    this.EligibleDocs!.push(SelectCodeNode.fromJS(item));
+            }
         }
-        return null;
+    }
+
+    static fromJS(data: any): RouteActionInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new RouteActionInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["DocMasterKey"] = this.DocMasterKey;
+        data["UserName"] = this.UserName;
+        data["Title"] = this.Title;
+        data["DocNo"] = this.DocNo;
+        data["Type"] = this.Type;
+        data["Project"] = this.Project;
+        data["Status"] = this.Status;
+        data["Company"] = this.Company;
+        data["Priority"] = this.Priority;
+        data["Sequence"] = this.Sequence;
+        data["Due"] = this.Due;
+        data["Viewed"] = this.Viewed;
+        data["Alerted"] = this.Alerted;
+        data["Downloaded"] = this.Downloaded;
+        data["FromActed"] = this.FromActed;
+        data["CreatorActed"] = this.CreatorActed;
+        data["OkToRelease"] = this.OkToRelease;
+        data["ShowRouteResponseCode"] = this.ShowRouteResponseCode;
+        data["ShowRouteResponseArea"] = this.ShowRouteResponseArea;
+        data["HardCopyCount"] = this.HardCopyCount;
+        data["OkToReleaseCount"] = this.OkToReleaseCount;
+        data["ReleaseMatchCount"] = this.ReleaseMatchCount;
+        data["ResponseCode"] = this.ResponseCode;
+        data["Note"] = this.Note;
+        data["Response"] = this.Response;
+        data["Instructions"] = this.Instructions;
+        data["FromWho"] = this.FromWho;
+        data["CreatedBy"] = this.CreatedBy;
+        data["NextWho"] = this.NextWho;
+        data["AccessSummary"] = this.AccessSummary;
+        data["DocAccessHistoryReportURL"] = this.DocAccessHistoryReportURL;
+        data["LastSaved"] = this.LastSaved;
+        data["ExclusiveTo"] = this.ExclusiveTo;
+        data["DocTypeKey"] = this.DocTypeKey;
+        if (Array.isArray(this.StatusChoices)) {
+            data["StatusChoices"] = [];
+            for (let item of this.StatusChoices)
+                data["StatusChoices"].push(item.toJSON());
+        }
+        if (Array.isArray(this.ResponseCodeChoices)) {
+            data["ResponseCodeChoices"] = [];
+            for (let item of this.ResponseCodeChoices)
+                data["ResponseCodeChoices"].push(item.toJSON());
+        }
+        if (Array.isArray(this.MatchingDocs)) {
+            data["MatchingDocs"] = [];
+            for (let item of this.MatchingDocs)
+                data["MatchingDocs"].push(item.toJSON());
+        }
+        if (Array.isArray(this.EligibleDocs)) {
+            data["EligibleDocs"] = [];
+            for (let item of this.EligibleDocs)
+                data["EligibleDocs"].push(item.toJSON());
+        }
+        return data; 
+    }
+
+    clone(): RouteActionInfo {
+        const json = this.toJSON();
+        let result = new RouteActionInfo();
+        result.init(json);
+        return result;
     }
 }
 
-export class ProjectTeamClient {
-    baseUrl: string;
-    beforeSend: any = undefined;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+export interface IRouteActionInfo {
+    DocMasterKey: string;
+    UserName?: string | undefined;
+    Title?: string | undefined;
+    DocNo?: string | undefined;
+    Type?: string | undefined;
+    Project?: string | undefined;
+    Status?: string | undefined;
+    Company?: string | undefined;
+    Priority: number;
+    Sequence: number;
+    Due?: string | undefined;
+    Viewed?: string | undefined;
+    Alerted?: string | undefined;
+    Downloaded?: string | undefined;
+    FromActed?: string | undefined;
+    CreatorActed?: string | undefined;
+    OkToRelease: boolean;
+    ShowRouteResponseCode: boolean;
+    ShowRouteResponseArea: boolean;
+    HardCopyCount: number;
+    OkToReleaseCount: number;
+    ReleaseMatchCount: number;
+    ResponseCode?: string | undefined;
+    Note?: string | undefined;
+    Response?: string | undefined;
+    Instructions?: string | undefined;
+    FromWho?: string | undefined;
+    CreatedBy?: string | undefined;
+    NextWho?: string | undefined;
+    AccessSummary?: string | undefined;
+    DocAccessHistoryReportURL?: string | undefined;
+    LastSaved?: string | undefined;
+    ExclusiveTo?: string | undefined;
+    DocTypeKey: string;
+    StatusChoices?: SelectCodeNode[] | undefined;
+    ResponseCodeChoices?: SelectCodeNode[] | undefined;
+    MatchingDocs?: SelectCodeNode[] | undefined;
+    EligibleDocs?: SelectCodeNode[] | undefined;
+}
 
-    constructor(baseUrl?: string) {
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://stany2017/SFPMS";
-    }
+export class SelectCodeNode implements ISelectCodeNode {
+    key?: string | undefined;
+    value?: string | undefined;
 
-    /**
-     * Returns members of the specified project team
-     * @param projectID Full Project ID
-     * @param includeHidden True to include hidden projects
-     */
-    getProjectTeamList(projectID: string, includeHidden: boolean) {
-        return new Promise<ProjectTeamMember[] | null>((resolve, reject) => {
-            this.getProjectTeamListWithCallbacks(projectID, includeHidden, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getProjectTeamListWithCallbacks(projectID: string, includeHidden: boolean, onSuccess?: (result: ProjectTeamMember[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/Project/{projectID}/Team?";
-        if (projectID === undefined || projectID === null)
-            throw new Error("The parameter 'projectID' must be defined.");
-        url_ = url_.replace("{projectID}", encodeURIComponent("" + projectID));
-        if (includeHidden === undefined || includeHidden === null)
-            throw new Error("The parameter 'includeHidden' must be defined and cannot be null.");
-        else
-            url_ += "includeHidden=" + encodeURIComponent("" + includeHidden) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
+    constructor(data?: ISelectCodeNode) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
             }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetProjectTeamListWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetProjectTeamListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.processGetProjectTeamList(xhr);
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
         }
     }
 
-    protected processGetProjectTeamList(xhr: any): ProjectTeamMember[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProjectTeamMember.fromJS(item));
-            }
-            return result200;
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+    init(_data?: any) {
+        if (_data) {
+            this.key = _data["key"];
+            this.value = _data["value"];
         }
-        return null;
     }
+
+    static fromJS(data: any): SelectCodeNode {
+        data = typeof data === 'object' ? data : {};
+        let result = new SelectCodeNode();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["key"] = this.key;
+        data["value"] = this.value;
+        return data; 
+    }
+
+    clone(): SelectCodeNode {
+        const json = this.toJSON();
+        let result = new SelectCodeNode();
+        result.init(json);
+        return result;
+    }
+}
+
+export interface ISelectCodeNode {
+    key?: string | undefined;
+    value?: string | undefined;
 }
 
 export enum HttpStatusCode {
@@ -4542,6 +5217,279 @@ export enum HttpStatusCode {
     ServiceUnavailable = 503,
     GatewayTimeout = 504,
     HttpVersionNotSupported = 505,
+}
+
+/** Data to apply to the route being patched */
+export class RouteActionData implements IRouteActionData {
+    /** New Status Code (A for approved, B for Back, etc) */
+    NewStatus?: string | undefined;
+    /** Response Code */
+    ResponseCode?: string | undefined;
+    /** Freeform text for response note */
+    ResponseText?: string | undefined;
+
+    constructor(data?: IRouteActionData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.NewStatus = _data["NewStatus"];
+            this.ResponseCode = _data["ResponseCode"];
+            this.ResponseText = _data["ResponseText"];
+        }
+    }
+
+    static fromJS(data: any): RouteActionData {
+        data = typeof data === 'object' ? data : {};
+        let result = new RouteActionData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["NewStatus"] = this.NewStatus;
+        data["ResponseCode"] = this.ResponseCode;
+        data["ResponseText"] = this.ResponseText;
+        return data; 
+    }
+
+    clone(): RouteActionData {
+        const json = this.toJSON();
+        let result = new RouteActionData();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Data to apply to the route being patched */
+export interface IRouteActionData {
+    /** New Status Code (A for approved, B for Back, etc) */
+    NewStatus?: string | undefined;
+    /** Response Code */
+    ResponseCode?: string | undefined;
+    /** Freeform text for response note */
+    ResponseText?: string | undefined;
+}
+
+/** Readonly description of an cost transaction posted to a project */
+export class FileAccessHistory implements IFileAccessHistory {
+    /** User Name   */
+    UserName?: string | undefined;
+    /** File Name   */
+    FileName?: string | undefined;
+    /** File Revision number (starts with 1) */
+    RevID!: number;
+    /** When this access transaction occurred */
+    Accessed!: Date;
+    /** Type of Access */
+    AccessType?: string | undefined;
+    /** The Long Title of the document in whose context the access took place */
+    WithDocument?: string | undefined;
+    /** Additional information about access  */
+    AccessInfo?: string | undefined;
+    /** Was the file in cache */
+    UsedCache!: boolean;
+    /** User Key  for this transaction  */
+    UserKey!: string;
+    /** Document Key  for this transaction  */
+    DocMasterKey?: string | undefined;
+
+    constructor(data?: IFileAccessHistory) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.UserName = _data["UserName"];
+            this.FileName = _data["FileName"];
+            this.RevID = _data["RevID"];
+            this.Accessed = _data["Accessed"] ? new Date(_data["Accessed"].toString()) : <any>undefined;
+            this.AccessType = _data["AccessType"];
+            this.WithDocument = _data["WithDocument"];
+            this.AccessInfo = _data["AccessInfo"];
+            this.UsedCache = _data["UsedCache"];
+            this.UserKey = _data["UserKey"];
+            this.DocMasterKey = _data["DocMasterKey"];
+        }
+    }
+
+    static fromJS(data: any): FileAccessHistory {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileAccessHistory();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UserName"] = this.UserName;
+        data["FileName"] = this.FileName;
+        data["RevID"] = this.RevID;
+        data["Accessed"] = this.Accessed ? this.Accessed.toISOString() : <any>undefined;
+        data["AccessType"] = this.AccessType;
+        data["WithDocument"] = this.WithDocument;
+        data["AccessInfo"] = this.AccessInfo;
+        data["UsedCache"] = this.UsedCache;
+        data["UserKey"] = this.UserKey;
+        data["DocMasterKey"] = this.DocMasterKey;
+        return data; 
+    }
+
+    clone(): FileAccessHistory {
+        const json = this.toJSON();
+        let result = new FileAccessHistory();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Readonly description of an cost transaction posted to a project */
+export interface IFileAccessHistory {
+    /** User Name   */
+    UserName?: string | undefined;
+    /** File Name   */
+    FileName?: string | undefined;
+    /** File Revision number (starts with 1) */
+    RevID: number;
+    /** When this access transaction occurred */
+    Accessed: Date;
+    /** Type of Access */
+    AccessType?: string | undefined;
+    /** The Long Title of the document in whose context the access took place */
+    WithDocument?: string | undefined;
+    /** Additional information about access  */
+    AccessInfo?: string | undefined;
+    /** Was the file in cache */
+    UsedCache: boolean;
+    /** User Key  for this transaction  */
+    UserKey: string;
+    /** Document Key  for this transaction  */
+    DocMasterKey?: string | undefined;
+}
+
+/** Information about file versions */
+export class FileVersion implements IFileVersion {
+    /** Link to xsfFileVersionInfo */
+    FileVerKey!: string;
+    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
+    RevID!: number;
+    /** MD5 hash, combined with length and used for duplicate detection */
+    DataHash?: string | undefined;
+    /** External reference */
+    SourceRevision?: string | undefined;
+    /** When stored */
+    Cataloged!: Date;
+    /** When Approved */
+    Approved!: Date;
+    /** User that approved this */
+    ApprovedBy!: string;
+    /** Links to a user/contact  */
+    FromUser!: string;
+    /** text from binary (for index/search) */
+    TxtData?: string | undefined;
+    /** Size of file binary data in bytes  */
+    BinSize!: number;
+    /** True on the file version that is the newest one with approved not empty  */
+    IsCurrentApprovedVersion!: boolean;
+    /** When not empty, reason this version cannot be removed */
+    NoCanDelete?: string | undefined;
+
+    constructor(data?: IFileVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.FileVerKey = _data["FileVerKey"];
+            this.RevID = _data["RevID"];
+            this.DataHash = _data["DataHash"];
+            this.SourceRevision = _data["SourceRevision"];
+            this.Cataloged = _data["Cataloged"] ? new Date(_data["Cataloged"].toString()) : <any>undefined;
+            this.Approved = _data["Approved"] ? new Date(_data["Approved"].toString()) : <any>undefined;
+            this.ApprovedBy = _data["ApprovedBy"];
+            this.FromUser = _data["FromUser"];
+            this.TxtData = _data["TxtData"];
+            this.BinSize = _data["BinSize"];
+            this.IsCurrentApprovedVersion = _data["IsCurrentApprovedVersion"];
+            this.NoCanDelete = _data["NoCanDelete"];
+        }
+    }
+
+    static fromJS(data: any): FileVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["FileVerKey"] = this.FileVerKey;
+        data["RevID"] = this.RevID;
+        data["DataHash"] = this.DataHash;
+        data["SourceRevision"] = this.SourceRevision;
+        data["Cataloged"] = this.Cataloged ? this.Cataloged.toISOString() : <any>undefined;
+        data["Approved"] = this.Approved ? this.Approved.toISOString() : <any>undefined;
+        data["ApprovedBy"] = this.ApprovedBy;
+        data["FromUser"] = this.FromUser;
+        data["TxtData"] = this.TxtData;
+        data["BinSize"] = this.BinSize;
+        data["IsCurrentApprovedVersion"] = this.IsCurrentApprovedVersion;
+        data["NoCanDelete"] = this.NoCanDelete;
+        return data; 
+    }
+
+    clone(): FileVersion {
+        const json = this.toJSON();
+        let result = new FileVersion();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Information about file versions */
+export interface IFileVersion {
+    /** Link to xsfFileVersionInfo */
+    FileVerKey: string;
+    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
+    RevID: number;
+    /** MD5 hash, combined with length and used for duplicate detection */
+    DataHash?: string | undefined;
+    /** External reference */
+    SourceRevision?: string | undefined;
+    /** When stored */
+    Cataloged: Date;
+    /** When Approved */
+    Approved: Date;
+    /** User that approved this */
+    ApprovedBy: string;
+    /** Links to a user/contact  */
+    FromUser: string;
+    /** text from binary (for index/search) */
+    TxtData?: string | undefined;
+    /** Size of file binary data in bytes  */
+    BinSize: number;
+    /** True on the file version that is the newest one with approved not empty  */
+    IsCurrentApprovedVersion: boolean;
+    /** When not empty, reason this version cannot be removed */
+    NoCanDelete?: string | undefined;
 }
 
 /** Document Header informat for a process */
@@ -6103,543 +7051,93 @@ export interface IRelatedItemDetail {
     UOM?: string | undefined;
 }
 
-/** Readonly description of an cost transaction posted to a project */
-export class FileAccessHistory implements IFileAccessHistory {
-    /** User Name   */
-    UserName?: string | undefined;
-    /** File Name   */
-    FileName?: string | undefined;
-    /** File Revision number (starts with 1) */
-    RevID!: number;
-    /** When this access transaction occurred */
-    Accessed!: Date;
-    /** Type of Access */
-    AccessType?: string | undefined;
-    /** The Long Title of the document in whose context the access took place */
-    WithDocument?: string | undefined;
-    /** Additional information about access  */
-    AccessInfo?: string | undefined;
-    /** Was the file in cache */
-    UsedCache!: boolean;
-    /** User Key  for this transaction  */
-    UserKey!: string;
-    /** Document Key  for this transaction  */
-    DocMasterKey?: string | undefined;
-
-    constructor(data?: IFileAccessHistory) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.UserName = _data["UserName"];
-            this.FileName = _data["FileName"];
-            this.RevID = _data["RevID"];
-            this.Accessed = _data["Accessed"] ? new Date(_data["Accessed"].toString()) : <any>undefined;
-            this.AccessType = _data["AccessType"];
-            this.WithDocument = _data["WithDocument"];
-            this.AccessInfo = _data["AccessInfo"];
-            this.UsedCache = _data["UsedCache"];
-            this.UserKey = _data["UserKey"];
-            this.DocMasterKey = _data["DocMasterKey"];
-        }
-    }
-
-    static fromJS(data: any): FileAccessHistory {
-        data = typeof data === 'object' ? data : {};
-        let result = new FileAccessHistory();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserName"] = this.UserName;
-        data["FileName"] = this.FileName;
-        data["RevID"] = this.RevID;
-        data["Accessed"] = this.Accessed ? this.Accessed.toISOString() : <any>undefined;
-        data["AccessType"] = this.AccessType;
-        data["WithDocument"] = this.WithDocument;
-        data["AccessInfo"] = this.AccessInfo;
-        data["UsedCache"] = this.UsedCache;
-        data["UserKey"] = this.UserKey;
-        data["DocMasterKey"] = this.DocMasterKey;
-        return data; 
-    }
-
-    clone(): FileAccessHistory {
-        const json = this.toJSON();
-        let result = new FileAccessHistory();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Readonly description of an cost transaction posted to a project */
-export interface IFileAccessHistory {
-    /** User Name   */
-    UserName?: string | undefined;
-    /** File Name   */
-    FileName?: string | undefined;
-    /** File Revision number (starts with 1) */
-    RevID: number;
-    /** When this access transaction occurred */
-    Accessed: Date;
-    /** Type of Access */
-    AccessType?: string | undefined;
-    /** The Long Title of the document in whose context the access took place */
-    WithDocument?: string | undefined;
-    /** Additional information about access  */
-    AccessInfo?: string | undefined;
-    /** Was the file in cache */
-    UsedCache: boolean;
-    /** User Key  for this transaction  */
-    UserKey: string;
-    /** Document Key  for this transaction  */
-    DocMasterKey?: string | undefined;
-}
-
-/** Information about file versions */
-export class FileVersion implements IFileVersion {
-    /** Link to xsfFileVersionInfo */
-    FileVerKey!: string;
-    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
-    RevID!: number;
-    /** MD5 hash, combined with length and used for duplicate detection */
-    DataHash?: string | undefined;
-    /** External reference */
-    SourceRevision?: string | undefined;
-    /** When stored */
-    Cataloged!: Date;
-    /** When Approved */
-    Approved!: Date;
-    /** User that approved this */
-    ApprovedBy!: string;
-    /** Links to a user/contact  */
-    FromUser!: string;
-    /** text from binary (for index/search) */
-    TxtData?: string | undefined;
-    /** Size of file binary data in bytes  */
-    BinSize!: number;
-    /** True on the file version that is the newest one with approved not empty  */
-    IsCurrentApprovedVersion!: boolean;
-    /** When not empty, reason this version cannot be removed */
-    NoCanDelete?: string | undefined;
-
-    constructor(data?: IFileVersion) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.FileVerKey = _data["FileVerKey"];
-            this.RevID = _data["RevID"];
-            this.DataHash = _data["DataHash"];
-            this.SourceRevision = _data["SourceRevision"];
-            this.Cataloged = _data["Cataloged"] ? new Date(_data["Cataloged"].toString()) : <any>undefined;
-            this.Approved = _data["Approved"] ? new Date(_data["Approved"].toString()) : <any>undefined;
-            this.ApprovedBy = _data["ApprovedBy"];
-            this.FromUser = _data["FromUser"];
-            this.TxtData = _data["TxtData"];
-            this.BinSize = _data["BinSize"];
-            this.IsCurrentApprovedVersion = _data["IsCurrentApprovedVersion"];
-            this.NoCanDelete = _data["NoCanDelete"];
-        }
-    }
-
-    static fromJS(data: any): FileVersion {
-        data = typeof data === 'object' ? data : {};
-        let result = new FileVersion();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["FileVerKey"] = this.FileVerKey;
-        data["RevID"] = this.RevID;
-        data["DataHash"] = this.DataHash;
-        data["SourceRevision"] = this.SourceRevision;
-        data["Cataloged"] = this.Cataloged ? this.Cataloged.toISOString() : <any>undefined;
-        data["Approved"] = this.Approved ? this.Approved.toISOString() : <any>undefined;
-        data["ApprovedBy"] = this.ApprovedBy;
-        data["FromUser"] = this.FromUser;
-        data["TxtData"] = this.TxtData;
-        data["BinSize"] = this.BinSize;
-        data["IsCurrentApprovedVersion"] = this.IsCurrentApprovedVersion;
-        data["NoCanDelete"] = this.NoCanDelete;
-        return data; 
-    }
-
-    clone(): FileVersion {
-        const json = this.toJSON();
-        let result = new FileVersion();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Information about file versions */
-export interface IFileVersion {
-    /** Link to xsfFileVersionInfo */
-    FileVerKey: string;
-    /** -2:Doc Folder; -4:Item Folder; with -1: delete */
-    RevID: number;
-    /** MD5 hash, combined with length and used for duplicate detection */
-    DataHash?: string | undefined;
-    /** External reference */
-    SourceRevision?: string | undefined;
-    /** When stored */
-    Cataloged: Date;
-    /** When Approved */
-    Approved: Date;
-    /** User that approved this */
-    ApprovedBy: string;
-    /** Links to a user/contact  */
-    FromUser: string;
-    /** text from binary (for index/search) */
-    TxtData?: string | undefined;
-    /** Size of file binary data in bytes  */
-    BinSize: number;
-    /** True on the file version that is the newest one with approved not empty  */
-    IsCurrentApprovedVersion: boolean;
-    /** When not empty, reason this version cannot be removed */
-    NoCanDelete?: string | undefined;
-}
-
-/** A document currently routed to a specific user */
-export class UserActionItem implements IUserActionItem {
-    /** Key for the document */
-    DocMasterKey!: string;
-    /** key for the route on the document */
+/** Describes a sequenced recipient in a document route */
+export class DocRoute implements IDocRoute {
+    /** associates the row with a specific doc route */
     RouteID!: string;
-    /** key for the type of document */
-    DocTypeKey!: string;
-    /** Resolved Name of the document/process type */
-    DocType?: string | undefined;
-    /** Project ID */
-    Project?: string | undefined;
-    /** Document Number */
-    DocNo?: string | undefined;
-    /** Document Batch (seldom used) */
-    DocBatchNo?: string | undefined;
-    /** Due Date */
-    Due?: Date | undefined;
-    /** Title */
-    Title?: string | undefined;
-    /** Key for Contact this document is "from" */
+    /** Link to user/contact */
+    UserKey!: string;
+    /** Initialized to current stage when added */
+    Stage!: number;
+    /** Display sequence (by name withing sequence) */
+    Sequence!: number;
+    /** Parallel Route Group ID */
+    GroupNo!: number;
+    /** Links to the user/contact that added this route */
     FromUser!: string;
-    /** Key for Primary contact on this document */
-    PrimaryContact!: string;
-    /** Priority (1=high) */
-    Priority!: number;
-    /** Date this route was viewed */
-    Viewed?: Date | undefined;
-    /** Date this document was closed (or null) */
-    Closed?: Date | undefined;
-    /** Date this route was reaced */
-    Reached!: Date;
-    /** Route Instructions */
-    Note?: string | undefined;
-    /** Resolved Status of document */
-    StatusText?: string | undefined;
-    /** Status Code */
+    /** Status code */
     Status?: string | undefined;
-    /** Company Name */
-    Company?: string | undefined;
-    /** Current Route Sequence */
-    Sequence!: number;
-    /** When TRUE, it is OK to release this document without opening it */
-    OkToRelease!: boolean;
-    /** When True, is recent  */
-    IsRecent!: boolean;
-    /** How many files are attached */
-    FilesAttached!: number;
-
-    constructor(data?: IUserActionItem) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.DocMasterKey = _data["DocMasterKey"];
-            this.RouteID = _data["RouteID"];
-            this.DocTypeKey = _data["DocTypeKey"];
-            this.DocType = _data["DocType"];
-            this.Project = _data["Project"];
-            this.DocNo = _data["DocNo"];
-            this.DocBatchNo = _data["DocBatchNo"];
-            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
-            this.Title = _data["Title"];
-            this.FromUser = _data["FromUser"];
-            this.PrimaryContact = _data["PrimaryContact"];
-            this.Priority = _data["Priority"];
-            this.Viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
-            this.Closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
-            this.Reached = _data["Reached"] ? new Date(_data["Reached"].toString()) : <any>undefined;
-            this.Note = _data["Note"];
-            this.StatusText = _data["StatusText"];
-            this.Status = _data["Status"];
-            this.Company = _data["Company"];
-            this.Sequence = _data["Sequence"];
-            this.OkToRelease = _data["OkToRelease"];
-            this.IsRecent = _data["IsRecent"];
-            this.FilesAttached = _data["FilesAttached"];
-        }
-    }
-
-    static fromJS(data: any): UserActionItem {
-        data = typeof data === 'object' ? data : {};
-        let result = new UserActionItem();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["DocMasterKey"] = this.DocMasterKey;
-        data["RouteID"] = this.RouteID;
-        data["DocTypeKey"] = this.DocTypeKey;
-        data["DocType"] = this.DocType;
-        data["Project"] = this.Project;
-        data["DocNo"] = this.DocNo;
-        data["DocBatchNo"] = this.DocBatchNo;
-        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
-        data["Title"] = this.Title;
-        data["FromUser"] = this.FromUser;
-        data["PrimaryContact"] = this.PrimaryContact;
-        data["Priority"] = this.Priority;
-        data["Viewed"] = this.Viewed ? this.Viewed.toISOString() : <any>undefined;
-        data["Closed"] = this.Closed ? this.Closed.toISOString() : <any>undefined;
-        data["Reached"] = this.Reached ? this.Reached.toISOString() : <any>undefined;
-        data["Note"] = this.Note;
-        data["StatusText"] = this.StatusText;
-        data["Status"] = this.Status;
-        data["Company"] = this.Company;
-        data["Sequence"] = this.Sequence;
-        data["OkToRelease"] = this.OkToRelease;
-        data["IsRecent"] = this.IsRecent;
-        data["FilesAttached"] = this.FilesAttached;
-        return data; 
-    }
-
-    clone(): UserActionItem {
-        const json = this.toJSON();
-        let result = new UserActionItem();
-        result.init(json);
-        return result;
-    }
-}
-
-/** A document currently routed to a specific user */
-export interface IUserActionItem {
-    /** Key for the document */
-    DocMasterKey: string;
-    /** key for the route on the document */
-    RouteID: string;
-    /** key for the type of document */
-    DocTypeKey: string;
-    /** Resolved Name of the document/process type */
-    DocType?: string | undefined;
-    /** Project ID */
-    Project?: string | undefined;
-    /** Document Number */
-    DocNo?: string | undefined;
-    /** Document Batch (seldom used) */
-    DocBatchNo?: string | undefined;
-    /** Due Date */
+    /** Web; E-mail; Fax; Hard Copy */
+    RouteVia?: string | undefined;
+    /** Controls edits to base document (AKA IsCollaborator) */
+    UserDocEdit!: boolean;
+    /** This routee wants watchdog alerts about this document */
+    SendAlerts!: boolean;
+    /** When true, email based routing after this sequence is sent on behalf of this routee so that they will receive replies (see EmailFrom) */
+    ReplyTo!: boolean;
+    /** Set when first viewed */
+    Viewed?: Date | undefined;
+    /** Date (and sometimes Time) by which action is required */
     Due?: Date | undefined;
-    /** Title */
-    Title?: string | undefined;
-    /** Key for Contact this document is "from" */
-    FromUser: string;
-    /** Key for Primary contact on this document */
-    PrimaryContact: string;
-    /** Priority (1=high) */
-    Priority: number;
-    /** Date this route was viewed */
-    Viewed?: Date | undefined;
-    /** Date this document was closed (or null) */
-    Closed?: Date | undefined;
-    /** Date this route was reaced */
-    Reached: Date;
-    /** Route Instructions */
-    Note?: string | undefined;
-    /** Resolved Status of document */
-    StatusText?: string | undefined;
-    /** Status Code */
-    Status?: string | undefined;
-    /** Company Name */
-    Company?: string | undefined;
-    /** Current Route Sequence */
-    Sequence: number;
-    /** When TRUE, it is OK to release this document without opening it */
-    OkToRelease: boolean;
-    /** When True, is recent  */
-    IsRecent: boolean;
-    /** How many files are attached */
-    FilesAttached: number;
-}
-
-/** Various common filters - not every filter is supported by every query */
-export class QueryFilters implements IQueryFilters {
-    /** Project Mask (eg GC%) */
-    ProjectLike?: string | undefined;
-    /** Applies to common text (title, description, etc) */
-    TitleLike?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    UserKey?: string | undefined;
-    /** Key must match an existing document type
-00000000-0000-0000-0000-000000000000   */
-    ForDocType?: string | undefined;
-    /** Key for Program or empty key */
-    ProgramKey?: string | undefined;
-    /** Default 2000-01-01 */
-    FromDate?: Date | undefined;
-    /** Default today */
-    ThruDate?: Date | undefined;
-    /** Default is false */
-    NewOnly!: boolean;
-    /** Default is false */
-    IncludeHidden!: boolean;
-    /** Name Value Pair filter values (semicolon separated) */
-    nvpFilters?: string | undefined;
-
-    constructor(data?: IQueryFilters) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.ProjectLike = _data["ProjectLike"];
-            this.TitleLike = _data["TitleLike"];
-            this.UserKey = _data["UserKey"];
-            this.ForDocType = _data["ForDocType"];
-            this.ProgramKey = _data["ProgramKey"];
-            this.FromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
-            this.ThruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
-            this.NewOnly = _data["NewOnly"];
-            this.IncludeHidden = _data["IncludeHidden"];
-            this.nvpFilters = _data["nvpFilters"];
-        }
-    }
-
-    static fromJS(data: any): QueryFilters {
-        data = typeof data === 'object' ? data : {};
-        let result = new QueryFilters();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["ProjectLike"] = this.ProjectLike;
-        data["TitleLike"] = this.TitleLike;
-        data["UserKey"] = this.UserKey;
-        data["ForDocType"] = this.ForDocType;
-        data["ProgramKey"] = this.ProgramKey;
-        data["FromDate"] = this.FromDate ? this.FromDate.toISOString() : <any>undefined;
-        data["ThruDate"] = this.ThruDate ? this.ThruDate.toISOString() : <any>undefined;
-        data["NewOnly"] = this.NewOnly;
-        data["IncludeHidden"] = this.IncludeHidden;
-        data["nvpFilters"] = this.nvpFilters;
-        return data; 
-    }
-
-    clone(): QueryFilters {
-        const json = this.toJSON();
-        let result = new QueryFilters();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Various common filters - not every filter is supported by every query */
-export interface IQueryFilters {
-    /** Project Mask (eg GC%) */
-    ProjectLike?: string | undefined;
-    /** Applies to common text (title, description, etc) */
-    TitleLike?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    UserKey?: string | undefined;
-    /** Key must match an existing document type
-00000000-0000-0000-0000-000000000000   */
-    ForDocType?: string | undefined;
-    /** Key for Program or empty key */
-    ProgramKey?: string | undefined;
-    /** Default 2000-01-01 */
-    FromDate?: Date | undefined;
-    /** Default today */
-    ThruDate?: Date | undefined;
-    /** Default is false */
-    NewOnly: boolean;
-    /** Default is false */
-    IncludeHidden: boolean;
-    /** Name Value Pair filter values (semicolon separated) */
-    nvpFilters?: string | undefined;
-}
-
-export class RouteActionInfo implements IRouteActionInfo {
-    DocMasterKey!: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
     UserName?: string | undefined;
-    Title?: string | undefined;
-    DocNo?: string | undefined;
-    Type?: string | undefined;
-    Project?: string | undefined;
-    Status?: string | undefined;
-    Company?: string | undefined;
-    Priority!: number;
-    Sequence!: number;
-    Due?: string | undefined;
-    Viewed?: string | undefined;
-    Alerted?: string | undefined;
-    Downloaded?: string | undefined;
-    FromActed?: string | undefined;
-    CreatorActed?: string | undefined;
-    OkToRelease!: boolean;
-    ShowRouteResponseCode!: boolean;
-    ShowRouteResponseArea!: boolean;
-    HardCopyCount!: number;
-    OkToReleaseCount!: number;
-    ReleaseMatchCount!: number;
-    ResponseCode?: string | undefined;
+    RouteeProxy!: string;
+    /** When 1, no notification emails are sent */
+    PriorityOver!: number;
+    ExpectProxy!: boolean;
+    HasContent!: boolean;
+    /** True when this user has CSTM | InternalStaff */
+    IsInternal!: boolean;
+    /** When true, the user is inactive */
+    UserKey_Inactive!: boolean;
+    /** When this route was reached (estimated) */
+    Reached!: Date;
+    /** If transmital has data */
+    HasBinData!: boolean;
+    /** list of choices for RouteVia */
+    StatusChoices?: Suggestion[] | undefined;
+    /** list of choices for RouteVia */
+    RouteViaChoices?: Suggestion[] | undefined;
+    /** Name of Person email routes are sent on-behalf-of */
+    EmailFrom?: string | undefined;
+    /** Free form */
     Note?: string | undefined;
+    /** Free form instruction to route receipient  */
+    Request?: string | undefined;
+    /** Free form response to route receipient */
     Response?: string | undefined;
-    Instructions?: string | undefined;
-    FromWho?: string | undefined;
-    CreatedBy?: string | undefined;
-    NextWho?: string | undefined;
-    AccessSummary?: string | undefined;
-    DocAccessHistoryReportURL?: string | undefined;
-    LastSaved?: string | undefined;
-    ExclusiveTo?: string | undefined;
-    DocTypeKey!: string;
-    StatusChoices?: SelectCodeNode[] | undefined;
-    ResponseCodeChoices?: SelectCodeNode[] | undefined;
-    MatchingDocs?: SelectCodeNode[] | undefined;
-    EligibleDocs?: SelectCodeNode[] | undefined;
+    /** Code defined in DocType specific list */
+    ResponseCode?: string | undefined;
+    /** list of choices for ResponseCode */
+    ResponseCodeChoices?: Suggestion[] | undefined;
+    /** Workflow directives */
+    WorkflowScript?: string | undefined;
+    /** Set when email notification is sent */
+    Alerted?: Date | undefined;
+    /** When Downloaded (included in activity) */
+    Downloaded?: Date | undefined;
+    /** Set by the data layer when Status changes */
+    Acted?: Date | undefined;
+    /** Summary of activity on the doc, suitable for display.  Includes Acted, Downloaded, Viewed */
+    Activity?: string | undefined;
+    /** Email notifications suppressed until this time */
+    SuppressNotifyUntil!: Date;
+    /** associates the row with a doc route sequence */
+    RouteStepKey!: string;
+    /** Identifies the user */
+    ByUser!: string;
+    /** The transmittal control number */
+    TransNumber!: number;
+    /** Typically when entity was first recorded; some users may be able to override for some entities */
+    Created!: Date;
+    /** not currently used */
+    TransStatus?: string | undefined;
+    /** Type of binary data (DOCX, PDF, etc) */
+    BinType?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
 
-    constructor(data?: IRouteActionInfo) {
+    constructor(data?: IDocRoute) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6650,183 +7148,244 @@ export class RouteActionInfo implements IRouteActionInfo {
 
     init(_data?: any) {
         if (_data) {
-            this.DocMasterKey = _data["DocMasterKey"];
-            this.UserName = _data["UserName"];
-            this.Title = _data["Title"];
-            this.DocNo = _data["DocNo"];
-            this.Type = _data["Type"];
-            this.Project = _data["Project"];
-            this.Status = _data["Status"];
-            this.Company = _data["Company"];
-            this.Priority = _data["Priority"];
+            this.RouteID = _data["RouteID"];
+            this.UserKey = _data["UserKey"];
+            this.Stage = _data["Stage"];
             this.Sequence = _data["Sequence"];
-            this.Due = _data["Due"];
-            this.Viewed = _data["Viewed"];
-            this.Alerted = _data["Alerted"];
-            this.Downloaded = _data["Downloaded"];
-            this.FromActed = _data["FromActed"];
-            this.CreatorActed = _data["CreatorActed"];
-            this.OkToRelease = _data["OkToRelease"];
-            this.ShowRouteResponseCode = _data["ShowRouteResponseCode"];
-            this.ShowRouteResponseArea = _data["ShowRouteResponseArea"];
-            this.HardCopyCount = _data["HardCopyCount"];
-            this.OkToReleaseCount = _data["OkToReleaseCount"];
-            this.ReleaseMatchCount = _data["ReleaseMatchCount"];
-            this.ResponseCode = _data["ResponseCode"];
-            this.Note = _data["Note"];
-            this.Response = _data["Response"];
-            this.Instructions = _data["Instructions"];
-            this.FromWho = _data["FromWho"];
-            this.CreatedBy = _data["CreatedBy"];
-            this.NextWho = _data["NextWho"];
-            this.AccessSummary = _data["AccessSummary"];
-            this.DocAccessHistoryReportURL = _data["DocAccessHistoryReportURL"];
-            this.LastSaved = _data["LastSaved"];
-            this.ExclusiveTo = _data["ExclusiveTo"];
-            this.DocTypeKey = _data["DocTypeKey"];
+            this.GroupNo = _data["GroupNo"];
+            this.FromUser = _data["FromUser"];
+            this.Status = _data["Status"];
+            this.RouteVia = _data["RouteVia"];
+            this.UserDocEdit = _data["UserDocEdit"];
+            this.SendAlerts = _data["SendAlerts"];
+            this.ReplyTo = _data["ReplyTo"];
+            this.Viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
+            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
+            this.UserName = _data["UserName"];
+            this.RouteeProxy = _data["RouteeProxy"];
+            this.PriorityOver = _data["PriorityOver"];
+            this.ExpectProxy = _data["ExpectProxy"];
+            this.HasContent = _data["HasContent"];
+            this.IsInternal = _data["IsInternal"];
+            this.UserKey_Inactive = _data["UserKey_Inactive"];
+            this.Reached = _data["Reached"] ? new Date(_data["Reached"].toString()) : <any>undefined;
+            this.HasBinData = _data["HasBinData"];
             if (Array.isArray(_data["StatusChoices"])) {
                 this.StatusChoices = [] as any;
                 for (let item of _data["StatusChoices"])
-                    this.StatusChoices!.push(SelectCodeNode.fromJS(item));
+                    this.StatusChoices!.push(Suggestion.fromJS(item));
             }
+            if (Array.isArray(_data["RouteViaChoices"])) {
+                this.RouteViaChoices = [] as any;
+                for (let item of _data["RouteViaChoices"])
+                    this.RouteViaChoices!.push(Suggestion.fromJS(item));
+            }
+            this.EmailFrom = _data["EmailFrom"];
+            this.Note = _data["Note"];
+            this.Request = _data["Request"];
+            this.Response = _data["Response"];
+            this.ResponseCode = _data["ResponseCode"];
             if (Array.isArray(_data["ResponseCodeChoices"])) {
                 this.ResponseCodeChoices = [] as any;
                 for (let item of _data["ResponseCodeChoices"])
-                    this.ResponseCodeChoices!.push(SelectCodeNode.fromJS(item));
+                    this.ResponseCodeChoices!.push(Suggestion.fromJS(item));
             }
-            if (Array.isArray(_data["MatchingDocs"])) {
-                this.MatchingDocs = [] as any;
-                for (let item of _data["MatchingDocs"])
-                    this.MatchingDocs!.push(SelectCodeNode.fromJS(item));
-            }
-            if (Array.isArray(_data["EligibleDocs"])) {
-                this.EligibleDocs = [] as any;
-                for (let item of _data["EligibleDocs"])
-                    this.EligibleDocs!.push(SelectCodeNode.fromJS(item));
+            this.WorkflowScript = _data["WorkflowScript"];
+            this.Alerted = _data["Alerted"] ? new Date(_data["Alerted"].toString()) : <any>undefined;
+            this.Downloaded = _data["Downloaded"] ? new Date(_data["Downloaded"].toString()) : <any>undefined;
+            this.Acted = _data["Acted"] ? new Date(_data["Acted"].toString()) : <any>undefined;
+            this.Activity = _data["Activity"];
+            this.SuppressNotifyUntil = _data["SuppressNotifyUntil"] ? new Date(_data["SuppressNotifyUntil"].toString()) : <any>undefined;
+            this.RouteStepKey = _data["RouteStepKey"];
+            this.ByUser = _data["ByUser"];
+            this.TransNumber = _data["TransNumber"];
+            this.Created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
+            this.TransStatus = _data["TransStatus"];
+            this.BinType = _data["BinType"];
+            if (Array.isArray(_data["MenuCommands"])) {
+                this.MenuCommands = [] as any;
+                for (let item of _data["MenuCommands"])
+                    this.MenuCommands!.push(MenuAction.fromJS(item));
             }
         }
     }
 
-    static fromJS(data: any): RouteActionInfo {
+    static fromJS(data: any): DocRoute {
         data = typeof data === 'object' ? data : {};
-        let result = new RouteActionInfo();
+        let result = new DocRoute();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["DocMasterKey"] = this.DocMasterKey;
-        data["UserName"] = this.UserName;
-        data["Title"] = this.Title;
-        data["DocNo"] = this.DocNo;
-        data["Type"] = this.Type;
-        data["Project"] = this.Project;
-        data["Status"] = this.Status;
-        data["Company"] = this.Company;
-        data["Priority"] = this.Priority;
+        data["RouteID"] = this.RouteID;
+        data["UserKey"] = this.UserKey;
+        data["Stage"] = this.Stage;
         data["Sequence"] = this.Sequence;
-        data["Due"] = this.Due;
-        data["Viewed"] = this.Viewed;
-        data["Alerted"] = this.Alerted;
-        data["Downloaded"] = this.Downloaded;
-        data["FromActed"] = this.FromActed;
-        data["CreatorActed"] = this.CreatorActed;
-        data["OkToRelease"] = this.OkToRelease;
-        data["ShowRouteResponseCode"] = this.ShowRouteResponseCode;
-        data["ShowRouteResponseArea"] = this.ShowRouteResponseArea;
-        data["HardCopyCount"] = this.HardCopyCount;
-        data["OkToReleaseCount"] = this.OkToReleaseCount;
-        data["ReleaseMatchCount"] = this.ReleaseMatchCount;
-        data["ResponseCode"] = this.ResponseCode;
-        data["Note"] = this.Note;
-        data["Response"] = this.Response;
-        data["Instructions"] = this.Instructions;
-        data["FromWho"] = this.FromWho;
-        data["CreatedBy"] = this.CreatedBy;
-        data["NextWho"] = this.NextWho;
-        data["AccessSummary"] = this.AccessSummary;
-        data["DocAccessHistoryReportURL"] = this.DocAccessHistoryReportURL;
-        data["LastSaved"] = this.LastSaved;
-        data["ExclusiveTo"] = this.ExclusiveTo;
-        data["DocTypeKey"] = this.DocTypeKey;
+        data["GroupNo"] = this.GroupNo;
+        data["FromUser"] = this.FromUser;
+        data["Status"] = this.Status;
+        data["RouteVia"] = this.RouteVia;
+        data["UserDocEdit"] = this.UserDocEdit;
+        data["SendAlerts"] = this.SendAlerts;
+        data["ReplyTo"] = this.ReplyTo;
+        data["Viewed"] = this.Viewed ? this.Viewed.toISOString() : <any>undefined;
+        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
+        data["UserName"] = this.UserName;
+        data["RouteeProxy"] = this.RouteeProxy;
+        data["PriorityOver"] = this.PriorityOver;
+        data["ExpectProxy"] = this.ExpectProxy;
+        data["HasContent"] = this.HasContent;
+        data["IsInternal"] = this.IsInternal;
+        data["UserKey_Inactive"] = this.UserKey_Inactive;
+        data["Reached"] = this.Reached ? this.Reached.toISOString() : <any>undefined;
+        data["HasBinData"] = this.HasBinData;
         if (Array.isArray(this.StatusChoices)) {
             data["StatusChoices"] = [];
             for (let item of this.StatusChoices)
                 data["StatusChoices"].push(item.toJSON());
         }
+        if (Array.isArray(this.RouteViaChoices)) {
+            data["RouteViaChoices"] = [];
+            for (let item of this.RouteViaChoices)
+                data["RouteViaChoices"].push(item.toJSON());
+        }
+        data["EmailFrom"] = this.EmailFrom;
+        data["Note"] = this.Note;
+        data["Request"] = this.Request;
+        data["Response"] = this.Response;
+        data["ResponseCode"] = this.ResponseCode;
         if (Array.isArray(this.ResponseCodeChoices)) {
             data["ResponseCodeChoices"] = [];
             for (let item of this.ResponseCodeChoices)
                 data["ResponseCodeChoices"].push(item.toJSON());
         }
-        if (Array.isArray(this.MatchingDocs)) {
-            data["MatchingDocs"] = [];
-            for (let item of this.MatchingDocs)
-                data["MatchingDocs"].push(item.toJSON());
-        }
-        if (Array.isArray(this.EligibleDocs)) {
-            data["EligibleDocs"] = [];
-            for (let item of this.EligibleDocs)
-                data["EligibleDocs"].push(item.toJSON());
+        data["WorkflowScript"] = this.WorkflowScript;
+        data["Alerted"] = this.Alerted ? this.Alerted.toISOString() : <any>undefined;
+        data["Downloaded"] = this.Downloaded ? this.Downloaded.toISOString() : <any>undefined;
+        data["Acted"] = this.Acted ? this.Acted.toISOString() : <any>undefined;
+        data["Activity"] = this.Activity;
+        data["SuppressNotifyUntil"] = this.SuppressNotifyUntil ? this.SuppressNotifyUntil.toISOString() : <any>undefined;
+        data["RouteStepKey"] = this.RouteStepKey;
+        data["ByUser"] = this.ByUser;
+        data["TransNumber"] = this.TransNumber;
+        data["Created"] = this.Created ? this.Created.toISOString() : <any>undefined;
+        data["TransStatus"] = this.TransStatus;
+        data["BinType"] = this.BinType;
+        if (Array.isArray(this.MenuCommands)) {
+            data["MenuCommands"] = [];
+            for (let item of this.MenuCommands)
+                data["MenuCommands"].push(item.toJSON());
         }
         return data; 
     }
 
-    clone(): RouteActionInfo {
+    clone(): DocRoute {
         const json = this.toJSON();
-        let result = new RouteActionInfo();
+        let result = new DocRoute();
         result.init(json);
         return result;
     }
 }
 
-export interface IRouteActionInfo {
-    DocMasterKey: string;
-    UserName?: string | undefined;
-    Title?: string | undefined;
-    DocNo?: string | undefined;
-    Type?: string | undefined;
-    Project?: string | undefined;
-    Status?: string | undefined;
-    Company?: string | undefined;
-    Priority: number;
+/** Describes a sequenced recipient in a document route */
+export interface IDocRoute {
+    /** associates the row with a specific doc route */
+    RouteID: string;
+    /** Link to user/contact */
+    UserKey: string;
+    /** Initialized to current stage when added */
+    Stage: number;
+    /** Display sequence (by name withing sequence) */
     Sequence: number;
-    Due?: string | undefined;
-    Viewed?: string | undefined;
-    Alerted?: string | undefined;
-    Downloaded?: string | undefined;
-    FromActed?: string | undefined;
-    CreatorActed?: string | undefined;
-    OkToRelease: boolean;
-    ShowRouteResponseCode: boolean;
-    ShowRouteResponseArea: boolean;
-    HardCopyCount: number;
-    OkToReleaseCount: number;
-    ReleaseMatchCount: number;
-    ResponseCode?: string | undefined;
+    /** Parallel Route Group ID */
+    GroupNo: number;
+    /** Links to the user/contact that added this route */
+    FromUser: string;
+    /** Status code */
+    Status?: string | undefined;
+    /** Web; E-mail; Fax; Hard Copy */
+    RouteVia?: string | undefined;
+    /** Controls edits to base document (AKA IsCollaborator) */
+    UserDocEdit: boolean;
+    /** This routee wants watchdog alerts about this document */
+    SendAlerts: boolean;
+    /** When true, email based routing after this sequence is sent on behalf of this routee so that they will receive replies (see EmailFrom) */
+    ReplyTo: boolean;
+    /** Set when first viewed */
+    Viewed?: Date | undefined;
+    /** Date (and sometimes Time) by which action is required */
+    Due?: Date | undefined;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    UserName?: string | undefined;
+    RouteeProxy: string;
+    /** When 1, no notification emails are sent */
+    PriorityOver: number;
+    ExpectProxy: boolean;
+    HasContent: boolean;
+    /** True when this user has CSTM | InternalStaff */
+    IsInternal: boolean;
+    /** When true, the user is inactive */
+    UserKey_Inactive: boolean;
+    /** When this route was reached (estimated) */
+    Reached: Date;
+    /** If transmital has data */
+    HasBinData: boolean;
+    /** list of choices for RouteVia */
+    StatusChoices?: Suggestion[] | undefined;
+    /** list of choices for RouteVia */
+    RouteViaChoices?: Suggestion[] | undefined;
+    /** Name of Person email routes are sent on-behalf-of */
+    EmailFrom?: string | undefined;
+    /** Free form */
     Note?: string | undefined;
+    /** Free form instruction to route receipient  */
+    Request?: string | undefined;
+    /** Free form response to route receipient */
     Response?: string | undefined;
-    Instructions?: string | undefined;
-    FromWho?: string | undefined;
-    CreatedBy?: string | undefined;
-    NextWho?: string | undefined;
-    AccessSummary?: string | undefined;
-    DocAccessHistoryReportURL?: string | undefined;
-    LastSaved?: string | undefined;
-    ExclusiveTo?: string | undefined;
-    DocTypeKey: string;
-    StatusChoices?: SelectCodeNode[] | undefined;
-    ResponseCodeChoices?: SelectCodeNode[] | undefined;
-    MatchingDocs?: SelectCodeNode[] | undefined;
-    EligibleDocs?: SelectCodeNode[] | undefined;
+    /** Code defined in DocType specific list */
+    ResponseCode?: string | undefined;
+    /** list of choices for ResponseCode */
+    ResponseCodeChoices?: Suggestion[] | undefined;
+    /** Workflow directives */
+    WorkflowScript?: string | undefined;
+    /** Set when email notification is sent */
+    Alerted?: Date | undefined;
+    /** When Downloaded (included in activity) */
+    Downloaded?: Date | undefined;
+    /** Set by the data layer when Status changes */
+    Acted?: Date | undefined;
+    /** Summary of activity on the doc, suitable for display.  Includes Acted, Downloaded, Viewed */
+    Activity?: string | undefined;
+    /** Email notifications suppressed until this time */
+    SuppressNotifyUntil: Date;
+    /** associates the row with a doc route sequence */
+    RouteStepKey: string;
+    /** Identifies the user */
+    ByUser: string;
+    /** The transmittal control number */
+    TransNumber: number;
+    /** Typically when entity was first recorded; some users may be able to override for some entities */
+    Created: Date;
+    /** not currently used */
+    TransStatus?: string | undefined;
+    /** Type of binary data (DOCX, PDF, etc) */
+    BinType?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
 }
 
-export class SelectCodeNode implements ISelectCodeNode {
+/** Attributes describing a member of a project team */
+export class Suggestion implements ISuggestion {
+    /** Key (empty if not applicable) */
     key?: string | undefined;
+    /** display  */
+    label?: string | undefined;
+    /** value (if key is specified, this is the display value and key is the data value) */
     value?: string | undefined;
 
-    constructor(data?: ISelectCodeNode) {
+    constructor(data?: ISuggestion) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6838,13 +7397,14 @@ export class SelectCodeNode implements ISelectCodeNode {
     init(_data?: any) {
         if (_data) {
             this.key = _data["key"];
+            this.label = _data["label"];
             this.value = _data["value"];
         }
     }
 
-    static fromJS(data: any): SelectCodeNode {
+    static fromJS(data: any): Suggestion {
         data = typeof data === 'object' ? data : {};
-        let result = new SelectCodeNode();
+        let result = new Suggestion();
         result.init(data);
         return result;
     }
@@ -6852,33 +7412,63 @@ export class SelectCodeNode implements ISelectCodeNode {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["key"] = this.key;
+        data["label"] = this.label;
         data["value"] = this.value;
         return data; 
     }
 
-    clone(): SelectCodeNode {
+    clone(): Suggestion {
         const json = this.toJSON();
-        let result = new SelectCodeNode();
+        let result = new Suggestion();
         result.init(json);
         return result;
     }
 }
 
-export interface ISelectCodeNode {
+/** Attributes describing a member of a project team */
+export interface ISuggestion {
+    /** Key (empty if not applicable) */
     key?: string | undefined;
+    /** display  */
+    label?: string | undefined;
+    /** value (if key is specified, this is the display value and key is the data value) */
     value?: string | undefined;
 }
 
-/** Data to apply to the route being patched */
-export class RouteActionData implements IRouteActionData {
-    /** New Status Code (A for approved, B for Back, etc) */
-    NewStatus?: string | undefined;
-    /** Response Code */
-    ResponseCode?: string | undefined;
-    /** Freeform text for response note */
-    ResponseText?: string | undefined;
+/** Describes a Menu or Action */
+export class MenuAction implements IMenuAction {
+    /** The menu or group that connects a series of actions */
+    MenuID?: string | undefined;
+    /** optional arguement */
+    CommandArgument?: string | undefined;
+    /** Key for this action, unique within MenuID */
+    CommandName?: string | undefined;
+    /** True if enabled */
+    Enabled!: boolean;
+    /** Actual Permits this user has for UCModule and UCFunction, when insufficient, enabled will be false */
+    HasPermits!: number;
+    /** suggested image */
+    IconImageUrl?: string | undefined;
+    /** Display Text */
+    ItemText?: string | undefined;
+    /** URL for action */
+    HRef?: string | undefined;
+    /** target for URL (dashboard, _blank, etc) */
+    HrefTarget?: string | undefined;
+    /** For a permission demand lookup */
+    UCModule?: string | undefined;
+    /** The function within the specified module */
+    UCFunction?: string | undefined;
+    /** Demanded permissions within UCModule and UCFunction  */
+    NeedPermits!: number;
+    /** Controls order of choices within MenuID */
+    MenuSeq!: number;
+    /** If not empty, a confirmation prompt */
+    Confirm?: string | undefined;
+    /** When true, and not enabled, do not bother showing */
+    HideifDisabled!: boolean;
 
-    constructor(data?: IRouteActionData) {
+    constructor(data?: IMenuAction) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6889,43 +7479,1191 @@ export class RouteActionData implements IRouteActionData {
 
     init(_data?: any) {
         if (_data) {
-            this.NewStatus = _data["NewStatus"];
-            this.ResponseCode = _data["ResponseCode"];
-            this.ResponseText = _data["ResponseText"];
+            this.MenuID = _data["MenuID"];
+            this.CommandArgument = _data["CommandArgument"];
+            this.CommandName = _data["CommandName"];
+            this.Enabled = _data["Enabled"];
+            this.HasPermits = _data["HasPermits"];
+            this.IconImageUrl = _data["IconImageUrl"];
+            this.ItemText = _data["ItemText"];
+            this.HRef = _data["HRef"];
+            this.HrefTarget = _data["HrefTarget"];
+            this.UCModule = _data["UCModule"];
+            this.UCFunction = _data["UCFunction"];
+            this.NeedPermits = _data["NeedPermits"];
+            this.MenuSeq = _data["MenuSeq"];
+            this.Confirm = _data["Confirm"];
+            this.HideifDisabled = _data["HideifDisabled"];
         }
     }
 
-    static fromJS(data: any): RouteActionData {
+    static fromJS(data: any): MenuAction {
         data = typeof data === 'object' ? data : {};
-        let result = new RouteActionData();
+        let result = new MenuAction();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["NewStatus"] = this.NewStatus;
-        data["ResponseCode"] = this.ResponseCode;
-        data["ResponseText"] = this.ResponseText;
+        data["MenuID"] = this.MenuID;
+        data["CommandArgument"] = this.CommandArgument;
+        data["CommandName"] = this.CommandName;
+        data["Enabled"] = this.Enabled;
+        data["HasPermits"] = this.HasPermits;
+        data["IconImageUrl"] = this.IconImageUrl;
+        data["ItemText"] = this.ItemText;
+        data["HRef"] = this.HRef;
+        data["HrefTarget"] = this.HrefTarget;
+        data["UCModule"] = this.UCModule;
+        data["UCFunction"] = this.UCFunction;
+        data["NeedPermits"] = this.NeedPermits;
+        data["MenuSeq"] = this.MenuSeq;
+        data["Confirm"] = this.Confirm;
+        data["HideifDisabled"] = this.HideifDisabled;
         return data; 
     }
 
-    clone(): RouteActionData {
+    clone(): MenuAction {
         const json = this.toJSON();
-        let result = new RouteActionData();
+        let result = new MenuAction();
         result.init(json);
         return result;
     }
 }
 
-/** Data to apply to the route being patched */
-export interface IRouteActionData {
-    /** New Status Code (A for approved, B for Back, etc) */
-    NewStatus?: string | undefined;
-    /** Response Code */
-    ResponseCode?: string | undefined;
-    /** Freeform text for response note */
-    ResponseText?: string | undefined;
+/** Describes a Menu or Action */
+export interface IMenuAction {
+    /** The menu or group that connects a series of actions */
+    MenuID?: string | undefined;
+    /** optional arguement */
+    CommandArgument?: string | undefined;
+    /** Key for this action, unique within MenuID */
+    CommandName?: string | undefined;
+    /** True if enabled */
+    Enabled: boolean;
+    /** Actual Permits this user has for UCModule and UCFunction, when insufficient, enabled will be false */
+    HasPermits: number;
+    /** suggested image */
+    IconImageUrl?: string | undefined;
+    /** Display Text */
+    ItemText?: string | undefined;
+    /** URL for action */
+    HRef?: string | undefined;
+    /** target for URL (dashboard, _blank, etc) */
+    HrefTarget?: string | undefined;
+    /** For a permission demand lookup */
+    UCModule?: string | undefined;
+    /** The function within the specified module */
+    UCFunction?: string | undefined;
+    /** Demanded permissions within UCModule and UCFunction  */
+    NeedPermits: number;
+    /** Controls order of choices within MenuID */
+    MenuSeq: number;
+    /** If not empty, a confirmation prompt */
+    Confirm?: string | undefined;
+    /** When true, and not enabled, do not bother showing */
+    HideifDisabled: boolean;
+}
+
+/** Legacy Site Authentication */
+export class SiteLogin implements ISiteLogin {
+    /** User ID EG: george@acme.com */
+    UID?: string | undefined;
+    /** Password */
+    PW?: string | undefined;
+    /** Set to TRUE if password has already been hashed (rare) */
+    IsHashed!: boolean;
+
+    constructor(data?: ISiteLogin) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.UID = _data["UID"];
+            this.PW = _data["PW"];
+            this.IsHashed = _data["IsHashed"];
+        }
+    }
+
+    static fromJS(data: any): SiteLogin {
+        data = typeof data === 'object' ? data : {};
+        let result = new SiteLogin();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UID"] = this.UID;
+        data["PW"] = this.PW;
+        data["IsHashed"] = this.IsHashed;
+        return data; 
+    }
+
+    clone(): SiteLogin {
+        const json = this.toJSON();
+        let result = new SiteLogin();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Legacy Site Authentication */
+export interface ISiteLogin {
+    /** User ID EG: george@acme.com */
+    UID?: string | undefined;
+    /** Password */
+    PW?: string | undefined;
+    /** Set to TRUE if password has already been hashed (rare) */
+    IsHashed: boolean;
+}
+
+/** Attributes describing the currently authenticated user */
+export class CurrentUser implements ICurrentUser {
+    /** User Key */
+    UserKey!: string;
+    /** Login ID for user in name@domain.com or similar format */
+    UserLoginName?: string | undefined;
+    /** Full name, eg John M. Smithe */
+    FullName?: string | undefined;
+    /** Email Address */
+    email?: string | undefined;
+    /** True if user will have to change PW soon */
+    PWMustChange!: boolean;
+    /** Three character time zone designation */
+    UserTimeZone?: string | undefined;
+    /** +/- Time offset from server */
+    TZOffset!: number;
+    /** Password Aging is enabled for this user */
+    PWAging!: boolean;
+    /** Account expiration is enabled for this user if account is not regularly used */
+    SlidingExpiration!: boolean;
+    /** When true, the user is currently locked out */
+    IsLockedOut!: boolean;
+    /** When the current password will expire if PWAging is true */
+    PWExpires?: Date | undefined;
+    /** When this account will expire */
+    Expiration?: Date | undefined;
+    /** When IsLockedOut, the lockout lasts until this date and time */
+    LockedOutUntil?: Date | undefined;
+    /** Text why the user is locked out (suitable for display) */
+    LockoutReason?: string | undefined;
+    /** How many bad password attempts in a row */
+    FailedLoginRun!: number;
+    /** When true, this exact user ID is integrated with Accounting */
+    SolomonUser!: boolean;
+    /** When true, this is the users first interactive session */
+    IsFirstLogin!: boolean;
+    /** Current IIS Session ID */
+    MasterSession?: string | undefined;
+    /** Guid for this session in xsfUserSession  */
+    UserSessionKey!: string;
+    /** URI for an image of this user */
+    PictureURL?: string | undefined;
+    /** hmmm */
+    PDSKey?: string | undefined;
+    /** This data is locked in memory */
+    IsDSProtected!: boolean;
+
+    constructor(data?: ICurrentUser) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.UserKey = _data["UserKey"];
+            this.UserLoginName = _data["UserLoginName"];
+            this.FullName = _data["FullName"];
+            this.email = _data["email"];
+            this.PWMustChange = _data["PWMustChange"];
+            this.UserTimeZone = _data["UserTimeZone"];
+            this.TZOffset = _data["TZOffset"];
+            this.PWAging = _data["PWAging"];
+            this.SlidingExpiration = _data["SlidingExpiration"];
+            this.IsLockedOut = _data["IsLockedOut"];
+            this.PWExpires = _data["PWExpires"] ? new Date(_data["PWExpires"].toString()) : <any>undefined;
+            this.Expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
+            this.LockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
+            this.LockoutReason = _data["LockoutReason"];
+            this.FailedLoginRun = _data["FailedLoginRun"];
+            this.SolomonUser = _data["SolomonUser"];
+            this.IsFirstLogin = _data["IsFirstLogin"];
+            this.MasterSession = _data["MasterSession"];
+            this.UserSessionKey = _data["UserSessionKey"];
+            this.PictureURL = _data["PictureURL"];
+            this.PDSKey = _data["PDSKey"];
+            this.IsDSProtected = _data["IsDSProtected"];
+        }
+    }
+
+    static fromJS(data: any): CurrentUser {
+        data = typeof data === 'object' ? data : {};
+        let result = new CurrentUser();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UserKey"] = this.UserKey;
+        data["UserLoginName"] = this.UserLoginName;
+        data["FullName"] = this.FullName;
+        data["email"] = this.email;
+        data["PWMustChange"] = this.PWMustChange;
+        data["UserTimeZone"] = this.UserTimeZone;
+        data["TZOffset"] = this.TZOffset;
+        data["PWAging"] = this.PWAging;
+        data["SlidingExpiration"] = this.SlidingExpiration;
+        data["IsLockedOut"] = this.IsLockedOut;
+        data["PWExpires"] = this.PWExpires ? this.PWExpires.toISOString() : <any>undefined;
+        data["Expiration"] = this.Expiration ? this.Expiration.toISOString() : <any>undefined;
+        data["LockedOutUntil"] = this.LockedOutUntil ? this.LockedOutUntil.toISOString() : <any>undefined;
+        data["LockoutReason"] = this.LockoutReason;
+        data["FailedLoginRun"] = this.FailedLoginRun;
+        data["SolomonUser"] = this.SolomonUser;
+        data["IsFirstLogin"] = this.IsFirstLogin;
+        data["MasterSession"] = this.MasterSession;
+        data["UserSessionKey"] = this.UserSessionKey;
+        data["PictureURL"] = this.PictureURL;
+        data["PDSKey"] = this.PDSKey;
+        data["IsDSProtected"] = this.IsDSProtected;
+        return data; 
+    }
+
+    clone(): CurrentUser {
+        const json = this.toJSON();
+        let result = new CurrentUser();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Attributes describing the currently authenticated user */
+export interface ICurrentUser {
+    /** User Key */
+    UserKey: string;
+    /** Login ID for user in name@domain.com or similar format */
+    UserLoginName?: string | undefined;
+    /** Full name, eg John M. Smithe */
+    FullName?: string | undefined;
+    /** Email Address */
+    email?: string | undefined;
+    /** True if user will have to change PW soon */
+    PWMustChange: boolean;
+    /** Three character time zone designation */
+    UserTimeZone?: string | undefined;
+    /** +/- Time offset from server */
+    TZOffset: number;
+    /** Password Aging is enabled for this user */
+    PWAging: boolean;
+    /** Account expiration is enabled for this user if account is not regularly used */
+    SlidingExpiration: boolean;
+    /** When true, the user is currently locked out */
+    IsLockedOut: boolean;
+    /** When the current password will expire if PWAging is true */
+    PWExpires?: Date | undefined;
+    /** When this account will expire */
+    Expiration?: Date | undefined;
+    /** When IsLockedOut, the lockout lasts until this date and time */
+    LockedOutUntil?: Date | undefined;
+    /** Text why the user is locked out (suitable for display) */
+    LockoutReason?: string | undefined;
+    /** How many bad password attempts in a row */
+    FailedLoginRun: number;
+    /** When true, this exact user ID is integrated with Accounting */
+    SolomonUser: boolean;
+    /** When true, this is the users first interactive session */
+    IsFirstLogin: boolean;
+    /** Current IIS Session ID */
+    MasterSession?: string | undefined;
+    /** Guid for this session in xsfUserSession  */
+    UserSessionKey: string;
+    /** URI for an image of this user */
+    PictureURL?: string | undefined;
+    /** hmmm */
+    PDSKey?: string | undefined;
+    /** This data is locked in memory */
+    IsDSProtected: boolean;
+}
+
+export class PasswordConfiguredOptions implements IPasswordConfiguredOptions {
+
+    constructor(data?: IPasswordConfiguredOptions) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): PasswordConfiguredOptions {
+        data = typeof data === 'object' ? data : {};
+        let result = new PasswordConfiguredOptions();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        return data; 
+    }
+
+    clone(): PasswordConfiguredOptions {
+        const json = this.toJSON();
+        let result = new PasswordConfiguredOptions();
+        result.init(json);
+        return result;
+    }
+}
+
+export interface IPasswordConfiguredOptions {
+}
+
+/** Permission required flag -- bit flags can be combined */
+export enum PermissionFlags {
+    None = 0,
+    Read = 1,
+    Insert = 2,
+    Update = 4,
+    Delete = 8,
+    Blanket = 16,
+}
+
+/** Describes permission being demanded and the context */
+export class PermissionContext implements IPermissionContext {
+    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
+    UCModule!: string;
+    /** Internal Name (see xsfUCFunction) */
+    UCFunction!: string;
+    /** Project ID  */
+    Project?: string | undefined;
+    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
+    DocMasterKey!: string;
+    /** Document Type */
+    DocTypeKey!: string;
+    /** Doc Reference (seldom used) */
+    DocReference!: string;
+    /** Bit Coded R I U D S  */
+    PermissionNeeded!: PermissionFlags;
+
+    constructor(data?: IPermissionContext) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.UCModule = _data["UCModule"];
+            this.UCFunction = _data["UCFunction"];
+            this.Project = _data["Project"];
+            this.DocMasterKey = _data["DocMasterKey"];
+            this.DocTypeKey = _data["DocTypeKey"];
+            this.DocReference = _data["DocReference"];
+            this.PermissionNeeded = _data["PermissionNeeded"];
+        }
+    }
+
+    static fromJS(data: any): PermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new PermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UCModule"] = this.UCModule;
+        data["UCFunction"] = this.UCFunction;
+        data["Project"] = this.Project;
+        data["DocMasterKey"] = this.DocMasterKey;
+        data["DocTypeKey"] = this.DocTypeKey;
+        data["DocReference"] = this.DocReference;
+        data["PermissionNeeded"] = this.PermissionNeeded;
+        return data; 
+    }
+
+    clone(): PermissionContext {
+        const json = this.toJSON();
+        let result = new PermissionContext();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes permission being demanded and the context */
+export interface IPermissionContext {
+    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
+    UCModule: string;
+    /** Internal Name (see xsfUCFunction) */
+    UCFunction: string;
+    /** Project ID  */
+    Project?: string | undefined;
+    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
+    DocMasterKey: string;
+    /** Document Type */
+    DocTypeKey: string;
+    /** Doc Reference (seldom used) */
+    DocReference: string;
+    /** Bit Coded R I U D S  */
+    PermissionNeeded: PermissionFlags;
+}
+
+export class TabStripDetails implements ITabStripDetails {
+    TabId!: number;
+    TabKey?: string | undefined;
+    TabText?: string | undefined;
+    TabOrder!: number;
+    TabType?: string | undefined;
+    AuthorizedRoles?: string | undefined;
+    LinkURL?: string | undefined;
+    Tip?: string | undefined;
+    IsVisible!: boolean;
+
+    constructor(data?: ITabStripDetails) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.TabId = _data["TabId"];
+            this.TabKey = _data["TabKey"];
+            this.TabText = _data["TabText"];
+            this.TabOrder = _data["TabOrder"];
+            this.TabType = _data["TabType"];
+            this.AuthorizedRoles = _data["AuthorizedRoles"];
+            this.LinkURL = _data["LinkURL"];
+            this.Tip = _data["Tip"];
+            this.IsVisible = _data["IsVisible"];
+        }
+    }
+
+    static fromJS(data: any): TabStripDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new TabStripDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["TabId"] = this.TabId;
+        data["TabKey"] = this.TabKey;
+        data["TabText"] = this.TabText;
+        data["TabOrder"] = this.TabOrder;
+        data["TabType"] = this.TabType;
+        data["AuthorizedRoles"] = this.AuthorizedRoles;
+        data["LinkURL"] = this.LinkURL;
+        data["Tip"] = this.Tip;
+        data["IsVisible"] = this.IsVisible;
+        return data; 
+    }
+
+    clone(): TabStripDetails {
+        const json = this.toJSON();
+        let result = new TabStripDetails();
+        result.init(json);
+        return result;
+    }
+}
+
+export interface ITabStripDetails {
+    TabId: number;
+    TabKey?: string | undefined;
+    TabText?: string | undefined;
+    TabOrder: number;
+    TabType?: string | undefined;
+    AuthorizedRoles?: string | undefined;
+    LinkURL?: string | undefined;
+    Tip?: string | undefined;
+    IsVisible: boolean;
+}
+
+/** Attributes describing a member of a project team */
+export class ProjectTeamMember implements IProjectTeamMember {
+    /** Primary Key */
+    UserProjectKey!: string;
+    /** Key of Team Member in contact table */
+    UserKey!: string;
+    /** Key of Role Responsibility on this team (UCRoleKey) */
+    Responsibility!: string;
+    /** Login name of the team member */
+    UserName?: string | undefined;
+    /** Company Name (Acme Inc) */
+    Company?: string | undefined;
+    /** Email address */
+    email?: string | undefined;
+    /** Phone chosen as primary on the contact details */
+    UsePhone?: string | undefined;
+    /** Freeform: how the team member designates this project   */
+    ContactProject?: string | undefined;
+    /** Role Description */
+    RoleDescription?: string | undefined;
+    /** Role Name (see Responsibility) */
+    RoleName?: string | undefined;
+    /** Link to likeness of this team member */
+    LikenessURL?: string | undefined;
+    /** Link to an external resource associated with this team member */
+    WebURL?: string | undefined;
+    /** By default, When the team member was added  */
+    Starting!: Date;
+    /** When the team member left (or was replaced) */
+    Ending!: Date;
+    /** When TRUE,  shown by default */
+    TeamList!: boolean;
+    /** When TRUE, is visible on this team even to users that do not have can see all */
+    IsPublic!: boolean;
+    /** When TRUE, this team member is active */
+    Active!: boolean;
+    /** Indicates if the user is always public (as opposed to public on this team: see IsPublic) */
+    UserNotPublic!: boolean;
+    /** When TRUE, the contact for this team member has been marked inactive */
+    UserNotActive!: boolean;
+    /** custom amount */
+    csAmount!: number;
+    /** custom amount */
+    csValue!: number;
+    /** custom quantity */
+    csQty!: number;
+    /** custom whole number */
+    csNumber!: number;
+    /** custom boolean */
+    csCheck!: boolean;
+    /** custom boolean */
+    csFlag!: boolean;
+    /** custom note */
+    csNote?: string | undefined;
+    /** custom code (potential code list lookup) */
+    csCode?: string | undefined;
+    /** custom string */
+    csString016?: string | undefined;
+    /** custom string */
+    csString030?: string | undefined;
+    /** custom string */
+    csString040?: string | undefined;
+    /** custom string */
+    csString050?: string | undefined;
+    /** custom string */
+    csString060?: string | undefined;
+    /** custom string */
+    csString080?: string | undefined;
+    /** custom string */
+    csString100?: string | undefined;
+    /** custom string */
+    csString120?: string | undefined;
+    /** custom string */
+    csString240?: string | undefined;
+    /** custom key - usually for a person */
+    csContactKey?: string | undefined;
+    /** custom key */
+    csKey?: string | undefined;
+    /** custom date */
+    csDate?: Date | undefined;
+    /** custom date */
+    csWhen?: Date | undefined;
+
+    constructor(data?: IProjectTeamMember) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.UserProjectKey = _data["UserProjectKey"];
+            this.UserKey = _data["UserKey"];
+            this.Responsibility = _data["Responsibility"];
+            this.UserName = _data["UserName"];
+            this.Company = _data["Company"];
+            this.email = _data["email"];
+            this.UsePhone = _data["UsePhone"];
+            this.ContactProject = _data["ContactProject"];
+            this.RoleDescription = _data["RoleDescription"];
+            this.RoleName = _data["RoleName"];
+            this.LikenessURL = _data["LikenessURL"];
+            this.WebURL = _data["WebURL"];
+            this.Starting = _data["Starting"] ? new Date(_data["Starting"].toString()) : <any>undefined;
+            this.Ending = _data["Ending"] ? new Date(_data["Ending"].toString()) : <any>undefined;
+            this.TeamList = _data["TeamList"];
+            this.IsPublic = _data["IsPublic"];
+            this.Active = _data["Active"];
+            this.UserNotPublic = _data["UserNotPublic"];
+            this.UserNotActive = _data["UserNotActive"];
+            this.csAmount = _data["csAmount"];
+            this.csValue = _data["csValue"];
+            this.csQty = _data["csQty"];
+            this.csNumber = _data["csNumber"];
+            this.csCheck = _data["csCheck"];
+            this.csFlag = _data["csFlag"];
+            this.csNote = _data["csNote"];
+            this.csCode = _data["csCode"];
+            this.csString016 = _data["csString016"];
+            this.csString030 = _data["csString030"];
+            this.csString040 = _data["csString040"];
+            this.csString050 = _data["csString050"];
+            this.csString060 = _data["csString060"];
+            this.csString080 = _data["csString080"];
+            this.csString100 = _data["csString100"];
+            this.csString120 = _data["csString120"];
+            this.csString240 = _data["csString240"];
+            this.csContactKey = _data["csContactKey"];
+            this.csKey = _data["csKey"];
+            this.csDate = _data["csDate"] ? new Date(_data["csDate"].toString()) : <any>undefined;
+            this.csWhen = _data["csWhen"] ? new Date(_data["csWhen"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ProjectTeamMember {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProjectTeamMember();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UserProjectKey"] = this.UserProjectKey;
+        data["UserKey"] = this.UserKey;
+        data["Responsibility"] = this.Responsibility;
+        data["UserName"] = this.UserName;
+        data["Company"] = this.Company;
+        data["email"] = this.email;
+        data["UsePhone"] = this.UsePhone;
+        data["ContactProject"] = this.ContactProject;
+        data["RoleDescription"] = this.RoleDescription;
+        data["RoleName"] = this.RoleName;
+        data["LikenessURL"] = this.LikenessURL;
+        data["WebURL"] = this.WebURL;
+        data["Starting"] = this.Starting ? this.Starting.toISOString() : <any>undefined;
+        data["Ending"] = this.Ending ? this.Ending.toISOString() : <any>undefined;
+        data["TeamList"] = this.TeamList;
+        data["IsPublic"] = this.IsPublic;
+        data["Active"] = this.Active;
+        data["UserNotPublic"] = this.UserNotPublic;
+        data["UserNotActive"] = this.UserNotActive;
+        data["csAmount"] = this.csAmount;
+        data["csValue"] = this.csValue;
+        data["csQty"] = this.csQty;
+        data["csNumber"] = this.csNumber;
+        data["csCheck"] = this.csCheck;
+        data["csFlag"] = this.csFlag;
+        data["csNote"] = this.csNote;
+        data["csCode"] = this.csCode;
+        data["csString016"] = this.csString016;
+        data["csString030"] = this.csString030;
+        data["csString040"] = this.csString040;
+        data["csString050"] = this.csString050;
+        data["csString060"] = this.csString060;
+        data["csString080"] = this.csString080;
+        data["csString100"] = this.csString100;
+        data["csString120"] = this.csString120;
+        data["csString240"] = this.csString240;
+        data["csContactKey"] = this.csContactKey;
+        data["csKey"] = this.csKey;
+        data["csDate"] = this.csDate ? this.csDate.toISOString() : <any>undefined;
+        data["csWhen"] = this.csWhen ? this.csWhen.toISOString() : <any>undefined;
+        return data; 
+    }
+
+    clone(): ProjectTeamMember {
+        const json = this.toJSON();
+        let result = new ProjectTeamMember();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Attributes describing a member of a project team */
+export interface IProjectTeamMember {
+    /** Primary Key */
+    UserProjectKey: string;
+    /** Key of Team Member in contact table */
+    UserKey: string;
+    /** Key of Role Responsibility on this team (UCRoleKey) */
+    Responsibility: string;
+    /** Login name of the team member */
+    UserName?: string | undefined;
+    /** Company Name (Acme Inc) */
+    Company?: string | undefined;
+    /** Email address */
+    email?: string | undefined;
+    /** Phone chosen as primary on the contact details */
+    UsePhone?: string | undefined;
+    /** Freeform: how the team member designates this project   */
+    ContactProject?: string | undefined;
+    /** Role Description */
+    RoleDescription?: string | undefined;
+    /** Role Name (see Responsibility) */
+    RoleName?: string | undefined;
+    /** Link to likeness of this team member */
+    LikenessURL?: string | undefined;
+    /** Link to an external resource associated with this team member */
+    WebURL?: string | undefined;
+    /** By default, When the team member was added  */
+    Starting: Date;
+    /** When the team member left (or was replaced) */
+    Ending: Date;
+    /** When TRUE,  shown by default */
+    TeamList: boolean;
+    /** When TRUE, is visible on this team even to users that do not have can see all */
+    IsPublic: boolean;
+    /** When TRUE, this team member is active */
+    Active: boolean;
+    /** Indicates if the user is always public (as opposed to public on this team: see IsPublic) */
+    UserNotPublic: boolean;
+    /** When TRUE, the contact for this team member has been marked inactive */
+    UserNotActive: boolean;
+    /** custom amount */
+    csAmount: number;
+    /** custom amount */
+    csValue: number;
+    /** custom quantity */
+    csQty: number;
+    /** custom whole number */
+    csNumber: number;
+    /** custom boolean */
+    csCheck: boolean;
+    /** custom boolean */
+    csFlag: boolean;
+    /** custom note */
+    csNote?: string | undefined;
+    /** custom code (potential code list lookup) */
+    csCode?: string | undefined;
+    /** custom string */
+    csString016?: string | undefined;
+    /** custom string */
+    csString030?: string | undefined;
+    /** custom string */
+    csString040?: string | undefined;
+    /** custom string */
+    csString050?: string | undefined;
+    /** custom string */
+    csString060?: string | undefined;
+    /** custom string */
+    csString080?: string | undefined;
+    /** custom string */
+    csString100?: string | undefined;
+    /** custom string */
+    csString120?: string | undefined;
+    /** custom string */
+    csString240?: string | undefined;
+    /** custom key - usually for a person */
+    csContactKey?: string | undefined;
+    /** custom key */
+    csKey?: string | undefined;
+    /** custom date */
+    csDate?: Date | undefined;
+    /** custom date */
+    csWhen?: Date | undefined;
+}
+
+/** Summary of Project Process (Document) types */
+export class TypeSummary implements ITypeSummary {
+    /** Key for Process Type */
+    DocTypeKey!: string;
+    /** String Process (Doc Type) Name */
+    DocType?: string | undefined;
+    /** Number of documents currently open */
+    cnt_open!: number;
+    /** Number of documents closed */
+    cnt_closed!: number;
+    /** Number of documents overdue */
+    cnt_overdue!: number;
+    /** Number of documents due soon */
+    cnt_DueSoon!: number;
+    /** Number of days tile due */
+    DaysTillDue!: number;
+    /** User has permission to create  */
+    CanAdd!: boolean;
+
+    constructor(data?: ITypeSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.DocTypeKey = _data["DocTypeKey"];
+            this.DocType = _data["DocType"];
+            this.cnt_open = _data["cnt_open"];
+            this.cnt_closed = _data["cnt_closed"];
+            this.cnt_overdue = _data["cnt_overdue"];
+            this.cnt_DueSoon = _data["cnt_DueSoon"];
+            this.DaysTillDue = _data["DaysTillDue"];
+            this.CanAdd = _data["CanAdd"];
+        }
+    }
+
+    static fromJS(data: any): TypeSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new TypeSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["DocTypeKey"] = this.DocTypeKey;
+        data["DocType"] = this.DocType;
+        data["cnt_open"] = this.cnt_open;
+        data["cnt_closed"] = this.cnt_closed;
+        data["cnt_overdue"] = this.cnt_overdue;
+        data["cnt_DueSoon"] = this.cnt_DueSoon;
+        data["DaysTillDue"] = this.DaysTillDue;
+        data["CanAdd"] = this.CanAdd;
+        return data; 
+    }
+
+    clone(): TypeSummary {
+        const json = this.toJSON();
+        let result = new TypeSummary();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Summary of Project Process (Document) types */
+export interface ITypeSummary {
+    /** Key for Process Type */
+    DocTypeKey: string;
+    /** String Process (Doc Type) Name */
+    DocType?: string | undefined;
+    /** Number of documents currently open */
+    cnt_open: number;
+    /** Number of documents closed */
+    cnt_closed: number;
+    /** Number of documents overdue */
+    cnt_overdue: number;
+    /** Number of documents due soon */
+    cnt_DueSoon: number;
+    /** Number of days tile due */
+    DaysTillDue: number;
+    /** User has permission to create  */
+    CanAdd: boolean;
+}
+
+/** Process Document on a Project */
+export class ProjectDocsOfType implements IProjectDocsOfType {
+    /** Key to Document (required to open) */
+    DocMasterKey!: string;
+    /** Type of Process */
+    DocTypeKey!: string;
+    /** Key to Process Reference */
+    DocReference!: string;
+    /** Document Date (header) */
+    DocDate!: Date;
+    /** Document Number (header; usually read only) */
+    DocNo?: string | undefined;
+    /** Batch Number (often unused) */
+    DocBatchNo?: string | undefined;
+    /** Source Document Number (eg: invoice number for a vendor invoice) */
+    SourceDocNo?: string | undefined;
+    /** Document Title */
+    Title?: string | undefined;
+    /** Document Priority 1==High */
+    Priority!: number;
+    /** When true, document is confidential (only name routes have access) */
+    Confidential!: boolean;
+    /** Key to Contact document was "from") */
+    FromUser!: string;
+    /** Resolved name of user the Document is "from" */
+    SortFrom?: string | undefined;
+    /** Key to contact "Responsible" - used for Ball in Court and other use cases */
+    ResponsibleParty!: string;
+    /** Resolved name of Responsible Party */
+    SortResp?: string | undefined;
+    /** Key for Contact, from SourceContact or ResponsibleParty or Doc Creator  */
+    Company!: string;
+    /** Resolved Company Name  of the source Contact  */
+    SortCompany?: string | undefined;
+    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
+    ToUser?: string | undefined;
+    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person) */
+    SortTo?: string | undefined;
+    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
+    Author?: string | undefined;
+    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person)   */
+    SortAuthor?: string | undefined;
+    /** When the document/process is due */
+    Due!: Date;
+    /** when the document/process was approved */
+    Signoff?: Date | undefined;
+    /** when the document/process was closed */
+    Closed?: Date | undefined;
+    /** Project ID */
+    Project?: string | undefined;
+    /** check this */
+    SpecSection?: string | undefined;
+    /** Subcontract number (shared by commitment, payment requests, CCO, receipts, etc) */
+    SubContract?: string | undefined;
+    /** Flag indicating pay control option (auto, warn, block) */
+    PayControl?: string | undefined;
+    /** Subtype code */
+    Subtype?: string | undefined;
+    /** Resolved name of subtype */
+    SubtypeDescription?: string | undefined;
+    /** Status Code */
+    Status?: string | undefined;
+    /** Value of document/process - usually sum of Expense Amount on items (see DocFormula rule group) */
+    CostImpact!: number;
+    /** Custome Amount */
+    csAmount!: number;
+    /** Subsegment code */
+    Subsegment?: string | undefined;
+    /** Contract type code */
+    ContractType?: string | undefined;
+    /** Source date for document (eg invoice date) */
+    SourceDate?: Date | undefined;
+    /** Payment Item Number */
+    PayItemNumber?: string | undefined;
+    /** External Doc Number */
+    ExternalDocNo?: string | undefined;
+    /** Specification (document header) */
+    Specification?: string | undefined;
+    /** Key of Primary Source Contact of document (eq vendor on commitments and related docs) */
+    SourceContact!: string;
+    /** Current Routing sequence (zero if route is complete) */
+    CurrentSeq!: number;
+    /** Number of stages of routing  */
+    MaxStage!: number;
+    /** How many files are attached */
+    FilesAttached!: number;
+
+    constructor(data?: IProjectDocsOfType) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.DocMasterKey = _data["DocMasterKey"];
+            this.DocTypeKey = _data["DocTypeKey"];
+            this.DocReference = _data["DocReference"];
+            this.DocDate = _data["DocDate"] ? new Date(_data["DocDate"].toString()) : <any>undefined;
+            this.DocNo = _data["DocNo"];
+            this.DocBatchNo = _data["DocBatchNo"];
+            this.SourceDocNo = _data["SourceDocNo"];
+            this.Title = _data["Title"];
+            this.Priority = _data["Priority"];
+            this.Confidential = _data["Confidential"];
+            this.FromUser = _data["FromUser"];
+            this.SortFrom = _data["SortFrom"];
+            this.ResponsibleParty = _data["ResponsibleParty"];
+            this.SortResp = _data["SortResp"];
+            this.Company = _data["Company"];
+            this.SortCompany = _data["SortCompany"];
+            this.ToUser = _data["ToUser"];
+            this.SortTo = _data["SortTo"];
+            this.Author = _data["Author"];
+            this.SortAuthor = _data["SortAuthor"];
+            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
+            this.Signoff = _data["Signoff"] ? new Date(_data["Signoff"].toString()) : <any>undefined;
+            this.Closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
+            this.Project = _data["Project"];
+            this.SpecSection = _data["SpecSection"];
+            this.SubContract = _data["SubContract"];
+            this.PayControl = _data["PayControl"];
+            this.Subtype = _data["Subtype"];
+            this.SubtypeDescription = _data["SubtypeDescription"];
+            this.Status = _data["Status"];
+            this.CostImpact = _data["CostImpact"];
+            this.csAmount = _data["csAmount"];
+            this.Subsegment = _data["Subsegment"];
+            this.ContractType = _data["ContractType"];
+            this.SourceDate = _data["SourceDate"] ? new Date(_data["SourceDate"].toString()) : <any>undefined;
+            this.PayItemNumber = _data["PayItemNumber"];
+            this.ExternalDocNo = _data["ExternalDocNo"];
+            this.Specification = _data["Specification"];
+            this.SourceContact = _data["SourceContact"];
+            this.CurrentSeq = _data["CurrentSeq"];
+            this.MaxStage = _data["MaxStage"];
+            this.FilesAttached = _data["FilesAttached"];
+        }
+    }
+
+    static fromJS(data: any): ProjectDocsOfType {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProjectDocsOfType();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["DocMasterKey"] = this.DocMasterKey;
+        data["DocTypeKey"] = this.DocTypeKey;
+        data["DocReference"] = this.DocReference;
+        data["DocDate"] = this.DocDate ? this.DocDate.toISOString() : <any>undefined;
+        data["DocNo"] = this.DocNo;
+        data["DocBatchNo"] = this.DocBatchNo;
+        data["SourceDocNo"] = this.SourceDocNo;
+        data["Title"] = this.Title;
+        data["Priority"] = this.Priority;
+        data["Confidential"] = this.Confidential;
+        data["FromUser"] = this.FromUser;
+        data["SortFrom"] = this.SortFrom;
+        data["ResponsibleParty"] = this.ResponsibleParty;
+        data["SortResp"] = this.SortResp;
+        data["Company"] = this.Company;
+        data["SortCompany"] = this.SortCompany;
+        data["ToUser"] = this.ToUser;
+        data["SortTo"] = this.SortTo;
+        data["Author"] = this.Author;
+        data["SortAuthor"] = this.SortAuthor;
+        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
+        data["Signoff"] = this.Signoff ? this.Signoff.toISOString() : <any>undefined;
+        data["Closed"] = this.Closed ? this.Closed.toISOString() : <any>undefined;
+        data["Project"] = this.Project;
+        data["SpecSection"] = this.SpecSection;
+        data["SubContract"] = this.SubContract;
+        data["PayControl"] = this.PayControl;
+        data["Subtype"] = this.Subtype;
+        data["SubtypeDescription"] = this.SubtypeDescription;
+        data["Status"] = this.Status;
+        data["CostImpact"] = this.CostImpact;
+        data["csAmount"] = this.csAmount;
+        data["Subsegment"] = this.Subsegment;
+        data["ContractType"] = this.ContractType;
+        data["SourceDate"] = this.SourceDate ? this.SourceDate.toISOString() : <any>undefined;
+        data["PayItemNumber"] = this.PayItemNumber;
+        data["ExternalDocNo"] = this.ExternalDocNo;
+        data["Specification"] = this.Specification;
+        data["SourceContact"] = this.SourceContact;
+        data["CurrentSeq"] = this.CurrentSeq;
+        data["MaxStage"] = this.MaxStage;
+        data["FilesAttached"] = this.FilesAttached;
+        return data; 
+    }
+
+    clone(): ProjectDocsOfType {
+        const json = this.toJSON();
+        let result = new ProjectDocsOfType();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Process Document on a Project */
+export interface IProjectDocsOfType {
+    /** Key to Document (required to open) */
+    DocMasterKey: string;
+    /** Type of Process */
+    DocTypeKey: string;
+    /** Key to Process Reference */
+    DocReference: string;
+    /** Document Date (header) */
+    DocDate: Date;
+    /** Document Number (header; usually read only) */
+    DocNo?: string | undefined;
+    /** Batch Number (often unused) */
+    DocBatchNo?: string | undefined;
+    /** Source Document Number (eg: invoice number for a vendor invoice) */
+    SourceDocNo?: string | undefined;
+    /** Document Title */
+    Title?: string | undefined;
+    /** Document Priority 1==High */
+    Priority: number;
+    /** When true, document is confidential (only name routes have access) */
+    Confidential: boolean;
+    /** Key to Contact document was "from") */
+    FromUser: string;
+    /** Resolved name of user the Document is "from" */
+    SortFrom?: string | undefined;
+    /** Key to contact "Responsible" - used for Ball in Court and other use cases */
+    ResponsibleParty: string;
+    /** Resolved name of Responsible Party */
+    SortResp?: string | undefined;
+    /** Key for Contact, from SourceContact or ResponsibleParty or Doc Creator  */
+    Company: string;
+    /** Resolved Company Name  of the source Contact  */
+    SortCompany?: string | undefined;
+    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
+    ToUser?: string | undefined;
+    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person) */
+    SortTo?: string | undefined;
+    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
+    Author?: string | undefined;
+    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person)   */
+    SortAuthor?: string | undefined;
+    /** When the document/process is due */
+    Due: Date;
+    /** when the document/process was approved */
+    Signoff?: Date | undefined;
+    /** when the document/process was closed */
+    Closed?: Date | undefined;
+    /** Project ID */
+    Project?: string | undefined;
+    /** check this */
+    SpecSection?: string | undefined;
+    /** Subcontract number (shared by commitment, payment requests, CCO, receipts, etc) */
+    SubContract?: string | undefined;
+    /** Flag indicating pay control option (auto, warn, block) */
+    PayControl?: string | undefined;
+    /** Subtype code */
+    Subtype?: string | undefined;
+    /** Resolved name of subtype */
+    SubtypeDescription?: string | undefined;
+    /** Status Code */
+    Status?: string | undefined;
+    /** Value of document/process - usually sum of Expense Amount on items (see DocFormula rule group) */
+    CostImpact: number;
+    /** Custome Amount */
+    csAmount: number;
+    /** Subsegment code */
+    Subsegment?: string | undefined;
+    /** Contract type code */
+    ContractType?: string | undefined;
+    /** Source date for document (eg invoice date) */
+    SourceDate?: Date | undefined;
+    /** Payment Item Number */
+    PayItemNumber?: string | undefined;
+    /** External Doc Number */
+    ExternalDocNo?: string | undefined;
+    /** Specification (document header) */
+    Specification?: string | undefined;
+    /** Key of Primary Source Contact of document (eq vendor on commitments and related docs) */
+    SourceContact: string;
+    /** Current Routing sequence (zero if route is complete) */
+    CurrentSeq: number;
+    /** Number of stages of routing  */
+    MaxStage: number;
+    /** How many files are attached */
+    FilesAttached: number;
 }
 
 /** Primary Summary */
@@ -7101,54 +8839,24 @@ export interface IProjectSummary {
     UserList: boolean;
 }
 
-/** Describes an Alert Condition */
-export class UserAlert implements IUserAlert {
-    /** Key for Alert */
-    AlertKey!: string;
-    /** Key for User for whom the alert was generated */
-    UserKey!: string;
-    /** Document about which the alert was generated */
-    DocMasterKey!: string;
-    /** Status of Alert (New, etc) */
-    Status?: string | undefined;
-    /** Notification type (M for email) */
-    NotificationType?: string | undefined;
-    /** When this alert was created.  Alerts automatically expire in ??? days */
-    Created!: Date;
-    /** For Email Notification Type, when was the email sent */
-    Notified!: Date;
-    /** When was the alert viewed */
-    Viewed!: Date;
-    /** When action is due */
-    Due!: Date;
-    /** When closed (from document) */
-    Closed!: Date;
-    /** Short Description of alert */
-    Description?: string | undefined;
-    /** Long description (generated using AlertText rules) */
-    AlertText?: string | undefined;
-    /** Project ID */
-    Project?: string | undefined;
-    /** Source of alert (ATC, CloudStorage, etc) */
-    Source?: string | undefined;
-    /** Key from source to indentify its alerts */
-    SourceKey?: string | undefined;
-    /** Extra info for categorization */
-    Info1?: string | undefined;
-    /** Extra info 2 */
-    Info2?: string | undefined;
-    /** Files attached to document */
-    FilesAttached!: number;
-    /** unused */
-    MsgType?: string | undefined;
-    /** unused */
-    MsgKey?: string | undefined;
-    /** unused */
-    MsgSuffix?: string | undefined;
-    /** When true, this alert was from an external source (seldom used) */
-    SIVAlert!: boolean;
+/** Attributes describing a choice defined in Code Maintenance - for context UI */
+export class CodeChoice implements ICodeChoice {
+    /** Name for a set of choices */
+    SetName!: string;
+    /** Code */
+    Code!: string;
+    /** Display Value  */
+    Description!: string;
+    /** For cascading codes, names the next code set */
+    NextSet?: string | undefined;
+    /** True if code is still active */
+    Active!: boolean;
+    /** True if code is allowed for new records */
+    OnAdd!: boolean;
+    /** Code Flag - use varies by code set */
+    CodeFlag!: boolean;
 
-    constructor(data?: IUserAlert) {
+    constructor(data?: ICodeChoice) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -7159,119 +8867,59 @@ export class UserAlert implements IUserAlert {
 
     init(_data?: any) {
         if (_data) {
-            this.AlertKey = _data["AlertKey"];
-            this.UserKey = _data["UserKey"];
-            this.DocMasterKey = _data["DocMasterKey"];
-            this.Status = _data["Status"];
-            this.NotificationType = _data["NotificationType"];
-            this.Created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
-            this.Notified = _data["Notified"] ? new Date(_data["Notified"].toString()) : <any>undefined;
-            this.Viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
-            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
-            this.Closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
+            this.SetName = _data["SetName"];
+            this.Code = _data["Code"];
             this.Description = _data["Description"];
-            this.AlertText = _data["AlertText"];
-            this.Project = _data["Project"];
-            this.Source = _data["Source"];
-            this.SourceKey = _data["SourceKey"];
-            this.Info1 = _data["Info1"];
-            this.Info2 = _data["Info2"];
-            this.FilesAttached = _data["FilesAttached"];
-            this.MsgType = _data["MsgType"];
-            this.MsgKey = _data["MsgKey"];
-            this.MsgSuffix = _data["MsgSuffix"];
-            this.SIVAlert = _data["SIVAlert"];
+            this.NextSet = _data["NextSet"];
+            this.Active = _data["Active"];
+            this.OnAdd = _data["OnAdd"];
+            this.CodeFlag = _data["CodeFlag"];
         }
     }
 
-    static fromJS(data: any): UserAlert {
+    static fromJS(data: any): CodeChoice {
         data = typeof data === 'object' ? data : {};
-        let result = new UserAlert();
+        let result = new CodeChoice();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["AlertKey"] = this.AlertKey;
-        data["UserKey"] = this.UserKey;
-        data["DocMasterKey"] = this.DocMasterKey;
-        data["Status"] = this.Status;
-        data["NotificationType"] = this.NotificationType;
-        data["Created"] = this.Created ? this.Created.toISOString() : <any>undefined;
-        data["Notified"] = this.Notified ? this.Notified.toISOString() : <any>undefined;
-        data["Viewed"] = this.Viewed ? this.Viewed.toISOString() : <any>undefined;
-        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
-        data["Closed"] = this.Closed ? this.Closed.toISOString() : <any>undefined;
+        data["SetName"] = this.SetName;
+        data["Code"] = this.Code;
         data["Description"] = this.Description;
-        data["AlertText"] = this.AlertText;
-        data["Project"] = this.Project;
-        data["Source"] = this.Source;
-        data["SourceKey"] = this.SourceKey;
-        data["Info1"] = this.Info1;
-        data["Info2"] = this.Info2;
-        data["FilesAttached"] = this.FilesAttached;
-        data["MsgType"] = this.MsgType;
-        data["MsgKey"] = this.MsgKey;
-        data["MsgSuffix"] = this.MsgSuffix;
-        data["SIVAlert"] = this.SIVAlert;
+        data["NextSet"] = this.NextSet;
+        data["Active"] = this.Active;
+        data["OnAdd"] = this.OnAdd;
+        data["CodeFlag"] = this.CodeFlag;
         return data; 
     }
 
-    clone(): UserAlert {
+    clone(): CodeChoice {
         const json = this.toJSON();
-        let result = new UserAlert();
+        let result = new CodeChoice();
         result.init(json);
         return result;
     }
 }
 
-/** Describes an Alert Condition */
-export interface IUserAlert {
-    /** Key for Alert */
-    AlertKey: string;
-    /** Key for User for whom the alert was generated */
-    UserKey: string;
-    /** Document about which the alert was generated */
-    DocMasterKey: string;
-    /** Status of Alert (New, etc) */
-    Status?: string | undefined;
-    /** Notification type (M for email) */
-    NotificationType?: string | undefined;
-    /** When this alert was created.  Alerts automatically expire in ??? days */
-    Created: Date;
-    /** For Email Notification Type, when was the email sent */
-    Notified: Date;
-    /** When was the alert viewed */
-    Viewed: Date;
-    /** When action is due */
-    Due: Date;
-    /** When closed (from document) */
-    Closed: Date;
-    /** Short Description of alert */
-    Description?: string | undefined;
-    /** Long description (generated using AlertText rules) */
-    AlertText?: string | undefined;
-    /** Project ID */
-    Project?: string | undefined;
-    /** Source of alert (ATC, CloudStorage, etc) */
-    Source?: string | undefined;
-    /** Key from source to indentify its alerts */
-    SourceKey?: string | undefined;
-    /** Extra info for categorization */
-    Info1?: string | undefined;
-    /** Extra info 2 */
-    Info2?: string | undefined;
-    /** Files attached to document */
-    FilesAttached: number;
-    /** unused */
-    MsgType?: string | undefined;
-    /** unused */
-    MsgKey?: string | undefined;
-    /** unused */
-    MsgSuffix?: string | undefined;
-    /** When true, this alert was from an external source (seldom used) */
-    SIVAlert: boolean;
+/** Attributes describing a choice defined in Code Maintenance - for context UI */
+export interface ICodeChoice {
+    /** Name for a set of choices */
+    SetName: string;
+    /** Code */
+    Code: string;
+    /** Display Value  */
+    Description: string;
+    /** For cascading codes, names the next code set */
+    NextSet?: string | undefined;
+    /** True if code is still active */
+    Active: boolean;
+    /** True if code is allowed for new records */
+    OnAdd: boolean;
+    /** Code Flag - use varies by code set */
+    CodeFlag: boolean;
 }
 
 /** Describes a Part, including the fields available to this user */
@@ -7781,26 +9429,25 @@ export interface IUIDisplayFilter {
     Overlay?: string | undefined;
 }
 
-/** Summary of Project Process (Document) types */
-export class TypeSummary implements ITypeSummary {
-    /** Key for Process Type */
-    DocTypeKey!: string;
-    /** String Process (Doc Type) Name */
-    DocType?: string | undefined;
-    /** Number of documents currently open */
-    cnt_open!: number;
-    /** Number of documents closed */
-    cnt_closed!: number;
-    /** Number of documents overdue */
-    cnt_overdue!: number;
-    /** Number of documents due soon */
-    cnt_DueSoon!: number;
-    /** Number of days tile due */
-    DaysTillDue!: number;
-    /** User has permission to create  */
-    CanAdd!: boolean;
+/** Primary Site Weather Now */
+export class ProjKPIFact implements IProjKPIFact {
+    /** Target which KPI column */
+    Column?: string | undefined;
+    /** Label  */
+    Label?: string | undefined;
+    /** Value to display */
+    Value?: string | undefined;
+    /** Set if value has a click action */
+    Action?: string | undefined;
+    /** Display Format (C2) */
+    DForm?: string | undefined;
+    /** CSS to apply */
+    TForm?: string | undefined;
+    Negative!: boolean;
+    /** UI CFG Item Name */
+    ItemName?: string | undefined;
 
-    constructor(data?: ITypeSummary) {
+    constructor(data?: IProjKPIFact) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -7811,607 +9458,104 @@ export class TypeSummary implements ITypeSummary {
 
     init(_data?: any) {
         if (_data) {
-            this.DocTypeKey = _data["DocTypeKey"];
-            this.DocType = _data["DocType"];
-            this.cnt_open = _data["cnt_open"];
-            this.cnt_closed = _data["cnt_closed"];
-            this.cnt_overdue = _data["cnt_overdue"];
-            this.cnt_DueSoon = _data["cnt_DueSoon"];
-            this.DaysTillDue = _data["DaysTillDue"];
-            this.CanAdd = _data["CanAdd"];
+            this.Column = _data["Column"];
+            this.Label = _data["Label"];
+            this.Value = _data["Value"];
+            this.Action = _data["Action"];
+            this.DForm = _data["DForm"];
+            this.TForm = _data["TForm"];
+            this.Negative = _data["Negative"];
+            this.ItemName = _data["ItemName"];
         }
     }
 
-    static fromJS(data: any): TypeSummary {
+    static fromJS(data: any): ProjKPIFact {
         data = typeof data === 'object' ? data : {};
-        let result = new TypeSummary();
+        let result = new ProjKPIFact();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["DocTypeKey"] = this.DocTypeKey;
-        data["DocType"] = this.DocType;
-        data["cnt_open"] = this.cnt_open;
-        data["cnt_closed"] = this.cnt_closed;
-        data["cnt_overdue"] = this.cnt_overdue;
-        data["cnt_DueSoon"] = this.cnt_DueSoon;
-        data["DaysTillDue"] = this.DaysTillDue;
-        data["CanAdd"] = this.CanAdd;
+        data["Column"] = this.Column;
+        data["Label"] = this.Label;
+        data["Value"] = this.Value;
+        data["Action"] = this.Action;
+        data["DForm"] = this.DForm;
+        data["TForm"] = this.TForm;
+        data["Negative"] = this.Negative;
+        data["ItemName"] = this.ItemName;
         return data; 
     }
 
-    clone(): TypeSummary {
+    clone(): ProjKPIFact {
         const json = this.toJSON();
-        let result = new TypeSummary();
+        let result = new ProjKPIFact();
         result.init(json);
         return result;
     }
 }
 
-/** Summary of Project Process (Document) types */
-export interface ITypeSummary {
-    /** Key for Process Type */
-    DocTypeKey: string;
-    /** String Process (Doc Type) Name */
-    DocType?: string | undefined;
-    /** Number of documents currently open */
-    cnt_open: number;
-    /** Number of documents closed */
-    cnt_closed: number;
-    /** Number of documents overdue */
-    cnt_overdue: number;
-    /** Number of documents due soon */
-    cnt_DueSoon: number;
-    /** Number of days tile due */
-    DaysTillDue: number;
-    /** User has permission to create  */
-    CanAdd: boolean;
+/** Primary Site Weather Now */
+export interface IProjKPIFact {
+    /** Target which KPI column */
+    Column?: string | undefined;
+    /** Label  */
+    Label?: string | undefined;
+    /** Value to display */
+    Value?: string | undefined;
+    /** Set if value has a click action */
+    Action?: string | undefined;
+    /** Display Format (C2) */
+    DForm?: string | undefined;
+    /** CSS to apply */
+    TForm?: string | undefined;
+    Negative: boolean;
+    /** UI CFG Item Name */
+    ItemName?: string | undefined;
 }
 
-/** Process Document on a Project */
-export class ProjectDocsOfType implements IProjectDocsOfType {
-    /** Key to Document (required to open) */
-    DocMasterKey!: string;
-    /** Type of Process */
-    DocTypeKey!: string;
-    /** Key to Process Reference */
-    DocReference!: string;
-    /** Document Date (header) */
-    DocDate!: Date;
-    /** Document Number (header; usually read only) */
-    DocNo?: string | undefined;
-    /** Batch Number (often unused) */
-    DocBatchNo?: string | undefined;
-    /** Source Document Number (eg: invoice number for a vendor invoice) */
-    SourceDocNo?: string | undefined;
-    /** Document Title */
-    Title?: string | undefined;
-    /** Document Priority 1==High */
-    Priority!: number;
-    /** When true, document is confidential (only name routes have access) */
-    Confidential!: boolean;
-    /** Key to Contact document was "from") */
-    FromUser!: string;
-    /** Resolved name of user the Document is "from" */
-    SortFrom?: string | undefined;
-    /** Key to contact "Responsible" - used for Ball in Court and other use cases */
-    ResponsibleParty!: string;
-    /** Resolved name of Responsible Party */
-    SortResp?: string | undefined;
-    /** Key for Contact, from SourceContact or ResponsibleParty or Doc Creator  */
-    Company!: string;
-    /** Resolved Company Name  of the source Contact  */
-    SortCompany?: string | undefined;
-    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
-    ToUser?: string | undefined;
-    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person) */
-    SortTo?: string | undefined;
-    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
-    Author?: string | undefined;
-    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person)   */
-    SortAuthor?: string | undefined;
-    /** When the document/process is due */
-    Due!: Date;
-    /** when the document/process was approved */
-    Signoff?: Date | undefined;
-    /** when the document/process was closed */
-    Closed?: Date | undefined;
-    /** Project ID */
-    Project?: string | undefined;
-    /** check this */
-    SpecSection?: string | undefined;
-    /** Subcontract number (shared by commitment, payment requests, CCO, receipts, etc) */
-    SubContract?: string | undefined;
-    /** Flag indicating pay control option (auto, warn, block) */
-    PayControl?: string | undefined;
-    /** Subtype code */
-    Subtype?: string | undefined;
-    /** Resolved name of subtype */
-    SubtypeDescription?: string | undefined;
-    /** Status Code */
-    Status?: string | undefined;
-    /** Value of document/process - usually sum of Expense Amount on items (see DocFormula rule group) */
-    CostImpact!: number;
-    /** Custome Amount */
-    csAmount!: number;
-    /** Subsegment code */
-    Subsegment?: string | undefined;
-    /** Contract type code */
-    ContractType?: string | undefined;
-    /** Source date for document (eg invoice date) */
-    SourceDate?: Date | undefined;
-    /** Payment Item Number */
-    PayItemNumber?: string | undefined;
-    /** External Doc Number */
-    ExternalDocNo?: string | undefined;
-    /** Specification (document header) */
-    Specification?: string | undefined;
-    /** Key of Primary Source Contact of document (eq vendor on commitments and related docs) */
-    SourceContact!: string;
-    /** Current Routing sequence (zero if route is complete) */
-    CurrentSeq!: number;
-    /** Number of stages of routing  */
-    MaxStage!: number;
-    /** How many files are attached */
-    FilesAttached!: number;
-
-    constructor(data?: IProjectDocsOfType) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.DocMasterKey = _data["DocMasterKey"];
-            this.DocTypeKey = _data["DocTypeKey"];
-            this.DocReference = _data["DocReference"];
-            this.DocDate = _data["DocDate"] ? new Date(_data["DocDate"].toString()) : <any>undefined;
-            this.DocNo = _data["DocNo"];
-            this.DocBatchNo = _data["DocBatchNo"];
-            this.SourceDocNo = _data["SourceDocNo"];
-            this.Title = _data["Title"];
-            this.Priority = _data["Priority"];
-            this.Confidential = _data["Confidential"];
-            this.FromUser = _data["FromUser"];
-            this.SortFrom = _data["SortFrom"];
-            this.ResponsibleParty = _data["ResponsibleParty"];
-            this.SortResp = _data["SortResp"];
-            this.Company = _data["Company"];
-            this.SortCompany = _data["SortCompany"];
-            this.ToUser = _data["ToUser"];
-            this.SortTo = _data["SortTo"];
-            this.Author = _data["Author"];
-            this.SortAuthor = _data["SortAuthor"];
-            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
-            this.Signoff = _data["Signoff"] ? new Date(_data["Signoff"].toString()) : <any>undefined;
-            this.Closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
-            this.Project = _data["Project"];
-            this.SpecSection = _data["SpecSection"];
-            this.SubContract = _data["SubContract"];
-            this.PayControl = _data["PayControl"];
-            this.Subtype = _data["Subtype"];
-            this.SubtypeDescription = _data["SubtypeDescription"];
-            this.Status = _data["Status"];
-            this.CostImpact = _data["CostImpact"];
-            this.csAmount = _data["csAmount"];
-            this.Subsegment = _data["Subsegment"];
-            this.ContractType = _data["ContractType"];
-            this.SourceDate = _data["SourceDate"] ? new Date(_data["SourceDate"].toString()) : <any>undefined;
-            this.PayItemNumber = _data["PayItemNumber"];
-            this.ExternalDocNo = _data["ExternalDocNo"];
-            this.Specification = _data["Specification"];
-            this.SourceContact = _data["SourceContact"];
-            this.CurrentSeq = _data["CurrentSeq"];
-            this.MaxStage = _data["MaxStage"];
-            this.FilesAttached = _data["FilesAttached"];
-        }
-    }
-
-    static fromJS(data: any): ProjectDocsOfType {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProjectDocsOfType();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["DocMasterKey"] = this.DocMasterKey;
-        data["DocTypeKey"] = this.DocTypeKey;
-        data["DocReference"] = this.DocReference;
-        data["DocDate"] = this.DocDate ? this.DocDate.toISOString() : <any>undefined;
-        data["DocNo"] = this.DocNo;
-        data["DocBatchNo"] = this.DocBatchNo;
-        data["SourceDocNo"] = this.SourceDocNo;
-        data["Title"] = this.Title;
-        data["Priority"] = this.Priority;
-        data["Confidential"] = this.Confidential;
-        data["FromUser"] = this.FromUser;
-        data["SortFrom"] = this.SortFrom;
-        data["ResponsibleParty"] = this.ResponsibleParty;
-        data["SortResp"] = this.SortResp;
-        data["Company"] = this.Company;
-        data["SortCompany"] = this.SortCompany;
-        data["ToUser"] = this.ToUser;
-        data["SortTo"] = this.SortTo;
-        data["Author"] = this.Author;
-        data["SortAuthor"] = this.SortAuthor;
-        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
-        data["Signoff"] = this.Signoff ? this.Signoff.toISOString() : <any>undefined;
-        data["Closed"] = this.Closed ? this.Closed.toISOString() : <any>undefined;
-        data["Project"] = this.Project;
-        data["SpecSection"] = this.SpecSection;
-        data["SubContract"] = this.SubContract;
-        data["PayControl"] = this.PayControl;
-        data["Subtype"] = this.Subtype;
-        data["SubtypeDescription"] = this.SubtypeDescription;
-        data["Status"] = this.Status;
-        data["CostImpact"] = this.CostImpact;
-        data["csAmount"] = this.csAmount;
-        data["Subsegment"] = this.Subsegment;
-        data["ContractType"] = this.ContractType;
-        data["SourceDate"] = this.SourceDate ? this.SourceDate.toISOString() : <any>undefined;
-        data["PayItemNumber"] = this.PayItemNumber;
-        data["ExternalDocNo"] = this.ExternalDocNo;
-        data["Specification"] = this.Specification;
-        data["SourceContact"] = this.SourceContact;
-        data["CurrentSeq"] = this.CurrentSeq;
-        data["MaxStage"] = this.MaxStage;
-        data["FilesAttached"] = this.FilesAttached;
-        return data; 
-    }
-
-    clone(): ProjectDocsOfType {
-        const json = this.toJSON();
-        let result = new ProjectDocsOfType();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Process Document on a Project */
-export interface IProjectDocsOfType {
-    /** Key to Document (required to open) */
-    DocMasterKey: string;
-    /** Type of Process */
-    DocTypeKey: string;
-    /** Key to Process Reference */
-    DocReference: string;
-    /** Document Date (header) */
-    DocDate: Date;
-    /** Document Number (header; usually read only) */
-    DocNo?: string | undefined;
-    /** Batch Number (often unused) */
-    DocBatchNo?: string | undefined;
-    /** Source Document Number (eg: invoice number for a vendor invoice) */
-    SourceDocNo?: string | undefined;
-    /** Document Title */
-    Title?: string | undefined;
-    /** Document Priority 1==High */
-    Priority: number;
-    /** When true, document is confidential (only name routes have access) */
-    Confidential: boolean;
-    /** Key to Contact document was "from") */
-    FromUser: string;
-    /** Resolved name of user the Document is "from" */
-    SortFrom?: string | undefined;
-    /** Key to contact "Responsible" - used for Ball in Court and other use cases */
-    ResponsibleParty: string;
-    /** Resolved name of Responsible Party */
-    SortResp?: string | undefined;
-    /** Key for Contact, from SourceContact or ResponsibleParty or Doc Creator  */
-    Company: string;
-    /** Resolved Company Name  of the source Contact  */
-    SortCompany?: string | undefined;
-    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
-    ToUser?: string | undefined;
-    /** Resolved name of contact that this document is "to" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person) */
-    SortTo?: string | undefined;
-    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Name), or data on address (Company or Person)   */
-    Author?: string | undefined;
-    /** Resolved name of contact that this document is "FROM" (uses To Address, contact (Compnay or Sort Name), or data on address (Company or Person)   */
-    SortAuthor?: string | undefined;
-    /** When the document/process is due */
-    Due: Date;
-    /** when the document/process was approved */
-    Signoff?: Date | undefined;
-    /** when the document/process was closed */
-    Closed?: Date | undefined;
-    /** Project ID */
-    Project?: string | undefined;
-    /** check this */
-    SpecSection?: string | undefined;
-    /** Subcontract number (shared by commitment, payment requests, CCO, receipts, etc) */
-    SubContract?: string | undefined;
-    /** Flag indicating pay control option (auto, warn, block) */
-    PayControl?: string | undefined;
-    /** Subtype code */
-    Subtype?: string | undefined;
-    /** Resolved name of subtype */
-    SubtypeDescription?: string | undefined;
-    /** Status Code */
-    Status?: string | undefined;
-    /** Value of document/process - usually sum of Expense Amount on items (see DocFormula rule group) */
-    CostImpact: number;
-    /** Custome Amount */
-    csAmount: number;
-    /** Subsegment code */
-    Subsegment?: string | undefined;
-    /** Contract type code */
-    ContractType?: string | undefined;
-    /** Source date for document (eg invoice date) */
-    SourceDate?: Date | undefined;
-    /** Payment Item Number */
-    PayItemNumber?: string | undefined;
-    /** External Doc Number */
-    ExternalDocNo?: string | undefined;
-    /** Specification (document header) */
-    Specification?: string | undefined;
-    /** Key of Primary Source Contact of document (eq vendor on commitments and related docs) */
-    SourceContact: string;
-    /** Current Routing sequence (zero if route is complete) */
-    CurrentSeq: number;
-    /** Number of stages of routing  */
-    MaxStage: number;
-    /** How many files are attached */
-    FilesAttached: number;
-}
-
-/** Attributes describing a member of a project team */
-export class Suggestion implements ISuggestion {
-    /** Key (empty if not applicable) */
-    key?: string | undefined;
-    /** display  */
-    label?: string | undefined;
-    /** value (if key is specified, this is the display value and key is the data value) */
-    value?: string | undefined;
-
-    constructor(data?: ISuggestion) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.key = _data["key"];
-            this.label = _data["label"];
-            this.value = _data["value"];
-        }
-    }
-
-    static fromJS(data: any): Suggestion {
-        data = typeof data === 'object' ? data : {};
-        let result = new Suggestion();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["key"] = this.key;
-        data["label"] = this.label;
-        data["value"] = this.value;
-        return data; 
-    }
-
-    clone(): Suggestion {
-        const json = this.toJSON();
-        let result = new Suggestion();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Attributes describing a member of a project team */
-export interface ISuggestion {
-    /** Key (empty if not applicable) */
-    key?: string | undefined;
-    /** display  */
-    label?: string | undefined;
-    /** value (if key is specified, this is the display value and key is the data value) */
-    value?: string | undefined;
-}
-
-/** Attributes describing a choice defined in Code Maintenance - for context UI */
-export class CodeChoice implements ICodeChoice {
-    /** Name for a set of choices */
-    SetName!: string;
-    /** Code */
-    Code!: string;
-    /** Display Value  */
-    Description!: string;
-    /** For cascading codes, names the next code set */
-    NextSet?: string | undefined;
-    /** True if code is still active */
-    Active!: boolean;
-    /** True if code is allowed for new records */
-    OnAdd!: boolean;
-    /** Code Flag - use varies by code set */
-    CodeFlag!: boolean;
-
-    constructor(data?: ICodeChoice) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.SetName = _data["SetName"];
-            this.Code = _data["Code"];
-            this.Description = _data["Description"];
-            this.NextSet = _data["NextSet"];
-            this.Active = _data["Active"];
-            this.OnAdd = _data["OnAdd"];
-            this.CodeFlag = _data["CodeFlag"];
-        }
-    }
-
-    static fromJS(data: any): CodeChoice {
-        data = typeof data === 'object' ? data : {};
-        let result = new CodeChoice();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["SetName"] = this.SetName;
-        data["Code"] = this.Code;
-        data["Description"] = this.Description;
-        data["NextSet"] = this.NextSet;
-        data["Active"] = this.Active;
-        data["OnAdd"] = this.OnAdd;
-        data["CodeFlag"] = this.CodeFlag;
-        return data; 
-    }
-
-    clone(): CodeChoice {
-        const json = this.toJSON();
-        let result = new CodeChoice();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Attributes describing a choice defined in Code Maintenance - for context UI */
-export interface ICodeChoice {
-    /** Name for a set of choices */
-    SetName: string;
-    /** Code */
-    Code: string;
-    /** Display Value  */
-    Description: string;
-    /** For cascading codes, names the next code set */
-    NextSet?: string | undefined;
-    /** True if code is still active */
-    Active: boolean;
-    /** True if code is allowed for new records */
-    OnAdd: boolean;
-    /** Code Flag - use varies by code set */
-    CodeFlag: boolean;
-}
-
-/** Legacy Site Authentication */
-export class SiteLogin implements ISiteLogin {
-    /** User ID EG: george@acme.com */
-    UID?: string | undefined;
-    /** Password */
-    PW?: string | undefined;
-    /** Set to TRUE if password has already been hashed (rare) */
-    IsHashed!: boolean;
-
-    constructor(data?: ISiteLogin) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.UID = _data["UID"];
-            this.PW = _data["PW"];
-            this.IsHashed = _data["IsHashed"];
-        }
-    }
-
-    static fromJS(data: any): SiteLogin {
-        data = typeof data === 'object' ? data : {};
-        let result = new SiteLogin();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UID"] = this.UID;
-        data["PW"] = this.PW;
-        data["IsHashed"] = this.IsHashed;
-        return data; 
-    }
-
-    clone(): SiteLogin {
-        const json = this.toJSON();
-        let result = new SiteLogin();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Legacy Site Authentication */
-export interface ISiteLogin {
-    /** User ID EG: george@acme.com */
-    UID?: string | undefined;
-    /** Password */
-    PW?: string | undefined;
-    /** Set to TRUE if password has already been hashed (rare) */
-    IsHashed: boolean;
-}
-
-/** Attributes describing the currently authenticated user */
-export class CurrentUser implements ICurrentUser {
-    /** User Key */
+/** Summary information about a contact */
+export class ContactSummary implements IContactSummary {
+    /** Link to user/contact */
     UserKey!: string;
-    /** Login ID for user in name@domain.com or similar format */
-    UserLoginName?: string | undefined;
-    /** Full name, eg John M. Smithe */
-    FullName?: string | undefined;
-    /** Email Address */
-    email?: string | undefined;
-    /** True if user will have to change PW soon */
-    PWMustChange!: boolean;
-    /** Three character time zone designation */
-    UserTimeZone?: string | undefined;
-    /** +/- Time offset from server */
-    TZOffset!: number;
-    /** Password Aging is enabled for this user */
-    PWAging!: boolean;
-    /** Account expiration is enabled for this user if account is not regularly used */
-    SlidingExpiration!: boolean;
-    /** When true, the user is currently locked out */
-    IsLockedOut!: boolean;
-    /** When the current password will expire if PWAging is true */
-    PWExpires?: Date | undefined;
-    /** When this account will expire */
-    Expiration?: Date | undefined;
-    /** When IsLockedOut, the lockout lasts until this date and time */
-    LockedOutUntil?: Date | undefined;
-    /** Text why the user is locked out (suitable for display) */
-    LockoutReason?: string | undefined;
-    /** How many bad password attempts in a row */
-    FailedLoginRun!: number;
-    /** When true, this exact user ID is integrated with Accounting */
-    SolomonUser!: boolean;
-    /** When true, this is the users first interactive session */
-    IsFirstLogin!: boolean;
-    /** Current IIS Session ID */
-    MasterSession?: string | undefined;
-    /** Guid for this session in xsfUserSession  */
-    UserSessionKey!: string;
-    /** URI for an image of this user */
-    PictureURL?: string | undefined;
-    /** hmmm */
-    PDSKey?: string | undefined;
-    /** This data is locked in memory */
-    IsDSProtected!: boolean;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    UserName?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    SortName?: string | undefined;
+    /** Standard SMTP Email Address */
+    Email?: string | undefined;
+    /** Which phone is preferred */
+    UsePhone?: string | undefined;
+    /** Predominantly Obsolete */
+    Fax?: string | undefined;
+    /** When True, can log in to sfPMS */
+    sfUser!: boolean;
+    /** Emp, Vendor, Customer, Standard */
+    ContactType?: string | undefined;
+    /** Bit coded  */
+    ContactFlags!: number;
+    /** ID from external source (customer or vendor ID, revision or batch id) */
+    ExternalID?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    Company?: string | undefined;
+    /** For Vendors, indicate related CSI  */
+    CSIList?: string | undefined;
+    /** When false, this row is ignored and ineffective */
+    Active!: boolean;
+    /** When true, there are no references to this contact */
+    OkToDelete!: boolean;
+    /** When true, this contact came from an external source */
+    IsXTS!: boolean;
+    /** When true, external changes to this contact are currently ignored */
+    XTSBlockIn!: boolean;
+    /** When true, changes to this contact are not being shared with external peer */
+    XTSBlockOut!: boolean;
+    /** When true, this is the company contact - not a person at the company */
+    IsPrimary!: boolean;
 
-    constructor(data?: ICurrentUser) {
+    constructor(data?: IContactSummary) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -8423,33 +9567,29 @@ export class CurrentUser implements ICurrentUser {
     init(_data?: any) {
         if (_data) {
             this.UserKey = _data["UserKey"];
-            this.UserLoginName = _data["UserLoginName"];
-            this.FullName = _data["FullName"];
-            this.email = _data["email"];
-            this.PWMustChange = _data["PWMustChange"];
-            this.UserTimeZone = _data["UserTimeZone"];
-            this.TZOffset = _data["TZOffset"];
-            this.PWAging = _data["PWAging"];
-            this.SlidingExpiration = _data["SlidingExpiration"];
-            this.IsLockedOut = _data["IsLockedOut"];
-            this.PWExpires = _data["PWExpires"] ? new Date(_data["PWExpires"].toString()) : <any>undefined;
-            this.Expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
-            this.LockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
-            this.LockoutReason = _data["LockoutReason"];
-            this.FailedLoginRun = _data["FailedLoginRun"];
-            this.SolomonUser = _data["SolomonUser"];
-            this.IsFirstLogin = _data["IsFirstLogin"];
-            this.MasterSession = _data["MasterSession"];
-            this.UserSessionKey = _data["UserSessionKey"];
-            this.PictureURL = _data["PictureURL"];
-            this.PDSKey = _data["PDSKey"];
-            this.IsDSProtected = _data["IsDSProtected"];
+            this.UserName = _data["UserName"];
+            this.SortName = _data["SortName"];
+            this.Email = _data["Email"];
+            this.UsePhone = _data["UsePhone"];
+            this.Fax = _data["Fax"];
+            this.sfUser = _data["sfUser"];
+            this.ContactType = _data["ContactType"];
+            this.ContactFlags = _data["ContactFlags"];
+            this.ExternalID = _data["ExternalID"];
+            this.Company = _data["Company"];
+            this.CSIList = _data["CSIList"];
+            this.Active = _data["Active"];
+            this.OkToDelete = _data["OkToDelete"];
+            this.IsXTS = _data["IsXTS"];
+            this.XTSBlockIn = _data["XTSBlockIn"];
+            this.XTSBlockOut = _data["XTSBlockOut"];
+            this.IsPrimary = _data["IsPrimary"];
         }
     }
 
-    static fromJS(data: any): CurrentUser {
+    static fromJS(data: any): ContactSummary {
         data = typeof data === 'object' ? data : {};
-        let result = new CurrentUser();
+        let result = new ContactSummary();
         result.init(data);
         return result;
     }
@@ -8457,228 +9597,648 @@ export class CurrentUser implements ICurrentUser {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["UserKey"] = this.UserKey;
-        data["UserLoginName"] = this.UserLoginName;
-        data["FullName"] = this.FullName;
-        data["email"] = this.email;
-        data["PWMustChange"] = this.PWMustChange;
-        data["UserTimeZone"] = this.UserTimeZone;
-        data["TZOffset"] = this.TZOffset;
-        data["PWAging"] = this.PWAging;
-        data["SlidingExpiration"] = this.SlidingExpiration;
-        data["IsLockedOut"] = this.IsLockedOut;
-        data["PWExpires"] = this.PWExpires ? this.PWExpires.toISOString() : <any>undefined;
-        data["Expiration"] = this.Expiration ? this.Expiration.toISOString() : <any>undefined;
-        data["LockedOutUntil"] = this.LockedOutUntil ? this.LockedOutUntil.toISOString() : <any>undefined;
-        data["LockoutReason"] = this.LockoutReason;
-        data["FailedLoginRun"] = this.FailedLoginRun;
-        data["SolomonUser"] = this.SolomonUser;
-        data["IsFirstLogin"] = this.IsFirstLogin;
-        data["MasterSession"] = this.MasterSession;
-        data["UserSessionKey"] = this.UserSessionKey;
-        data["PictureURL"] = this.PictureURL;
-        data["PDSKey"] = this.PDSKey;
-        data["IsDSProtected"] = this.IsDSProtected;
+        data["UserName"] = this.UserName;
+        data["SortName"] = this.SortName;
+        data["Email"] = this.Email;
+        data["UsePhone"] = this.UsePhone;
+        data["Fax"] = this.Fax;
+        data["sfUser"] = this.sfUser;
+        data["ContactType"] = this.ContactType;
+        data["ContactFlags"] = this.ContactFlags;
+        data["ExternalID"] = this.ExternalID;
+        data["Company"] = this.Company;
+        data["CSIList"] = this.CSIList;
+        data["Active"] = this.Active;
+        data["OkToDelete"] = this.OkToDelete;
+        data["IsXTS"] = this.IsXTS;
+        data["XTSBlockIn"] = this.XTSBlockIn;
+        data["XTSBlockOut"] = this.XTSBlockOut;
+        data["IsPrimary"] = this.IsPrimary;
         return data; 
     }
 
-    clone(): CurrentUser {
+    clone(): ContactSummary {
         const json = this.toJSON();
-        let result = new CurrentUser();
+        let result = new ContactSummary();
         result.init(json);
         return result;
     }
 }
 
-/** Attributes describing the currently authenticated user */
-export interface ICurrentUser {
-    /** User Key */
+/** Summary information about a contact */
+export interface IContactSummary {
+    /** Link to user/contact */
     UserKey: string;
-    /** Login ID for user in name@domain.com or similar format */
-    UserLoginName?: string | undefined;
-    /** Full name, eg John M. Smithe */
-    FullName?: string | undefined;
-    /** Email Address */
-    email?: string | undefined;
-    /** True if user will have to change PW soon */
-    PWMustChange: boolean;
-    /** Three character time zone designation */
-    UserTimeZone?: string | undefined;
-    /** +/- Time offset from server */
-    TZOffset: number;
-    /** Password Aging is enabled for this user */
-    PWAging: boolean;
-    /** Account expiration is enabled for this user if account is not regularly used */
-    SlidingExpiration: boolean;
-    /** When true, the user is currently locked out */
-    IsLockedOut: boolean;
-    /** When the current password will expire if PWAging is true */
-    PWExpires?: Date | undefined;
-    /** When this account will expire */
-    Expiration?: Date | undefined;
-    /** When IsLockedOut, the lockout lasts until this date and time */
-    LockedOutUntil?: Date | undefined;
-    /** Text why the user is locked out (suitable for display) */
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    UserName?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    SortName?: string | undefined;
+    /** Standard SMTP Email Address */
+    Email?: string | undefined;
+    /** Which phone is preferred */
+    UsePhone?: string | undefined;
+    /** Predominantly Obsolete */
+    Fax?: string | undefined;
+    /** When True, can log in to sfPMS */
+    sfUser: boolean;
+    /** Emp, Vendor, Customer, Standard */
+    ContactType?: string | undefined;
+    /** Bit coded  */
+    ContactFlags: number;
+    /** ID from external source (customer or vendor ID, revision or batch id) */
+    ExternalID?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    Company?: string | undefined;
+    /** For Vendors, indicate related CSI  */
+    CSIList?: string | undefined;
+    /** When false, this row is ignored and ineffective */
+    Active: boolean;
+    /** When true, there are no references to this contact */
+    OkToDelete: boolean;
+    /** When true, this contact came from an external source */
+    IsXTS: boolean;
+    /** When true, external changes to this contact are currently ignored */
+    XTSBlockIn: boolean;
+    /** When true, changes to this contact are not being shared with external peer */
+    XTSBlockOut: boolean;
+    /** When true, this is the company contact - not a person at the company */
+    IsPrimary: boolean;
+}
+
+/** Various filters for contact search */
+export class ContactFilters implements IContactFilters {
+    /** Name like */
+    NameLike?: string | undefined;
+    /** Email  */
+    EmailLike?: string | undefined;
+    /** Company like  */
+    CompanyLike?: string | undefined;
+    /** Location */
+    LocationLike?: string | undefined;
+    /** ID like (vendor, customer, employee IDs) */
+    IDLike?: string | undefined;
+    /** For Vendors, specified related CSI  */
+    CSIListLike?: string | undefined;
+    /** Phone Like (matches any phone number) */
+    PhoneLike?: string | undefined;
+    /** When true, result is limited to  */
+    Users!: boolean;
+    /** When true, result is limited to  */
+    Customers!: boolean;
+    /** When true, result is limited to  */
+    Employee!: boolean;
+    /** When true, result is limited to  */
+    Public!: boolean;
+    /** When true, result is limited to primary company contacts  */
+    Company!: boolean;
+    /** When true, result is limited to  */
+    Vendors!: boolean;
+    /** 1==Active;0==Inactive; 2==Both */
+    ContactState!: number;
+    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
+    RoleKey?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    UserKey?: string | undefined;
+    /** Default 2000-01-01 */
+    FromDate?: Date | undefined;
+    /** Default today */
+    ThruDate?: Date | undefined;
+
+    constructor(data?: IContactFilters) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.NameLike = _data["NameLike"];
+            this.EmailLike = _data["EmailLike"];
+            this.CompanyLike = _data["CompanyLike"];
+            this.LocationLike = _data["LocationLike"];
+            this.IDLike = _data["IDLike"];
+            this.CSIListLike = _data["CSIListLike"];
+            this.PhoneLike = _data["PhoneLike"];
+            this.Users = _data["Users"];
+            this.Customers = _data["Customers"];
+            this.Employee = _data["Employee"];
+            this.Public = _data["Public"];
+            this.Company = _data["Company"];
+            this.Vendors = _data["Vendors"];
+            this.ContactState = _data["ContactState"];
+            this.RoleKey = _data["RoleKey"];
+            this.UserKey = _data["UserKey"];
+            this.FromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
+            this.ThruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ContactFilters {
+        data = typeof data === 'object' ? data : {};
+        let result = new ContactFilters();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["NameLike"] = this.NameLike;
+        data["EmailLike"] = this.EmailLike;
+        data["CompanyLike"] = this.CompanyLike;
+        data["LocationLike"] = this.LocationLike;
+        data["IDLike"] = this.IDLike;
+        data["CSIListLike"] = this.CSIListLike;
+        data["PhoneLike"] = this.PhoneLike;
+        data["Users"] = this.Users;
+        data["Customers"] = this.Customers;
+        data["Employee"] = this.Employee;
+        data["Public"] = this.Public;
+        data["Company"] = this.Company;
+        data["Vendors"] = this.Vendors;
+        data["ContactState"] = this.ContactState;
+        data["RoleKey"] = this.RoleKey;
+        data["UserKey"] = this.UserKey;
+        data["FromDate"] = this.FromDate ? this.FromDate.toISOString() : <any>undefined;
+        data["ThruDate"] = this.ThruDate ? this.ThruDate.toISOString() : <any>undefined;
+        return data; 
+    }
+
+    clone(): ContactFilters {
+        const json = this.toJSON();
+        let result = new ContactFilters();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Various filters for contact search */
+export interface IContactFilters {
+    /** Name like */
+    NameLike?: string | undefined;
+    /** Email  */
+    EmailLike?: string | undefined;
+    /** Company like  */
+    CompanyLike?: string | undefined;
+    /** Location */
+    LocationLike?: string | undefined;
+    /** ID like (vendor, customer, employee IDs) */
+    IDLike?: string | undefined;
+    /** For Vendors, specified related CSI  */
+    CSIListLike?: string | undefined;
+    /** Phone Like (matches any phone number) */
+    PhoneLike?: string | undefined;
+    /** When true, result is limited to  */
+    Users: boolean;
+    /** When true, result is limited to  */
+    Customers: boolean;
+    /** When true, result is limited to  */
+    Employee: boolean;
+    /** When true, result is limited to  */
+    Public: boolean;
+    /** When true, result is limited to primary company contacts  */
+    Company: boolean;
+    /** When true, result is limited to  */
+    Vendors: boolean;
+    /** 1==Active;0==Inactive; 2==Both */
+    ContactState: number;
+    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
+    RoleKey?: string | undefined;
+    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
+    UserKey?: string | undefined;
+    /** Default 2000-01-01 */
+    FromDate?: Date | undefined;
+    /** Default today */
+    ThruDate?: Date | undefined;
+}
+
+/** Describes a contact */
+export class Contact implements IContact {
+    /** Key for this user/contact */
+    UserKey!: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    UserName?: string | undefined;
+    /** Login name */
+    UserLogin?: string | undefined;
+    /** Source of external authentication that points to this contact */
+    FederatedIdentityInfo?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    SortName?: string | undefined;
+    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
+    FamiliarName?: string | undefined;
+    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
+    Salutation?: string | undefined;
+    /** Short description */
+    Title?: string | undefined;
+    /** Free form; replaces ~R placeholder in Salutation */
+    Role?: string | undefined;
+    /** Standard SMTP Email Address */
+    EMail?: string | undefined;
+    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
+    phone?: string | undefined;
+    /** Predominantly Obsolete */
+    fax?: string | undefined;
+    /** Mobile phone number */
+    cell?: string | undefined;
+    /** Gets phone designation  */
+    pager?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    Company?: string | undefined;
+    /** First line of address */
+    address?: string | undefined;
+    /** Second line of address */
+    address2?: string | undefined;
+    /** City (for address) */
+    city?: string | undefined;
+    /** For Address */
+    state?: string | undefined;
+    /** Zipcode for address */
+    zip?: string | undefined;
+    /** Uses xsfCodeSet, not used in address */
+    Country?: string | undefined;
+    /** Applicable County / Organizational Juristiction (not used in address) */
+    County?: string | undefined;
+    /** EST, PST, etc */
+    TimeZone?: string | undefined;
+    /** Instant Messaging Service */
+    IMService?: string | undefined;
+    /** Instant Messaging Handle */
+    IMHandle?: string | undefined;
+    /** URL */
+    WebURL?: string | undefined;
+    /** Vendor Company ID */
+    VendorID?: string | undefined;
+    /** Weak link to Solomon */
+    EmployeeID?: string | undefined;
+    /** Emp, Vendor, Customer, Standard */
+    ContactType?: string | undefined;
+    /** Web; E-mail; Fax; Hard Copy */
+    RouteVia?: string | undefined;
+    /** 1=Phone; 2=Cell; 3-Pager */
+    ShowPhone!: number;
+    /** Key to role that defines who can proxy for this contact */
+    RouteeProxy?: string | undefined;
+    /** A role with a responsibility */
+    DefaultResponsibility!: string;
+    /** Key to primary company */
+    ContactCompanyKey!: string;
+    /** HTML Markup for signature in templates */
+    Signature?: string | undefined;
+    /** Key to file in catalog that contains image */
+    Likeness?: string | undefined;
+    /** When TRUE, trigger updates address if company address changes */
+    UseCompanyAddr!: boolean;
+    /** When true, new projects are added to the dashboard automatically */
+    ShowNewProjects!: boolean;
+    /** When True, can log in to dashboard */
+    sfUser!: boolean;
+    /** When true, this contact is included in lookups  */
+    IsPublic!: boolean;
+    /** When false, this row is ignored and ineffective */
+    Active!: boolean;
+    /** When true, is also an integrated DSL User */
+    SolomonUser!: boolean;
+    /** When TRUE, expiration date is advanced each day the user logs in */
+    SlidingExpiration!: boolean;
+    /** When TRUE, user must change password */
+    PWMustChange!: boolean;
+    /** When TRUE, user can be locked out because of password age */
+    PWAging!: boolean;
+    /** Company Division ID */
+    DivisionID?: string | undefined;
+    /** Why user has been blocked */
     LockoutReason?: string | undefined;
-    /** How many bad password attempts in a row */
-    FailedLoginRun: number;
-    /** When true, this exact user ID is integrated with Accounting */
+    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
+    OrgLevel!: number;
+    /** Checksum of all externally syched data */
+    SynchCheck!: number;
+    /** Number of consecutive login failures (reset upon success) */
+    FailedLoginRun!: number;
+    /** Email notifications suppressed until this time */
+    SuppressNotifyUntil?: Date | undefined;
+    /** Set by data layer each time the user logs in */
+    LastLogin?: Date | undefined;
+    /** Date when password was last changed; can be null */
+    LastPWChange?: Date | undefined;
+    /** User cannot login until this time */
+    LockedOutUntil?: Date | undefined;
+    /** Date of Expiration for this account */
+    Expiration?: Date | undefined;
+    /** When entity was first recorded; read only */
+    Created!: Date;
+
+    constructor(data?: IContact) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.UserKey = _data["UserKey"];
+            this.UserName = _data["UserName"];
+            this.UserLogin = _data["UserLogin"];
+            this.FederatedIdentityInfo = _data["FederatedIdentityInfo"];
+            this.SortName = _data["SortName"];
+            this.FamiliarName = _data["FamiliarName"];
+            this.Salutation = _data["Salutation"];
+            this.Title = _data["Title"];
+            this.Role = _data["Role"];
+            this.EMail = _data["EMail"];
+            this.phone = _data["phone"];
+            this.fax = _data["fax"];
+            this.cell = _data["cell"];
+            this.pager = _data["pager"];
+            this.Company = _data["Company"];
+            this.address = _data["address"];
+            this.address2 = _data["address2"];
+            this.city = _data["city"];
+            this.state = _data["state"];
+            this.zip = _data["zip"];
+            this.Country = _data["Country"];
+            this.County = _data["County"];
+            this.TimeZone = _data["TimeZone"];
+            this.IMService = _data["IMService"];
+            this.IMHandle = _data["IMHandle"];
+            this.WebURL = _data["WebURL"];
+            this.VendorID = _data["VendorID"];
+            this.EmployeeID = _data["EmployeeID"];
+            this.ContactType = _data["ContactType"];
+            this.RouteVia = _data["RouteVia"];
+            this.ShowPhone = _data["ShowPhone"];
+            this.RouteeProxy = _data["RouteeProxy"];
+            this.DefaultResponsibility = _data["DefaultResponsibility"];
+            this.ContactCompanyKey = _data["ContactCompanyKey"];
+            this.Signature = _data["Signature"];
+            this.Likeness = _data["Likeness"];
+            this.UseCompanyAddr = _data["UseCompanyAddr"];
+            this.ShowNewProjects = _data["ShowNewProjects"];
+            this.sfUser = _data["sfUser"];
+            this.IsPublic = _data["IsPublic"];
+            this.Active = _data["Active"];
+            this.SolomonUser = _data["SolomonUser"];
+            this.SlidingExpiration = _data["SlidingExpiration"];
+            this.PWMustChange = _data["PWMustChange"];
+            this.PWAging = _data["PWAging"];
+            this.DivisionID = _data["DivisionID"];
+            this.LockoutReason = _data["LockoutReason"];
+            this.OrgLevel = _data["OrgLevel"];
+            this.SynchCheck = _data["SynchCheck"];
+            this.FailedLoginRun = _data["FailedLoginRun"];
+            this.SuppressNotifyUntil = _data["SuppressNotifyUntil"] ? new Date(_data["SuppressNotifyUntil"].toString()) : <any>undefined;
+            this.LastLogin = _data["LastLogin"] ? new Date(_data["LastLogin"].toString()) : <any>undefined;
+            this.LastPWChange = _data["LastPWChange"] ? new Date(_data["LastPWChange"].toString()) : <any>undefined;
+            this.LockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
+            this.Expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
+            this.Created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): Contact {
+        data = typeof data === 'object' ? data : {};
+        let result = new Contact();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["UserKey"] = this.UserKey;
+        data["UserName"] = this.UserName;
+        data["UserLogin"] = this.UserLogin;
+        data["FederatedIdentityInfo"] = this.FederatedIdentityInfo;
+        data["SortName"] = this.SortName;
+        data["FamiliarName"] = this.FamiliarName;
+        data["Salutation"] = this.Salutation;
+        data["Title"] = this.Title;
+        data["Role"] = this.Role;
+        data["EMail"] = this.EMail;
+        data["phone"] = this.phone;
+        data["fax"] = this.fax;
+        data["cell"] = this.cell;
+        data["pager"] = this.pager;
+        data["Company"] = this.Company;
+        data["address"] = this.address;
+        data["address2"] = this.address2;
+        data["city"] = this.city;
+        data["state"] = this.state;
+        data["zip"] = this.zip;
+        data["Country"] = this.Country;
+        data["County"] = this.County;
+        data["TimeZone"] = this.TimeZone;
+        data["IMService"] = this.IMService;
+        data["IMHandle"] = this.IMHandle;
+        data["WebURL"] = this.WebURL;
+        data["VendorID"] = this.VendorID;
+        data["EmployeeID"] = this.EmployeeID;
+        data["ContactType"] = this.ContactType;
+        data["RouteVia"] = this.RouteVia;
+        data["ShowPhone"] = this.ShowPhone;
+        data["RouteeProxy"] = this.RouteeProxy;
+        data["DefaultResponsibility"] = this.DefaultResponsibility;
+        data["ContactCompanyKey"] = this.ContactCompanyKey;
+        data["Signature"] = this.Signature;
+        data["Likeness"] = this.Likeness;
+        data["UseCompanyAddr"] = this.UseCompanyAddr;
+        data["ShowNewProjects"] = this.ShowNewProjects;
+        data["sfUser"] = this.sfUser;
+        data["IsPublic"] = this.IsPublic;
+        data["Active"] = this.Active;
+        data["SolomonUser"] = this.SolomonUser;
+        data["SlidingExpiration"] = this.SlidingExpiration;
+        data["PWMustChange"] = this.PWMustChange;
+        data["PWAging"] = this.PWAging;
+        data["DivisionID"] = this.DivisionID;
+        data["LockoutReason"] = this.LockoutReason;
+        data["OrgLevel"] = this.OrgLevel;
+        data["SynchCheck"] = this.SynchCheck;
+        data["FailedLoginRun"] = this.FailedLoginRun;
+        data["SuppressNotifyUntil"] = this.SuppressNotifyUntil ? this.SuppressNotifyUntil.toISOString() : <any>undefined;
+        data["LastLogin"] = this.LastLogin ? this.LastLogin.toISOString() : <any>undefined;
+        data["LastPWChange"] = this.LastPWChange ? this.LastPWChange.toISOString() : <any>undefined;
+        data["LockedOutUntil"] = this.LockedOutUntil ? this.LockedOutUntil.toISOString() : <any>undefined;
+        data["Expiration"] = this.Expiration ? this.Expiration.toISOString() : <any>undefined;
+        data["Created"] = this.Created ? this.Created.toISOString() : <any>undefined;
+        return data; 
+    }
+
+    clone(): Contact {
+        const json = this.toJSON();
+        let result = new Contact();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes a contact */
+export interface IContact {
+    /** Key for this user/contact */
+    UserKey: string;
+    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
+    UserName?: string | undefined;
+    /** Login name */
+    UserLogin?: string | undefined;
+    /** Source of external authentication that points to this contact */
+    FederatedIdentityInfo?: string | undefined;
+    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
+    SortName?: string | undefined;
+    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
+    FamiliarName?: string | undefined;
+    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
+    Salutation?: string | undefined;
+    /** Short description */
+    Title?: string | undefined;
+    /** Free form; replaces ~R placeholder in Salutation */
+    Role?: string | undefined;
+    /** Standard SMTP Email Address */
+    EMail?: string | undefined;
+    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
+    phone?: string | undefined;
+    /** Predominantly Obsolete */
+    fax?: string | undefined;
+    /** Mobile phone number */
+    cell?: string | undefined;
+    /** Gets phone designation  */
+    pager?: string | undefined;
+    /** free form; when various contacts match exactly, good things happen */
+    Company?: string | undefined;
+    /** First line of address */
+    address?: string | undefined;
+    /** Second line of address */
+    address2?: string | undefined;
+    /** City (for address) */
+    city?: string | undefined;
+    /** For Address */
+    state?: string | undefined;
+    /** Zipcode for address */
+    zip?: string | undefined;
+    /** Uses xsfCodeSet, not used in address */
+    Country?: string | undefined;
+    /** Applicable County / Organizational Juristiction (not used in address) */
+    County?: string | undefined;
+    /** EST, PST, etc */
+    TimeZone?: string | undefined;
+    /** Instant Messaging Service */
+    IMService?: string | undefined;
+    /** Instant Messaging Handle */
+    IMHandle?: string | undefined;
+    /** URL */
+    WebURL?: string | undefined;
+    /** Vendor Company ID */
+    VendorID?: string | undefined;
+    /** Weak link to Solomon */
+    EmployeeID?: string | undefined;
+    /** Emp, Vendor, Customer, Standard */
+    ContactType?: string | undefined;
+    /** Web; E-mail; Fax; Hard Copy */
+    RouteVia?: string | undefined;
+    /** 1=Phone; 2=Cell; 3-Pager */
+    ShowPhone: number;
+    /** Key to role that defines who can proxy for this contact */
+    RouteeProxy?: string | undefined;
+    /** A role with a responsibility */
+    DefaultResponsibility: string;
+    /** Key to primary company */
+    ContactCompanyKey: string;
+    /** HTML Markup for signature in templates */
+    Signature?: string | undefined;
+    /** Key to file in catalog that contains image */
+    Likeness?: string | undefined;
+    /** When TRUE, trigger updates address if company address changes */
+    UseCompanyAddr: boolean;
+    /** When true, new projects are added to the dashboard automatically */
+    ShowNewProjects: boolean;
+    /** When True, can log in to dashboard */
+    sfUser: boolean;
+    /** When true, this contact is included in lookups  */
+    IsPublic: boolean;
+    /** When false, this row is ignored and ineffective */
+    Active: boolean;
+    /** When true, is also an integrated DSL User */
     SolomonUser: boolean;
-    /** When true, this is the users first interactive session */
-    IsFirstLogin: boolean;
-    /** Current IIS Session ID */
-    MasterSession?: string | undefined;
-    /** Guid for this session in xsfUserSession  */
-    UserSessionKey: string;
-    /** URI for an image of this user */
-    PictureURL?: string | undefined;
-    /** hmmm */
-    PDSKey?: string | undefined;
-    /** This data is locked in memory */
-    IsDSProtected: boolean;
+    /** When TRUE, expiration date is advanced each day the user logs in */
+    SlidingExpiration: boolean;
+    /** When TRUE, user must change password */
+    PWMustChange: boolean;
+    /** When TRUE, user can be locked out because of password age */
+    PWAging: boolean;
+    /** Company Division ID */
+    DivisionID?: string | undefined;
+    /** Why user has been blocked */
+    LockoutReason?: string | undefined;
+    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
+    OrgLevel: number;
+    /** Checksum of all externally syched data */
+    SynchCheck: number;
+    /** Number of consecutive login failures (reset upon success) */
+    FailedLoginRun: number;
+    /** Email notifications suppressed until this time */
+    SuppressNotifyUntil?: Date | undefined;
+    /** Set by data layer each time the user logs in */
+    LastLogin?: Date | undefined;
+    /** Date when password was last changed; can be null */
+    LastPWChange?: Date | undefined;
+    /** User cannot login until this time */
+    LockedOutUntil?: Date | undefined;
+    /** Date of Expiration for this account */
+    Expiration?: Date | undefined;
+    /** When entity was first recorded; read only */
+    Created: Date;
 }
 
-export class PasswordConfiguredOptions implements IPasswordConfiguredOptions {
-
-    constructor(data?: IPasswordConfiguredOptions) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): PasswordConfiguredOptions {
-        data = typeof data === 'object' ? data : {};
-        let result = new PasswordConfiguredOptions();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data; 
-    }
-
-    clone(): PasswordConfiguredOptions {
-        const json = this.toJSON();
-        let result = new PasswordConfiguredOptions();
-        result.init(json);
-        return result;
-    }
-}
-
-export interface IPasswordConfiguredOptions {
-}
-
-/** Permission required flag -- bit flags can be combined */
-export enum PermissionFlags {
-    None = 0,
-    Read = 1,
-    Insert = 2,
-    Update = 4,
-    Delete = 8,
-    Blanket = 16,
-}
-
-/** Describes permission being demanded and the context */
-export class PermissionContext implements IPermissionContext {
-    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
-    UCModule!: string;
-    /** Internal Name (see xsfUCFunction) */
-    UCFunction!: string;
-    /** Project ID  */
-    Project?: string | undefined;
-    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
+/** Describes an Alert Condition */
+export class UserAlert implements IUserAlert {
+    /** Key for Alert */
+    AlertKey!: string;
+    /** Key for User for whom the alert was generated */
+    UserKey!: string;
+    /** Document about which the alert was generated */
     DocMasterKey!: string;
-    /** Document Type */
-    DocTypeKey!: string;
-    /** Doc Reference (seldom used) */
-    DocReference!: string;
-    /** Bit Coded R I U D S  */
-    PermissionNeeded!: PermissionFlags;
-
-    constructor(data?: IPermissionContext) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.UCModule = _data["UCModule"];
-            this.UCFunction = _data["UCFunction"];
-            this.Project = _data["Project"];
-            this.DocMasterKey = _data["DocMasterKey"];
-            this.DocTypeKey = _data["DocTypeKey"];
-            this.DocReference = _data["DocReference"];
-            this.PermissionNeeded = _data["PermissionNeeded"];
-        }
-    }
-
-    static fromJS(data: any): PermissionContext {
-        data = typeof data === 'object' ? data : {};
-        let result = new PermissionContext();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UCModule"] = this.UCModule;
-        data["UCFunction"] = this.UCFunction;
-        data["Project"] = this.Project;
-        data["DocMasterKey"] = this.DocMasterKey;
-        data["DocTypeKey"] = this.DocTypeKey;
-        data["DocReference"] = this.DocReference;
-        data["PermissionNeeded"] = this.PermissionNeeded;
-        return data; 
-    }
-
-    clone(): PermissionContext {
-        const json = this.toJSON();
-        let result = new PermissionContext();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Describes permission being demanded and the context */
-export interface IPermissionContext {
-    /** Module Name (SYS, LIST, PART, PAGE, DOC)  */
-    UCModule: string;
-    /** Internal Name (see xsfUCFunction) */
-    UCFunction: string;
-    /** Project ID  */
+    /** Status of Alert (New, etc) */
+    Status?: string | undefined;
+    /** Notification type (M for email) */
+    NotificationType?: string | undefined;
+    /** When this alert was created.  Alerts automatically expire in ??? days */
+    Created!: Date;
+    /** For Email Notification Type, when was the email sent */
+    Notified!: Date;
+    /** When was the alert viewed */
+    Viewed!: Date;
+    /** When action is due */
+    Due!: Date;
+    /** When closed (from document) */
+    Closed!: Date;
+    /** Short Description of alert */
+    Description?: string | undefined;
+    /** Long description (generated using AlertText rules) */
+    AlertText?: string | undefined;
+    /** Project ID */
     Project?: string | undefined;
-    /** Key of document - if specified, DocTypeKey, DocReference and Project are loaded from the document */
-    DocMasterKey: string;
-    /** Document Type */
-    DocTypeKey: string;
-    /** Doc Reference (seldom used) */
-    DocReference: string;
-    /** Bit Coded R I U D S  */
-    PermissionNeeded: PermissionFlags;
-}
+    /** Source of alert (ATC, CloudStorage, etc) */
+    Source?: string | undefined;
+    /** Key from source to indentify its alerts */
+    SourceKey?: string | undefined;
+    /** Extra info for categorization */
+    Info1?: string | undefined;
+    /** Extra info 2 */
+    Info2?: string | undefined;
+    /** Files attached to document */
+    FilesAttached!: number;
+    /** unused */
+    MsgType?: string | undefined;
+    /** unused */
+    MsgKey?: string | undefined;
+    /** unused */
+    MsgSuffix?: string | undefined;
+    /** When true, this alert was from an external source (seldom used) */
+    SIVAlert!: boolean;
 
-export class TabStripDetails implements ITabStripDetails {
-    TabId!: number;
-    TabKey?: string | undefined;
-    TabText?: string | undefined;
-    TabOrder!: number;
-    TabType?: string | undefined;
-    AuthorizedRoles?: string | undefined;
-    LinkURL?: string | undefined;
-    Tip?: string | undefined;
-    IsVisible!: boolean;
-
-    constructor(data?: ITabStripDetails) {
+    constructor(data?: IUserAlert) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -8689,57 +10249,405 @@ export class TabStripDetails implements ITabStripDetails {
 
     init(_data?: any) {
         if (_data) {
-            this.TabId = _data["TabId"];
-            this.TabKey = _data["TabKey"];
-            this.TabText = _data["TabText"];
-            this.TabOrder = _data["TabOrder"];
-            this.TabType = _data["TabType"];
-            this.AuthorizedRoles = _data["AuthorizedRoles"];
-            this.LinkURL = _data["LinkURL"];
-            this.Tip = _data["Tip"];
-            this.IsVisible = _data["IsVisible"];
+            this.AlertKey = _data["AlertKey"];
+            this.UserKey = _data["UserKey"];
+            this.DocMasterKey = _data["DocMasterKey"];
+            this.Status = _data["Status"];
+            this.NotificationType = _data["NotificationType"];
+            this.Created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
+            this.Notified = _data["Notified"] ? new Date(_data["Notified"].toString()) : <any>undefined;
+            this.Viewed = _data["Viewed"] ? new Date(_data["Viewed"].toString()) : <any>undefined;
+            this.Due = _data["Due"] ? new Date(_data["Due"].toString()) : <any>undefined;
+            this.Closed = _data["Closed"] ? new Date(_data["Closed"].toString()) : <any>undefined;
+            this.Description = _data["Description"];
+            this.AlertText = _data["AlertText"];
+            this.Project = _data["Project"];
+            this.Source = _data["Source"];
+            this.SourceKey = _data["SourceKey"];
+            this.Info1 = _data["Info1"];
+            this.Info2 = _data["Info2"];
+            this.FilesAttached = _data["FilesAttached"];
+            this.MsgType = _data["MsgType"];
+            this.MsgKey = _data["MsgKey"];
+            this.MsgSuffix = _data["MsgSuffix"];
+            this.SIVAlert = _data["SIVAlert"];
         }
     }
 
-    static fromJS(data: any): TabStripDetails {
+    static fromJS(data: any): UserAlert {
         data = typeof data === 'object' ? data : {};
-        let result = new TabStripDetails();
+        let result = new UserAlert();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["TabId"] = this.TabId;
-        data["TabKey"] = this.TabKey;
-        data["TabText"] = this.TabText;
-        data["TabOrder"] = this.TabOrder;
-        data["TabType"] = this.TabType;
-        data["AuthorizedRoles"] = this.AuthorizedRoles;
-        data["LinkURL"] = this.LinkURL;
-        data["Tip"] = this.Tip;
-        data["IsVisible"] = this.IsVisible;
+        data["AlertKey"] = this.AlertKey;
+        data["UserKey"] = this.UserKey;
+        data["DocMasterKey"] = this.DocMasterKey;
+        data["Status"] = this.Status;
+        data["NotificationType"] = this.NotificationType;
+        data["Created"] = this.Created ? this.Created.toISOString() : <any>undefined;
+        data["Notified"] = this.Notified ? this.Notified.toISOString() : <any>undefined;
+        data["Viewed"] = this.Viewed ? this.Viewed.toISOString() : <any>undefined;
+        data["Due"] = this.Due ? this.Due.toISOString() : <any>undefined;
+        data["Closed"] = this.Closed ? this.Closed.toISOString() : <any>undefined;
+        data["Description"] = this.Description;
+        data["AlertText"] = this.AlertText;
+        data["Project"] = this.Project;
+        data["Source"] = this.Source;
+        data["SourceKey"] = this.SourceKey;
+        data["Info1"] = this.Info1;
+        data["Info2"] = this.Info2;
+        data["FilesAttached"] = this.FilesAttached;
+        data["MsgType"] = this.MsgType;
+        data["MsgKey"] = this.MsgKey;
+        data["MsgSuffix"] = this.MsgSuffix;
+        data["SIVAlert"] = this.SIVAlert;
         return data; 
     }
 
-    clone(): TabStripDetails {
+    clone(): UserAlert {
         const json = this.toJSON();
-        let result = new TabStripDetails();
+        let result = new UserAlert();
         result.init(json);
         return result;
     }
 }
 
-export interface ITabStripDetails {
-    TabId: number;
-    TabKey?: string | undefined;
-    TabText?: string | undefined;
-    TabOrder: number;
-    TabType?: string | undefined;
-    AuthorizedRoles?: string | undefined;
-    LinkURL?: string | undefined;
-    Tip?: string | undefined;
-    IsVisible: boolean;
+/** Describes an Alert Condition */
+export interface IUserAlert {
+    /** Key for Alert */
+    AlertKey: string;
+    /** Key for User for whom the alert was generated */
+    UserKey: string;
+    /** Document about which the alert was generated */
+    DocMasterKey: string;
+    /** Status of Alert (New, etc) */
+    Status?: string | undefined;
+    /** Notification type (M for email) */
+    NotificationType?: string | undefined;
+    /** When this alert was created.  Alerts automatically expire in ??? days */
+    Created: Date;
+    /** For Email Notification Type, when was the email sent */
+    Notified: Date;
+    /** When was the alert viewed */
+    Viewed: Date;
+    /** When action is due */
+    Due: Date;
+    /** When closed (from document) */
+    Closed: Date;
+    /** Short Description of alert */
+    Description?: string | undefined;
+    /** Long description (generated using AlertText rules) */
+    AlertText?: string | undefined;
+    /** Project ID */
+    Project?: string | undefined;
+    /** Source of alert (ATC, CloudStorage, etc) */
+    Source?: string | undefined;
+    /** Key from source to indentify its alerts */
+    SourceKey?: string | undefined;
+    /** Extra info for categorization */
+    Info1?: string | undefined;
+    /** Extra info 2 */
+    Info2?: string | undefined;
+    /** Files attached to document */
+    FilesAttached: number;
+    /** unused */
+    MsgType?: string | undefined;
+    /** unused */
+    MsgKey?: string | undefined;
+    /** unused */
+    MsgSuffix?: string | undefined;
+    /** When true, this alert was from an external source (seldom used) */
+    SIVAlert: boolean;
+}
+
+/** Describes a set of permissions for this user */
+export class UCPermitSet implements IUCPermitSet {
+    /** Key of this item */
+    Project!: string;
+    /** Links to Module|Function  */
+    Permits!: { [key: string]: UCPermit[]; };
+
+    constructor(data?: IUCPermitSet) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.Permits = {};
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.Project = _data["Project"];
+            if (_data["Permits"]) {
+                this.Permits = {} as any;
+                for (let key in _data["Permits"]) {
+                    if (_data["Permits"].hasOwnProperty(key))
+                        this.Permits![key] = _data["Permits"][key] ? _data["Permits"][key].map((i: any) => UCPermit.fromJS(i)) : [];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): UCPermitSet {
+        data = typeof data === 'object' ? data : {};
+        let result = new UCPermitSet();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["Project"] = this.Project;
+        if (this.Permits) {
+            data["Permits"] = {};
+            for (let key in this.Permits) {
+                if (this.Permits.hasOwnProperty(key))
+                    data["Permits"][key] = this.Permits[key];
+            }
+        }
+        return data; 
+    }
+
+    clone(): UCPermitSet {
+        const json = this.toJSON();
+        let result = new UCPermitSet();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Describes a set of permissions for this user */
+export interface IUCPermitSet {
+    /** Key of this item */
+    Project: string;
+    /** Links to Module|Function  */
+    Permits: { [key: string]: UCPermit[]; };
+}
+
+/** Permissions for a specific function */
+export class UCPermit implements IUCPermit {
+    /** If not empty, for a specific document (rare) */
+    DocMasterKey?: string | undefined;
+    /** If not empty, for a specific doc reference(rare) */
+    DocReference?: string | undefined;
+    /** If not empty, for a specific document process type(Common) */
+    DocTypeKey?: string | undefined;
+    /** When true, has read permission */
+    ReadOK!: boolean;
+    /** When true, has read permission */
+    InsOK!: boolean;
+    /** When true, has read permission */
+    UpdOK!: boolean;
+    /** When true, has read permission */
+    DelOK!: boolean;
+    /** When true, has read permission */
+    BlanketOK!: boolean;
+    /** When true, there is no restriction on this permission */
+    IsGlobal!: boolean;
+
+    constructor(data?: IUCPermit) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.DocMasterKey = _data["DocMasterKey"];
+            this.DocReference = _data["DocReference"];
+            this.DocTypeKey = _data["DocTypeKey"];
+            this.ReadOK = _data["ReadOK"];
+            this.InsOK = _data["InsOK"];
+            this.UpdOK = _data["UpdOK"];
+            this.DelOK = _data["DelOK"];
+            this.BlanketOK = _data["BlanketOK"];
+            this.IsGlobal = _data["IsGlobal"];
+        }
+    }
+
+    static fromJS(data: any): UCPermit {
+        data = typeof data === 'object' ? data : {};
+        let result = new UCPermit();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["DocMasterKey"] = this.DocMasterKey;
+        data["DocReference"] = this.DocReference;
+        data["DocTypeKey"] = this.DocTypeKey;
+        data["ReadOK"] = this.ReadOK;
+        data["InsOK"] = this.InsOK;
+        data["UpdOK"] = this.UpdOK;
+        data["DelOK"] = this.DelOK;
+        data["BlanketOK"] = this.BlanketOK;
+        data["IsGlobal"] = this.IsGlobal;
+        return data; 
+    }
+
+    clone(): UCPermit {
+        const json = this.toJSON();
+        let result = new UCPermit();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Permissions for a specific function */
+export interface IUCPermit {
+    /** If not empty, for a specific document (rare) */
+    DocMasterKey?: string | undefined;
+    /** If not empty, for a specific doc reference(rare) */
+    DocReference?: string | undefined;
+    /** If not empty, for a specific document process type(Common) */
+    DocTypeKey?: string | undefined;
+    /** When true, has read permission */
+    ReadOK: boolean;
+    /** When true, has read permission */
+    InsOK: boolean;
+    /** When true, has read permission */
+    UpdOK: boolean;
+    /** When true, has read permission */
+    DelOK: boolean;
+    /** When true, has read permission */
+    BlanketOK: boolean;
+    /** When true, there is no restriction on this permission */
+    IsGlobal: boolean;
+}
+
+/** Passes data to a simple API */
+export class APIData implements IAPIData {
+    /** Raw Data */
+    Data?: string | undefined;
+    /** when true, data has been uri encoded (encodeURIComponent) */
+    IsURIEncoded!: boolean;
+
+    constructor(data?: IAPIData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.Data = _data["Data"];
+            this.IsURIEncoded = _data["IsURIEncoded"];
+        }
+    }
+
+    static fromJS(data: any): APIData {
+        data = typeof data === 'object' ? data : {};
+        let result = new APIData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["Data"] = this.Data;
+        data["IsURIEncoded"] = this.IsURIEncoded;
+        return data; 
+    }
+
+    clone(): APIData {
+        const json = this.toJSON();
+        let result = new APIData();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Passes data to a simple API */
+export interface IAPIData {
+    /** Raw Data */
+    Data?: string | undefined;
+    /** when true, data has been uri encoded (encodeURIComponent) */
+    IsURIEncoded: boolean;
+}
+
+/** Passes data to a simple API */
+export class PDSData extends APIData implements IPDSData {
+    /** ID of data set */
+    PDSKey?: string | undefined;
+    /** Type of change (put, set) */
+    Mode?: string | undefined;
+    /** key or AK source (eg: AK/tdkeymapkey/TK/@xtsKeyMap.BlockOut/9c337885-0fb1-460c-960a-3bacc1d8e0)
+             */
+    Path?: string | undefined;
+    /** Type of data (boolean,string) */
+    Type?: string | undefined;
+    /** When TRUE target field can be read only and will be updated in memory */
+    UpdateReadOnly!: boolean;
+
+    constructor(data?: IPDSData) {
+        super(data);
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.PDSKey = _data["PDSKey"];
+            this.Mode = _data["Mode"];
+            this.Path = _data["Path"];
+            this.Type = _data["Type"];
+            this.UpdateReadOnly = _data["UpdateReadOnly"];
+        }
+    }
+
+    static fromJS(data: any): PDSData {
+        data = typeof data === 'object' ? data : {};
+        let result = new PDSData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["PDSKey"] = this.PDSKey;
+        data["Mode"] = this.Mode;
+        data["Path"] = this.Path;
+        data["Type"] = this.Type;
+        data["UpdateReadOnly"] = this.UpdateReadOnly;
+        super.toJSON(data);
+        return data; 
+    }
+
+    clone(): PDSData {
+        const json = this.toJSON();
+        let result = new PDSData();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Passes data to a simple API */
+export interface IPDSData extends IAPIData {
+    /** ID of data set */
+    PDSKey?: string | undefined;
+    /** Type of change (put, set) */
+    Mode?: string | undefined;
+    /** key or AK source (eg: AK/tdkeymapkey/TK/@xtsKeyMap.BlockOut/9c337885-0fb1-460c-960a-3bacc1d8e0)
+             */
+    Path?: string | undefined;
+    /** Type of data (boolean,string) */
+    Type?: string | undefined;
+    /** When TRUE target field can be read only and will be updated in memory */
+    UpdateReadOnly: boolean;
 }
 
 /** Abstracted information about a project */
@@ -9127,137 +11035,6 @@ export interface IProjectAbstract {
     ExcludeKPIUI: boolean;
     /** Indicates when this abstract was generated */
     dataResolved: Date;
-}
-
-/** Describes a Menu or Action */
-export class MenuAction implements IMenuAction {
-    /** The menu or group that connects a series of actions */
-    MenuID?: string | undefined;
-    /** optional arguement */
-    CommandArgument?: string | undefined;
-    /** Key for this action, unique within MenuID */
-    CommandName?: string | undefined;
-    /** True if enabled */
-    Enabled!: boolean;
-    /** Actual Permits this user has for UCModule and UCFunction, when insufficient, enabled will be false */
-    HasPermits!: number;
-    /** suggested image */
-    IconImageUrl?: string | undefined;
-    /** Display Text */
-    ItemText?: string | undefined;
-    /** URL for action */
-    HRef?: string | undefined;
-    /** target for URL (dashboard, _blank, etc) */
-    HrefTarget?: string | undefined;
-    /** For a permission demand lookup */
-    UCModule?: string | undefined;
-    /** The function within the specified module */
-    UCFunction?: string | undefined;
-    /** Demanded permissions within UCModule and UCFunction  */
-    NeedPermits!: number;
-    /** Controls order of choices within MenuID */
-    MenuSeq!: number;
-    /** If not empty, a confirmation prompt */
-    Confirm?: string | undefined;
-    /** When true, and not enabled, do not bother showing */
-    HideifDisabled!: boolean;
-
-    constructor(data?: IMenuAction) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.MenuID = _data["MenuID"];
-            this.CommandArgument = _data["CommandArgument"];
-            this.CommandName = _data["CommandName"];
-            this.Enabled = _data["Enabled"];
-            this.HasPermits = _data["HasPermits"];
-            this.IconImageUrl = _data["IconImageUrl"];
-            this.ItemText = _data["ItemText"];
-            this.HRef = _data["HRef"];
-            this.HrefTarget = _data["HrefTarget"];
-            this.UCModule = _data["UCModule"];
-            this.UCFunction = _data["UCFunction"];
-            this.NeedPermits = _data["NeedPermits"];
-            this.MenuSeq = _data["MenuSeq"];
-            this.Confirm = _data["Confirm"];
-            this.HideifDisabled = _data["HideifDisabled"];
-        }
-    }
-
-    static fromJS(data: any): MenuAction {
-        data = typeof data === 'object' ? data : {};
-        let result = new MenuAction();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["MenuID"] = this.MenuID;
-        data["CommandArgument"] = this.CommandArgument;
-        data["CommandName"] = this.CommandName;
-        data["Enabled"] = this.Enabled;
-        data["HasPermits"] = this.HasPermits;
-        data["IconImageUrl"] = this.IconImageUrl;
-        data["ItemText"] = this.ItemText;
-        data["HRef"] = this.HRef;
-        data["HrefTarget"] = this.HrefTarget;
-        data["UCModule"] = this.UCModule;
-        data["UCFunction"] = this.UCFunction;
-        data["NeedPermits"] = this.NeedPermits;
-        data["MenuSeq"] = this.MenuSeq;
-        data["Confirm"] = this.Confirm;
-        data["HideifDisabled"] = this.HideifDisabled;
-        return data; 
-    }
-
-    clone(): MenuAction {
-        const json = this.toJSON();
-        let result = new MenuAction();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Describes a Menu or Action */
-export interface IMenuAction {
-    /** The menu or group that connects a series of actions */
-    MenuID?: string | undefined;
-    /** optional arguement */
-    CommandArgument?: string | undefined;
-    /** Key for this action, unique within MenuID */
-    CommandName?: string | undefined;
-    /** True if enabled */
-    Enabled: boolean;
-    /** Actual Permits this user has for UCModule and UCFunction, when insufficient, enabled will be false */
-    HasPermits: number;
-    /** suggested image */
-    IconImageUrl?: string | undefined;
-    /** Display Text */
-    ItemText?: string | undefined;
-    /** URL for action */
-    HRef?: string | undefined;
-    /** target for URL (dashboard, _blank, etc) */
-    HrefTarget?: string | undefined;
-    /** For a permission demand lookup */
-    UCModule?: string | undefined;
-    /** The function within the specified module */
-    UCFunction?: string | undefined;
-    /** Demanded permissions within UCModule and UCFunction  */
-    NeedPermits: number;
-    /** Controls order of choices within MenuID */
-    MenuSeq: number;
-    /** If not empty, a confirmation prompt */
-    Confirm?: string | undefined;
-    /** When true, and not enabled, do not bother showing */
-    HideifDisabled: boolean;
 }
 
 /** Attributes describing a Link to a parent or child  project */
@@ -10211,1335 +11988,6 @@ export interface IProjectTranDetail {
     Acct_TranClass?: string | undefined;
     /** Account Class (L, B, E, etc) */
     Acct_Class?: string | undefined;
-}
-
-/** Describes a set of permissions for this user */
-export class UCPermitSet implements IUCPermitSet {
-    /** Key of this item */
-    Project!: string;
-    /** Links to Module|Function  */
-    Permits!: { [key: string]: UCPermit[]; };
-
-    constructor(data?: IUCPermitSet) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-        if (!data) {
-            this.Permits = {};
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.Project = _data["Project"];
-            if (_data["Permits"]) {
-                this.Permits = {} as any;
-                for (let key in _data["Permits"]) {
-                    if (_data["Permits"].hasOwnProperty(key))
-                        this.Permits![key] = _data["Permits"][key] ? _data["Permits"][key].map((i: any) => UCPermit.fromJS(i)) : [];
-                }
-            }
-        }
-    }
-
-    static fromJS(data: any): UCPermitSet {
-        data = typeof data === 'object' ? data : {};
-        let result = new UCPermitSet();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["Project"] = this.Project;
-        if (this.Permits) {
-            data["Permits"] = {};
-            for (let key in this.Permits) {
-                if (this.Permits.hasOwnProperty(key))
-                    data["Permits"][key] = this.Permits[key];
-            }
-        }
-        return data; 
-    }
-
-    clone(): UCPermitSet {
-        const json = this.toJSON();
-        let result = new UCPermitSet();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Describes a set of permissions for this user */
-export interface IUCPermitSet {
-    /** Key of this item */
-    Project: string;
-    /** Links to Module|Function  */
-    Permits: { [key: string]: UCPermit[]; };
-}
-
-/** Permissions for a specific function */
-export class UCPermit implements IUCPermit {
-    /** If not empty, for a specific document (rare) */
-    DocMasterKey?: string | undefined;
-    /** If not empty, for a specific doc reference(rare) */
-    DocReference?: string | undefined;
-    /** If not empty, for a specific document process type(Common) */
-    DocTypeKey?: string | undefined;
-    /** When true, has read permission */
-    ReadOK!: boolean;
-    /** When true, has read permission */
-    InsOK!: boolean;
-    /** When true, has read permission */
-    UpdOK!: boolean;
-    /** When true, has read permission */
-    DelOK!: boolean;
-    /** When true, has read permission */
-    BlanketOK!: boolean;
-    /** When true, there is no restriction on this permission */
-    IsGlobal!: boolean;
-
-    constructor(data?: IUCPermit) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.DocMasterKey = _data["DocMasterKey"];
-            this.DocReference = _data["DocReference"];
-            this.DocTypeKey = _data["DocTypeKey"];
-            this.ReadOK = _data["ReadOK"];
-            this.InsOK = _data["InsOK"];
-            this.UpdOK = _data["UpdOK"];
-            this.DelOK = _data["DelOK"];
-            this.BlanketOK = _data["BlanketOK"];
-            this.IsGlobal = _data["IsGlobal"];
-        }
-    }
-
-    static fromJS(data: any): UCPermit {
-        data = typeof data === 'object' ? data : {};
-        let result = new UCPermit();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["DocMasterKey"] = this.DocMasterKey;
-        data["DocReference"] = this.DocReference;
-        data["DocTypeKey"] = this.DocTypeKey;
-        data["ReadOK"] = this.ReadOK;
-        data["InsOK"] = this.InsOK;
-        data["UpdOK"] = this.UpdOK;
-        data["DelOK"] = this.DelOK;
-        data["BlanketOK"] = this.BlanketOK;
-        data["IsGlobal"] = this.IsGlobal;
-        return data; 
-    }
-
-    clone(): UCPermit {
-        const json = this.toJSON();
-        let result = new UCPermit();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Permissions for a specific function */
-export interface IUCPermit {
-    /** If not empty, for a specific document (rare) */
-    DocMasterKey?: string | undefined;
-    /** If not empty, for a specific doc reference(rare) */
-    DocReference?: string | undefined;
-    /** If not empty, for a specific document process type(Common) */
-    DocTypeKey?: string | undefined;
-    /** When true, has read permission */
-    ReadOK: boolean;
-    /** When true, has read permission */
-    InsOK: boolean;
-    /** When true, has read permission */
-    UpdOK: boolean;
-    /** When true, has read permission */
-    DelOK: boolean;
-    /** When true, has read permission */
-    BlanketOK: boolean;
-    /** When true, there is no restriction on this permission */
-    IsGlobal: boolean;
-}
-
-/** Passes data to a simple API */
-export class APIData implements IAPIData {
-    /** Raw Data */
-    Data?: string | undefined;
-    /** when true, data has been uri encoded (encodeURIComponent) */
-    IsURIEncoded!: boolean;
-
-    constructor(data?: IAPIData) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.Data = _data["Data"];
-            this.IsURIEncoded = _data["IsURIEncoded"];
-        }
-    }
-
-    static fromJS(data: any): APIData {
-        data = typeof data === 'object' ? data : {};
-        let result = new APIData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["Data"] = this.Data;
-        data["IsURIEncoded"] = this.IsURIEncoded;
-        return data; 
-    }
-
-    clone(): APIData {
-        const json = this.toJSON();
-        let result = new APIData();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Passes data to a simple API */
-export interface IAPIData {
-    /** Raw Data */
-    Data?: string | undefined;
-    /** when true, data has been uri encoded (encodeURIComponent) */
-    IsURIEncoded: boolean;
-}
-
-/** Passes data to a simple API */
-export class PDSData extends APIData implements IPDSData {
-    /** ID of data set */
-    PDSKey?: string | undefined;
-    /** Type of change (put, set) */
-    Mode?: string | undefined;
-    /** key or AK source (eg: AK/tdkeymapkey/TK/@xtsKeyMap.BlockOut/9c337885-0fb1-460c-960a-3bacc1d8e0)
-             */
-    Path?: string | undefined;
-    /** Type of data (boolean,string) */
-    Type?: string | undefined;
-    /** When TRUE target field can be read only and will be updated in memory */
-    UpdateReadOnly!: boolean;
-
-    constructor(data?: IPDSData) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.PDSKey = _data["PDSKey"];
-            this.Mode = _data["Mode"];
-            this.Path = _data["Path"];
-            this.Type = _data["Type"];
-            this.UpdateReadOnly = _data["UpdateReadOnly"];
-        }
-    }
-
-    static fromJS(data: any): PDSData {
-        data = typeof data === 'object' ? data : {};
-        let result = new PDSData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["PDSKey"] = this.PDSKey;
-        data["Mode"] = this.Mode;
-        data["Path"] = this.Path;
-        data["Type"] = this.Type;
-        data["UpdateReadOnly"] = this.UpdateReadOnly;
-        super.toJSON(data);
-        return data; 
-    }
-
-    clone(): PDSData {
-        const json = this.toJSON();
-        let result = new PDSData();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Passes data to a simple API */
-export interface IPDSData extends IAPIData {
-    /** ID of data set */
-    PDSKey?: string | undefined;
-    /** Type of change (put, set) */
-    Mode?: string | undefined;
-    /** key or AK source (eg: AK/tdkeymapkey/TK/@xtsKeyMap.BlockOut/9c337885-0fb1-460c-960a-3bacc1d8e0)
-             */
-    Path?: string | undefined;
-    /** Type of data (boolean,string) */
-    Type?: string | undefined;
-    /** When TRUE target field can be read only and will be updated in memory */
-    UpdateReadOnly: boolean;
-}
-
-/** Summary information about a contact */
-export class ContactSummary implements IContactSummary {
-    /** Link to user/contact */
-    UserKey!: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    UserName?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    SortName?: string | undefined;
-    /** Standard SMTP Email Address */
-    Email?: string | undefined;
-    /** Which phone is preferred */
-    UsePhone?: string | undefined;
-    /** Predominantly Obsolete */
-    Fax?: string | undefined;
-    /** When True, can log in to sfPMS */
-    sfUser!: boolean;
-    /** Emp, Vendor, Customer, Standard */
-    ContactType?: string | undefined;
-    /** Bit coded  */
-    ContactFlags!: number;
-    /** ID from external source (customer or vendor ID, revision or batch id) */
-    ExternalID?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    Company?: string | undefined;
-    /** For Vendors, indicate related CSI  */
-    CSIList?: string | undefined;
-    /** When false, this row is ignored and ineffective */
-    Active!: boolean;
-    /** When true, there are no references to this contact */
-    OkToDelete!: boolean;
-    /** When true, this contact came from an external source */
-    IsXTS!: boolean;
-    /** When true, external changes to this contact are currently ignored */
-    XTSBlockIn!: boolean;
-    /** When true, changes to this contact are not being shared with external peer */
-    XTSBlockOut!: boolean;
-    /** When true, this is the company contact - not a person at the company */
-    IsPrimary!: boolean;
-
-    constructor(data?: IContactSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.UserKey = _data["UserKey"];
-            this.UserName = _data["UserName"];
-            this.SortName = _data["SortName"];
-            this.Email = _data["Email"];
-            this.UsePhone = _data["UsePhone"];
-            this.Fax = _data["Fax"];
-            this.sfUser = _data["sfUser"];
-            this.ContactType = _data["ContactType"];
-            this.ContactFlags = _data["ContactFlags"];
-            this.ExternalID = _data["ExternalID"];
-            this.Company = _data["Company"];
-            this.CSIList = _data["CSIList"];
-            this.Active = _data["Active"];
-            this.OkToDelete = _data["OkToDelete"];
-            this.IsXTS = _data["IsXTS"];
-            this.XTSBlockIn = _data["XTSBlockIn"];
-            this.XTSBlockOut = _data["XTSBlockOut"];
-            this.IsPrimary = _data["IsPrimary"];
-        }
-    }
-
-    static fromJS(data: any): ContactSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new ContactSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserKey"] = this.UserKey;
-        data["UserName"] = this.UserName;
-        data["SortName"] = this.SortName;
-        data["Email"] = this.Email;
-        data["UsePhone"] = this.UsePhone;
-        data["Fax"] = this.Fax;
-        data["sfUser"] = this.sfUser;
-        data["ContactType"] = this.ContactType;
-        data["ContactFlags"] = this.ContactFlags;
-        data["ExternalID"] = this.ExternalID;
-        data["Company"] = this.Company;
-        data["CSIList"] = this.CSIList;
-        data["Active"] = this.Active;
-        data["OkToDelete"] = this.OkToDelete;
-        data["IsXTS"] = this.IsXTS;
-        data["XTSBlockIn"] = this.XTSBlockIn;
-        data["XTSBlockOut"] = this.XTSBlockOut;
-        data["IsPrimary"] = this.IsPrimary;
-        return data; 
-    }
-
-    clone(): ContactSummary {
-        const json = this.toJSON();
-        let result = new ContactSummary();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Summary information about a contact */
-export interface IContactSummary {
-    /** Link to user/contact */
-    UserKey: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    UserName?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    SortName?: string | undefined;
-    /** Standard SMTP Email Address */
-    Email?: string | undefined;
-    /** Which phone is preferred */
-    UsePhone?: string | undefined;
-    /** Predominantly Obsolete */
-    Fax?: string | undefined;
-    /** When True, can log in to sfPMS */
-    sfUser: boolean;
-    /** Emp, Vendor, Customer, Standard */
-    ContactType?: string | undefined;
-    /** Bit coded  */
-    ContactFlags: number;
-    /** ID from external source (customer or vendor ID, revision or batch id) */
-    ExternalID?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    Company?: string | undefined;
-    /** For Vendors, indicate related CSI  */
-    CSIList?: string | undefined;
-    /** When false, this row is ignored and ineffective */
-    Active: boolean;
-    /** When true, there are no references to this contact */
-    OkToDelete: boolean;
-    /** When true, this contact came from an external source */
-    IsXTS: boolean;
-    /** When true, external changes to this contact are currently ignored */
-    XTSBlockIn: boolean;
-    /** When true, changes to this contact are not being shared with external peer */
-    XTSBlockOut: boolean;
-    /** When true, this is the company contact - not a person at the company */
-    IsPrimary: boolean;
-}
-
-/** Various filters for contact search */
-export class ContactFilters implements IContactFilters {
-    /** Name like */
-    NameLike?: string | undefined;
-    /** Email  */
-    EmailLike?: string | undefined;
-    /** Company like  */
-    CompanyLike?: string | undefined;
-    /** Location */
-    LocationLike?: string | undefined;
-    /** ID like (vendor, customer, employee IDs) */
-    IDLike?: string | undefined;
-    /** For Vendors, specified related CSI  */
-    CSIListLike?: string | undefined;
-    /** Phone Like (matches any phone number) */
-    PhoneLike?: string | undefined;
-    /** When true, result is limited to  */
-    Users!: boolean;
-    /** When true, result is limited to  */
-    Customers!: boolean;
-    /** When true, result is limited to  */
-    Employee!: boolean;
-    /** When true, result is limited to  */
-    Public!: boolean;
-    /** When true, result is limited to primary company contacts  */
-    Company!: boolean;
-    /** When true, result is limited to  */
-    Vendors!: boolean;
-    /** 1==Active;0==Inactive; 2==Both */
-    ContactState!: number;
-    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
-    RoleKey?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    UserKey?: string | undefined;
-    /** Default 2000-01-01 */
-    FromDate?: Date | undefined;
-    /** Default today */
-    ThruDate?: Date | undefined;
-
-    constructor(data?: IContactFilters) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.NameLike = _data["NameLike"];
-            this.EmailLike = _data["EmailLike"];
-            this.CompanyLike = _data["CompanyLike"];
-            this.LocationLike = _data["LocationLike"];
-            this.IDLike = _data["IDLike"];
-            this.CSIListLike = _data["CSIListLike"];
-            this.PhoneLike = _data["PhoneLike"];
-            this.Users = _data["Users"];
-            this.Customers = _data["Customers"];
-            this.Employee = _data["Employee"];
-            this.Public = _data["Public"];
-            this.Company = _data["Company"];
-            this.Vendors = _data["Vendors"];
-            this.ContactState = _data["ContactState"];
-            this.RoleKey = _data["RoleKey"];
-            this.UserKey = _data["UserKey"];
-            this.FromDate = _data["FromDate"] ? new Date(_data["FromDate"].toString()) : <any>undefined;
-            this.ThruDate = _data["ThruDate"] ? new Date(_data["ThruDate"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ContactFilters {
-        data = typeof data === 'object' ? data : {};
-        let result = new ContactFilters();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["NameLike"] = this.NameLike;
-        data["EmailLike"] = this.EmailLike;
-        data["CompanyLike"] = this.CompanyLike;
-        data["LocationLike"] = this.LocationLike;
-        data["IDLike"] = this.IDLike;
-        data["CSIListLike"] = this.CSIListLike;
-        data["PhoneLike"] = this.PhoneLike;
-        data["Users"] = this.Users;
-        data["Customers"] = this.Customers;
-        data["Employee"] = this.Employee;
-        data["Public"] = this.Public;
-        data["Company"] = this.Company;
-        data["Vendors"] = this.Vendors;
-        data["ContactState"] = this.ContactState;
-        data["RoleKey"] = this.RoleKey;
-        data["UserKey"] = this.UserKey;
-        data["FromDate"] = this.FromDate ? this.FromDate.toISOString() : <any>undefined;
-        data["ThruDate"] = this.ThruDate ? this.ThruDate.toISOString() : <any>undefined;
-        return data; 
-    }
-
-    clone(): ContactFilters {
-        const json = this.toJSON();
-        let result = new ContactFilters();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Various filters for contact search */
-export interface IContactFilters {
-    /** Name like */
-    NameLike?: string | undefined;
-    /** Email  */
-    EmailLike?: string | undefined;
-    /** Company like  */
-    CompanyLike?: string | undefined;
-    /** Location */
-    LocationLike?: string | undefined;
-    /** ID like (vendor, customer, employee IDs) */
-    IDLike?: string | undefined;
-    /** For Vendors, specified related CSI  */
-    CSIListLike?: string | undefined;
-    /** Phone Like (matches any phone number) */
-    PhoneLike?: string | undefined;
-    /** When true, result is limited to  */
-    Users: boolean;
-    /** When true, result is limited to  */
-    Customers: boolean;
-    /** When true, result is limited to  */
-    Employee: boolean;
-    /** When true, result is limited to  */
-    Public: boolean;
-    /** When true, result is limited to primary company contacts  */
-    Company: boolean;
-    /** When true, result is limited to  */
-    Vendors: boolean;
-    /** 1==Active;0==Inactive; 2==Both */
-    ContactState: number;
-    /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
-    RoleKey?: string | undefined;
-    /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
-    UserKey?: string | undefined;
-    /** Default 2000-01-01 */
-    FromDate?: Date | undefined;
-    /** Default today */
-    ThruDate?: Date | undefined;
-}
-
-/** Describes a contact */
-export class Contact implements IContact {
-    /** Key for this user/contact */
-    UserKey!: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    UserName?: string | undefined;
-    /** Login name */
-    UserLogin?: string | undefined;
-    /** Source of external authentication that points to this contact */
-    FederatedIdentityInfo?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    SortName?: string | undefined;
-    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
-    FamiliarName?: string | undefined;
-    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
-    Salutation?: string | undefined;
-    /** Short description */
-    Title?: string | undefined;
-    /** Free form; replaces ~R placeholder in Salutation */
-    Role?: string | undefined;
-    /** Standard SMTP Email Address */
-    EMail?: string | undefined;
-    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
-    phone?: string | undefined;
-    /** Predominantly Obsolete */
-    fax?: string | undefined;
-    /** Mobile phone number */
-    cell?: string | undefined;
-    /** Gets phone designation  */
-    pager?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    Company?: string | undefined;
-    /** First line of address */
-    address?: string | undefined;
-    /** Second line of address */
-    address2?: string | undefined;
-    /** City (for address) */
-    city?: string | undefined;
-    /** For Address */
-    state?: string | undefined;
-    /** Zipcode for address */
-    zip?: string | undefined;
-    /** Uses xsfCodeSet, not used in address */
-    Country?: string | undefined;
-    /** Applicable County / Organizational Juristiction (not used in address) */
-    County?: string | undefined;
-    /** EST, PST, etc */
-    TimeZone?: string | undefined;
-    /** Instant Messaging Service */
-    IMService?: string | undefined;
-    /** Instant Messaging Handle */
-    IMHandle?: string | undefined;
-    /** URL */
-    WebURL?: string | undefined;
-    /** Vendor Company ID */
-    VendorID?: string | undefined;
-    /** Weak link to Solomon */
-    EmployeeID?: string | undefined;
-    /** Emp, Vendor, Customer, Standard */
-    ContactType?: string | undefined;
-    /** Web; E-mail; Fax; Hard Copy */
-    RouteVia?: string | undefined;
-    /** 1=Phone; 2=Cell; 3-Pager */
-    ShowPhone!: number;
-    /** Key to role that defines who can proxy for this contact */
-    RouteeProxy?: string | undefined;
-    /** A role with a responsibility */
-    DefaultResponsibility!: string;
-    /** Key to primary company */
-    ContactCompanyKey!: string;
-    /** HTML Markup for signature in templates */
-    Signature?: string | undefined;
-    /** Key to file in catalog that contains image */
-    Likeness?: string | undefined;
-    /** When TRUE, trigger updates address if company address changes */
-    UseCompanyAddr!: boolean;
-    /** When true, new projects are added to the dashboard automatically */
-    ShowNewProjects!: boolean;
-    /** When True, can log in to dashboard */
-    sfUser!: boolean;
-    /** When true, this contact is included in lookups  */
-    IsPublic!: boolean;
-    /** When false, this row is ignored and ineffective */
-    Active!: boolean;
-    /** When true, is also an integrated DSL User */
-    SolomonUser!: boolean;
-    /** When TRUE, expiration date is advanced each day the user logs in */
-    SlidingExpiration!: boolean;
-    /** When TRUE, user must change password */
-    PWMustChange!: boolean;
-    /** When TRUE, user can be locked out because of password age */
-    PWAging!: boolean;
-    /** Company Division ID */
-    DivisionID?: string | undefined;
-    /** Why user has been blocked */
-    LockoutReason?: string | undefined;
-    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
-    OrgLevel!: number;
-    /** Checksum of all externally syched data */
-    SynchCheck!: number;
-    /** Number of consecutive login failures (reset upon success) */
-    FailedLoginRun!: number;
-    /** Email notifications suppressed until this time */
-    SuppressNotifyUntil?: Date | undefined;
-    /** Set by data layer each time the user logs in */
-    LastLogin?: Date | undefined;
-    /** Date when password was last changed; can be null */
-    LastPWChange?: Date | undefined;
-    /** User cannot login until this time */
-    LockedOutUntil?: Date | undefined;
-    /** Date of Expiration for this account */
-    Expiration?: Date | undefined;
-    /** When entity was first recorded; read only */
-    Created!: Date;
-
-    constructor(data?: IContact) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.UserKey = _data["UserKey"];
-            this.UserName = _data["UserName"];
-            this.UserLogin = _data["UserLogin"];
-            this.FederatedIdentityInfo = _data["FederatedIdentityInfo"];
-            this.SortName = _data["SortName"];
-            this.FamiliarName = _data["FamiliarName"];
-            this.Salutation = _data["Salutation"];
-            this.Title = _data["Title"];
-            this.Role = _data["Role"];
-            this.EMail = _data["EMail"];
-            this.phone = _data["phone"];
-            this.fax = _data["fax"];
-            this.cell = _data["cell"];
-            this.pager = _data["pager"];
-            this.Company = _data["Company"];
-            this.address = _data["address"];
-            this.address2 = _data["address2"];
-            this.city = _data["city"];
-            this.state = _data["state"];
-            this.zip = _data["zip"];
-            this.Country = _data["Country"];
-            this.County = _data["County"];
-            this.TimeZone = _data["TimeZone"];
-            this.IMService = _data["IMService"];
-            this.IMHandle = _data["IMHandle"];
-            this.WebURL = _data["WebURL"];
-            this.VendorID = _data["VendorID"];
-            this.EmployeeID = _data["EmployeeID"];
-            this.ContactType = _data["ContactType"];
-            this.RouteVia = _data["RouteVia"];
-            this.ShowPhone = _data["ShowPhone"];
-            this.RouteeProxy = _data["RouteeProxy"];
-            this.DefaultResponsibility = _data["DefaultResponsibility"];
-            this.ContactCompanyKey = _data["ContactCompanyKey"];
-            this.Signature = _data["Signature"];
-            this.Likeness = _data["Likeness"];
-            this.UseCompanyAddr = _data["UseCompanyAddr"];
-            this.ShowNewProjects = _data["ShowNewProjects"];
-            this.sfUser = _data["sfUser"];
-            this.IsPublic = _data["IsPublic"];
-            this.Active = _data["Active"];
-            this.SolomonUser = _data["SolomonUser"];
-            this.SlidingExpiration = _data["SlidingExpiration"];
-            this.PWMustChange = _data["PWMustChange"];
-            this.PWAging = _data["PWAging"];
-            this.DivisionID = _data["DivisionID"];
-            this.LockoutReason = _data["LockoutReason"];
-            this.OrgLevel = _data["OrgLevel"];
-            this.SynchCheck = _data["SynchCheck"];
-            this.FailedLoginRun = _data["FailedLoginRun"];
-            this.SuppressNotifyUntil = _data["SuppressNotifyUntil"] ? new Date(_data["SuppressNotifyUntil"].toString()) : <any>undefined;
-            this.LastLogin = _data["LastLogin"] ? new Date(_data["LastLogin"].toString()) : <any>undefined;
-            this.LastPWChange = _data["LastPWChange"] ? new Date(_data["LastPWChange"].toString()) : <any>undefined;
-            this.LockedOutUntil = _data["LockedOutUntil"] ? new Date(_data["LockedOutUntil"].toString()) : <any>undefined;
-            this.Expiration = _data["Expiration"] ? new Date(_data["Expiration"].toString()) : <any>undefined;
-            this.Created = _data["Created"] ? new Date(_data["Created"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): Contact {
-        data = typeof data === 'object' ? data : {};
-        let result = new Contact();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserKey"] = this.UserKey;
-        data["UserName"] = this.UserName;
-        data["UserLogin"] = this.UserLogin;
-        data["FederatedIdentityInfo"] = this.FederatedIdentityInfo;
-        data["SortName"] = this.SortName;
-        data["FamiliarName"] = this.FamiliarName;
-        data["Salutation"] = this.Salutation;
-        data["Title"] = this.Title;
-        data["Role"] = this.Role;
-        data["EMail"] = this.EMail;
-        data["phone"] = this.phone;
-        data["fax"] = this.fax;
-        data["cell"] = this.cell;
-        data["pager"] = this.pager;
-        data["Company"] = this.Company;
-        data["address"] = this.address;
-        data["address2"] = this.address2;
-        data["city"] = this.city;
-        data["state"] = this.state;
-        data["zip"] = this.zip;
-        data["Country"] = this.Country;
-        data["County"] = this.County;
-        data["TimeZone"] = this.TimeZone;
-        data["IMService"] = this.IMService;
-        data["IMHandle"] = this.IMHandle;
-        data["WebURL"] = this.WebURL;
-        data["VendorID"] = this.VendorID;
-        data["EmployeeID"] = this.EmployeeID;
-        data["ContactType"] = this.ContactType;
-        data["RouteVia"] = this.RouteVia;
-        data["ShowPhone"] = this.ShowPhone;
-        data["RouteeProxy"] = this.RouteeProxy;
-        data["DefaultResponsibility"] = this.DefaultResponsibility;
-        data["ContactCompanyKey"] = this.ContactCompanyKey;
-        data["Signature"] = this.Signature;
-        data["Likeness"] = this.Likeness;
-        data["UseCompanyAddr"] = this.UseCompanyAddr;
-        data["ShowNewProjects"] = this.ShowNewProjects;
-        data["sfUser"] = this.sfUser;
-        data["IsPublic"] = this.IsPublic;
-        data["Active"] = this.Active;
-        data["SolomonUser"] = this.SolomonUser;
-        data["SlidingExpiration"] = this.SlidingExpiration;
-        data["PWMustChange"] = this.PWMustChange;
-        data["PWAging"] = this.PWAging;
-        data["DivisionID"] = this.DivisionID;
-        data["LockoutReason"] = this.LockoutReason;
-        data["OrgLevel"] = this.OrgLevel;
-        data["SynchCheck"] = this.SynchCheck;
-        data["FailedLoginRun"] = this.FailedLoginRun;
-        data["SuppressNotifyUntil"] = this.SuppressNotifyUntil ? this.SuppressNotifyUntil.toISOString() : <any>undefined;
-        data["LastLogin"] = this.LastLogin ? this.LastLogin.toISOString() : <any>undefined;
-        data["LastPWChange"] = this.LastPWChange ? this.LastPWChange.toISOString() : <any>undefined;
-        data["LockedOutUntil"] = this.LockedOutUntil ? this.LockedOutUntil.toISOString() : <any>undefined;
-        data["Expiration"] = this.Expiration ? this.Expiration.toISOString() : <any>undefined;
-        data["Created"] = this.Created ? this.Created.toISOString() : <any>undefined;
-        return data; 
-    }
-
-    clone(): Contact {
-        const json = this.toJSON();
-        let result = new Contact();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Describes a contact */
-export interface IContact {
-    /** Key for this user/contact */
-    UserKey: string;
-    /** Proper name for display - John Smith; replaces ~U placeholder in Salutation */
-    UserName?: string | undefined;
-    /** Login name */
-    UserLogin?: string | undefined;
-    /** Source of external authentication that points to this contact */
-    FederatedIdentityInfo?: string | undefined;
-    /** Smith for Jon Smith; corresponds to ~S salutation placeholder */
-    SortName?: string | undefined;
-    /** Jack for Jon Smith; corresponds to ~F salutation placeholder */
-    FamiliarName?: string | undefined;
-    /** Default is Dear ~U; placeholders: ~ F,S,U,C,T,R */
-    Salutation?: string | undefined;
-    /** Short description */
-    Title?: string | undefined;
-    /** Free form; replaces ~R placeholder in Salutation */
-    Role?: string | undefined;
-    /** Standard SMTP Email Address */
-    EMail?: string | undefined;
-    /** Phone typically aaa xxx ssss or + with internaltional dialing string */
-    phone?: string | undefined;
-    /** Predominantly Obsolete */
-    fax?: string | undefined;
-    /** Mobile phone number */
-    cell?: string | undefined;
-    /** Gets phone designation  */
-    pager?: string | undefined;
-    /** free form; when various contacts match exactly, good things happen */
-    Company?: string | undefined;
-    /** First line of address */
-    address?: string | undefined;
-    /** Second line of address */
-    address2?: string | undefined;
-    /** City (for address) */
-    city?: string | undefined;
-    /** For Address */
-    state?: string | undefined;
-    /** Zipcode for address */
-    zip?: string | undefined;
-    /** Uses xsfCodeSet, not used in address */
-    Country?: string | undefined;
-    /** Applicable County / Organizational Juristiction (not used in address) */
-    County?: string | undefined;
-    /** EST, PST, etc */
-    TimeZone?: string | undefined;
-    /** Instant Messaging Service */
-    IMService?: string | undefined;
-    /** Instant Messaging Handle */
-    IMHandle?: string | undefined;
-    /** URL */
-    WebURL?: string | undefined;
-    /** Vendor Company ID */
-    VendorID?: string | undefined;
-    /** Weak link to Solomon */
-    EmployeeID?: string | undefined;
-    /** Emp, Vendor, Customer, Standard */
-    ContactType?: string | undefined;
-    /** Web; E-mail; Fax; Hard Copy */
-    RouteVia?: string | undefined;
-    /** 1=Phone; 2=Cell; 3-Pager */
-    ShowPhone: number;
-    /** Key to role that defines who can proxy for this contact */
-    RouteeProxy?: string | undefined;
-    /** A role with a responsibility */
-    DefaultResponsibility: string;
-    /** Key to primary company */
-    ContactCompanyKey: string;
-    /** HTML Markup for signature in templates */
-    Signature?: string | undefined;
-    /** Key to file in catalog that contains image */
-    Likeness?: string | undefined;
-    /** When TRUE, trigger updates address if company address changes */
-    UseCompanyAddr: boolean;
-    /** When true, new projects are added to the dashboard automatically */
-    ShowNewProjects: boolean;
-    /** When True, can log in to dashboard */
-    sfUser: boolean;
-    /** When true, this contact is included in lookups  */
-    IsPublic: boolean;
-    /** When false, this row is ignored and ineffective */
-    Active: boolean;
-    /** When true, is also an integrated DSL User */
-    SolomonUser: boolean;
-    /** When TRUE, expiration date is advanced each day the user logs in */
-    SlidingExpiration: boolean;
-    /** When TRUE, user must change password */
-    PWMustChange: boolean;
-    /** When TRUE, user can be locked out because of password age */
-    PWAging: boolean;
-    /** Company Division ID */
-    DivisionID?: string | undefined;
-    /** Why user has been blocked */
-    LockoutReason?: string | undefined;
-    /** When a user does a contact lookup, they can only see contacts with an OrgLevel less than 1.112 times their own OrgLevel */
-    OrgLevel: number;
-    /** Checksum of all externally syched data */
-    SynchCheck: number;
-    /** Number of consecutive login failures (reset upon success) */
-    FailedLoginRun: number;
-    /** Email notifications suppressed until this time */
-    SuppressNotifyUntil?: Date | undefined;
-    /** Set by data layer each time the user logs in */
-    LastLogin?: Date | undefined;
-    /** Date when password was last changed; can be null */
-    LastPWChange?: Date | undefined;
-    /** User cannot login until this time */
-    LockedOutUntil?: Date | undefined;
-    /** Date of Expiration for this account */
-    Expiration?: Date | undefined;
-    /** When entity was first recorded; read only */
-    Created: Date;
-}
-
-/** Primary Site Weather Now */
-export class ProjKPIFact implements IProjKPIFact {
-    /** Target which KPI column */
-    Column?: string | undefined;
-    /** Label  */
-    Label?: string | undefined;
-    /** Value to display */
-    Value?: string | undefined;
-    /** Set if value has a click action */
-    Action?: string | undefined;
-    /** Display Format (C2) */
-    DForm?: string | undefined;
-    /** CSS to apply */
-    TForm?: string | undefined;
-    Negative!: boolean;
-    /** UI CFG Item Name */
-    ItemName?: string | undefined;
-
-    constructor(data?: IProjKPIFact) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.Column = _data["Column"];
-            this.Label = _data["Label"];
-            this.Value = _data["Value"];
-            this.Action = _data["Action"];
-            this.DForm = _data["DForm"];
-            this.TForm = _data["TForm"];
-            this.Negative = _data["Negative"];
-            this.ItemName = _data["ItemName"];
-        }
-    }
-
-    static fromJS(data: any): ProjKPIFact {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProjKPIFact();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["Column"] = this.Column;
-        data["Label"] = this.Label;
-        data["Value"] = this.Value;
-        data["Action"] = this.Action;
-        data["DForm"] = this.DForm;
-        data["TForm"] = this.TForm;
-        data["Negative"] = this.Negative;
-        data["ItemName"] = this.ItemName;
-        return data; 
-    }
-
-    clone(): ProjKPIFact {
-        const json = this.toJSON();
-        let result = new ProjKPIFact();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Primary Site Weather Now */
-export interface IProjKPIFact {
-    /** Target which KPI column */
-    Column?: string | undefined;
-    /** Label  */
-    Label?: string | undefined;
-    /** Value to display */
-    Value?: string | undefined;
-    /** Set if value has a click action */
-    Action?: string | undefined;
-    /** Display Format (C2) */
-    DForm?: string | undefined;
-    /** CSS to apply */
-    TForm?: string | undefined;
-    Negative: boolean;
-    /** UI CFG Item Name */
-    ItemName?: string | undefined;
-}
-
-/** Attributes describing a member of a project team */
-export class ProjectTeamMember implements IProjectTeamMember {
-    /** Primary Key */
-    UserProjectKey!: string;
-    /** Key of Team Member in contact table */
-    UserKey!: string;
-    /** Key of Role Responsibility on this team (UCRoleKey) */
-    Responsibility!: string;
-    /** Login name of the team member */
-    UserName?: string | undefined;
-    /** Company Name (Acme Inc) */
-    Company?: string | undefined;
-    /** Email address */
-    email?: string | undefined;
-    /** Phone chosen as primary on the contact details */
-    UsePhone?: string | undefined;
-    /** Freeform: how the team member designates this project   */
-    ContactProject?: string | undefined;
-    /** Role Description */
-    RoleDescription?: string | undefined;
-    /** Role Name (see Responsibility) */
-    RoleName?: string | undefined;
-    /** Link to likeness of this team member */
-    LikenessURL?: string | undefined;
-    /** Link to an external resource associated with this team member */
-    WebURL?: string | undefined;
-    /** By default, When the team member was added  */
-    Starting!: Date;
-    /** When the team member left (or was replaced) */
-    Ending!: Date;
-    /** When TRUE,  shown by default */
-    TeamList!: boolean;
-    /** When TRUE, is visible on this team even to users that do not have can see all */
-    IsPublic!: boolean;
-    /** When TRUE, this team member is active */
-    Active!: boolean;
-    /** Indicates if the user is always public (as opposed to public on this team: see IsPublic) */
-    UserNotPublic!: boolean;
-    /** When TRUE, the contact for this team member has been marked inactive */
-    UserNotActive!: boolean;
-    /** custom amount */
-    csAmount!: number;
-    /** custom amount */
-    csValue!: number;
-    /** custom quantity */
-    csQty!: number;
-    /** custom whole number */
-    csNumber!: number;
-    /** custom boolean */
-    csCheck!: boolean;
-    /** custom boolean */
-    csFlag!: boolean;
-    /** custom note */
-    csNote?: string | undefined;
-    /** custom code (potential code list lookup) */
-    csCode?: string | undefined;
-    /** custom string */
-    csString016?: string | undefined;
-    /** custom string */
-    csString030?: string | undefined;
-    /** custom string */
-    csString040?: string | undefined;
-    /** custom string */
-    csString050?: string | undefined;
-    /** custom string */
-    csString060?: string | undefined;
-    /** custom string */
-    csString080?: string | undefined;
-    /** custom string */
-    csString100?: string | undefined;
-    /** custom string */
-    csString120?: string | undefined;
-    /** custom string */
-    csString240?: string | undefined;
-    /** custom key - usually for a person */
-    csContactKey?: string | undefined;
-    /** custom key */
-    csKey?: string | undefined;
-    /** custom date */
-    csDate?: Date | undefined;
-    /** custom date */
-    csWhen?: Date | undefined;
-
-    constructor(data?: IProjectTeamMember) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.UserProjectKey = _data["UserProjectKey"];
-            this.UserKey = _data["UserKey"];
-            this.Responsibility = _data["Responsibility"];
-            this.UserName = _data["UserName"];
-            this.Company = _data["Company"];
-            this.email = _data["email"];
-            this.UsePhone = _data["UsePhone"];
-            this.ContactProject = _data["ContactProject"];
-            this.RoleDescription = _data["RoleDescription"];
-            this.RoleName = _data["RoleName"];
-            this.LikenessURL = _data["LikenessURL"];
-            this.WebURL = _data["WebURL"];
-            this.Starting = _data["Starting"] ? new Date(_data["Starting"].toString()) : <any>undefined;
-            this.Ending = _data["Ending"] ? new Date(_data["Ending"].toString()) : <any>undefined;
-            this.TeamList = _data["TeamList"];
-            this.IsPublic = _data["IsPublic"];
-            this.Active = _data["Active"];
-            this.UserNotPublic = _data["UserNotPublic"];
-            this.UserNotActive = _data["UserNotActive"];
-            this.csAmount = _data["csAmount"];
-            this.csValue = _data["csValue"];
-            this.csQty = _data["csQty"];
-            this.csNumber = _data["csNumber"];
-            this.csCheck = _data["csCheck"];
-            this.csFlag = _data["csFlag"];
-            this.csNote = _data["csNote"];
-            this.csCode = _data["csCode"];
-            this.csString016 = _data["csString016"];
-            this.csString030 = _data["csString030"];
-            this.csString040 = _data["csString040"];
-            this.csString050 = _data["csString050"];
-            this.csString060 = _data["csString060"];
-            this.csString080 = _data["csString080"];
-            this.csString100 = _data["csString100"];
-            this.csString120 = _data["csString120"];
-            this.csString240 = _data["csString240"];
-            this.csContactKey = _data["csContactKey"];
-            this.csKey = _data["csKey"];
-            this.csDate = _data["csDate"] ? new Date(_data["csDate"].toString()) : <any>undefined;
-            this.csWhen = _data["csWhen"] ? new Date(_data["csWhen"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ProjectTeamMember {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProjectTeamMember();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["UserProjectKey"] = this.UserProjectKey;
-        data["UserKey"] = this.UserKey;
-        data["Responsibility"] = this.Responsibility;
-        data["UserName"] = this.UserName;
-        data["Company"] = this.Company;
-        data["email"] = this.email;
-        data["UsePhone"] = this.UsePhone;
-        data["ContactProject"] = this.ContactProject;
-        data["RoleDescription"] = this.RoleDescription;
-        data["RoleName"] = this.RoleName;
-        data["LikenessURL"] = this.LikenessURL;
-        data["WebURL"] = this.WebURL;
-        data["Starting"] = this.Starting ? this.Starting.toISOString() : <any>undefined;
-        data["Ending"] = this.Ending ? this.Ending.toISOString() : <any>undefined;
-        data["TeamList"] = this.TeamList;
-        data["IsPublic"] = this.IsPublic;
-        data["Active"] = this.Active;
-        data["UserNotPublic"] = this.UserNotPublic;
-        data["UserNotActive"] = this.UserNotActive;
-        data["csAmount"] = this.csAmount;
-        data["csValue"] = this.csValue;
-        data["csQty"] = this.csQty;
-        data["csNumber"] = this.csNumber;
-        data["csCheck"] = this.csCheck;
-        data["csFlag"] = this.csFlag;
-        data["csNote"] = this.csNote;
-        data["csCode"] = this.csCode;
-        data["csString016"] = this.csString016;
-        data["csString030"] = this.csString030;
-        data["csString040"] = this.csString040;
-        data["csString050"] = this.csString050;
-        data["csString060"] = this.csString060;
-        data["csString080"] = this.csString080;
-        data["csString100"] = this.csString100;
-        data["csString120"] = this.csString120;
-        data["csString240"] = this.csString240;
-        data["csContactKey"] = this.csContactKey;
-        data["csKey"] = this.csKey;
-        data["csDate"] = this.csDate ? this.csDate.toISOString() : <any>undefined;
-        data["csWhen"] = this.csWhen ? this.csWhen.toISOString() : <any>undefined;
-        return data; 
-    }
-
-    clone(): ProjectTeamMember {
-        const json = this.toJSON();
-        let result = new ProjectTeamMember();
-        result.init(json);
-        return result;
-    }
-}
-
-/** Attributes describing a member of a project team */
-export interface IProjectTeamMember {
-    /** Primary Key */
-    UserProjectKey: string;
-    /** Key of Team Member in contact table */
-    UserKey: string;
-    /** Key of Role Responsibility on this team (UCRoleKey) */
-    Responsibility: string;
-    /** Login name of the team member */
-    UserName?: string | undefined;
-    /** Company Name (Acme Inc) */
-    Company?: string | undefined;
-    /** Email address */
-    email?: string | undefined;
-    /** Phone chosen as primary on the contact details */
-    UsePhone?: string | undefined;
-    /** Freeform: how the team member designates this project   */
-    ContactProject?: string | undefined;
-    /** Role Description */
-    RoleDescription?: string | undefined;
-    /** Role Name (see Responsibility) */
-    RoleName?: string | undefined;
-    /** Link to likeness of this team member */
-    LikenessURL?: string | undefined;
-    /** Link to an external resource associated with this team member */
-    WebURL?: string | undefined;
-    /** By default, When the team member was added  */
-    Starting: Date;
-    /** When the team member left (or was replaced) */
-    Ending: Date;
-    /** When TRUE,  shown by default */
-    TeamList: boolean;
-    /** When TRUE, is visible on this team even to users that do not have can see all */
-    IsPublic: boolean;
-    /** When TRUE, this team member is active */
-    Active: boolean;
-    /** Indicates if the user is always public (as opposed to public on this team: see IsPublic) */
-    UserNotPublic: boolean;
-    /** When TRUE, the contact for this team member has been marked inactive */
-    UserNotActive: boolean;
-    /** custom amount */
-    csAmount: number;
-    /** custom amount */
-    csValue: number;
-    /** custom quantity */
-    csQty: number;
-    /** custom whole number */
-    csNumber: number;
-    /** custom boolean */
-    csCheck: boolean;
-    /** custom boolean */
-    csFlag: boolean;
-    /** custom note */
-    csNote?: string | undefined;
-    /** custom code (potential code list lookup) */
-    csCode?: string | undefined;
-    /** custom string */
-    csString016?: string | undefined;
-    /** custom string */
-    csString030?: string | undefined;
-    /** custom string */
-    csString040?: string | undefined;
-    /** custom string */
-    csString050?: string | undefined;
-    /** custom string */
-    csString060?: string | undefined;
-    /** custom string */
-    csString080?: string | undefined;
-    /** custom string */
-    csString100?: string | undefined;
-    /** custom string */
-    csString120?: string | undefined;
-    /** custom string */
-    csString240?: string | undefined;
-    /** custom key - usually for a person */
-    csContactKey?: string | undefined;
-    /** custom key */
-    csKey?: string | undefined;
-    /** custom date */
-    csDate?: Date | undefined;
-    /** custom date */
-    csWhen?: Date | undefined;
 }
 
 export class ApiException extends Error {
