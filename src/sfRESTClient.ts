@@ -747,7 +747,8 @@ export class sfRestClient {
      * @param dependsOnList semicolon separated list of related field and constants. eg #Project;=Subtype
      * @param rawRow primary source of data
      */
-    GatherDependsOnValues(dependsOnList:string, rawRow: any) : string[] {
+    GatherDependsOnValues(dependsOnList:string, rawRow: any) : string[] | undefined {
+        if (!dependsOnList) return undefined;
         var result: string[] = [];
 
         dependsOnList.split(";").forEach(element => {
