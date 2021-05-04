@@ -570,6 +570,29 @@ export class sfRestClient {
         return table;
     };
 
+    /**
+     *
+     * @param id the guid DocMasterKey for the document to be opened
+     */
+    PopDoc(id : GUID) : Promise<Window | null>
+    {
+        return new Promise<Window | null>((resolve) => {
+            this.GetDV("DocMasterType",id,undefined).then((thisDocType) => {
+                var thisRestClient = this;
+                if (!thisDocType) throw new Error("Document not found"); //hmmm maybe a popup?
+                //todo: determine if we should use the new or old UI based on the document type of this document
+                if (this._LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1}".sfFormat(id, thisDocType));
+
+                var url : string = thisRestClient._SiteURL + '/DocDetail.aspx?id=' + id ;
+                var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
+                //todo: determine if we need the "how many tabs" logic and dialog
+                if (!window) throw new Error("PopDoc() Must be called from a browser window");
+                var PW = window.open(url, TargetTab);
+                resolve(PW);
+            });
+        };
+    }
+
  /**
      * Make sure the URL starts with application root path
     */
@@ -725,6 +748,9 @@ export class sfRestClient {
         return this._SiteURL + '/api/' + suffix;
     }
 
+    /**
+     * For example: http://server.domain.com/sfPMS  (does not include ending slash)
+     */
     protected _SiteURL: string;
 
 
