@@ -744,7 +744,7 @@ export class sfRestClient {
 
     /**
      * Builds a string array of values that help define the context of a lookup or evaluation
-     * @param dependsOnList semicolon separated list of related field and constants. eg #Project;=Subtype
+     * @param dependsOnList semicolon separated list of related field and constants. eg #DocMasterDetail.Project;=Subtype
      * @param rawRow primary source of data
      */
     GatherDependsOnValues(dependsOnList:string, rawRow: any) : string[] | undefined {
@@ -755,6 +755,13 @@ export class sfRestClient {
             if (element.startsWith("=")) result.push(element.substring(1));
             if (element.startsWith("#")) {
                 element = element.substring(1);
+                if (element.startsWith("DocMasterDetail.")) {
+                    if (element.endsWith(".Project")) result.push(this._WCC.Project);
+                    else if (element.endsWith(".DocTypeKey")) result.push(this._WCC.DocTypeKey);
+                    else {
+                        throw new Error("Not implemented yet: Depends on " + element);
+                    }
+                }
                 if (element.indexOf(".")> 0 ) {
                     throw new Error("Not implemented yet: Depends on a related row of data: " + element);
                 }
