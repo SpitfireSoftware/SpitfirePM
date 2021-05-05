@@ -579,18 +579,28 @@ export class sfRestClient {
         return new Promise<Window | null>((resolve) => {
             this.GetDV("DocMasterType",id,undefined).then((thisDocType) => {
                 var thisRestClient = this;
-                if (!thisDocType) throw new Error("Document not found"); //hmmm maybe a popup?
+                if (!thisDocType) {
+                    console.warn("Document not found"); //hmmm maybe a popup?
+                    resolve(null);
+                    return;
+                }
                 //todo: determine if we should use the new or old UI based on the document type of this document
-                if (this._LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1}".sfFormat(id, thisDocType));
+                var url : string =  thisRestClient._PopDocLegacyURL;
+                if (thisRestClient._PopDocForceXBUI) url =  thisRestClient._PopDocXBURL;
+                url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
+                if (this._LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
-                var url : string = thisRestClient._SiteURL + '/DocDetail.aspx?id=' + id ;
                 var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
                 //todo: determine if we need the "how many tabs" logic and dialog
-                if (!window) throw new Error("PopDoc() Must be called from a browser window");
+                if (!window) {
+                    console.error("PopDoc() Must be called from a browser window");
+                    resolve(null);
+                    return;
+                }
                 var PW = window.open(url, TargetTab);
                 resolve(PW);
             });
-        };
+        });
     }
 
  /**
@@ -665,7 +675,11 @@ export class sfRestClient {
     }
 
     /**
-     * Sets sfRestClient Options, eg { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000}
+     * Sets sfRestClient Options
+     *
+     * Example: SetOptions() { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000, PopDocForceXBUI: true, PopDocXBURL: "{0}#!/doc/home?id={1}"});
+     *
+     * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
     */
     public SetOptions(options: { [key: string]: any }): void {
         Object.keys(options).forEach((key) => {
@@ -682,6 +696,12 @@ export class sfRestClient {
      * How long (in milliseconds) should a DV result be cached for reuse
     */
     _DVCacheLife: number = 16 * 60000; // 16 minutes
+    /**
+     * When true PopDoc() will always use new UI
+     */
+    _PopDocForceXBUI : boolean = false;
+    _PopDocLegacyURL: string =  '{0}/DocDetail.aspx?id={1}';
+    _PopDocXBURL: string = "{0}#!/document/home?id={1}";
 
     /**
      * Builds a query friendly string, also great for hashing or cache keys
@@ -781,17 +801,30 @@ export class sfRestClient {
             if (element.startsWith("=")) result.push(element.substring(1));
             if (element.startsWith("#")) {
                 element = element.substring(1);
-                if (element.startsWith("DocMasterDetail.")) {
-                    if (element.endsWith(".Project")) result.push(this._WCC.Project);
-                    else if (element.endsWith(".DocTypeKey")) result.push(this._WCC.DocTypeKey);
+                if (element.indexOf(".")> 0 ) {
+                    var ElementNameParts :string[] = element.split(".");
+                    var TableName : string = ElementNameParts[0];
+                    var FieldName : string = ElementNameParts[1];
+                    var SourceResolved: boolean = false;
+                    var UseRow = rawRow;
+                    //todo: resolve alternate UseRow based on tablename...
+                    if (FieldName in UseRow ) {
+                        SourceResolved = true;
+                        result.push(this.FieldValueFromRow(rawRow,FieldName));
+                    }
                     else {
-                        throw new Error("Not implemented yet: Depends on " + element);
+                        if (FieldName in this._WCC) {
+                            SourceResolved = true;
+                            result.push(this._WCC[FieldName]);
+                        }
+                    }
+                    if (!SourceResolved) {
+                        console.error("Not implemented yet: Depends on data: " + element);
                     }
                 }
-                if (element.indexOf(".")> 0 ) {
-                    throw new Error("Not implemented yet: Depends on a related row of data: " + element);
+                else {
+                    result.push(this.FieldValueFromRow(rawRow,element));
                 }
-                result.push(this.FieldValueFromRow(rawRow,element));
             }
         });
         return result;
