@@ -200,6 +200,7 @@ class QAInfoOptions {
     }
 }
 
+export class NVPair { [key: string]: any; }
 export class WCCData { [key: string]: any; }
 export class DataModelRow { [key: string]: any; };
 export class DataModelCollection { [key: string]: any; } [];
@@ -261,7 +262,7 @@ export class sfRestClient {
                 .done(function () {
                     resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
                     thisPart!.DataModels.delete(DataModelBuildKey);
-                    if (thisPart!.RestClient._LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
+                    if (thisPart!.RestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
                 }).fail(function() {
                     if (FailCount === 0) {
                         resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
@@ -393,7 +394,7 @@ export class sfRestClient {
             if (typeof result === "string") {
                 var CacheResult: DVCacheEntry = JSON.parse(result);
 
-                if ((Date.now() - CacheResult.w) < this._DVCacheLife) {
+                if ((Date.now() - CacheResult.w) < this._Options.DVCacheLife) {
                     apiResultPromise = new Promise<string | null>((resolve) => resolve(CacheResult.v));
                     return apiResultPromise;
                 }
@@ -406,7 +407,7 @@ export class sfRestClient {
 
 
         if (this._CachedDVRequests.has(cacheKey)) {
-            if (this._LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
+            if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
             return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
         }
 
@@ -467,7 +468,7 @@ export class sfRestClient {
     queryOptions.LoadFromDataAttributes(forElement);
     var url = queryOptions.QueryURL;
     if (!url) {
-        if (this._LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
+        if (this._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
         return forElement;
     }
     if (url.indexOf("$K")) {
@@ -499,7 +500,7 @@ export class sfRestClient {
             }
         }
     );
-    if (RESTClient._LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
+    if (RESTClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
     if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
     $GCI.load(url, function (responseText, textStatus, jqXHR: JQuery.jqXHR) {
         var isEmpty = false;
@@ -585,10 +586,10 @@ export class sfRestClient {
                     return;
                 }
                 //todo: determine if we should use the new or old UI based on the document type of this document
-                var url : string =  thisRestClient._PopDocLegacyURL;
-                if (thisRestClient._PopDocForceXBUI) url =  thisRestClient._PopDocXBURL;
+                var url : string =  thisRestClient._Options.PopDocLegacyURL;
+                if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopDocXBURL;
                 url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
-                if (this._LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
+                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
                 var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
                 //todo: determine if we need the "how many tabs" logic and dialog
@@ -631,7 +632,7 @@ export class sfRestClient {
                 RESTClient._UCPermitMap = ls;
             }
         }
-        if ((Date.now() - RESTClient._UCPermitMap._etag.w) < (this._DVCacheLife * 4)) {
+        if ((Date.now() - RESTClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4)) {
             DeferredResult.resolve(RESTClient._UCPermitMap);
             return permitCheck;
         }
@@ -682,27 +683,35 @@ export class sfRestClient {
      * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
     */
     public SetOptions(options: { [key: string]: any }): void {
+        if (!options) {
+            console.warn("No options passed. Use JSON object");
+            return;
+        }
         Object.keys(options).forEach((key) => {
-            var PropName = '_' + key;
+            var PropName : any = '_' + key;
             //    if ((typeof this[PropName] !== "undefined"  &&  typeof this[key] === typeof options[key] ) {
             //         this[PropName] = options[key];
             //    }
-            if (key === "DVCacheLife" && typeof this._DVCacheLife === typeof options[key]) this._DVCacheLife = options[key]
-            else if (key === "LogLevel" && typeof this._LogLevel === typeof options[key]) this._LogLevel = options[key]
+            if (key === "DVCacheLife" && typeof this._Options.DVCacheLife === typeof options[key]) this._Options.DVCacheLife = options[key]
+            else if (key === "LogLevel" && typeof this._Options.LogLevel === typeof options[key]) this._Options.LogLevel = options[key]
+            else if (key === "PopDocForceXBUI" && typeof this._Options.PopDocForceXBUI === typeof options[key]) this._Options.PopDocForceXBUI = options[key]
+            else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) this._Options[PropName] = options[key];
         });
     }
 
+    protected _Options : NVPair  = {
     /**
      * How long (in milliseconds) should a DV result be cached for reuse
     */
-    _DVCacheLife: number = 16 * 60000; // 16 minutes
-    /**
-     * When true PopDoc() will always use new UI
-     */
-    _PopDocForceXBUI : boolean = false;
-    _PopDocLegacyURL: string =  '{0}/DocDetail.aspx?id={1}';
-    _PopDocXBURL: string = "{0}#!/document/home?id={1}";
-
+        DVCacheLife:  16 * 60000, // 16 minutes
+        LogLevel:  LoggingLevels.None,
+        /**
+         * When true PopDoc() will always use new UI
+         */
+        PopDocForceXBUI :  false,
+        PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
+        PopDocXBURL:  "{0}#!/document/home?id={1}"
+    }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
     */
@@ -761,7 +770,7 @@ export class sfRestClient {
 
     protected _GetAPIXHR(url: string): JQueryXHR {
         url = this._APIURL(url);
-        if (this._LogLevel >= LoggingLevels.Verbose) console.log(url);
+        if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log(url);
         return $.getJSON(url);
     }
     protected _APIURL(suffix: any) {
@@ -836,7 +845,7 @@ export class sfRestClient {
         if (item.DV || item.LookupName ||
             (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
             if (item.DV) {
-                if (this._LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
+                if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
                 thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
                     var ThisSuffix : string = "_dv";
                     if (!((item.DataField + ThisSuffix) in rawRow)) {
@@ -867,7 +876,7 @@ export class sfRestClient {
         }
     }
     protected _AddDVValueToDataModel(thisPart: PartStorageData, dataModelBuildKey: string, index: number, dataField: string, suffix : string, newValue: string | boolean | null) {
-        //if (this._LogLevel >= LoggingLevels.Debug) console.log("Row {0}, adding {1}_dv = {2} ".sfFormat(index,DataField,newValue ));
+        //if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("Row {0}, adding {1}_dv = {2} ".sfFormat(index,DataField,newValue ));
         thisPart.DataModels.get(dataModelBuildKey)![index][dataField + suffix] = newValue;
     }
 
@@ -906,7 +915,7 @@ export class sfRestClient {
         },
         WCCLoaded: false
     }
-    protected _LogLevel: LoggingLevels = LoggingLevels.None;
+
 
 
     constructor() {
