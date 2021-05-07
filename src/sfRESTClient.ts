@@ -212,10 +212,14 @@ export class sfRestClient {
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
-    BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: any): Promise<DataModelCollection> {
+    BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: [{}] | {}): Promise<DataModelCollection> {
         if (!this._z.WCCLoaded) this.LoadUserSessionInfo();
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
-        if (!thisPart) new Error("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, context)));
+        if (!thisPart) {
+            console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, context)));
+            var EmptyPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => resolve(rawData));
+            return EmptyPromise;
+        }
         var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
             thisPart!.CFGLoader().then(() => {
                 var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData);
@@ -251,7 +255,15 @@ export class sfRestClient {
         var StartAtTicks: number = Date.now();
         var DataModelBuildKey: string = PartStorageData.GetDataModelBuildContextKey();
         var FailCount: number= 0;
-        thisPart!.DataModels.set(DataModelBuildKey, rawData)
+        var SingleInstanceMode = false;
+        if (!Array.isArray(rawData)) {
+            SingleInstanceMode = true;
+            var SingleElementArrayOfRawData  = [];
+            SingleElementArrayOfRawData.push(rawData);
+            rawData = SingleElementArrayOfRawData;
+        }
+        thisPart!.DataModels.set(DataModelBuildKey, rawData);
+
         thisPart!._PromiseList = [];
 
         // this loop builds PromiseList
@@ -260,12 +272,16 @@ export class sfRestClient {
         var ViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => {
             $.when.apply($, thisPart!._PromiseList!)
                 .done(function () {
-                    resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
+                    var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
+                    if (SingleInstanceMode) FinalData = FinalData[0];
+                    resolve(FinalData);
                     thisPart!.DataModels.delete(DataModelBuildKey);
                     if (thisPart!.RestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
                 }).fail(function() {
                     if (FailCount === 0) {
-                        resolve(thisPart!.DataModels.get(DataModelBuildKey!)!);
+                        var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
+                        if (SingleInstanceMode) FinalData = FinalData[0];
+                        resolve(FinalData);
                         thisPart!.DataModels.delete(DataModelBuildKey);
                         FailCount++;
                     }
