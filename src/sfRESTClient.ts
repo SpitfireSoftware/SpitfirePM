@@ -2,7 +2,7 @@
 //import { contains } from "jquery";
 import { GUID } from "./globals";
 import  { sfApplicationRootPath } from "./string.extensions";
-import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, SessionClient, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as $ from 'jquery';
 
 
@@ -377,6 +377,30 @@ export class sfRestClient {
         return permitCheck; // wait for .done, use (r)
 
     }
+
+    GetLookupSuggestions(lookupName : string, seedValue: string,
+          /**
+         * either a string or string array (up to 4 elements);
+        */
+           dependsOn: string | string[] | undefined,
+          limit: number) : Promise<Suggestion[] | null> {
+
+            var apiResultPromise: Promise<Suggestion[] | null>
+
+            //var RESTClient: sfRestClient = this;
+            var api: LookupClient = new LookupClient(this._SiteURL);
+            var DependsOnSet: string[] = ["", "", "", "",""];
+            if (Array.isArray(dependsOn)) {
+                $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
+            }
+            else if (dependsOn) {
+                DependsOnSet[0] = dependsOn;
+            }
+
+            var apiResultPromise: Promise<Suggestion[] | null> = api.getSuggestions4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],seedValue,limit);
+
+            return apiResultPromise;
+    }
     /**
      * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
      * @param displayName the name of a display value rule (eg sfUser, RoleName, etc)
@@ -456,6 +480,13 @@ export class sfRestClient {
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, partContext);
         return thisPart.CFGLoader();
     }
+
+    GetLookupCFG(lookupName: string) : Promise<UIDisplayPart | null > {
+    var api: UICFGClient = new UICFGClient(this._SiteURL);
+    return api.getLookupDisplay(lookupName);
+
+    }
+
 
  /**
      * Pops up a dialog showing result of a qAlias query
