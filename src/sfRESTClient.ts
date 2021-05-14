@@ -719,8 +719,10 @@ export class sfRestClient {
     /**
      * How long (in milliseconds) should a DV result be cached for reuse
     */
+        BlankPageURI: "ABOUT:blank",
         DVCacheLife:  16 * 60000, // 16 minutes
         LogLevel:  LoggingLevels.None,
+        NonPostbackEventID: "DNPB",
         /**
          * When true PopDoc() will always use new UI
          */
@@ -855,6 +857,271 @@ export class sfRestClient {
         return result;
     }
 
+    /**
+     * Opens a Modal dialog with an iFrame and loads pvp.aspx?vpg=your-vpg-id /
+     * @param vpg ReportBrowser,;
+     * @param opts
+     * @param w
+     * @param h
+     * @param defaultResponse
+     */
+    public VModalPage( vpg: string, opts: string, w:number, h:number, defaultResponse: string | undefined ): void{
+        if (!defaultResponse ) defaultResponse = "";
+        var context : Window = window;
+        var innerContext = window;
+        if (parent != window) {
+           // if (typeof context["sfRestClient"] == "undefined") context = parent as Window;
+           // if (sfWCC.isAsyncPart) context = parent;
+        }
+
+        this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
+
+        // if (w != null) context.sfLookupWidthChangeTo( w);
+        // if (h != null) context.sfLookupHeightChangeTo(h + $LookupViewPortAdjustments.outsidExtraH);
+        // else {
+        //     var $FRAME = $LookupDialog.find("IFRAME");
+        //     if (typeof ($FRAME) === "undefined") {
+        //         console.log("vPgDialog iFrame not found!");
+        //     }
+        //     else {
+        //         $FRAME.off("load.vPgDialog").on("load.vPgDialog", function () {
+        //             resizeDialogInFrame(this, context);
+        //         });
+        //     }
+        // }
+
+    }
+
+    ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : boolean {
+        var newValue;
+        var formName = "0";
+
+
+        if (eventId == null) eventId = 'mDialog';
+        if (eventArg == null) eventArg = url;
+        if (!window) {
+            console.warn("ModalDialog() must be called in a browser window!", url);
+            return false;
+        }
+        if (eventContext == null) eventContext = window;
+
+        if (!this.$LookupDialog) {
+        this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
+            .sfFormat(this._Options.BlankPageURI))
+            .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: 300, height: 200,
+                    close: this.sfModalDialogClosed,
+                    dialogClass: "lookup",
+                    resizeStop:  this.sfModelDialogResizedHandler
+                });
+}
+
+        var  OpenUrl = sfApplicationRootPath + url;
+        //LookupOpenUrl = LookupOpenUrl + '&lookupName=' + lookupName +
+        //	        '&resultName=' + resultName +
+        //	        '&postBack=' + postBack + fromPage + dependsList;
+        if (!this.$LookupDialog) {
+            console.warn("Could not open dialog (missing DIV), lost",url);
+            return false;
+        }
+        this.$LookupDialog.data("postbackEventId", eventId);
+        this.$LookupDialog.data("postbackEventArg", eventArg);
+        this.$LookupDialog.data("postback", (eventId != this._Options.NonPostbackEventID));
+        this.$LookupDialog.data("postbackContext", eventContext);
+        this.$LookupDialog.data("idName", url);
+        this.$LookupDialog.data("newValue", eventArg);  // must reset to null or prior lookup result value may get used
+        this.$LookupDialog.data("multiSelect", false);
+        this.$LookupDialog.data("mode", 'modalDialog');
+
+        this.$LookupDialog.data("windowWidth", $(window).width()!);
+        this.$LookupDialog.data("windowHeight", $(window).height()!);
+        this.$LookupDialog.data("documentWidth", $(document).width()!);
+        this.$LookupDialog.data("documentHeight", $(document).height()!);
+        this.$LookupDialog.data("vScrollPosition", $(document).scrollTop()!);
+        this.$LookupDialog.data("hScrollPosition", $(document).scrollLeft()!);
+
+        //if (isiPad) sfLookupHeightChangeTo( $(window).height());
+
+        //load( LookupOpenUrl ); //...only works with div
+
+        this.$LookupFrame   = $(this.$LookupDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
+        if (!this.$LookupFrame) {
+            console.warn("Could not open dialog (missing IFRAME), lost",url);
+            return false;
+        }
+        this.$LookupFrame!.attr('src', OpenUrl); // only w iframe
+        this.SetModalDialogTitle(this.$LookupDialog,"");
+
+        this.$LookupDialog.dialog('open');
+
+            try {
+                var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
+                if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
+                    // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
+                    setTimeout("refreshiFrameSrc();", 1234);
+                }
+            }
+            catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
+
+
+        return false;  // so anchor click event doesn't also do work
+
+
+    }
+    protected $LookupDialog : JQuery<HTMLElement> | undefined ;
+    protected $LookupFrame : JQuery<HTMLIFrameElement> | undefined ;
+
+
+    SetModalDialogTitle(theDialog: JQuery<HTMLElement>, toText : string, ptSize?: string | number | undefined) {
+        var $LookupTitle = theDialog.prev();               //fragile...another version might break this
+        if (!ptSize) ptSize = ".7em";
+        theDialog.dialog('option', 'title', toText);
+        $LookupTitle.css('padding', '1px 1px 1px 4px');
+        theDialog.css('padding', '0px 0px 0px 1px');
+        theDialog.css('margin', '0');
+        $LookupTitle.css('font-size', ptSize);
+        return theDialog;
+    }
+
+    RefreshiFrameSrc() {
+        if (!this.$LookupFrame) {
+            console.warn("Could not refresh iframe SRC for dialog ");
+            return false;
+        }
+        var RESTClient = this;
+        var $LookupFrameDOM = this.$LookupFrame![0].contentDocument || this.$LookupFrame[0].contentWindow!.document;
+        // last verified as needed w/Chrome  Feb 2017
+        if (typeof ($LookupFrameDOM) != 'undefined') {
+            var locNow = $LookupFrameDOM.location.href;
+            var wantSrc = this.$LookupFrame.attr('src');
+            if (!locNow.endsWith(wantSrc!)) {
+                console.log("mDialog frame src re-get, is " + $LookupFrameDOM.location + '; want ' + this.$LookupFrame.attr('src') + '.');
+                var DialogContext = window;
+                try {
+                    this.$LookupDialog!.find("IFRAME").on("load",  function () {
+                        RESTClient.ResizeDialogInFrame(this, RESTClient);
+                    });
+                } catch (e) {
+                        console.log("<!> refreshiFrameSrc could not find IFRAME" );
+                        }
+                $LookupFrameDOM.location.href = this.$LookupFrame.attr('src') as string;
+            }
+        }
+    }
+
+    ResizeDialogInFrame(FrameElement : HTMLElement, RESTClient : sfRestClient) : void {
+        var $FrameElement = $(FrameElement);
+        var RunHeight = $FrameElement.contents().find("html").outerHeight()! + 16;  // see also ResetPartFrameHeight() in sfPMS
+        if (RunHeight) RESTClient.$LookupDialog!.dialog('option', 'height', RunHeight + 8).height(RunHeight + 16).find('iframe').height(RunHeight)
+        var frameID = ($FrameElement.attr("id")) ? $FrameElement.attr("id") : $FrameElement.closest("[id]").attr("id");
+        console.log("onLoad::resizeDialogInFrame({1}) h={0}".sfFormat(RunHeight, frameID));
+    }
+
+    protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
+        if (!this.$LookupDialog) return;
+        var postbackEventId = this.$LookupDialog.data("postbackEventId");
+        var postbackEventArg = this.$LookupDialog.data("postbackEventArg");
+        var postbackContext = this.$LookupDialog.data("postbackContext");
+        var postBack = this.$LookupDialog.data("postback");
+        var idName = this.$LookupDialog.data("idName");
+        var newValue = this.$LookupDialog.data("newValue");
+        var IsMultiSelect = this.$LookupDialog.data("multiSelect");
+        var dialogMode = this.$LookupDialog.data("mode");
+        var NewValueIsNew = true;
+
+        if (typeof (postbackContext) == "undefined") postbackContext = window;
+        this.$LookupFrame!.attr('src', this._Options.DVCacheLife); // point frame back to blank page
+        //sfLookupHeightChangeTo(201);
+        //sfLookupWidthChangeTo( 301);
+        //if (  ($(window).width()! > this.$LookupDialog.data("windowWidth"))) this.sfSetParentWindowSize(true, this.$LookupDialog.data("windowWidth") + $LookupViewPortAdjustments.outsidExtraW, -1);
+        this.$LookupDialog.dialog('option', 'position', 'center');
+        // $LookupDialog.dialog('option', 'zIndex', $.maxZIndex() + 1); neither this nor .dialog('moveToTop') helped
+
+
+        if (dialogMode == 'modalDialog') {
+            if (newValue == null) newValue = postbackEventArg;
+            postbackEventArg = newValue;
+        }
+
+        if (newValue != null) {
+            console.log(dialogMode +' result: ' + idName + ' = ' + newValue);
+            if ((dialogMode == 'lookup') && (!IsMultiSelect)) {
+                var $LookupInputSource = postbackContext.$('input[name="' + idName + '"]');
+                NewValueIsNew = !($LookupInputSource.val() == newValue);
+                if (NewValueIsNew) {
+                    $LookupInputSource.val( newValue );
+                    console.log(dialogMode + ' result stored into: ' + idName);
+                    $LookupInputSource.trigger("sfLookup.Stored", [newValue]);
+                }
+                else {
+                    if (postBack) postBack = false;
+                    console.log(dialogMode + ' result - form ALREADY HAS NEW VALUE for ' + idName);
+                }
+            }
+
+            if (postBack) {
+                if (dialogMode == 'lookup') {
+                    //notesay: if we decide we need validation here , we must also *not* block postback for GUID result values....or else they do not resolve
+                    //USE CASE: approve CO, both names need to be selected, but neither can post back with this code
+                    //console.log('lookup for ' + idName + ' -- pre postback, validation checks ');
+                    //if (typeof(Page_ClientValidate) != 'undefined') {
+                    //    postBack = Page_ClientValidate();
+                    //    //note  $('#' + idName).change(); did not cause postbacks
+                    //    console.log('lookup for ' + idName + ' -- Page Validation Result =  '+ postBack);
+                    //}
+                }
+                if (postBack) {
+                    var ctlID = postbackContext.$('input[name="' + idName + '"]').attr('id');
+                    var theInput = postbackContext.$('#' + ctlID);
+                    if (typeof postbackContext.ShowPleaseWaitUsingDialog != "undefined") postbackContext.ShowPleaseWaitUsingDialog();
+                    if (theInput.hasClass('sfUI-UseChangeEventForPostbacks')) {
+                        theInput.change();
+                        //var inputs = theInput.closest('form').find('input').filter(':visible');
+                        //inputs.eq(inputs.index(theInput[0]) + 1).focus();
+                    }
+                    else postbackContext.__doPostBack(postbackEventId, postbackEventArg);
+                    console.log(dialogMode +' result: ' + idName + ' -- posting back [' + postbackEventId + '] / [' + postbackEventArg +']');
+                    }
+                }
+            }
+    }
+    protected sfModelDialogResizedHandler() : void {
+        if (!this.$LookupDialog) return;
+        this.sfModelDialogResized(this.$LookupDialog)
+    }
+
+    protected sfSetParentWindowSize(canShrink : boolean, DesiredWidth: number, DesiredHeight: number) : void {
+        console.warn("sfSetParentWindowSize not implemented");
+
+        // if (top == window) {
+        //     if (sfSmartSize != undefined) return sfSmartSize(canShrink, DesiredWidth, DesiredHeight);
+        // }
+        // else {
+        //     return sfSetParentDialogSize(canShrink, DesiredWidth, DesiredHeight)
+        // }
+
+    }
+
+    protected sfModelDialogResized(forDialog : JQuery) : void {
+
+            // this is called after a user resizes the dialog
+                var dg = forDialog
+                if (!$(window)) return;
+                var tdh = Math.floor(dg.dialog("option", "height"));
+                var tdw = Math.floor(dg.dialog("option", "width"));
+                var height = dg.height()!; // actual content area
+                var width = Math.round(dg.width()! + 1);  // actual content area
+                var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
+                console.log('sfDialogResized resized to {0}w, {1}h inside {2}x{3}, frame h={4}'.sfFormat( width ,height , tdw , tdh, fh));
+                if ((($(window).width()! < (width + this.DialogViewPortAdjustments.outsidExtraW)) || ($(window).height()! < (height + this.DialogViewPortAdjustments.outsidExtraH)))) this.sfSetParentWindowSize(false, width + this.DialogViewPortAdjustments.outsidExtraW, height + this.DialogViewPortAdjustments.outsidExtraH);
+                var $DFrame = $(dg.children("iframe").get(0)) // what if there is no frame???
+                // $($DFrame).contents().find("html").outerHeight()  -- but not a good place to force the height
+                $DFrame.css('height', fh); // also iframe
+                $DFrame.css('width', '100%'); // also iframe
+
+    }
+//var $LookupFrame = $($LookupDialog.children("iframe").get(0))
+
+     protected DialogViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
 
     _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, DataModelBuildKey: string) {
 
