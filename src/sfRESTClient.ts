@@ -2,7 +2,7 @@
 //import { contains } from "jquery";
 import { GUID } from "./globals";
 import  { sfApplicationRootPath } from "./string.extensions";
-import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as $ from 'jquery';
 
 
@@ -52,6 +52,22 @@ class PartStorageData {
             thisPart = new PartStorageData(client, partName, forDocType, context);
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
             thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType, context);
+            if (thisPart._InitializationResultPromise) {
+                thisPart._InitializationResultPromise.then((r) => {
+                    thisPart!.CFG = r;
+                });
+            }
+        }
+        return thisPart;
+    }
+    public static PartStorageDataLookupFactory(client: sfRestClient, lookupName: string): PartStorageData {
+        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(lookupName,  "lookup", "lookup");
+        var thisPart: PartStorageData;
+        if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
+        else {
+            thisPart = new PartStorageData(client, lookupName, "lookup", "lookup");
+            var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
+            thisPart._InitializationResultPromise = api.getLookupDisplay(lookupName );
             if (thisPart._InitializationResultPromise) {
                 thisPart._InitializationResultPromise.then((r) => {
                     thisPart!.CFG = r;
@@ -378,6 +394,14 @@ export class sfRestClient {
 
     }
 
+    /**
+     * Returns set of choices for an auto-complete based on the seed value
+     * @param lookupName
+     * @param seedValue 0 or more characters which will limit the suggestions
+     * @param dependsOn 0 to 4 values required by the lookup for context
+     * @param limit a reasonable number of suggestions to be returned
+     * @returns
+     */
     GetLookupSuggestions(lookupName : string, seedValue: string,
           /**
          * either a string or string array (up to 4 elements);
@@ -401,6 +425,53 @@ export class sfRestClient {
 
             return apiResultPromise;
     }
+
+    /**
+     * Returns a View Model constructured for the result rows matching specified lookup context and filters
+     * @param lookupName
+     * @param dependsOn 0 to 4 values required by the lookup for context
+     * @param filterValues  default to {}
+     * @returns
+     */
+    GetLookupResults(lookupName : string,
+        /**
+       * either a string or string array (up to 4 elements);
+      */
+         dependsOn: string | string[] | undefined,
+         filterValues: QueryFilters
+         ) : Promise<DataModelCollection> {
+
+          var apiResultPromise: Promise<{[key:string]:any}[] | null>;
+
+
+          //var RESTClient: sfRestClient = this;
+          var api: LookupClient = new LookupClient(this._SiteURL);
+          var DependsOnSet: string[] = ["", "", "", "",""];
+          if (Array.isArray(dependsOn)) {
+              $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
+          }
+          else if (dependsOn) {
+              DependsOnSet[0] = dependsOn;
+          }
+
+
+          var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
+            apiResultPromise  = api.getLookupResult4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],filterValues);
+
+            apiResultPromise.then((lookupResultData) => {
+                  var thisPart : PartStorageData = PartStorageData.PartStorageDataLookupFactory(this,lookupName);
+                  thisPart!.CFGLoader().then(() => {
+                    var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, lookupResultData);
+                    ViewModelPromise.then((r) => finalResolve(r));
+                });
+            });
+
+
+        });
+        return FinalViewModelPromise;
+  }
+
+
     /**
      * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
      * @param displayName the name of a display value rule (eg sfUser, RoleName, etc)
@@ -481,14 +552,18 @@ export class sfRestClient {
         return thisPart.CFGLoader();
     }
 
+    /**
+     * Async Get of Lookup column configuration data
+     * @param lookupName name of required Lookup
+     * @returns UIDisplayPart with relevant UIItems and UIFilters
+     */
     GetLookupCFG(lookupName: string) : Promise<UIDisplayPart | null > {
-    var api: UICFGClient = new UICFGClient(this._SiteURL);
-    return api.getLookupDisplay(lookupName);
-
+        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataLookupFactory(this, lookupName);
+        return thisPart.CFGLoader();
     }
 
 
- /**
+    /**
      * Pops up a dialog showing result of a qAlias query
      *
      * @param forElement either an JQuery element or QAInfoOptions object
