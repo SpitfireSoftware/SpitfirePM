@@ -224,7 +224,7 @@ export type PartContextKey = string // PartName[context]::dtk
 
 
 export class sfRestClient {
-    version = 2020;
+    version: string = "2020.0.7810";
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -695,7 +695,7 @@ export class sfRestClient {
     };
 
     /**
-     *
+     * Opens a new tab with location specified based on Document Key and UI version
      * @param id the guid DocMasterKey for the document to be opened
      */
     PopDoc(id : GUID) : Promise<Window | null>
@@ -984,7 +984,7 @@ export class sfRestClient {
         this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
 
         // if (w != null) context.sfLookupWidthChangeTo( w);
-        // if (h != null) context.sfLookupHeightChangeTo(h + $LookupViewPortAdjustments.outsidExtraH);
+        if (h != null) this.sfLookupHeightChangeTo(h + this._LookupViewPortAdjustments.outsidExtraH);
         // else {
         //     var $FRAME = $LookupDialog.find("IFRAME");
         //     if (typeof ($FRAME) === "undefined") {
@@ -1207,6 +1207,43 @@ export class sfRestClient {
         // }
 
     }
+     private  sfLookupHeightChangeTo(newValue : number):void {
+        // here newValue represents the intended size for the inner iFrame's rending area
+        var ld = this.$LookupDialog;
+        if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
+        if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
+        if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) {
+            // requested size still too large
+            var requestedH = newValue;
+            newValue = $(window).height()! - this._LookupViewPortAdjustments.outsidExtraH;
+            console.log('dialog height requested cannot be accomidated by window, reduce from ' + requestedH + ' to ' + newValue);
+        }
+        var tdh = newValue + this._LookupViewPortAdjustments.vpExtraH + this._LookupViewPortAdjustments.frameExtraH;
+        ld!.dialog('option', "height", tdh);
+
+        //var LookupFrame = $(ld.children("iframe").get(0))
+        this.sfModelDialogResized(ld!);
+        ld!.dialog('option', 'position', 'center');
+        console.log('dialog height explicitly set to ' + newValue);
+    }
+    private _LookupViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
+
+    private sfLookupWidthChangeTo( newValue:number):void {
+        var ld = this.$LookupDialog;
+        if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) this.sfSetParentWindowSize(false, newValue + this._LookupViewPortAdjustments.outsidExtraW + this._LookupViewPortAdjustments.vpExtraW, -1);
+        if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) {
+            // requested size still too wide
+            var requestedW = newValue;
+            newValue = $(window).width()! - this._LookupViewPortAdjustments.outsidExtraW;
+            console.log('dialog width requested cannot be accomidated by window, reduce from ' + requestedW + ' to ' + newValue);
+        }
+
+        ld!.dialog('option', "width", newValue + this._LookupViewPortAdjustments.vpExtraW);
+        this.sfModelDialogResized(ld!);
+        setTimeout(function () { ld!.dialog('option', 'position', 'center'); }, 259); // need this to happen after above has all completed
+        console.log('dialog width explicitly set to ' + newValue);
+    }
+
 
     protected sfModelDialogResized(forDialog : JQuery) : void {
 
