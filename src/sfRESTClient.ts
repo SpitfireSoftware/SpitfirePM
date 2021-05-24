@@ -3,9 +3,9 @@
 import { GUID } from "./globals";
 import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import * as _exports from "./SwaggerClients";
 import * as $ from 'jquery';
-
-
+//import {dialog}    from "jquery-ui";
 
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
@@ -1307,6 +1307,26 @@ export class sfRestClient {
         thisPart.DataModels.get(dataModelBuildKey)![index][dataField + suffix] = newValue;
     }
 
+    /**
+     * Returns a refernce that can be used to create instances of specific API clients
+     * @returns object with exported resources constructorts
+     */
+    readonly exports : NVPair;
+
+    /**
+     * Creates an instance of the requested API controller with baseURL set appropriately
+     * @param controllerName
+     * @returns instance
+     */
+    public NewAPIController( controllerName : string ) : any {
+        var newController : any;
+        if (controllerName in this.exports) {
+            newController = new this.exports[controllerName](this._SiteURL);
+        }
+        else console.warn("NewAPIController() does not recognized ",controllerName);
+        return newController;
+    }
+
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
     protected _UserPermitResultCache: Map<string, number> = new Map<string, number>();
@@ -1342,8 +1362,7 @@ export class sfRestClient {
         },
         WCCLoaded: false
     }
-
-
+    protected static _GlobalClientConstructFlag : boolean = false;
 
     constructor() {
         if (typeof sfApplicationRootPath === "string") {
@@ -1353,6 +1372,12 @@ export class sfRestClient {
             var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
+        if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
+            sfRestClient._GlobalClientConstructFlag = true;
+            window.sfClient = new sfRestClient();
+            sfRestClient._GlobalClientConstructFlag = false;
+        }
+        this.exports = _exports
         this.LoadUserSessionInfo().then(() => this.LoadUCFunctionMap());
     }
 };

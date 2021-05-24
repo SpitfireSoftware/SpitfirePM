@@ -1,3 +1,4 @@
+import { sfRestClient } from "./sfRESTClient";
 
 interface Window {
     sfApplicationRootPath: string;
@@ -12,6 +13,7 @@ interface Math {
 declare global {
     interface Window {
         $: JQueryStatic;
+        sfClient: sfRestClient;
     }
     interface JQueryStatic {
         datepicker: any;
