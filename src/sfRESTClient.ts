@@ -4,6 +4,7 @@ import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
+import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 //import {dialog}    from "jquery-ui";
 
 //export type GUID = string //& { isGuid: true };
@@ -292,7 +293,7 @@ export class sfRestClient {
                     resolve(FinalData);
                     thisPart!.DataModels.delete(DataModelBuildKey);
                     if (thisPart!.RestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
-                }).fail(function() {
+                }).fail(function(jqXHR, textStatus, errorThrown) {
                     if (FailCount === 0) {
                         var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
                         if (SingleInstanceMode) FinalData = FinalData[0];
@@ -755,7 +756,8 @@ export class sfRestClient {
                 sfRestClient._UCPermitMap = ls;
             }
         }
-        if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4)) {
+        if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4) ||
+            (this._WCC.UserKey === this.EmptyKey)) {
             DeferredResult.resolve(sfRestClient._UCPermitMap);
             return permitCheck;
         }
@@ -778,6 +780,14 @@ export class sfRestClient {
             }
 
             DeferredResult.resolve(sfRestClient._UCPermitMap);
+        }).fail(function GetPermitMapFailed(jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status == 403) {
+                console.log("LoadUCFunctionMap() ...forbidden; likely not logged in " );
+            }
+            else {
+                console.warn("LoadUCFunctionMap() failed ", textStatus,errorThrown,jqXHR);
+            }
+            DeferredResult.resolve(sfRestClient._UCPermitMap); // will make do for now
         });
 
         return permitCheck;
@@ -1450,6 +1460,9 @@ export class sfRestClient {
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
         this.exports = _SwaggerClientExports;
+        // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
+        if (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version)) window.ClickOnceExtension = new BrowserExtensionChecker();
+
         this.LoadUserSessionInfo().then(() => {
             this.LoadUCFunctionMap().then(() =>{
                 if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {

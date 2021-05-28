@@ -1,3 +1,4 @@
+import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 import { sfRestClient } from "./sfRESTClient";
 
 interface Window {
@@ -15,6 +16,7 @@ declare global {
         $: JQueryStatic;
         jQuery: JQueryStatic;
         sfClient: sfRestClient;
+        ClickOnceExtension: BrowserExtensionChecker;  // not the best name, needed by legacy UI
     }
     interface JQueryStatic {
         datepicker: any;
