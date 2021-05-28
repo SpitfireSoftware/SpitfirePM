@@ -13,6 +13,7 @@ interface Math {
 declare global {
     interface Window {
         $: JQueryStatic;
+        jQuery: JQueryStatic;
         sfClient: sfRestClient;
     }
     interface JQueryStatic {

@@ -1,4 +1,3 @@
-
 //import { contains } from "jquery";
 import { GUID } from "./globals";
 import  { sfApplicationRootPath } from "./string.extensions";
@@ -224,7 +223,7 @@ export type PartContextKey = string // PartName[context]::dtk
 
 
 export class sfRestClient {
-    version: string = "2020.0.7810";
+    version: string = "2020.0.7816";
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -580,7 +579,7 @@ export class sfRestClient {
         onPostback?: (eventTarget: string, eventArgs: string) => void                ) : JQuery<HTMLElement> {
 
     var RESTClient : sfRestClient = this;
-                    if (typeof queryOptions === "undefined")
+    if (typeof queryOptions === "undefined")
      {
         var TempOptions : QAInfoOptions | null;
         TempOptions =   QAInfoOptions.QAInfoOptionsFromCSSFactory(forElement);
@@ -615,35 +614,52 @@ export class sfRestClient {
     $GCI.html("Loading....");
     // //width: window.top.$(window.top).width() * 0.88
 
-    $GCI.dialog({
-        title: queryOptions.DialogTitle, height: "auto", width: "auto", position: "top center"
-        , show: { effect: "blind", duration: 100 }
-        , close: function (event?:any, ui?:any) {
-            $GCI.dialog('destroy');
+    this.AssureJQUITools($GCI).then((unused) => {
+
+        $GCI.dialog({
+            title: queryOptions?.DialogTitle, height: "auto", width: "auto", position: "top center"
+            , show: { effect: "blind", duration: 100 }
+            , close: function (event?:any, ui?:any) {
+                $GCI.dialog('destroy');
+                }
             }
-        }
-    );
-    if (RESTClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
-    if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
-    $GCI.load(url, function (responseText, textStatus, jqXHR: JQuery.jqXHR) {
-        var isEmpty = false;
-        if (responseText.startsWith("[{")) {
-            var ldata = JSON.parse(responseText);
-            var table = RESTClient.MakeTable(ldata);
-            $GCI.html(table.prop("outerHTML"));
-            isEmpty = ($GCI.html() == "" || $GCI.html() == "[]")
-        }
-        else if (jqXHR.status !== 200 && textStatus) {
-            $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
-            if (jqXHR.responseText.length > 1234) $GCI.css("width",$(window.top).width()! - 48);
-        }
-        else if (!responseText || (typeof responseText === "string" && responseText === "[]")) isEmpty = true;
-        if (isEmpty) {
-            $GCI.html(queryOptions?.EmptyDialogText!);
-        }
+        );
+        if (RESTClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
+        if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
+        $GCI.load(url, function (responseText, textStatus, jqXHR: JQuery.jqXHR) {
+            var isEmpty = false;
+            if (responseText.startsWith("[{")) {
+                var ldata = JSON.parse(responseText);
+                var table = RESTClient.MakeTable(ldata);
+                $GCI.html(table.prop("outerHTML"));
+                isEmpty = ($GCI.html() == "" || $GCI.html() == "[]")
+            }
+            else if (jqXHR.status !== 200 && textStatus) {
+                $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
+                if (jqXHR.responseText.length > 1234) $GCI.css("width",$(window.top).width()! - 48);
+            }
+            else if (!responseText || (typeof responseText === "string" && responseText === "[]")) isEmpty = true;
+            if (isEmpty) {
+                $GCI.html(queryOptions?.EmptyDialogText!);
+            }
+        });
     });
 
     return forElement;
+    }
+
+    public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
+        var UIToolPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
+            if (typeof $element.dialog !== "function") {
+                if (!window.jQuery) window.jQuery = $;
+                $.getScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js', function() {
+                    console.log("jQuery UI extensions loaded.");
+                    resolve(true);
+                });
+            }
+            else resolve(true);
+       });
+       return UIToolPromise;
     }
 
     /**
@@ -981,8 +997,9 @@ export class sfRestClient {
            // if (sfWCC.isAsyncPart) context = parent;
         }
 
-        this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
+        var UIPromise: Promise<boolean | undefined> = this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
 
+        UIPromise.then((unused) => {
         // if (w != null) context.sfLookupWidthChangeTo( w);
         if (h != null) this.sfLookupHeightChangeTo(h + this._LookupViewPortAdjustments.outsidExtraH);
         // else {
@@ -996,10 +1013,11 @@ export class sfRestClient {
         //         });
         //     }
         // }
+        });
 
     }
 
-    ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : boolean {
+    ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : Promise<boolean|undefined>  {
         var newValue;
         var formName = "0";
 
@@ -1008,69 +1026,72 @@ export class sfRestClient {
         if (eventArg == null) eventArg = url;
         if (!window) {
             console.warn("ModalDialog() must be called in a browser window!", url);
-            return false;
+            return new Promise<boolean>((b) => {  b(false)});;
         }
         if (eventContext == null) eventContext = window;
 
-        if (!this.$LookupDialog) {
-        this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
-            .sfFormat(this._Options.BlankPageURI))
-            .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: 300, height: 200,
-                    close: this.sfModalDialogClosed,
-                    dialogClass: "lookup",
-                    resizeStop:  this.sfModelDialogResizedHandler
-                });
-}
+        var UIPromise: Promise<boolean | undefined> = this.AssureJQUITools($("div").first() ).then((unused)=>{
 
-        var  OpenUrl = sfApplicationRootPath + url;
-        //LookupOpenUrl = LookupOpenUrl + '&lookupName=' + lookupName +
-        //	        '&resultName=' + resultName +
-        //	        '&postBack=' + postBack + fromPage + dependsList;
-        if (!this.$LookupDialog) {
-            console.warn("Could not open dialog (missing DIV), lost",url);
-            return false;
-        }
-        this.$LookupDialog.data("postbackEventId", eventId);
-        this.$LookupDialog.data("postbackEventArg", eventArg);
-        this.$LookupDialog.data("postback", (eventId != this._Options.NonPostbackEventID));
-        this.$LookupDialog.data("postbackContext", eventContext);
-        this.$LookupDialog.data("idName", url);
-        this.$LookupDialog.data("newValue", eventArg);  // must reset to null or prior lookup result value may get used
-        this.$LookupDialog.data("multiSelect", false);
-        this.$LookupDialog.data("mode", 'modalDialog');
-
-        this.$LookupDialog.data("windowWidth", $(window).width()!);
-        this.$LookupDialog.data("windowHeight", $(window).height()!);
-        this.$LookupDialog.data("documentWidth", $(document).width()!);
-        this.$LookupDialog.data("documentHeight", $(document).height()!);
-        this.$LookupDialog.data("vScrollPosition", $(document).scrollTop()!);
-        this.$LookupDialog.data("hScrollPosition", $(document).scrollLeft()!);
-
-        //if (isiPad) sfLookupHeightChangeTo( $(window).height());
-
-        //load( LookupOpenUrl ); //...only works with div
-
-        this.$LookupFrame   = $(this.$LookupDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
-        if (!this.$LookupFrame) {
-            console.warn("Could not open dialog (missing IFRAME), lost",url);
-            return false;
-        }
-        this.$LookupFrame!.attr('src', OpenUrl); // only w iframe
-        this.SetModalDialogTitle(this.$LookupDialog,"");
-
-        this.$LookupDialog.dialog('open');
-
-            try {
-                var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
-                if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
-                    // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
-                    setTimeout("refreshiFrameSrc();", 1234);
-                }
+            if (!this.$LookupDialog) {
+            this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
+                .sfFormat(this._Options.BlankPageURI))
+                .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: 300, height: 200,
+                        close: this.sfModalDialogClosed,
+                        dialogClass: "lookup",
+                        resizeStop:  this.sfModelDialogResizedHandler
+                    });
             }
-            catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
 
+            var  OpenUrl = sfApplicationRootPath + url;
+            //LookupOpenUrl = LookupOpenUrl + '&lookupName=' + lookupName +
+            //	        '&resultName=' + resultName +
+            //	        '&postBack=' + postBack + fromPage + dependsList;
+            if (!this.$LookupDialog) {
+                console.warn("Could not open dialog (missing DIV), lost",url);
+                return false;
+            }
+            this.$LookupDialog.data("postbackEventId", eventId);
+            this.$LookupDialog.data("postbackEventArg", eventArg);
+            this.$LookupDialog.data("postback", (eventId != this._Options.NonPostbackEventID));
+            this.$LookupDialog.data("postbackContext", eventContext);
+            this.$LookupDialog.data("idName", url);
+            this.$LookupDialog.data("newValue", eventArg);  // must reset to null or prior lookup result value may get used
+            this.$LookupDialog.data("multiSelect", false);
+            this.$LookupDialog.data("mode", 'modalDialog');
 
-        return false;  // so anchor click event doesn't also do work
+            this.$LookupDialog.data("windowWidth", $(window).width()!);
+            this.$LookupDialog.data("windowHeight", $(window).height()!);
+            this.$LookupDialog.data("documentWidth", $(document).width()!);
+            this.$LookupDialog.data("documentHeight", $(document).height()!);
+            this.$LookupDialog.data("vScrollPosition", $(document).scrollTop()!);
+            this.$LookupDialog.data("hScrollPosition", $(document).scrollLeft()!);
+
+            //if (isiPad) sfLookupHeightChangeTo( $(window).height());
+
+            //load( LookupOpenUrl ); //...only works with div
+
+            this.$LookupFrame   = $(this.$LookupDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
+            if (!this.$LookupFrame) {
+                console.warn("Could not open dialog (missing IFRAME), lost",url);
+                return false;
+            }
+            this.$LookupFrame!.attr('src', OpenUrl); // only w iframe
+            this.SetModalDialogTitle(this.$LookupDialog,"");
+
+            this.$LookupDialog.dialog('open');
+
+                try {
+                    var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
+                    if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
+                        // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
+                        setTimeout("refreshiFrameSrc();", 1234);
+                    }
+                }
+                catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
+
+        });
+
+    return UIPromise;  // so anchor click event doesn't also do work
 
 
     }
