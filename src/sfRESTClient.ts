@@ -2,7 +2,7 @@
 import { GUID } from "./globals";
 import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
-import * as _exports from "./SwaggerClients";
+import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
 //import {dialog}    from "jquery-ui";
 
@@ -340,7 +340,7 @@ export class sfRestClient {
         }
         else {
             RESTClient.LoadUCFunctionMap().done(function () {
-                UCFK = RESTClient._UCPermitMap[ucModule][ucFunction];
+                UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
                 if (!UCFK) console.warn("CheckPermit could not find {0}|{1} - verify proper case!".sfFormat(ucModule, ucFunction));
                 UCFKDeferredResult.resolve(UCFK);
             });
@@ -652,6 +652,8 @@ export class sfRestClient {
         var UIToolPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
             if (typeof $element.dialog !== "function") {
                 if (!window.jQuery) window.jQuery = $;
+                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
+                this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,this._WCC.Version));
                 $.getScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js', function() {
                     console.log("jQuery UI extensions loaded.");
                     resolve(true);
@@ -661,6 +663,19 @@ export class sfRestClient {
        });
        return UIToolPromise;
     }
+
+    /**
+     * Adds a link to a stylesheet for the page
+     * @param cssRef if includes a slash(/), must be full URL, otherwise  site-url/wv.aspx/js/ is prepended
+     * @returns nothing
+     */
+    public AddCSSResource(cssRef : string): void {
+    if (!cssRef) return;
+    if (cssRef.indexOf("/") < 0) cssRef = "{0}/wv.aspx/js/{1}.css".sfFormat(sfApplicationRootPath, cssRef);
+    if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
+
+    $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
+}
 
     /**
      * Converts a JSON set into rows of an HTML Table.
@@ -710,38 +725,7 @@ export class sfRestClient {
         return table;
     };
 
-    /**
-     * Opens a new tab with location specified based on Document Key and UI version
-     * @param id the guid DocMasterKey for the document to be opened
-     */
-    PopDoc(id : GUID) : Promise<Window | null>
-    {
-        return new Promise<Window | null>((resolve) => {
-            this.GetDV("DocMasterType",id,undefined).then((thisDocType) => {
-                var thisRestClient = this;
-                if (!thisDocType) {
-                    console.warn("Document not found"); //hmmm maybe a popup?
-                    resolve(null);
-                    return;
-                }
-                //todo: determine if we should use the new or old UI based on the document type of this document
-                var url : string =  thisRestClient._Options.PopDocLegacyURL;
-                if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopDocXBURL;
-                url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
-                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
-                var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
-                //todo: determine if we need the "how many tabs" logic and dialog
-                if (!window) {
-                    console.error("PopDoc() Must be called from a browser window");
-                    resolve(null);
-                    return;
-                }
-                var PW = window.open(url, TargetTab);
-                resolve(PW);
-            });
-        });
-    }
 
  /**
      * Make sure the URL starts with application root path
@@ -763,36 +747,37 @@ export class sfRestClient {
         var DeferredResult = $.Deferred();
         var permitCheck = DeferredResult.promise();
 
-        if (RESTClient._UCPermitMap._etag.w === 0) {
+        if (sfRestClient._UCPermitMap._etag.w === 0) {
             // see about localStorage
             var ls = JSON.parse(localStorage.getItem(RESTClient._z.lsKeys.api_session_permits_map)!);
             if (ls && typeof ls._etag.w === "number") {
                 console.log("Loaded Function Map from localStorage...");
-                RESTClient._UCPermitMap = ls;
+                sfRestClient._UCPermitMap = ls;
             }
         }
-        if ((Date.now() - RESTClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4)) {
-            DeferredResult.resolve(RESTClient._UCPermitMap);
+        if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4)) {
+            DeferredResult.resolve(sfRestClient._UCPermitMap);
             return permitCheck;
         }
 
 
-        var GetPermitMapRequest = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(RESTClient._UCPermitMap._etag)[0]).done(function DoneGetPermitMapRequest(r) {
+        var GetPermitMapRequest = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]).done(function DoneGetPermitMapRequest(r) {
             if (GetPermitMapRequest.status !== 304) {
                 if (typeof r === "object" && typeof r._etag === "object") {
                     r._etag.w = Date.now();
                     console.log("Loaded Function Map from server...");
                     localStorage.setItem(RESTClient._z.lsKeys.api_session_permits_map, JSON.stringify(r));
-                    RESTClient._UCPermitMap = r;
+                    sfRestClient._UCPermitMap = r;
                 }
                 else {
                     console.log("LoadUCFunctionMap() could not load Function Map from server...", GetPermitMapRequest);
                 }
             } else {
                 console.log("LoadUCFunctionMap() resolved as not modified...");
+                sfRestClient._UCPermitMap._etag.w = Date.now();
             }
 
-            DeferredResult.resolve(RESTClient._UCPermitMap);
+            DeferredResult.resolve(sfRestClient._UCPermitMap);
         });
 
         return permitCheck;
@@ -805,15 +790,47 @@ export class sfRestClient {
 
         var api: SessionClient = new SessionClient(this._SiteURL);
         var apiResult: WCCData | null = api.getWCC();
-        if (!apiResult) new Error("LoadUserSessionInfo failed to getWCC");
+        if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
         return apiResult.then((r: WCCData) => {
             $.each(r, function SetWCCProperties(pname: string | number, pvalue) {
                 RESTClient._WCC[pname] = pvalue;
             });
+            RESTClient._WCC.PageName = RESTClient.ResolvePageName();
             RESTClient._z.WCCLoaded = true;
         });
     }
+  /**
+     * Opens a new tab with location specified based on Document Key and UI version
+     * @param id the guid DocMasterKey for the document to be opened
+     */
+   PopDoc(id : GUID) : Promise<Window | null>
+   {
+       return new Promise<Window | null>((resolve) => {
+           this.GetDV("DocMasterType",id,undefined).then((thisDocType) => {
+               var thisRestClient = this;
+               if (!thisDocType) {
+                   console.warn("Document not found"); //hmmm maybe a popup?
+                   resolve(null);
+                   return;
+               }
+               //todo: determine if we should use the new or old UI based on the document type of this document
+               var url : string =  thisRestClient._Options.PopDocLegacyURL;
+               if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopDocXBURL;
+               url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
+               if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
+               var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
+               //todo: determine if we need the "how many tabs" logic and dialog
+               if (!window) {
+                   console.error("PopDoc() Must be called from a browser window");
+                   resolve(null);
+                   return;
+               }
+               var PW = window.open(url, TargetTab);
+               resolve(PW);
+           });
+       });
+   }
     /**
      * Sets sfRestClient Options
      *
@@ -980,6 +997,33 @@ export class sfRestClient {
         return result;
     }
 
+    public IsDocExclusiveToMe() : boolean {
+        return ((!this.IsDocumentPage()) || (this._WCC.DataLockFlag >= "2"));
+    }
+
+    public IsDocumentPage() : boolean {
+        return this.IsPageOfType("DocDetail");
+    }
+    public IsProjectPage() : boolean {
+        return this.IsPageOfType("ProjectDetail");
+    }
+    public IsPageOfType(typeWanted: string) : boolean {
+        if (!this._WCC ) { console.warn("_WCC missing?"); return false; }
+        if (!this._WCC.PageName) this._WCC.PageName = this.ResolvePageName();
+        return (this._WCC.PageName == typeWanted); // future: handle variants ProjectDetail (legacy) vs projectDashboard (xb)
+    }
+
+    protected ResolvePageName() : string {
+        var pgname : string = location.pathname;
+        var pgHash : string = location.hash;
+        if (pgHash.length > 0) pgname = pgname; // for xb style
+        if (pgname.indexOf("/") >= 0) pgname = pgname.substr(pgname.lastIndexOf("/") + 1)
+        if (pgname.indexOf("?") >= 0) pgname = pgname.substr(0,pgname.indexOf("?") )
+        if (pgname.indexOf(".") >= 0) pgname = pgname.substr(0,pgname.indexOf(".") )
+        return pgname;
+    }
+
+
     /**
      * Opens a Modal dialog with an iFrame and loads pvp.aspx?vpg=your-vpg-id /
      * @param vpg ReportBrowser,;
@@ -1033,7 +1077,7 @@ export class sfRestClient {
         var UIPromise: Promise<boolean | undefined> = this.AssureJQUITools($("div").first() ).then((unused)=>{
 
             if (!this.$LookupDialog) {
-            this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
+                this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
                 .sfFormat(this._Options.BlankPageURI))
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: 300, height: 200,
                         close: this.sfModalDialogClosed,
@@ -1070,7 +1114,7 @@ export class sfRestClient {
 
             //load( LookupOpenUrl ); //...only works with div
 
-            this.$LookupFrame   = $(this.$LookupDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
+            this.$LookupFrame   = this.ResolveLookupFrame();
             if (!this.$LookupFrame) {
                 console.warn("Could not open dialog (missing IFRAME), lost",url);
                 return false;
@@ -1084,7 +1128,7 @@ export class sfRestClient {
                     var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
                     if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
                         // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
-                        setTimeout("refreshiFrameSrc();", 1234);
+                        setTimeout("top.sfClient.RefreshiFrameSrc();", 1234);
                     }
                 }
                 catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
@@ -1092,12 +1136,17 @@ export class sfRestClient {
         });
 
     return UIPromise;  // so anchor click event doesn't also do work
-
-
     }
     protected $LookupDialog : JQuery<HTMLElement> | undefined ;
     protected $LookupFrame : JQuery<HTMLIFrameElement> | undefined ;
 
+    protected ResolveLookupFrame() : JQuery<HTMLIFrameElement> | undefined {
+        if (!this.$LookupDialog) {
+            return undefined;
+        }
+        return $(this.$LookupDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
+
+    }
 
     SetModalDialogTitle(theDialog: JQuery<HTMLElement>, toText : string, ptSize?: string | number | undefined) {
         var $LookupTitle = theDialog.prev();               //fragile...another version might break this
@@ -1111,6 +1160,11 @@ export class sfRestClient {
     }
 
     RefreshiFrameSrc() {
+        if (!this.$LookupDialog) {
+            this.$LookupDialog =  $("div.clsJQLookup");
+            this.$LookupFrame   = this.ResolveLookupFrame();
+        }
+
         if (!this.$LookupFrame) {
             console.warn("Could not refresh iframe SRC for dialog ");
             return false;
@@ -1351,7 +1405,7 @@ export class sfRestClient {
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
     protected _UserPermitResultCache: Map<string, number> = new Map<string, number>();
-    protected _UCPermitMap: any = {
+    protected static _UCPermitMap: any = {
         _etag: {
             empty: 0,
             w: 0
@@ -1375,7 +1429,9 @@ export class sfRestClient {
         DocTypeKey: "00000000-0000-0000-0000-000000000000",
         DevMode: false,
         dsCacheKey: "1",
-        UserKey: "00000000-0000-0000-0000-000000000000"
+        PageName: "", // see ResolvePageName()
+        UserKey: "00000000-0000-0000-0000-000000000000",
+        Version: "2020.0.7000.00000"
     }
     protected _z: any = {
         lsKeys: {
@@ -1393,13 +1449,16 @@ export class sfRestClient {
             var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
-        if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
-            sfRestClient._GlobalClientConstructFlag = true;
-            window.sfClient = new sfRestClient();
-            sfRestClient._GlobalClientConstructFlag = false;
-        }
-        this.exports = _exports
-        this.LoadUserSessionInfo().then(() => this.LoadUCFunctionMap());
+        this.exports = _SwaggerClientExports;
+        this.LoadUserSessionInfo().then(() => {
+            this.LoadUCFunctionMap().then(() =>{
+                if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
+                    sfRestClient._GlobalClientConstructFlag = true;
+                    window.sfClient = new sfRestClient();
+                    sfRestClient._GlobalClientConstructFlag = false;
+                }
+            });
+        });
     }
 };
 
