@@ -59,7 +59,7 @@ export class BrowserExtensionChecker {
         try {
             document.body.appendChild(s);
             s.remove();
-            $("SCRIPT#SFExtensionCheck" + ExtID).remove();
+            //$("SCRIPT#SFExtensionCheck" + ExtID).remove();
         }
         catch (e) {
             // "Caught: Extension not installed: {0}".sfFormat(ExtName);
@@ -97,7 +97,7 @@ export class BrowserExtensionChecker {
             }
 
             //proprietary sf
-            //FYI: $.cookie not yet loaded
+            //FYI: $ likely not defined
             BrowserExtensionChecker.browser.isTouch = ('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0);
             BrowserExtensionChecker.browser.sfAgent = false;
             BrowserExtensionChecker.browser.isEdge = navigator.userAgent.match(/Edg/i) !== null || navigator.userAgent.match(/Edge/i) !== null;

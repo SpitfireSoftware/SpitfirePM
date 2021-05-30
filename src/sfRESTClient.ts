@@ -104,7 +104,7 @@ class PartStorageData {
 }
 
 /**
- * Options for QAPopInfo
+ * Options for Query Alias Popup ( QAPopInfo )
  */
 class QAInfoOptions {
     /**
@@ -388,7 +388,7 @@ export class sfRestClient {
                 return (finalPermit !== 31);
             });
             RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-            DeferredResult.resolve(finalPermit);
+            DeferredResult.resolve(finalPermit | RESTClient._WCC.AdminLevel);
         });
         return permitCheck; // wait for .done, use (r)
 
@@ -848,7 +848,7 @@ export class sfRestClient {
      *
      * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
     */
-    public SetOptions(options: { [key: string]: any }): void {
+    public SetOptions(options: NVPair): void {
         if (!options) {
             console.warn("No options passed. Use JSON object");
             return;
@@ -1007,6 +1007,36 @@ export class sfRestClient {
         return result;
     }
 
+    /**
+     * Allows a page to update the _WCC context data
+     * @param contextData object of Name-Value pairs, such as {DataPK: keyvalue, DocRevKey: keyvalue, etc: etc}
+     * @returns true if successful usually sychronously 
+     */
+    public  async SharePageContext( contextData: NVPair) : Promise<boolean> {
+        if (!this._z.WCCLoaded) await this.LoadUserSessionInfo();
+        if (!this._WCC ) {
+            console.warn("SharePageContext() _WCC missing?");
+            return false;
+        }
+
+        Object.keys(contextData).forEach((key) => {
+            if (key.startsWith("Doc")) {
+                if (!this.IsDocumentPage()) {
+                    console.warn("Not a document");
+                    return false;
+                }
+                this._WCC[key] = contextData[key];
+            }
+            else if (key === "DataPK" && typeof this._WCC.DataPK === typeof contextData[key]) this._WCC.DataPK = contextData[key]
+            else if (key === "dsCacheKey" ) this._WCC.dsCacheKey = contextData[key]
+            else if (key in this._WCC && typeof this._WCC[key]  === typeof contextData[key]) this._WCC[key] = contextData[key] // update if same type
+            else if (!(key in this._WCC)) this._WCC[key] = contextData[key]
+            else console.warn("SharePageContext() rejected {0}={1} due to a type mismatch".sfFormat(key,contextData[key]));
+        });
+
+        return true;
+
+    }
     public IsDocExclusiveToMe() : boolean {
         return ((!this.IsDocumentPage()) || (this._WCC.DataLockFlag >= "2"));
     }
@@ -1400,15 +1430,15 @@ export class sfRestClient {
 
     /**
      * Creates an instance of the requested API controller with baseURL set appropriately
-     * @param controllerName
+     * @param ofTypeName eg ActionItemsClient, DocumentToolsClient, LookupClient
      * @returns instance
      */
-    public NewAPIController( controllerName : string ) : any {
+    public NewAPIClient( ofTypeName : string ) : any {
         var newController : any;
-        if (controllerName in this.exports) {
-            newController = new this.exports[controllerName](this._SiteURL);
+        if (ofTypeName in this.exports) {
+            newController = new this.exports[ofTypeName](this._SiteURL);
         }
-        else console.warn("NewAPIController() does not recognized ",controllerName);
+        else console.warn("NewAPIClient() does not recognized ",ofTypeName);
         return newController;
     }
 
@@ -1435,8 +1465,11 @@ export class sfRestClient {
         return result;
     }
     _WCC: WCCData = {
-        DocSessionKey: "00000000-0000-0000-0000-000000000000",
-        DocTypeKey: "00000000-0000-0000-0000-000000000000",
+        AdminLevel: 0,
+        DataPK: "00000000-0000-0000-0000-000000000000", // set by SharePageContext()
+        DocRevKey: "00000000-0000-0000-0000-000000000000", // set by SharePageContext()
+        DocSessionKey: "00000000-0000-0000-0000-000000000000", // set by SharePageContext()
+        DocTypeKey: "00000000-0000-0000-0000-000000000000", // set by SharePageContext()
         DevMode: false,
         dsCacheKey: "1",
         PageName: "", // see ResolvePageName()
