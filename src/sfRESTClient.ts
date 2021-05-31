@@ -387,8 +387,9 @@ export class sfRestClient {
                 }
                 return (finalPermit !== 31);
             });
+            finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
             RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-            DeferredResult.resolve(finalPermit | RESTClient._WCC.AdminLevel);
+            DeferredResult.resolve(finalPermit );
         });
         return permitCheck; // wait for .done, use (r)
 
@@ -1010,7 +1011,7 @@ export class sfRestClient {
     /**
      * Allows a page to update the _WCC context data
      * @param contextData object of Name-Value pairs, such as {DataPK: keyvalue, DocRevKey: keyvalue, etc: etc}
-     * @returns true if successful usually sychronously 
+     * @returns true if successful usually sychronously
      */
     public  async SharePageContext( contextData: NVPair) : Promise<boolean> {
         if (!this._z.WCCLoaded) await this.LoadUserSessionInfo();
@@ -1063,6 +1064,33 @@ export class sfRestClient {
         return pgname;
     }
 
+    /**
+     * applies a mask like xxx-xx-xxxx to a string, each x consumes an input character, all others are copied
+     * @param inputString
+     * @param inputMask
+     * @returns
+     */
+     public CEFormatStringValue(inputString : string, inputMask : string ): string {
+        if (!inputString) return "";
+        if (!inputMask) return inputString;
+        if (inputMask.startsWith("K")) inputMask = inputMask.substring(1);
+        var result : string = "";
+        inputString = inputString.trimEnd();
+        var MaskLength =inputMask.length;
+        for (var i = 0; i < MaskLength; i++) {
+            var MaskChar = inputMask.charAt(0);
+            inputMask = inputMask.substring(1);
+            if (MaskChar === "x" && inputString.length > 0){
+                result = result + inputString.charAt(0);
+                inputString = inputString.substring(1);
+                if (inputString.length ===  0 ) break;
+            }
+            else if (MaskChar === "x") result = result + " ";
+            else result = result + MaskChar;
+        }
+        result = result + inputString;
+        return result;
+    }
 
     /**
      * Opens a Modal dialog with an iFrame and loads pvp.aspx?vpg=your-vpg-id /
