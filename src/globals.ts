@@ -27,12 +27,7 @@ declare global {
     }
 }
 
-// interface JQueryStatic {
-//     dialog() : Function;// : JQuery<HTMLElement>;
-// }
-// interface JQuery {
-//     dialog() : Function;// : JQuery<HTMLElement>;
-// }
+
 
 
 export type GUID = string //& { isGuid: true };

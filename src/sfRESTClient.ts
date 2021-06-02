@@ -650,10 +650,63 @@ export class sfRestClient {
     return forElement;
     }
 
+    protected DateFormatMap: {dn:string,dx:string}[] = [
+            {"dn":"dddd","dx":"%l"}
+        ,   {"dn":"ddd","dx":"%D"}
+        ,   {"dn":"dd","dx":"%d"}
+        ,   {"dn":"d","dx":"%j"}
+        ,   {"dn":"mmmm","dx":"%F"}
+        ,   {"dn":"mmm","dx":"%M"}
+        ,   {"dn":"mm","dx":"%m"}
+        ,   {"dn":"m","dx":"%n"}
+        ,   {"dn":"yyyy","dx":"%Y"}
+        ,   {"dn":"yy","dx":"%y"}
+        ,   {"dn":"hh","dx":"%h"}
+        ,   {"dn":"h","dx":"%g"}
+        ,   {"dn":"HH","dx":"%H"}
+        ,   {"dn":"H","dx":"%g"}
+        ,   {"dn":"mm","dx":"%i"}
+        ,   {"dn":"m","dx":"%i"}
+        ,   {"dn":"ss","dx":"%s"}
+        ,   {"dn":"s","dx":"%s"}
+        ,   {"dn":"ffff","dx":"%S"}
+        ,   {"dn":"fff","dx":"%S"}
+        ,   {"dn":"ff","dx":"%S"}
+        ,   {"dn":"f","dx":"%S"}
+        ,   {"dn":"tt","dx":"%A"}
+        ,   {"dn":"t","dx":"%a"}
+        ];
+
+    /**
+     * Converts traditional .NET date formats to Webix formats
+     * @param dotNetFormat something like d or m/d/yyyy
+     * See https://support.spitfirepm.com/kba-01132/ and https://docs.webix.com/helpers__date_formatting_methods.html
+     */
+    public ConvertDotNetDateTimeFormatToWebix( dotNetFormat : string ): string {
+        var result : string | null;
+        var DefaultCulture : string = navigator.language;
+        if (!dotNetFormat) {
+            if (DefaultCulture.length < 4) dotNetFormat = "d mmm yyyy";
+            else if (DefaultCulture = "en-US") dotNetFormat = "m/d/yyyy";
+            else dotNetFormat = "d mmm yyyy";
+        }
+        var cacheKey : string = "ZDFMT2WX:" + dotNetFormat;
+        result = sessionStorage.getItem(cacheKey)
+        if (result) return result;
+        result = dotNetFormat;
+        this.DateFormatMap.forEach(mapx => {
+            result = result!.replaceAll(mapx.dn,mapx.dx);
+        });
+        sessionStorage.setItem(cacheKey,result);
+        return result;
+
+    }
+
     public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
         var UIToolPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
             if (typeof $element.dialog !== "function") {
-                if (!window.jQuery) window.jQuery = $;
+                // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
+                if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
                 this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,this._WCC.Version));
                 $.getScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js', function() {
