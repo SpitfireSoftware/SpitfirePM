@@ -651,20 +651,20 @@ export class sfRestClient {
     }
 
     protected DateFormatMap: {dn:string,dx:string}[] = [
-            {"dn":"dddd","dx":"%l"}
-        ,   {"dn":"ddd","dx":"%D"}
-        ,   {"dn":"dd","dx":"%d"}
-        ,   {"dn":"d","dx":"%j"}
-        ,   {"dn":"MMMM","dx":"%F"}
-        ,   {"dn":"MMM","dx":"%M"}
-        ,   {"dn":"MM","dx":"%m"}
-        ,   {"dn":"M","dx":"%n"}
+            {"dn":"dddd","dx":"%l"} // Tuesday
+        ,   {"dn":"ddd","dx":"%D"}  // Tue
+        ,   {"dn":"dd","dx":"%d"}   // 08
+        ,   {"dn":"d","dx":"%j"}    // 8
+        ,   {"dn":"MMMM","dx":"%F"} // March
+        ,   {"dn":"MMM","dx":"%M"}  // Mar
+        ,   {"dn":"MM","dx":"%m"}   // 03
+        ,   {"dn":"M","dx":"%n"}    // 3
         ,   {"dn":"yyyy","dx":"%Y"}
         ,   {"dn":"yy","dx":"%y"}
-        ,   {"dn":"hh","dx":"%h"}
+        ,   {"dn":"hh","dx":"%h"}   // 12 hour clock
         ,   {"dn":"h","dx":"%g"}
-        ,   {"dn":"HH","dx":"%H"}
-        ,   {"dn":"H","dx":"%g"}
+        ,   {"dn":"HH","dx":"%H"}   // 24 hour clock
+        ,   {"dn":"H","dx":"%G"}
         ,   {"dn":"mm","dx":"%i"}
         ,   {"dn":"m","dx":"%i"}
         ,   {"dn":"ss","dx":"%s"}
@@ -673,15 +673,15 @@ export class sfRestClient {
         ,   {"dn":"fff","dx":"%S"}
         ,   {"dn":"ff","dx":"%S"}
         ,   {"dn":"f","dx":"%S"}
-        ,   {"dn":"tt","dx":"%A"}
-        ,   {"dn":"t","dx":"%a"}
+        ,   {"dn":"tt","dx":"%A"}   // AM/PM
+        ,   {"dn":"t","dx":"%a"}    // am/pm
         ];
 
     /**
      * Converts traditional .NET date formats to Webix formats
      * @param dotNetFormat something like d or m/d/yyyy
      * See https://support.spitfirepm.com/kba-01132/ and https://docs.webix.com/helpers__date_formatting_methods.html
-     * 
+     *
      * test: ["MMM d, yyyy","MM d, yy","M dd, yyyy","MMM d, yyyy HH:mm:ss","d/m/yyyy","H:mm:ss","h:mm:ss tt"].forEach(test=> console.log(test.padEnd(25),"\t",sfClient.ConvertDotNetDateTimeFormatToWebix(test)))
      */
     public ConvertDotNetDateTimeFormatToWebix( dotNetFormat : string ): string {
