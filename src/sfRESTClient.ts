@@ -655,10 +655,10 @@ export class sfRestClient {
         ,   {"dn":"ddd","dx":"%D"}
         ,   {"dn":"dd","dx":"%d"}
         ,   {"dn":"d","dx":"%j"}
-        ,   {"dn":"mmmm","dx":"%F"}
-        ,   {"dn":"mmm","dx":"%M"}
-        ,   {"dn":"mm","dx":"%m"}
-        ,   {"dn":"m","dx":"%n"}
+        ,   {"dn":"MMMM","dx":"%F"}
+        ,   {"dn":"MMM","dx":"%M"}
+        ,   {"dn":"MM","dx":"%m"}
+        ,   {"dn":"M","dx":"%n"}
         ,   {"dn":"yyyy","dx":"%Y"}
         ,   {"dn":"yy","dx":"%y"}
         ,   {"dn":"hh","dx":"%h"}
@@ -681,21 +681,26 @@ export class sfRestClient {
      * Converts traditional .NET date formats to Webix formats
      * @param dotNetFormat something like d or m/d/yyyy
      * See https://support.spitfirepm.com/kba-01132/ and https://docs.webix.com/helpers__date_formatting_methods.html
+     * 
+     * test: ["MMM d, yyyy","MM d, yy","M dd, yyyy","MMM d, yyyy HH:mm:ss","d/m/yyyy","H:mm:ss","h:mm:ss tt"].forEach(test=> console.log(test.padEnd(25),"\t",sfClient.ConvertDotNetDateTimeFormatToWebix(test)))
      */
     public ConvertDotNetDateTimeFormatToWebix( dotNetFormat : string ): string {
         var result : string | null;
         var DefaultCulture : string = navigator.language;
-        if (!dotNetFormat) {
-            if (DefaultCulture.length < 4) dotNetFormat = "d mmm yyyy";
-            else if (DefaultCulture = "en-US") dotNetFormat = "m/d/yyyy";
-            else dotNetFormat = "d mmm yyyy";
+        if (!dotNetFormat || dotNetFormat === "d") {
+            if (DefaultCulture.length < 4) dotNetFormat = "d MMM yyyy";
+            else if (DefaultCulture = "en-US") dotNetFormat = "M/d/yyyy";
+            else dotNetFormat = "d MMM yyyy";
         }
         var cacheKey : string = "ZDFMT2WX:" + dotNetFormat;
         result = sessionStorage.getItem(cacheKey)
         if (result) return result;
         result = dotNetFormat;
-        this.DateFormatMap.forEach(mapx => {
-            result = result!.replaceAll(mapx.dn,mapx.dx);
+        this.DateFormatMap.forEach((mapx,idx) => {
+            result = result!.replaceAll(mapx.dn,"{"+idx+"}");
+        });
+        this.DateFormatMap.forEach((mapx,idx) => {
+            result = result!.replaceAll("{"+idx+"}",mapx.dx);
         });
         sessionStorage.setItem(cacheKey,result);
         return result;
@@ -932,7 +937,7 @@ export class sfRestClient {
          */
         PopDocForceXBUI :  false,
         PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
-        PopDocXBURL:  "{0}#!/document/home?id={1}"
+        PopDocXBURL:  "{0}#!/document?id={1}"
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
@@ -1096,15 +1101,18 @@ export class sfRestClient {
     }
 
     public IsDocumentPage() : boolean {
-        return this.IsPageOfType("DocDetail");
+        return this.IsPageOfType("DocDetail") ;
     }
     public IsProjectPage() : boolean {
         return this.IsPageOfType("ProjectDetail");
     }
-    public IsPageOfType(typeWanted: string) : boolean {
+    public IsPageOfType(pageWanted: string) : boolean {
         if (!this._WCC ) { console.warn("_WCC missing?"); return false; }
         if (!this._WCC.PageName) this._WCC.PageName = this.ResolvePageName();
-        return (this._WCC.PageName == typeWanted); // future: handle variants ProjectDetail (legacy) vs projectDashboard (xb)
+        var XBUIPageName : string = this.XBVariantOfPageName(pageWanted);
+        return (    (this._WCC.PageName == pageWanted)  ||
+                    (this._WCC.PageName == XBUIPageName)
+                );
     }
 
     protected ResolvePageName() : string {
@@ -1115,6 +1123,23 @@ export class sfRestClient {
         if (pgname.indexOf("?") >= 0) pgname = pgname.substr(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substr(0,pgname.indexOf(".") )
         return pgname;
+    }
+
+    protected XBVariantOfPageName( classicPageName : string ) : string {
+        var result: string;
+        switch (classicPageName) {
+            case "DocDetail":
+                result = "document";
+                break;
+            case "ProjectDetail":
+                result = "projectDashboard";
+                break;
+
+            default:
+                result = classicPageName;
+                break;
+        }
+        return result;
     }
 
     /**
