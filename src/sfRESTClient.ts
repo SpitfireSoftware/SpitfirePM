@@ -423,7 +423,13 @@ export class sfRestClient {
                 DependsOnSet[0] = dependsOn;
             }
 
-            var apiResultPromise: Promise<Suggestion[] | null> = api.getSuggestions4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],seedValue,limit);
+
+            //var apiResultPromise: Promise<Suggestion[] | null> = api.getSuggestions4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],seedValue,limit);
+            var SuggestionContext = new _SwaggerClientExports.QueryFilters();
+            SuggestionContext.DependsOn = DependsOnSet;
+            SuggestionContext.MatchingSeed = seedValue;
+            SuggestionContext.ResultLimit = limit;
+            var apiResultPromise : Promise<Suggestion[] | null> = api.getSuggestionsWithContext(lookupName,"1",SuggestionContext)
 
             return apiResultPromise;
     }
