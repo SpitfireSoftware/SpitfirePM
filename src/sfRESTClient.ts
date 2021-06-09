@@ -224,7 +224,7 @@ export type PartContextKey = string // PartName[context]::dtk
 
 
 export class sfRestClient {
-    version: string = "2020.0.7816";
+    version: string = "2020.0.7828";
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -713,36 +713,6 @@ export class sfRestClient {
 
     }
 
-    public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
-        var UIToolPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
-            if (typeof $element.dialog !== "function") {
-                // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
-                if (!eval("window.jQuery") ) eval("window.jQuery = $;");
-                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
-                this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,this._WCC.Version));
-                $.getScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js', function() {
-                    console.log("jQuery UI extensions loaded.");
-                    resolve(true);
-                });
-            }
-            else resolve(true);
-       });
-       return UIToolPromise;
-    }
-
-    /**
-     * Adds a link to a stylesheet for the page
-     * @param cssRef if includes a slash(/), must be full URL, otherwise  site-url/wv.aspx/js/ is prepended
-     * @returns nothing
-     */
-    public AddCSSResource(cssRef : string): void {
-    if (!cssRef) return;
-    if (cssRef.indexOf("/") < 0) cssRef = "{0}/wv.aspx/js/{1}.css".sfFormat(sfApplicationRootPath, cssRef);
-    if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
-
-    $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
-}
-
     /**
      * Converts a JSON set into rows of an HTML Table.
      * @param mydata an array of JSON objects
@@ -874,6 +844,93 @@ export class sfRestClient {
             RESTClient._z.WCCLoaded = true;
         });
     }
+
+    /**
+     * For each passed URI, If page does not already have a matching SCRIPT element, adds one
+     * @param jsResourceList array of source uri
+     */
+    LoadDynamicJS( jsResourceList: string[]) : void{
+        // var $Target : JQuery<HTMLElement>
+        // if (this.IsPowerUXPage()) {
+        //     $Target = $("head");
+        // }
+        // else {
+        //     $Target = $("form");
+        // }
+
+        var AnyLoaded: boolean = false;
+        if (top.sfClient !== this) return;
+        jsResourceList.forEach(scriptSrc => {
+            var src = scriptSrc;
+            if (src.indexOf("?")>0) src= src.substring(0,src.indexOf("?"));
+            var js : JQuery<HTMLScriptElement> = $("script[src^='{0}']".sfFormat(src));
+            if (js.length === 0) {
+                var RESTClient: sfRestClient = this;
+                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("Dynamically Loading ",src);
+                this.getCachedScript(scriptSrc).done( function() {
+                        if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Loaded.", scriptSrc);
+                        //resolve(true);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        console.warn("Script load failure", scriptSrc,errorThrown)
+                        //resolve(true);
+                    });
+                AnyLoaded = true;
+            }
+        });
+
+        if (AnyLoaded ) {
+             this.AssureJQUITools($("<div />"));
+        }
+    }
+
+
+    public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
+        var UIToolPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
+            if (!$element) $element = $("<div />");
+            if (typeof $element.dialog !== "function") {
+                // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
+                if (!eval("window.jQuery") ) eval("window.jQuery = $;");
+                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
+                this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,this._WCC.Version));
+                if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
+                    $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
+
+                this.getCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js').done( function() {
+                        console.log("jQuery UI extensions loaded.");
+                        resolve(true);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        console.warn("jQueryUI did not load", errorThrown)
+                        resolve(true);
+                    })
+            }
+            else resolve(true);
+       });
+       return UIToolPromise;
+    }
+
+    public  getCachedScript( url: string): JQuery.jqXHR {
+        return $.ajax({
+            url: url,
+            dataType: "script",
+            cache: true
+        });
+    }
+
+    /**
+     * Adds a link to a stylesheet for the page
+     * @param cssRef if includes a slash(/), must be full URL, otherwise  site-url/wv.aspx/js/ is prepended
+     * @returns nothing
+     */
+    public AddCSSResource(cssRef : string): void {
+    if (!cssRef) return;
+    if (cssRef.indexOf("/") < 0) cssRef = "{0}/wv.aspx/js/{1}.css".sfFormat(sfApplicationRootPath, cssRef);
+    if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
+
+    $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
+}
+
+
+
   /**
      * Opens a new tab with location specified based on Document Key and UI version
      * @param id the guid DocMasterKey for the document to be opened
@@ -1104,6 +1161,10 @@ export class sfRestClient {
     }
     public IsDocExclusiveToMe() : boolean {
         return ((!this.IsDocumentPage()) || (this._WCC.DataLockFlag >= "2"));
+    }
+
+    public IsPowerUXPage() : boolean {
+        return location.hash.startsWith("#!")
     }
 
     public IsDocumentPage() : boolean {
@@ -1605,6 +1666,7 @@ export class sfRestClient {
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
         this.exports = _SwaggerClientExports;
+        this.exports.$ = $;
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version)) window.ClickOnceExtension = new BrowserExtensionChecker();
 
@@ -1614,6 +1676,10 @@ export class sfRestClient {
                     sfRestClient._GlobalClientConstructFlag = true;
                     window.sfClient = new sfRestClient();
                     sfRestClient._GlobalClientConstructFlag = false;
+                    if (typeof this._WCC._DynamicJS === "string" && this.IsPowerUXPage()) {
+                        var djs: string[] = JSON.parse( this._WCC._DynamicJS);
+                        this.LoadDynamicJS(djs);
+                    }
                 }
             });
         });
