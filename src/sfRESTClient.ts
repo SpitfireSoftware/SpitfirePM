@@ -1,7 +1,7 @@
 //import { contains } from "jquery";
 import { GUID } from "./globals";
 import  { sfApplicationRootPath } from "./string.extensions";
-import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
@@ -224,7 +224,7 @@ export type PartContextKey = string // PartName[context]::dtk
 
 
 export class sfRestClient {
-    version: string = "2020.0.7828";
+    version: string = "2020.0.7840";
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -262,6 +262,61 @@ export class sfRestClient {
         return ResultReady;
     }
 
+    /**
+     * Updates row visibility on the server and updates the in-memory flags for display of this row
+     * @param partName ProjTeam or ProjectPublicInfo
+     * @param rawData ViewModel containing raw row data
+     */
+    ToggleRowVisibility( partName: string, rawData: DataModelRow) : Promise<boolean> {
+
+        var DataField : string = "TeamList";
+        var api : ProjectTeamClient | ProjectsClient;
+        const FlagVisibleFieldName = "_DefaultRowVisible";
+        var ServerUpdatePromise :Promise<string> | undefined;
+        var RowKey = ""
+        var NewValue = false;
+        var APIContext : string = "";
+
+        if (partName === "ProjTeam") {
+            DataField = "TeamList";
+            api = new ProjectTeamClient(this._SiteURL);
+            NewValue = !(rawData[FlagVisibleFieldName]);
+            RowKey = rawData["UserProjectKey"];
+            APIContext = location.href;
+            APIContext = APIContext.substr(APIContext.lastIndexOf("=")+1);
+            ServerUpdatePromise = api.patchProjectTeam(APIContext,RowKey,DataField, NewValue.toString());
+        }
+        else if (partName === "ProjectPublicInfo") {
+            DataField = "UserList";
+            api = new ProjectsClient(this._SiteURL);
+            NewValue = !(rawData[FlagVisibleFieldName]);
+            RowKey = rawData["UserProjectKey"];
+            APIContext = this.EmptyKey; // future! get current user key
+            ServerUpdatePromise = api.patchUserProjectList(APIContext,RowKey,DataField, NewValue.toString());
+        }
+        else {
+            console.warn("ToggleRowVisibility - Unsupported: ",partName)
+            ServerUpdatePromise = undefined;
+        }
+
+
+
+        var FinalPromise: Promise<boolean> = new Promise<boolean>((finalResolve) => {
+            if (!ServerUpdatePromise) {
+                finalResolve(false);
+                return;
+            }
+            ServerUpdatePromise.then(()=>{
+                    rawData[FlagVisibleFieldName] = NewValue;
+                    rawData[DataField] = NewValue;
+                    finalResolve(true);
+                }).catch( (reason) =>{
+                console.warn("ToggleRowVisibility({0},{1}) Failed persist {2} to {3}, {4}".sfFormat(partName,RowKey,DataField,NewValue,reason));
+                finalResolve(false);
+            });
+        });
+        return FinalPromise;
+    }
 
     /**
      *  Applies CFG data to raw Data Model, returns promise that resolves when View Model is ready
@@ -656,7 +711,11 @@ export class sfRestClient {
     return forElement;
     }
 
-    protected DateFormatMap: {dn:string,dx:string}[] = [
+    /**
+     * Maps .NET placeholders (dn) to webix placeholders (dx)
+     * Important: order matters (eg: dd must be remapped before d, or the d map would be used)
+     */
+    protected _DateFormatMap: {dn:string,dx:string}[] = [
             {"dn":"dddd","dx":"%l"} // Tuesday
         ,   {"dn":"ddd","dx":"%D"}  // Tue
         ,   {"dn":"dd","dx":"%d"}   // 08
@@ -702,10 +761,10 @@ export class sfRestClient {
         result = sessionStorage.getItem(cacheKey)
         if (result) return result;
         result = dotNetFormat;
-        this.DateFormatMap.forEach((mapx,idx) => {
+        this._DateFormatMap.forEach((mapx,idx) => {
             result = result!.replaceAll(mapx.dn,"{"+idx+"}");
         });
-        this.DateFormatMap.forEach((mapx,idx) => {
+        this._DateFormatMap.forEach((mapx,idx) => {
             result = result!.replaceAll("{"+idx+"}",mapx.dx);
         });
         sessionStorage.setItem(cacheKey,result);
@@ -1555,13 +1614,33 @@ export class sfRestClient {
 
      protected DialogViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
 
-    _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, DataModelBuildKey: string) {
+    _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, dataModelBuildKey: string) {
+
+        if (item.CSS) {
+            if (item.CSS.indexOf("sfRowVisibleWhen") >= 0){
+                var IsWhenClear = (item.CSS.indexOf("WhenClear") >= 0);
+                const FlagVisibleFieldName = "_DefaultRowVisible";
+                if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} RowVis {1} ".sfFormat(item.ItemName, item.CSS));
+                thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowVis(rawRow: any, index: number) : void{
+                    var ShowRow = false;
+                    var UpdateFlagProperty = !(FlagVisibleFieldName in rawRow);
+                    if (!UpdateFlagProperty) ShowRow = rawRow[FlagVisibleFieldName];
+                    if (!ShowRow) {
+                        var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
+                        if (IsWhenClear) ShowRow = !(FieldValue)
+                        else ShowRow = !(!(FieldValue));
+                        if (!UpdateFlagProperty && ShowRow) UpdateFlagProperty = true;
+                    }
+                    if (UpdateFlagProperty) thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index,FlagVisibleFieldName, "", ShowRow);
+                });
+            }
+        }
 
         if (item.DV || item.LookupName ||
             (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
             if (item.DV) {
                 if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
-                thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
+                thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
                     var ThisSuffix : string = "_dv";
                     if (!((item.DataField + ThisSuffix) in rawRow)) {
                         var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
@@ -1569,20 +1648,20 @@ export class sfRestClient {
                         var DependsOn : string[] | undefined;
                         if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
                         thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
-                            thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, ThisSuffix, r);
+                            thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix, r);
                         }));
                     }
                 });
             }
             if (item.UIType === "contact") {
-                thisPart.DataModels.get(DataModelBuildKey)!.forEach(function DataModelRowDVContactActiveCheck(rawRow: any, index: number) : void {
+                thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowDVContactActiveCheck(rawRow: any, index: number) : void {
                     var ThisSuffix : string = "_IsInactive";
                     if (!((item.DataField + ThisSuffix) in rawRow)) {
                         var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
                         if (!FieldValue) return;
                         thisPart._PromiseList!.push(thisPart.RestClient.GetDV("sfUserActive", FieldValue, "", false).then(function then_AddDVActiveToDModel(r) {
                             if(!r)
-                                thisPart.RestClient._AddDVValueToDataModel(thisPart, DataModelBuildKey, index, item.DataField!, ThisSuffix ,true);
+                                thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix ,true);
                         }));
                     }
                 });
