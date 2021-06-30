@@ -282,8 +282,7 @@ export class sfRestClient {
             api = new ProjectTeamClient(this._SiteURL);
             NewValue = !(rawData[FlagVisibleFieldName]);
             RowKey = rawData["UserProjectKey"];
-            APIContext = location.href;
-            APIContext = APIContext.substr(APIContext.lastIndexOf("=")+1);
+            APIContext = this.GetPageProjectKey();
             ServerUpdatePromise = api.patchProjectTeam(APIContext,RowKey,DataField, NewValue.toString());
         }
         else if (partName === "ProjectPublicInfo") {
@@ -1296,10 +1295,76 @@ export class sfRestClient {
         return result;
     }
 
+    public GetPageQueryParameterByName(name:string):string {
+        name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+        var QPSource = location.search;
+        if (!QPSource) QPSource = location.hash;
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(QPSource);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    public GetPageProjectKey() :string {
+        var Context = location.href;
+        if (this.IsDocumentPage()) {
+            console.warn("GetPageProjectKey() does not *really* support doc pages yet");
+            Context = this._WCC.Project;
+        }
+        else {
+            Context = this.GetPageQueryParameterByName("id");
+            if (!Context) Context = this.GetPageQueryParameterByName("Project");
+        }
+        return Context;
+    }
+
+    /**
+     * Parses and performs an action
+     * @param actionString often in the form javascript:something(args)
+     * @param rowData optional collection of data
+     */
+    public InvokeAction(actionString: string, rowData? : DataModelRow) : void {
+
+        if (actionString.indexOf("vPgPopup(") >= 0) {
+            var rxVPgPopup = /vPgPopup\(['"](?<vpgName>\w+)['"],\s?(?<argslit>['"])(?<args>.*)['"],\s?(?<width>\d+),\s?(?<height>\d+)/gm;
+            var match = rxVPgPopup.exec(actionString);
+            if (match && match.groups) {
+                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
+                this.VModalPage(match.groups!.vpgName,match.groups.args,parseInt(match.groups.width),parseInt(match.groups.height),undefined);
+            }
+            else {
+                console.warn("InvokeAction::VPg failed match",actionString);
+            }
+        }
+        else if (actionString.indexOf("PopDoc(") >= 0) {
+            var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
+            var match = rxPopDoc.exec(actionString);
+            if (match && match.groups) {
+                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
+                this.PopDoc( match.groups.idguid );
+            }
+            else {
+                console.warn("InvokeAction::Doc failed match",actionString);
+            }
+        }
+        else if (actionString.indexOf("PopTXHistory(") >= 0) {
+            console.warn("InvokeAction::TXH not really done",actionString);
+            // sample action: javascript:PopTXHistory(\"TranHistory\", ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" );
+            // sample http://stany2017/SFPMS/pvp.aspx?vpg=TranHistory&project=GC003&ds=1f573cce-ddd8-4463-a6a6-40c641357f47_ProjectCA_dsData&task=01000&acct=%25&period=%
+            var Project = this.GetPageProjectKey()
+            var Task:string = "%",Acct : string = "%";
+            if (rowData && rowData["task"]) Task = rowData["task"];
+            if (rowData && rowData["acct"]) Acct = rowData["acct"];
+            this.VModalPage("TranHistory","&project={0}&task={1}&acct={2}&period=%".sfFormat(Project,Task,Acct),999,444,undefined);
+        }
+        else {
+            console.warn("InvokeAction() could not handle ",actionString);
+        }
+    }
+
     /**
      * Opens a Modal dialog with an iFrame and loads pvp.aspx?vpg=your-vpg-id /
      * @param vpg ReportBrowser,;
-     * @param opts
+     * @param opts Should begin with an ampersand(&)
      * @param w
      * @param h
      * @param defaultResponse
