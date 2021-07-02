@@ -1321,6 +1321,12 @@ export class sfRestClient {
      * Parses and performs an action
      * @param actionString often in the form javascript:something(args)
      * @param rowData optional collection of data
+     *
+     * Actions Supported
+     * - vPgPopup(...)
+     * - PopDoc(...)
+     * - PopTXHistory(...)
+     * - Nav To (dcmodules and admin tools)
      */
     public InvokeAction(actionString: string, rowData? : DataModelRow) : void {
 
@@ -1355,6 +1361,10 @@ export class sfRestClient {
             if (rowData && rowData["task"]) Task = rowData["task"];
             if (rowData && rowData["acct"]) Acct = rowData["acct"];
             this.VModalPage("TranHistory","&project={0}&task={1}&acct={2}&period=%".sfFormat(Project,Task,Acct),999,444,undefined);
+        }
+        else if (actionString.indexOf("/dcmodules/") >= 0  || actionString.indexOf("/admin/") >= 0 ) {
+            console.warn("InvokeAction::tools not really done",actionString);
+            top.location.href = actionString;
         }
         else {
             console.warn("InvokeAction() could not handle ",actionString);
