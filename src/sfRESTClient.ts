@@ -224,7 +224,7 @@ export type PartContextKey = string // PartName[context]::dtk
 
 
 export class sfRestClient {
-    version: string = "2020.0.7840";
+    version: string = "2020.0.7860";
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -1822,7 +1822,7 @@ export class sfRestClient {
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
-        if (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version)) window.ClickOnceExtension = new BrowserExtensionChecker();
+        if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
 
         this.LoadUserSessionInfo().then(() => {
             this.LoadUCFunctionMap().then(() =>{
@@ -1831,8 +1831,8 @@ export class sfRestClient {
                     window.sfClient = new sfRestClient();
                     sfRestClient._GlobalClientConstructFlag = false;
                     if (typeof this._WCC._DynamicJS === "string" && this.IsPowerUXPage()) {
-                        var djs: string[] = JSON.parse( this._WCC._DynamicJS);
-                        this.LoadDynamicJS(djs);
+                        var djs: string[] = JSON.parse(this._WCC._DynamicJS);
+                        if (djs) this.LoadDynamicJS(djs);
                     }
                 }
             });
