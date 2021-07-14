@@ -1829,6 +1829,8 @@ export class sfRestClient {
                 if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
                     sfRestClient._GlobalClientConstructFlag = true;
                     window.sfClient = new sfRestClient();
+                    if (!window.$) window.$ = $;
+                    if (!top.$) top.$ = $;
                     sfRestClient._GlobalClientConstructFlag = false;
                     if (typeof this._WCC._DynamicJS === "string" && this.IsPowerUXPage()) {
                         var djs: string[] = JSON.parse(this._WCC._DynamicJS);
