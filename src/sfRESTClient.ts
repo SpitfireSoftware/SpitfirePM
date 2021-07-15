@@ -227,7 +227,7 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7860";
+    version: string = "2020.0.7865";
     /**
      * Helps decode
      */
@@ -944,12 +944,29 @@ export class sfRestClient {
         var apiResult: WCCData | null = api.getWCC();
         if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
         return apiResult.then((r: WCCData) => {
-            $.each(r, function SetWCCProperties(pname: string | number, pvalue) {
-                RESTClient._WCC[pname] = pvalue;
-            });
-            RESTClient._WCC.PageName = RESTClient.ResolvePageName();
-            RESTClient._z.WCCLoaded = true;
+             this.UpdateWCCData(r);
         });
+    }
+
+    UpdateWCCData( newWCC: WCCData ) : WCCData {
+        var RESTClient: sfRestClient = this;
+        var ChangeList: Map<string, any> = new Map<string,any>();
+        $.each(newWCC, function SetWCCProperties(pname: string  , pvalue) {
+            var HasChanged = typeof RESTClient._WCC[pname] === "undefined" || RESTClient._WCC[pname] != pvalue;
+            if (HasChanged) {
+                RESTClient._WCC[pname] = pvalue;
+                ChangeList.set(pname,pvalue);
+            }
+        });
+        RESTClient._WCC.PageName = RESTClient.ResolvePageName();
+        RESTClient._z.WCCLoaded = true;
+        ChangeList.forEach((value,keyName) => {
+            var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
+            if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
+            $(document).trigger(eventName,[RESTClient,keyName,value]);
+        });
+
+        return newWCC
     }
 
     /**
@@ -1889,8 +1906,25 @@ export class sfRestClient {
         this.exports.$ = $;
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
+        if (window.sfClient && window.sfClient._z.WCCLoaded) {
+            var TargetClient = this;
+            $.each(window.sfClient._WCC, function CopyWCC(pname: string  , pvalue) {
+                var HasChanged = typeof TargetClient._WCC[pname] === "undefined" || TargetClient._WCC[pname] != pvalue;
+                if (HasChanged) {
+                    TargetClient._WCC[pname] = pvalue;
+                }
+            });
+        }
 
         this.LoadUserSessionInfo().then(() => {
+            var RESTClient = this;
+            $("document").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
+                console.log("Activating Dynamics JS")
+                if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
+                    var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
+                    if (djs) RESTClient.LoadDynamicJS(djs);
+                }
+            });
             this.LoadUCFunctionMap().then(() =>{
                 if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
                     sfRestClient._GlobalClientConstructFlag = true;
@@ -1898,10 +1932,6 @@ export class sfRestClient {
                     if (!window.$) window.$ = $;
                     if (!top.$) top.$ = $;
                     sfRestClient._GlobalClientConstructFlag = false;
-                    if (typeof this._WCC._DynamicJS === "string" && this.IsPowerUXPage()) {
-                        var djs: string[] = JSON.parse(this._WCC._DynamicJS);
-                        if (djs) this.LoadDynamicJS(djs);
-                    }
                 }
             });
         });
