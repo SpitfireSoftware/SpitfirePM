@@ -27,6 +27,7 @@ export enum LoggingLevels {
 
 type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
+
 class PartStorageData {
 
     CFG: UIDisplayPart | null;
@@ -221,10 +222,22 @@ export class WCCData { [key: string]: any; }
 export class DataModelRow { [key: string]: any; };
 export class DataModelCollection { [key: string]: any; } [];
 export type PartContextKey = string // PartName[context]::dtk
+export type Permits = number; // 0...31
+export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
     version: string = "2020.0.7860";
+    /**
+     * Helps decode
+     */
+     public static PermissionFlags = {
+        Read: 1,
+        Insert:  2,
+        Update:  4,
+        Delete:  8,
+        Special:  16
+    }
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -365,90 +378,126 @@ export class sfRestClient {
     /**
     * async: returns an numerc bit-flag indicating the user's permission level (R=1,I=2,U=4,D=8,S=16)
     */
-    CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): JQueryPromise<number> {
+    CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): Promise<Permits> {
         var RESTClient: sfRestClient = this;
-        var DeferredResult = $.Deferred();
-        var permitCheck = DeferredResult.promise();
-        if (!RESTClient._z.WCCLoaded) RESTClient.LoadUserSessionInfo();
+        //was $.Deferred();
+        var DeferredPermitResult : Promise<Permits> = new Promise<Permits>((ResolveThisPermit) => {
+            if (!RESTClient._z.WCCLoaded) RESTClient.LoadUserSessionInfo();
+            if (typeof optionalDTK !== "string") optionalDTK = "";
+            if (typeof optionalReference !== "string") optionalReference = "";
+            if (typeof optionalProject !== "string") optionalProject = "0";
+            var PermitCacheID = ucModule + "_" + ucFunction
+                + "_T" + optionalDTK.replaceAll("-", "")
+                + "_R" + optionalReference
+                + "_P" + optionalProject;
+            var ValueFromCache = RESTClient._UserPermitResultCache.get(PermitCacheID);
+            if (typeof ValueFromCache === "number") {
+                ResolveThisPermit(ValueFromCache);
+                return;
+            }
 
-        if (typeof optionalDTK !== "string") optionalDTK = "";
-        if (typeof optionalReference !== "string") optionalReference = "";
-        if (typeof optionalProject !== "string") optionalProject = "0";
-        var PermitCacheID = ucModule + "_" + ucFunction
-            + "_T" + optionalDTK.replaceAll("-", "")
-            + "_R" + optionalReference
-            + "_P" + optionalProject;
-        if (typeof RESTClient._UserPermitResultCache.get(PermitCacheID) === "number") {
-            DeferredResult.resolve(RESTClient._UserPermitResultCache.get(PermitCacheID));
-            return permitCheck; // quick!
-        }
-
-        var UCFK = "";
-        var ThisProjectPermitSet: UCPermitSet | undefined;
-        var UCFKDeferredResult = $.Deferred();
-        var UCFKPromise = UCFKDeferredResult.promise();
-        var PPSDeferredResult = $.Deferred();
-        var PPSPromise = PPSDeferredResult.promise();
-        if (ucModule.length === 36) {
-            UCFK = ucModule;
-            UCFKDeferredResult.resolve(UCFK);
-        }
-        else {
-            RESTClient.LoadUCFunctionMap().done(function () {
-                UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
-                if (!UCFK) console.warn("CheckPermit could not find {0}|{1} - verify proper case!".sfFormat(ucModule, ucFunction));
+            var UCFK = "";
+            var ThisProjectPermitSet: UCPermitSet | undefined;
+            var UCFKDeferredResult = $.Deferred();
+            var UCFKPromise = UCFKDeferredResult.promise();
+            var PPSDeferredResult = $.Deferred();
+            var PPSPromise = PPSDeferredResult.promise();
+            if (ucModule.length === 36) {
+                UCFK = ucModule;
                 UCFKDeferredResult.resolve(UCFK);
-            });
-        }
-
-        if (!(RESTClient._LoadedPermits.has(optionalProject))) {
-            var api = new SessionClient(this._SiteURL);
-            var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits(optionalProject);
-            if (apiResult) {
-                apiResult.then((r) => {
-                    if (r) {
-                        console.log("Loaded Project {0} Permit set from server...".sfFormat(optionalProject));
-                        RESTClient._LoadedPermits.set(optionalProject!, r);
-                        ThisProjectPermitSet = r!;
-                        PPSDeferredResult.resolve(r);
+            }
+            else {
+                RESTClient.LoadUCFunctionMap().done(function () {
+                    UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
+                    UCFKDeferredResult.resolve(UCFK);
+                    if (!UCFK) {
+                        console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
+                        ResolveThisPermit(0);
+                        return;
                     }
                 });
             }
-        }
-        else {
-            ThisProjectPermitSet = RESTClient._LoadedPermits.get(optionalProject);
-            PPSDeferredResult.resolve(ThisProjectPermitSet);
-        }
 
-        var finalCheck = [PPSDeferredResult, UCFKDeferredResult];
-
-        $.when.apply($, finalCheck).done(function () {
-            var finalPermit = 0;
-            $.each(ThisProjectPermitSet?.Permits, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
-                if (ThisUCFK === UCFK) {
-                    $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
-                        var thisPermitValue = 0;
-                        if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
-                            if (p.ReadOK) thisPermitValue += 1;
-                            if (p.InsOK) thisPermitValue += 2;
-                            if (p.UpdOK) thisPermitValue += 4;
-                            if (p.DelOK) thisPermitValue += 8;
-                            if (p.BlanketOK) thisPermitValue += 16;
+            if (!(RESTClient._LoadedPermits.has(optionalProject))) {
+                var api = new SessionClient(this._SiteURL);
+                var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits(optionalProject);
+                if (apiResult) {
+                    apiResult.then((r) => {
+                        if (r) {
+                            console.log("Loaded Project {0} Permit set from server...".sfFormat(optionalProject));
+                            RESTClient._LoadedPermits.set(optionalProject!, r);
+                            ThisProjectPermitSet = r!;
+                            PPSDeferredResult.resolve(r);
                         }
-                        finalPermit |= thisPermitValue;
-                        return (finalPermit !== 31);
                     });
                 }
-                return (finalPermit !== 31);
-            });
-            finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
-            RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-            DeferredResult.resolve(finalPermit );
-        });
-        return permitCheck; // wait for .done, use (r)
+            }
+            else {
+                ThisProjectPermitSet = RESTClient._LoadedPermits.get(optionalProject);
+                PPSDeferredResult.resolve(ThisProjectPermitSet);
+            }
 
+            var finalCheck = [PPSPromise, UCFKPromise];
+
+            $.when.apply($, finalCheck).done(function () {
+                var finalPermit : Permits = 0;
+                $.each(ThisProjectPermitSet?.Permits, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
+                    if (ThisUCFK === UCFK) {
+                        $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
+                            var thisPermitValue : Permits = 0;
+                            if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
+                                if (p.ReadOK) thisPermitValue += sfRestClient.PermissionFlags.Read;
+                                if (p.InsOK) thisPermitValue += sfRestClient.PermissionFlags.Insert;
+                                if (p.UpdOK) thisPermitValue += sfRestClient.PermissionFlags.Update;
+                                if (p.DelOK) thisPermitValue += sfRestClient.PermissionFlags.Delete;
+                                if (p.BlanketOK) thisPermitValue += sfRestClient.PermissionFlags.Special;
+                            }
+                            finalPermit |= thisPermitValue;
+                            return (finalPermit !== 31);
+                        });
+                    }
+                    return (finalPermit !== 31);
+                });
+                finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
+                RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+                ResolveThisPermit(finalPermit);
+            });
+        });
+        return DeferredPermitResult; // wait for .then, use (r)
     }
 
+    /**
+     * Resolves list of part names with permissions
+     * @returns object with part names and permission flags
+     */
+    GetPagePartPermits() : Promise<PagePartList> {
+        var DeferredPermitResult : Promise<PagePartList> = new Promise<PagePartList>((ResolveList) => {
+            var finalCheck : JQuery.Promise<any,any,any>[] = [] ;
+            var PartNameList: string[] = [];
+            var PageParts: PagePartList = {};
+            var PageKey : string = "0";
+            if (this.IsHomeDashboardPage()) { PartNameList = ["ActionItems","ProjectList","AlertList"];}
+            else if (this.IsProjectPage()) {
+                PartNameList = ["ProjTeam","ProjectKPI","ProjLinks","ProjectCA","ProjNote","ProjPhoto","ProjWeather"];
+                PageKey = this.GetPageProjectKey();
+            }
+
+            PartNameList.forEach(element  => {
+                var OnePartPermitDeferred = $.Deferred();
+                var OnePartPermitDeferredPromise = OnePartPermitDeferred.promise();
+                finalCheck.push(OnePartPermitDeferredPromise);
+                this.CheckPermit("PART",element,undefined,PageKey).then((r)=>{
+                    PageParts[element] = r;
+                    OnePartPermitDeferred.resolve(r);
+                });
+            });
+
+            $.when.apply($, finalCheck).done(function () {
+                ResolveList(PageParts)
+            });
+        });
+        return DeferredPermitResult;
+    }
 
     /**
      * Returns set of choices for an auto-complete based on the seed value
@@ -925,12 +974,8 @@ export class sfRestClient {
             if (js.length === 0) {
                 var RESTClient: sfRestClient = this;
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("Dynamically Loading ",src);
-                this.getCachedScript(scriptSrc).done( function() {
+                this.AddCachedScript(scriptSrc).then( ()=> {
                         if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Loaded.", scriptSrc);
-                        //resolve(true);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.warn("Script load failure", scriptSrc,errorThrown)
-                        //resolve(true);
                     });
                 AnyLoaded = true;
             }
@@ -953,25 +998,38 @@ export class sfRestClient {
                 if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
                     $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
 
-                this.getCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js').done( function() {
+                this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js').then( (likelyTrue) => {
                         console.log("jQuery UI extensions loaded.");
                         resolve(true);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.warn("jQueryUI did not load", errorThrown)
-                        resolve(true);
-                    })
+                    // })
+                    // .fail(function(jqXHR, textStatus, errorThrown) {
+                    //     console.warn("jQueryUI did not load", errorThrown)
+                    //     resolve(true);
+                    });
             }
             else resolve(true);
        });
        return UIToolPromise;
     }
 
-    public  getCachedScript( url: string): JQuery.jqXHR {
-        return $.ajax({
-            url: url,
-            dataType: "script",
-            cache: true
+    public  AddCachedScript(  url: string,context?: Window | undefined,): Promise<boolean> {
+        if (!context) context = self;
+        var script = context.document.createElement('script');
+        script.src = url;
+        var ScriptPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
+             script.onload = function _scriptloaded() {
+                resolve(true);
+            };
+            document.body.appendChild(script);
+        // it will start to load right after appended, and execute of course
         });
+
+        return ScriptPromise;
+        // return $.ajax({
+        //     url: url,
+        //     dataType: "script",
+        //     cache: true
+        // });
     }
 
     /**
@@ -1225,6 +1283,11 @@ export class sfRestClient {
         return location.hash.startsWith("#!")
     }
 
+    public IsHomeDashboardPage() : boolean {
+        return this.IsPageOfType("Dashboard") ;
+    }
+
+
     public IsDocumentPage() : boolean {
         return this.IsPageOfType("DocDetail") ;
     }
@@ -1243,7 +1306,7 @@ export class sfRestClient {
     protected ResolvePageName() : string {
         var pgname : string = location.pathname;
         var pgHash : string = location.hash;
-        if (pgHash.length > 0) pgname = pgname; // for xb style
+        if (pgHash.length > 0) pgname = pgHash; // for xb style
         if (pgname.indexOf("/") >= 0) pgname = pgname.substr(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substr(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substr(0,pgname.indexOf(".") )
@@ -1259,6 +1322,9 @@ export class sfRestClient {
             case "ProjectDetail":
                 result = "projectDashboard";
                 break;
+            case "Dashboard":
+                    result = "home";
+                    break;
 
             default:
                 result = classicPageName;
