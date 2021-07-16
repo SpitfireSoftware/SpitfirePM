@@ -725,7 +725,7 @@ export class sfRestClient {
     $GCI.html("Loading....");
     // //width: window.top.$(window.top).width() * 0.88
 
-    this.AssureJQUITools($GCI).then((unused) => {
+    //this.AssureJQUITools($GCI).then((unused) => {
 
         $GCI.dialog({
             title: queryOptions?.DialogTitle, height: "auto", width: "auto", position: "top center"
@@ -754,7 +754,7 @@ export class sfRestClient {
                 $GCI.html(queryOptions?.EmptyDialogText!);
             }
         });
-    });
+   // });
 
     return forElement;
     }
@@ -963,7 +963,8 @@ export class sfRestClient {
         ChangeList.forEach((value,keyName) => {
             var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
             if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
-            $(document).trigger(eventName,[RESTClient,keyName,value]);
+            if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
+            $("body").trigger(eventName,[RESTClient,keyName,value]);
         });
 
         return newWCC
@@ -998,14 +999,17 @@ export class sfRestClient {
             }
         });
 
-        if (AnyLoaded ) {
+     /*    if (AnyLoaded ) {
              this.AssureJQUITools($("<div />"));
-        }
+        } */
     }
 
 
     public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
-        var UIToolPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
+        var XToolLoadPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
+            if (self !== top) {console.log("AssureJQUITools() only applicable for global/top"); return false;}
+            if (this._z.XternalScriptsLoaded ) {console.log("AssureJQUITools() already done"); return false;}
+            this._z.XternalScriptsLoaded = true;
             if (!$element) $element = $("<div />");
             if (typeof $element.dialog !== "function") {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
@@ -1015,7 +1019,7 @@ export class sfRestClient {
                 if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
                     $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
 
-                this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js').then( (likelyTrue) => {
+                this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',true).then( (likelyTrue) => {
                         console.log("jQuery UI extensions loaded.");
                         resolve(true);
                     // })
@@ -1023,21 +1027,35 @@ export class sfRestClient {
                     //     console.warn("jQueryUI did not load", errorThrown)
                     //     resolve(true);
                     });
+                this.AddCachedScript('{0}/Scripts/jquery.signalR-2.4.1.min.js'.sfFormat(this._SiteURL),true);
+                this.AddCachedScript('{0}/signalR/hubs'.sfFormat(this._SiteURL),true);
+
             }
             else resolve(true);
        });
-       return UIToolPromise;
+       return XToolLoadPromise;
     }
 
-    public  AddCachedScript(  url: string,context?: Window | undefined,): Promise<boolean> {
+    public  AddCachedScript(  url: string,headScript?: boolean,context?: Window | undefined,): Promise<boolean> {
         if (!context) context = self;
-        var script = context.document.createElement('script');
-        script.src = url;
+
         var ScriptPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
-             script.onload = function _scriptloaded() {
+            var PreSearch = "{0}[src='{1}']".sfFormat(headScript ? "HEAD" : "BODY",url);
+            if ($(PreSearch).length > 0) {
+                console.log('AddCachedScript() found {0} has already been added'.sfFormat(url));
                 resolve(true);
-            };
-            document.body.appendChild(script);
+            }
+            var script = context!.document.createElement('script');
+            script.src = url;
+            script.type = "text/javascript"
+            script.defer = true;
+            script.async = false;
+            script.onload = function _scriptloaded() {
+                    resolve(true);
+                };
+            if (!headScript) document.body.appendChild(script)
+            else document.head.appendChild(script);
+            console.log("Added:",url);
         // it will start to load right after appended, and execute of course
         });
 
@@ -1504,7 +1522,7 @@ export class sfRestClient {
         }
         if (eventContext == null) eventContext = window;
 
-        var UIPromise: Promise<boolean | undefined> = this.AssureJQUITools($("div").first() ).then((unused)=>{
+        sfRestClient.ExternalToolsLoadedPromise.then((unused)=>{
 
             if (!this.$LookupDialog) {
                 this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
@@ -1565,7 +1583,7 @@ export class sfRestClient {
 
         });
 
-    return UIPromise;  // so anchor click event doesn't also do work
+    return sfRestClient.ExternalToolsLoadedPromise;  // so anchor click event doesn't also do work
     }
     protected $LookupDialog : JQuery<HTMLElement> | undefined ;
     protected $LookupFrame : JQuery<HTMLIFrameElement> | undefined ;
@@ -1890,9 +1908,11 @@ export class sfRestClient {
         lsKeys: {
             api_session_permits_map: "sfUCFunctionNameMap"
         },
-        WCCLoaded: false
+        WCCLoaded: false,
+        XternalScriptsLoaded: false
     }
     protected static _GlobalClientConstructFlag : boolean = false;
+    protected static ExternalToolsLoadedPromise: Promise<boolean | undefined>;
 
     constructor() {
         if (typeof sfApplicationRootPath === "string") {
@@ -1916,24 +1936,33 @@ export class sfRestClient {
             });
         }
 
-        this.LoadUserSessionInfo().then(() => {
-            var RESTClient = this;
-            $("document").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
-                console.log("Activating Dynamics JS")
-                if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
-                    var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
-                    if (djs) RESTClient.LoadDynamicJS(djs);
-                }
-            });
-            this.LoadUCFunctionMap().then(() =>{
-                if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
-                    sfRestClient._GlobalClientConstructFlag = true;
-                    window.sfClient = new sfRestClient();
-                    if (!window.$) window.$ = $;
-                    if (!top.$) top.$ = $;
-                    sfRestClient._GlobalClientConstructFlag = false;
-                }
-            });
+        var WCCLoadPromise =this.LoadUserSessionInfo();
+        WCCLoadPromise.then(() => {
+            if (window.sfClient && window.sfClient === this) {
+                var RESTClient = this;
+                sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
+
+                $(function DOMReadyNow() {
+                    console.log("Hey, Hey!");
+                    $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
+                        console.log("Activating Dynamics JS")
+                        if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
+                            var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
+                            if (djs) RESTClient.LoadDynamicJS(djs);
+                        }
+                    });
+               });
+            }
+        });
+
+        this.LoadUCFunctionMap().then(() =>{
+            if (!window.sfClient && !sfRestClient._GlobalClientConstructFlag) {
+                sfRestClient._GlobalClientConstructFlag = true;
+                window.sfClient = new sfRestClient();
+                if (!window.$) window.$ = $;
+                if (!top.$) top.$ = $;
+                sfRestClient._GlobalClientConstructFlag = false;
+            }
         });
     }
 };
