@@ -227,7 +227,7 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7865";
+    version: string = "2020.0.7867";
     /**
      * Helps decode
      */
@@ -635,7 +635,7 @@ export class sfRestClient {
 
         var RESTClient: sfRestClient = this;
         var api: LookupClient = new LookupClient(this._SiteURL);
-        var DependsOnSet: string[] = ["", "", "", ""];
+        var DependsOnSet: string[] = ["undefined", "undefined", "undefined", "undefined"];
         if (Array.isArray(dependsOn)) {
             $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
         }
