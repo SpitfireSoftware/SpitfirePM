@@ -637,7 +637,9 @@ export class sfRestClient {
         var api: LookupClient = new LookupClient(this._SiteURL);
         var DependsOnSet: string[] = ["undefined", "undefined", "undefined", "undefined"];
         if (Array.isArray(dependsOn)) {
-            $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
+            $.each(dependsOn, function (i, v) {
+                 if ( v !== undefined) DependsOnSet[i] = v;
+            });
         }
         else if (dependsOn) DependsOnSet[0] = dependsOn;
         var apiResultPromise: Promise<string | null> = api.getDisplayValue(displayName, "1", keyValue, DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3]);
