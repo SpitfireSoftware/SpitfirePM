@@ -231,7 +231,7 @@ export class sfRestClient {
     /**
      * Helps decode
      */
-     public static PermissionFlags = {
+     public readonly PermissionFlags = {
         Read: 1,
         Insert:  2,
         Update:  4,
@@ -446,11 +446,11 @@ export class sfRestClient {
                         $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
                             var thisPermitValue : Permits = 0;
                             if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
-                                if (p.ReadOK) thisPermitValue += sfRestClient.PermissionFlags.Read;
-                                if (p.InsOK) thisPermitValue += sfRestClient.PermissionFlags.Insert;
-                                if (p.UpdOK) thisPermitValue += sfRestClient.PermissionFlags.Update;
-                                if (p.DelOK) thisPermitValue += sfRestClient.PermissionFlags.Delete;
-                                if (p.BlanketOK) thisPermitValue += sfRestClient.PermissionFlags.Special;
+                                if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
+                                if (p.InsOK) thisPermitValue += RESTClient.PermissionFlags.Insert;
+                                if (p.UpdOK) thisPermitValue += RESTClient.PermissionFlags.Update;
+                                if (p.DelOK) thisPermitValue += RESTClient.PermissionFlags.Delete;
+                                if (p.BlanketOK) thisPermitValue += RESTClient.PermissionFlags.Special;
                             }
                             finalPermit |= thisPermitValue;
                             return (finalPermit !== 31);
@@ -765,7 +765,7 @@ export class sfRestClient {
      * Maps .NET placeholders (dn) to webix placeholders (dx)
      * Important: order matters (eg: dd must be remapped before d, or the d map would be used)
      */
-    protected _DateFormatMap: {dn:string,dx:string}[] = [
+    protected readonly _DateFormatMap: {dn:string,dx:string}[] = [
             {"dn":"dddd","dx":"%l"} // Tuesday
         ,   {"dn":"ddd","dx":"%D"}  // Tue
         ,   {"dn":"dd","dx":"%d"}   // 08
