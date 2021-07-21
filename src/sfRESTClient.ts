@@ -1490,22 +1490,26 @@ export class sfRestClient {
      * - PopTXHistory(...)
      * - Nav To (dcmodules and admin tools)
      */
-    public InvokeAction(actionString: string, rowData? : DataModelRow) : void {
-
-        if (actionString.indexOf("vPgPopup(") >= 0) {
+    public InvokeAction(actionString: string | _SwaggerClientExports.MenuAction, rowData? : DataModelRow) : void {
+        var ActionString : string = "";
+        if (typeof actionString === "string") ActionString = actionString;
+        if ( actionString instanceof _SwaggerClientExports.MenuAction ) {
+            if (actionString.HRef)         ActionString = actionString.HRef;
+        }
+        if (ActionString.indexOf("vPgPopup(") >= 0) {
             var rxVPgPopup = /vPgPopup\(['"](?<vpgName>\w+)['"],\s?(?<argslit>['"])(?<args>.*)['"],\s?(?<width>\d+),\s?(?<height>\d+)/gm;
-            var match = rxVPgPopup.exec(actionString);
+            var match = rxVPgPopup.exec(ActionString);
             if (match && match.groups) {
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
                 this.VModalPage(match.groups!.vpgName,match.groups.args,parseInt(match.groups.width),parseInt(match.groups.height),undefined);
             }
             else {
-                console.warn("InvokeAction::VPg failed match",actionString);
+                console.warn("InvokeAction::VPg failed match",ActionString);
             }
         }
-        else if (actionString.indexOf("PopDoc(") >= 0) {
+        else if (ActionString.indexOf("PopDoc(") >= 0) {
             var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
-            var match = rxPopDoc.exec(actionString);
+            var match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
                 this.PopDoc( match.groups.idguid );
@@ -1514,8 +1518,8 @@ export class sfRestClient {
                 console.warn("InvokeAction::Doc failed match",actionString);
             }
         }
-        else if (actionString.indexOf("PopTXHistory(") >= 0) {
-            console.warn("InvokeAction::TXH not really done",actionString);
+        else if (ActionString.indexOf("PopTXHistory(") >= 0) {
+            console.warn("InvokeAction::TXH not really done",ActionString);
             // sample action: javascript:PopTXHistory(\"TranHistory\", ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" );
             // sample http://stany2017/SFPMS/pvp.aspx?vpg=TranHistory&project=GC003&ds=1f573cce-ddd8-4463-a6a6-40c641357f47_ProjectCA_dsData&task=01000&acct=%25&period=%
             var Project = this.GetPageProjectKey()
@@ -1524,9 +1528,9 @@ export class sfRestClient {
             if (rowData && rowData["acct"]) Acct = rowData["acct"];
             this.VModalPage("TranHistory","&project={0}&task={1}&acct={2}&period=%".sfFormat(Project,Task,Acct),999,444,undefined);
         }
-        else if (actionString.indexOf("/dcmodules/") >= 0  || actionString.indexOf("/admin/") >= 0 ) {
-            console.warn("InvokeAction::tools not really done",actionString);
-            top.location.href = actionString;
+        else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
+            console.warn("InvokeAction::tools not really done",ActionString);
+            top.location.href = ActionString;
         }
         else {
             console.warn("InvokeAction() could not handle ",actionString);
