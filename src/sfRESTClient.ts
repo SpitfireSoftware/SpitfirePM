@@ -498,6 +498,8 @@ export class sfRestClient {
             else if (forPageName === this.PageTypeNames.ProjectDashboard) {
                 PartNameList = ["ProjTeam","ProjectKPI","ProjLinks","ProjectCA","ProjNote","ProjPhoto","ProjWeather"];
                 if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
+                // special case for project dashboards: ProjDocMenu
+                PageParts["ProjDocMenu"] = 1;
             }
             else {
                 console.warn("GetPagePartPermits() does not (yet) support ",forPageName);
