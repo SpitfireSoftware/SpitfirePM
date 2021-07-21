@@ -249,6 +249,7 @@ export class sfRestClient {
         ExecutiveDashboard: 8,
         AdminDashboard:16,
         ManageDashboard: 32,
+        Contacts: 64,
         Document: 1024,
         Unknown: 8092
     }
@@ -1388,7 +1389,9 @@ export class sfRestClient {
             case "Dashboard": case "home":
                     result = this.PageTypeNames.HomeDashboard;
                     break;
-
+                    case "users":
+                        result = this.PageTypeNames.Contacts;
+                        break;
             default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;
@@ -1473,8 +1476,8 @@ export class sfRestClient {
             Context = this._WCC.Project;
         }
         else {
-            Context = this.GetPageQueryParameterByName("id");
-            if (!Context) Context = this.GetPageQueryParameterByName("Project");
+            Context = this.GetPageQueryParameterByName(this.IsPowerUXPage() ? "project" : "id");
+            if (!Context) console.warn("GetPageProjectKey() could not resolve project key for page ",this.ResolvePageName());
         }
         return Context;
     }
@@ -1522,7 +1525,7 @@ export class sfRestClient {
             console.warn("InvokeAction::TXH not really done",ActionString);
             // sample action: javascript:PopTXHistory(\"TranHistory\", ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" );
             // sample http://stany2017/SFPMS/pvp.aspx?vpg=TranHistory&project=GC003&ds=1f573cce-ddd8-4463-a6a6-40c641357f47_ProjectCA_dsData&task=01000&acct=%25&period=%
-            var Project = this.GetPageProjectKey()
+            var Project = this.GetPageProjectKey();
             var Task:string = "%",Acct : string = "%";
             if (rowData && rowData["task"]) Task = rowData["task"];
             if (rowData && rowData["acct"]) Acct = rowData["acct"];
