@@ -5,6 +5,7 @@ import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPerm
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
+import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
 //export type GUID = string //& { isGuid: true };
@@ -1504,7 +1505,8 @@ export class sfRestClient {
             var match = rxVPgPopup.exec(ActionString);
             if (match && match.groups) {
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
-                this.VModalPage(match.groups!.vpgName,match.groups.args,parseInt(match.groups.width),parseInt(match.groups.height),undefined);
+                var ActionArgs : string = this.ExpandActionMarkers(match.groups.args,rowData);
+                this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),undefined);
             }
             else {
                 console.warn("InvokeAction::VPg failed match",ActionString);
@@ -1538,6 +1540,30 @@ export class sfRestClient {
         else {
             console.warn("InvokeAction() could not handle ",actionString);
         }
+    }
+
+    /** Finds $$ and other replacable values */
+    protected ExpandActionMarkers(rawAction: string, rowData? : DataModelRow) : string {
+        if (rawAction.indexOf("$$PROJECT") >= 0) {
+            rawAction = rawAction.replaceAll("$$PROJECT",this.GetActionMarkerReplacement("$$PROJECT",rowData));
+        }
+        // general case: regex??
+        return rawAction;
+    }
+
+    protected GetActionMarkerReplacement(markerName: string, rowData? : DataModelRow) : string {
+        var result: string = "";
+        if (markerName.startsWith("$$")) {
+            markerName = markerName.substr(2,1) + markerName.substr(3).toLowerCase();
+        }
+
+        if (rowData ) result = this.FieldValueFromRow(rowData,markerName);
+        if (!result) {
+            if (markerName === "Project") {
+                result = this.GetPageProjectKey();
+            }
+        }
+        return result;
     }
 
     /**
@@ -1591,11 +1617,13 @@ export class sfRestClient {
         if (eventContext == null) eventContext = window;
 
         sfRestClient.ExternalToolsLoadedPromise.then((unused)=>{
-
+            var DefaultWidth = $("body").width();
+            if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
+            if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (!this.$LookupDialog) {
                 this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
                 .sfFormat(this._Options.BlankPageURI))
-                .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: 300, height: 200,
+                .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
                         close: this.sfModalDialogClosed,
                         dialogClass: "lookup",
                         resizeStop:  this.sfModelDialogResizedHandler
