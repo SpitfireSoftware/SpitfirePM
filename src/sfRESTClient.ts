@@ -222,14 +222,16 @@ export class WCCData { [key: string]: any; }
 export class DataModelRow { [key: string]: any; };
 export class DataModelCollection { [key: string]: any; } [];
 export type PartContextKey = string // PartName[context]::dtk
-export type Permits = number; // 0...31
+export type Permits = number; // 0...31, see PermissionFlags
+/** See sfRestClient.PageTypeNames */
+export type PageTypeName = number; // see PageTypeNames
 export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7867";
+    version: string = "2020.0.7870";
     /**
-     * Helps decode
+     * Helps decode Permit flags
      */
      public readonly PermissionFlags = {
         Read: 1,
@@ -238,6 +240,19 @@ export class sfRestClient {
         Delete:  8,
         Special:  16
     }
+
+    /** For identifying the type of page/dashboard */
+    public readonly PageTypeNames = {
+        HomeDashboard: 1,
+        ProjectDashboard: 2,
+        Catalog: 4,
+        ExecutiveDashboard: 8,
+        AdminDashboard:16,
+        ManageDashboard: 32,
+        Document: 1024,
+        Unknown: 8092
+    }
+
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
@@ -470,23 +485,29 @@ export class sfRestClient {
      * Resolves list of part names with permissions
      * @returns object with part names and permission flags
      */
-    GetPagePartPermits() : Promise<PagePartList> {
+    GetPagePartPermits(forPageName? : PageTypeName  , pageKey? : string) : Promise<PagePartList> {
+        if (typeof pageKey === "undefined") pageKey =  "0";
+        if (typeof forPageName === "undefined") {
+            forPageName = this.ResolvePageTypeName();
+        }
         var DeferredPermitResult : Promise<PagePartList> = new Promise<PagePartList>((ResolveList) => {
             var finalCheck : JQuery.Promise<any,any,any>[] = [] ;
             var PartNameList: string[] = [];
             var PageParts: PagePartList = {};
-            var PageKey : string = "0";
-            if (this.IsHomeDashboardPage()) { PartNameList = ["ActionItems","ProjectList","AlertList"];}
-            else if (this.IsProjectPage()) {
+            if (forPageName === this.PageTypeNames.HomeDashboard ) { PartNameList = ["ActionItems","ProjectList","AlertList"];}
+            else if (forPageName === this.PageTypeNames.ProjectDashboard) {
                 PartNameList = ["ProjTeam","ProjectKPI","ProjLinks","ProjectCA","ProjNote","ProjPhoto","ProjWeather"];
-                PageKey = this.GetPageProjectKey();
+                if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
+            }
+            else {
+                console.warn("GetPagePartPermits() does not (yet) support ",forPageName);
             }
 
             PartNameList.forEach(element  => {
                 var OnePartPermitDeferred = $.Deferred();
                 var OnePartPermitDeferredPromise = OnePartPermitDeferred.promise();
                 finalCheck.push(OnePartPermitDeferredPromise);
-                this.CheckPermit("PART",element,undefined,PageKey).then((r)=>{
+                this.CheckPermit("PART",element,undefined,pageKey).then((r)=>{
                     PageParts[element] = r;
                     OnePartPermitDeferred.resolve(r);
                 });
@@ -1321,23 +1342,57 @@ export class sfRestClient {
     }
 
     public IsHomeDashboardPage() : boolean {
-        return this.IsPageOfType("Dashboard") ;
+        return this.IsPageOfType(this.PageTypeNames.HomeDashboard) ;
     }
 
 
     public IsDocumentPage() : boolean {
-        return this.IsPageOfType("DocDetail") ;
+        return this.IsPageOfType(this.PageTypeNames.Document);// "DocDetail") ;
     }
     public IsProjectPage() : boolean {
         return this.IsPageOfType("ProjectDetail");
     }
-    public IsPageOfType(pageWanted: string) : boolean {
+    /** @deprecated use IsPageOfType() */
+    public IsPageOfTypeByName(pageWanted: string) : boolean {
         if (!this._WCC ) { console.warn("_WCC missing?"); return false; }
         if (!this._WCC.PageName) this._WCC.PageName = this.ResolvePageName();
-        var XBUIPageName : string = this.XBVariantOfPageName(pageWanted);
+        var XBUIPageName : string = this.XBVariantOfPageName(this.ResolveStringPageNametoPageTypeName(pageWanted));
         return (    (this._WCC.PageName == pageWanted)  ||
                     (this._WCC.PageName == XBUIPageName)
                 );
+    }
+
+    public IsPageOfType(pageWanted: string | PageTypeName) : boolean {
+        if (typeof pageWanted === "string") {
+            pageWanted = this.ResolveStringPageNametoPageTypeName(pageWanted);
+        }
+
+        return ( this.ResolvePageTypeName() === pageWanted);
+    }
+
+    public ResolvePageTypeName() : PageTypeName {
+        return this.ResolveStringPageNametoPageTypeName(this.ResolvePageName());
+    }
+
+    protected ResolveStringPageNametoPageTypeName( pageNameString: string): PageTypeName {
+        var result: PageTypeName;
+        switch (pageNameString) {
+            case "DocDetail": case "document":
+                result = this.PageTypeNames.Document;
+                break;
+            case "ProjectDetail": case "projectDashboard":
+                result = this.PageTypeNames.ProjectDashboard;
+                break;
+            case "Dashboard": case "home":
+                    result = this.PageTypeNames.HomeDashboard;
+                    break;
+
+            default:
+                console.warn("Unexpected page type: ", pageNameString);
+                result = this.PageTypeNames.Unknown;
+                break;
+        }
+        return result;
     }
 
     protected ResolvePageName() : string {
@@ -1350,21 +1405,22 @@ export class sfRestClient {
         return pgname;
     }
 
-    protected XBVariantOfPageName( classicPageName : string ) : string {
+    protected XBVariantOfPageName( classicPageName : PageTypeName ) : string {
         var result: string;
         switch (classicPageName) {
-            case "DocDetail":
+            case this.PageTypeNames.Document:
                 result = "document";
                 break;
-            case "ProjectDetail":
+            case this.PageTypeNames.ProjectDashboard:
                 result = "projectDashboard";
                 break;
-            case "Dashboard":
+            case this.PageTypeNames.HomeDashboard:
                     result = "home";
                     break;
 
             default:
-                result = classicPageName;
+                console.warn("Unexpected page type: ", classicPageName);
+                result = classicPageName.toString();
                 break;
         }
         return result;
@@ -1407,9 +1463,10 @@ export class sfRestClient {
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    public GetPageProjectKey() :string {
+    public GetPageProjectKey(pageTypeName?: PageTypeName) :string {
         var Context = location.href;
-        if (this.IsDocumentPage()) {
+        if (typeof pageTypeName ==="undefined") pageTypeName = this.PageTypeNames.Unknown;
+        if (pageTypeName == this.PageTypeNames.Document || this.IsDocumentPage()) {
             console.warn("GetPageProjectKey() does not *really* support doc pages yet");
             Context = this._WCC.Project;
         }
