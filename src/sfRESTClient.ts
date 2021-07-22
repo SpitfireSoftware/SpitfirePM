@@ -423,6 +423,11 @@ export class sfRestClient {
                 UCFK = ucModule;
                 UCFKDeferredResult.resolve(UCFK);
             }
+            else if (sfRestClient._UCPermitMap && ucModule in sfRestClient._UCPermitMap
+                        && ucFunction in sfRestClient._UCPermitMap[ucModule] ) {
+                    UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
+                    UCFKDeferredResult.resolve(UCFK);
+            }
             else {
                 RESTClient.LoadUCFunctionMap().done(function () {
                     UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
@@ -476,8 +481,19 @@ export class sfRestClient {
                     return (finalPermit !== 31);
                 });
                 finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
-                RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-                ResolveThisPermit(finalPermit);
+                if (finalPermit === 31) {
+                    RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+                    ResolveThisPermit(finalPermit);
+                }
+                else {
+                    // not ideal: future we need a way to hold global permits here too
+                    var api : SessionClient = RESTClient.NewAPIClient("SessionClient");
+                    api.getCapabilityPermits(ucModule,ucFunction.replaceAll(".","!").replaceAll("/","@"),optionalProject,optionalDTK).then((r)=>{
+                        RESTClient._UserPermitResultCache.set(PermitCacheID, r);
+                        ResolveThisPermit(r);
+                    });
+                }
+
             });
         });
         return DeferredPermitResult; // wait for .then, use (r)
@@ -1964,6 +1980,12 @@ export class sfRestClient {
         }
         else console.warn("NewAPIClient() does not recognized ",ofTypeName);
         return newController;
+    }
+
+    public ClearCache(alsoClearSessionStorage? : boolean):void {
+        this._UserPermitResultCache.clear();
+        this._LoadedPermits.clear();
+        if (alsoClearSessionStorage) sessionStorage.clear();
     }
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
