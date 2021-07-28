@@ -1516,6 +1516,10 @@ export class sfRestClient {
         if ( actionString instanceof _SwaggerClientExports.MenuAction ) {
             if (actionString.HRef)         ActionString = actionString.HRef;
         }
+        if (!ActionString) {
+            if (this._Options.LogLevel >= LoggingLevels.Verbose) console.warn("InvokeAction ignoring empty action");
+            return;
+        }
         if (ActionString.indexOf("vPgPopup(") >= 0) {
             var rxVPgPopup = /vPgPopup\(['"](?<vpgName>\w+)['"],\s?(?<argslit>['"])(?<args>.*)['"],\s?(?<width>\d+),\s?(?<height>\d+)/gm;
             var match = rxVPgPopup.exec(ActionString);
