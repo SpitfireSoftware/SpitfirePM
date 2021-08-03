@@ -431,9 +431,16 @@ export class sfRestClient {
             else {
                 RESTClient.LoadUCFunctionMap().done(function () {
                     UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
-                    UCFKDeferredResult.resolve(UCFK);
+                    if (sfRestClient._UCPermitMap && ucModule in sfRestClient._UCPermitMap
+                        && ucFunction in sfRestClient._UCPermitMap[ucModule] ) {
+                       UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
+                       UCFKDeferredResult.resolve(UCFK);
+                    }
+                    else UCFKDeferredResult.resolve(RESTClient.EmptyKey);
                     if (!UCFK) {
-                        console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
+                        if (RESTClient._WCC.UserKey == RESTClient.EmptyKey)
+                            console.warn("CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for {0}|{1}!  LOGIN AGAIN!".sfFormat(ucModule, ucFunction))
+                        else console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
                         ResolveThisPermit(0);
                         return;
                     }
@@ -1934,7 +1941,24 @@ export class sfRestClient {
                 if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
                 thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
                     var ThisSuffix : string = "_dv";
-                    if (!((item.DataField + ThisSuffix) in rawRow)) {
+                    if (item.DataField?.startsWith("cmp_")) {
+                        // cmp_realfieldname_suffix
+                        var RealFieldName = item.DataField.substr(4);
+                        if (!(RealFieldName in rawRow)) {
+                            if (RealFieldName.indexOf("_") > 0) RealFieldName = RealFieldName.substr(0,RealFieldName.indexOf("_"));
+                            if ((RealFieldName in rawRow)) {
+                                var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, RealFieldName);
+                                ///!!! future: handle depends on #DocMasterDetail.project
+                                var DependsOn : string[] | undefined;
+                                if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
+                                thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
+                                    thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, "", r);
+                                }));
+                            }
+                            else console.warn("_ApplyUICFGtoRawData(cmp) base field {0} not found in row".sfFormat(RealFieldName));
+                        }
+                    }
+                    else if (!((item.DataField + ThisSuffix) in rawRow)) {
                         var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
                         ///!!! future: handle depends on #DocMasterDetail.project
                         var DependsOn : string[] | undefined;
