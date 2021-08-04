@@ -1130,7 +1130,58 @@ export class sfRestClient {
     $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
 }
 
+    /** Returns a guid/uuid
+     * TODO: replace with api call */
+    NewGuid() : GUID {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0,
+              v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+    }
 
+ /**
+     * Opens a new tab with URL specified based on Document Type Key and UI version
+     * @param dtk the guid document type
+     * @param project the project ID to be assigned to the new document
+     * @param options might include &UseID= to specify a key for the new document or &mode=np
+     */
+    PopNewDoc(dtk : GUID, project: string, options? : string) : Promise<Window | null> {
+        if (!options) options = "";
+        if (!project) project = this.GetPageProjectKey();
+        if (options.length > 0 && !options.startsWith("&")) console.warn("PopNewDoc() options should start with &...");
+        return new Promise<Window | null>((resolve) => {
+            this.GetDV("DocType",dtk,undefined).then((thisDocTypeSiteName) => {
+                var thisRestClient = this;
+                if (!thisDocTypeSiteName) {
+                    console.warn("Document type not found"); //hmmm maybe a popup?
+                    resolve(null);
+                    return;
+                }
+                //todo: determine if we should use the new or old UI based on the document type of this document
+                //todo: generate a GUID if one was not provided
+                var UseID : string;
+                var url : string =  thisRestClient._Options.PopNewDocLegacyURL;
+                if (options?.indexOf("&UseID")) {
+                    UseID = options.substr(options?.indexOf("&UseID")+7,36);
+                }
+                else UseID = this.NewGuid();  // todo: fix this!!!
+                if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopNewDocXBURL;
+                url  =  url.sfFormat(thisRestClient._SiteURL, dtk,project,options) ;
+                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopNewDoc opening {0} DTK {1} using {2}".sfFormat(UseID, dtk,url));
+
+                var TargetTab =  UseID.substr(UseID.lastIndexOf("-") + 1).toLowerCase();
+                //todo: determine if we need the "how many tabs" logic and dialog
+                if (!window) {
+                    console.error("PopNewDoc() Must be called from a browser window");
+                    resolve(null);
+                    return;
+                }
+                var PW = window.open(url, TargetTab);
+                resolve(PW);
+            });
+        });
+    }
 
   /**
      * Opens a new tab with location specified based on Document Key and UI version
@@ -1201,7 +1252,9 @@ export class sfRestClient {
          */
         PopDocForceXBUI :  false,
         PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
-        PopDocXBURL:  "{0}#!/document?id={1}"
+        PopDocXBURL:  "{0}#!/document?id={1}",
+        PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
+        PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
