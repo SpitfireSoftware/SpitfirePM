@@ -1132,12 +1132,29 @@ export class sfRestClient {
 
     /** Returns a guid/uuid
      * TODO: replace with api call */
-    NewGuid() : GUID {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0,
-              v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-          });
+    async NewGuid() : Promise<GUID> {
+        if (sfRestClient._NewGuidList.length == 0) {
+            var api = new SessionClient(this._SiteURL);
+            await api.getNewGuid(3).then(r => {
+                if (!r || r == null) {
+                    console.warn("API failed to return GUIDs!!");
+                    sfRestClient._NewGuidList.push(
+                        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                            var r = Math.random() * 16 | 0,
+                              v = c == 'x' ? r : (r & 0x3 | 0x8);
+                            return v.toString(16);
+                          })
+                    );
+                }
+                r!.forEach(element => {
+                    sfRestClient._NewGuidList.push(element);
+                });
+
+            });
+        }
+
+        var NextGuid : string = sfRestClient._NewGuidList.pop()!;
+        return NextGuid;
     }
 
  /**
@@ -1151,7 +1168,7 @@ export class sfRestClient {
         if (!project) project = this.GetPageProjectKey();
         if (options.length > 0 && !options.startsWith("&")) console.warn("PopNewDoc() options should start with &...");
         return new Promise<Window | null>((resolve) => {
-            this.GetDV("DocType",dtk,undefined).then((thisDocTypeSiteName) => {
+            this.GetDV("DocType",dtk,undefined).then(async (thisDocTypeSiteName) => {
                 var thisRestClient = this;
                 if (!thisDocTypeSiteName) {
                     console.warn("Document type not found"); //hmmm maybe a popup?
@@ -1165,7 +1182,7 @@ export class sfRestClient {
                 if (options?.indexOf("&UseID")) {
                     UseID = options.substr(options?.indexOf("&UseID")+7,36);
                 }
-                else UseID = this.NewGuid();  // todo: fix this!!!
+                else UseID = await this.NewGuid();  // todo: fix this!!!
                 if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopNewDocXBURL;
                 url  =  url.sfFormat(thisRestClient._SiteURL, dtk,project,options) ;
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopNewDoc opening {0} DTK {1} using {2}".sfFormat(UseID, dtk,url));
@@ -1580,7 +1597,11 @@ export class sfRestClient {
             if (this._Options.LogLevel >= LoggingLevels.Verbose) console.warn("InvokeAction ignoring empty action");
             return;
         }
-        if (ActionString.indexOf("vPgPopup(") >= 0) {
+        if (ActionString.startsWith(this._SiteURL)) {
+            this.ModalDialog(ActionString, ActionString.sfHashCode().toString(), "", window);
+
+        }
+        else if (ActionString.indexOf("vPgPopup(") >= 0) {
             var rxVPgPopup = /vPgPopup\(['"](?<vpgName>\w+)['"],\s?(?<argslit>['"])(?<args>.*)['"],\s?(?<width>\d+),\s?(?<height>\d+)/gm;
             var match = rxVPgPopup.exec(ActionString);
             if (match && match.groups) {
@@ -1601,6 +1622,18 @@ export class sfRestClient {
             }
             else {
                 console.warn("InvokeAction::Doc failed match",actionString);
+            }
+        }
+        else if (ActionString.indexOf("PopNewDoc(") >= 0) {
+            var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
+            var match = rxPopDoc.exec(ActionString);
+            if (match && match.groups) {
+                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
+                var Project = this.GetPageProjectKey();
+                this.PopNewDoc( match.groups.idguid ,Project);
+            }
+            else {
+                console.warn("InvokeAction::PopNewDoc failed match",actionString);
             }
         }
         else if (ActionString.indexOf("PopTXHistory(") >= 0) {
@@ -1710,7 +1743,8 @@ export class sfRestClient {
                     });
             }
 
-            var  OpenUrl = sfApplicationRootPath + url;
+            var  OpenUrl = url;
+            if (!OpenUrl.startsWith(sfApplicationRootPath)) OpenUrl = sfApplicationRootPath + url;
             //LookupOpenUrl = LookupOpenUrl + '&lookupName=' + lookupName +
             //	        '&resultName=' + resultName +
             //	        '&postBack=' + postBack + fromPage + dependsList;
@@ -2112,6 +2146,7 @@ export class sfRestClient {
     }
     protected static _GlobalClientConstructFlag : boolean = false;
     protected static ExternalToolsLoadedPromise: Promise<boolean | undefined>;
+    protected static _NewGuidList : GUID[] = [];
 
     constructor() {
         if (typeof sfApplicationRootPath === "string") {
