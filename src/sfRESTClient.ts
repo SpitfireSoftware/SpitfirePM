@@ -430,7 +430,6 @@ export class sfRestClient {
             }
             else {
                 RESTClient.LoadUCFunctionMap().done(function () {
-                    UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
                     if (sfRestClient._UCPermitMap && ucModule in sfRestClient._UCPermitMap
                         && ucFunction in sfRestClient._UCPermitMap[ucModule] ) {
                        UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
