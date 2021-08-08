@@ -230,7 +230,7 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7870";
+    version: string = "2020.0.7889";
     /**
      * Helps decode Permit flags
      */
@@ -398,8 +398,8 @@ export class sfRestClient {
     CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): Promise<Permits> {
         var RESTClient: sfRestClient = this;
         //was $.Deferred();
-        var DeferredPermitResult : Promise<Permits> = new Promise<Permits>((ResolveThisPermit) => {
-            if (!RESTClient._z.WCCLoaded) RESTClient.LoadUserSessionInfo();
+        var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit) => {
+            if (!RESTClient._z.WCCLoaded) await RESTClient.LoadUserSessionInfo();
             if (typeof optionalDTK !== "string") optionalDTK = "";
             if (typeof optionalReference !== "string") optionalReference = "";
             if (typeof optionalProject !== "string") optionalProject = "0";
@@ -1068,7 +1068,10 @@ export class sfRestClient {
                 if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
                     $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
 
-                this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',true).then( (likelyTrue) => {
+                    this.AddCachedScript('{0}/Scripts/jquery.signalR-2.4.2.min.js'.sfFormat(this._SiteURL),true).then((likelyTrue) => {
+                        this.AddCachedScript('{0}/signalR/hubs'.sfFormat(this._SiteURL),true);
+                    });
+                    this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',true).then( (likelyTrue) => {
                         console.log("jQuery UI extensions loaded.");
                         resolve(true);
                     // })
@@ -1076,8 +1079,7 @@ export class sfRestClient {
                     //     console.warn("jQueryUI did not load", errorThrown)
                     //     resolve(true);
                     });
-                this.AddCachedScript('{0}/Scripts/jquery.signalR-2.4.1.min.js'.sfFormat(this._SiteURL),true);
-                this.AddCachedScript('{0}/signalR/hubs'.sfFormat(this._SiteURL),true);
+
 
             }
             else resolve(true);
@@ -1122,12 +1124,12 @@ export class sfRestClient {
      * @returns nothing
      */
     public AddCSSResource(cssRef : string): void {
-    if (!cssRef) return;
-    if (cssRef.indexOf("/") < 0) cssRef = "{0}/wv.aspx/js/{1}.css".sfFormat(sfApplicationRootPath, cssRef);
-    if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
+        if (!cssRef) return;
+        if (cssRef.indexOf("/") < 0) cssRef = "{0}/wv.aspx/js/{1}.css".sfFormat(sfApplicationRootPath, cssRef);
+        if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
 
-    $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
-}
+        $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
+    }
 
     /** Returns a guid/uuid
      * TODO: replace with api call */
@@ -1480,11 +1482,21 @@ export class sfRestClient {
                 result = this.PageTypeNames.ProjectDashboard;
                 break;
             case "Dashboard": case "home":
-                    result = this.PageTypeNames.HomeDashboard;
+                result = this.PageTypeNames.HomeDashboard;
+                break;
+            case "users":
+                result = this.PageTypeNames.Contacts;
+                break;
+            case "libview":
+                result = this.PageTypeNames.Catalog;
+                break;
+            case "cusysm":
+                result = this.PageTypeNames.AdminDashboard;
+                break;
+            case "cuManager":
+                    result = this.PageTypeNames.ManageDashboard;
                     break;
-                    case "users":
-                        result = this.PageTypeNames.Contacts;
-                        break;
+
             default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;
@@ -1597,11 +1609,19 @@ export class sfRestClient {
             return;
         }
         if (ActionString.startsWith(this._SiteURL)) {
-            this.ModalDialog(ActionString, ActionString.sfHashCode().toString(), "", window);
+            if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0) ActionString += "&xbia=1";
+            if (ActionString.indexOf("libview.aspx") > 1) {
+                var ActionOptions : string = "";
+                if (ActionString.indexOf("?") > 0) {
+                    ActionOptions = "&"+  ActionString.substring(ActionString.indexOf("?")+1);
+                }
+                ActionString = "javascript:vPgPopup('v/LibView.aspx', '{0}', 850, 950);".sfFormat(ActionOptions); // ... w,h
+            }
+            else this.ModalDialog(ActionString, ActionString.sfHashCode().toString(), "", window);
 
         }
-        else if (ActionString.indexOf("vPgPopup(") >= 0) {
-            var rxVPgPopup = /vPgPopup\(['"](?<vpgName>\w+)['"],\s?(?<argslit>['"])(?<args>.*)['"],\s?(?<width>\d+),\s?(?<height>\d+)/gm;
+        if (ActionString.indexOf("vPgPopup(") >= 0) {
+            var rxVPgPopup = /vPgPopup\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>\d+)/gm;
             var match = rxVPgPopup.exec(ActionString);
             if (match && match.groups) {
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
@@ -1650,6 +1670,7 @@ export class sfRestClient {
             top.location.href = ActionString;
         }
         else {
+            this.DisplayUserNotification("Coming soon: could not invoike requested action.",9999);
             console.warn("InvokeAction() could not handle ",actionString);
         }
     }
@@ -1677,6 +1698,98 @@ export class sfRestClient {
         }
         return result;
     }
+
+    /**
+     * Figures out the type of page and the amount of viewable height (without scrolling)
+     * @returns height of top frame
+     */
+    UsablePageHeight() : number {
+        var RunHeight = top.$("BODY").height()!;
+        var $FooterInfo = top.$('TD#sfUIShowClientInfo');
+        if ($FooterInfo.length === 0) $FooterInfo = top.$("DIV.project-dashboard__footer-buttons");
+        if ($FooterInfo.length > 0) RunHeight =$FooterInfo.position().top + $FooterInfo.height()! + 16;
+        return RunHeight;
+    }
+
+    protected   notificationMsgTimeoutHandle: number | undefined;
+    WasNotificationShown(notificationMsg : string) : boolean {
+        var result = false;
+        var msgHash = "sfNoted:L{0}H{1}".sfFormat(notificationMsg.length, notificationMsg.sfHashCode());
+            try {
+                var cacheResult : string | null =sessionStorage.getItem(msgHash)
+                if ( cacheResult === null) result = false ;
+                else if (typeof cacheResult === "string") result = JSON.parse(cacheResult);
+            }
+            catch (e) {
+               console.warn(e);
+            }
+        return result;
+    }
+    MarkNotificationAsShown(notificationMsg: string) : void {
+        var msgHash = "sfNoted:L{0}H{1}".sfFormat(notificationMsg.length, notificationMsg.sfHashCode());
+        try {
+            top.sessionStorage.setItem(msgHash, "true");
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return;
+    }
+    /**
+     * See DisplayUserNotification() and DisplaySysNotification()
+     * @param templateURL div content source - See DisplayUserNotification() and DisplaySysNotification()
+     * @param notificationText message to display
+     * @param timeOutMS if specified, message auto-clears in this many milliseconds.  Which does not count as dismissed.
+     * @returns the DIV containing the message, .data("alreadyshown") = true if already shown.
+     */
+    DisplayThisNotification(templateURL : string, notificationText : string, timeOutMS? : number) : Promise<JQuery<HTMLElement>>{
+        $("DIV#SNotificationContainerHolder").remove();
+
+        var RESTClient = this;
+        var msgReady : Promise<JQuery<HTMLElement>> = new Promise<JQuery<HTMLElement>>( (msgDisplayResolved) => {
+            if (this.notificationMsgTimeoutHandle) {
+                clearTimeout(this.notificationMsgTimeoutHandle);
+                this.notificationMsgTimeoutHandle = undefined;
+            }
+            var $MsgDiv = $('<div />');
+            if ((!notificationText) || (this.WasNotificationShown(notificationText))) {
+                if (notificationText) console.log("Notification Already Shown: {0}".sfFormat(notificationText));
+                $MsgDiv.data("alreadyshown",true);
+                msgDisplayResolved( $MsgDiv );
+                return msgReady;
+            }
+            // snhc is included for legacy use cases
+            $MsgDiv.data('snhc', notificationText).data('notification', notificationText).data("snhash", notificationText.sfHashCode()).load(this.MakeSiteRelativeURL(templateURL), function (loadedHtml) {
+                var $BTN = $MsgDiv.find("BUTTON.sfNotificationDismiss");
+                msgDisplayResolved( $MsgDiv );
+                $BTN.on("click",function () {
+                    RESTClient.MarkNotificationAsShown($MsgDiv.data("snhc"));
+                    $MsgDiv.remove();
+                });
+            }).appendTo('BODY').first().on("click",function () { $(this).remove(); });
+
+            if (timeOutMS) msgReady.then(function () {
+                RESTClient.notificationMsgTimeoutHandle = setTimeout("notificationMsgTimeoutHandle = null; DisplayThisNotification('{0}');".sfFormat(templateURL),timeOutMS);
+            });
+
+        });
+        return msgReady;
+
+    }
+
+    DisplaySysNotification(responseText: string | number, timeOutMS:number) : Promise<JQuery<HTMLElement>>{
+        if (typeof responseText === "number") responseText = responseText.toString();
+        if (responseText.startsWith("SysNotification")) responseText = responseText.substring(16);
+        return this.DisplayThisNotification("ajhx/sysnotification.html", responseText, timeOutMS);
+    }
+
+    /** Displays a simple user notification, with "dismiss" session memory
+     * @param notificationText The message.  Message is skipped if the same exact message has already been dismissed.
+     */
+    DisplayUserNotification(notificationText : string, timeOutMS: number): Promise<JQuery<HTMLElement>> {
+        return this.DisplayThisNotification("ajhx/UsrNotification.html", notificationText, timeOutMS);
+    }
+
 
     /**
      * Opens a Modal dialog with an iFrame and loads pvp.aspx?vpg=your-vpg-id /
@@ -1850,10 +1963,21 @@ export class sfRestClient {
     ResizeDialogInFrame(FrameElement : HTMLElement, RESTClient : sfRestClient) : void {
         var $FrameElement = $(FrameElement);
         var RunHeight = $FrameElement.contents().find("html").outerHeight()! + 16;  // see also ResetPartFrameHeight() in sfPMS
-        if (RunHeight) RESTClient.$LookupDialog!.dialog('option', 'height', RunHeight + 8).height(RunHeight + 16).find('iframe').height(RunHeight)
+        var MaxHeight :number = $(top).height()! - 64;
+        if (!RunHeight) {
+            console.log("ResizeDialogInFrame() could not find content height, using 65% of ",MaxHeight);
+            RunHeight = Math.round(MaxHeight * 0.65);
+        }
+        if (RunHeight) {
+            if (RunHeight > MaxHeight) RunHeight = MaxHeight;
+            RESTClient.$LookupDialog!.dialog('option', 'height', RunHeight + 8).height(RunHeight + 16).find('iframe').height(RunHeight)
+        }else
         var frameID = ($FrameElement.attr("id")) ? $FrameElement.attr("id") : $FrameElement.closest("[id]").attr("id");
         console.log("onLoad::resizeDialogInFrame({1}) h={0}".sfFormat(RunHeight, frameID));
     }
+
+
+
 
     protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
         if (!this.$LookupDialog) return;
@@ -2099,6 +2223,7 @@ export class sfRestClient {
     public ClearCache(alsoClearSessionStorage? : boolean):void {
         this._UserPermitResultCache.clear();
         this._LoadedPermits.clear();
+        PartStorageData._LoadedParts.clear();
         if (alsoClearSessionStorage) sessionStorage.clear();
     }
 
@@ -2176,9 +2301,9 @@ export class sfRestClient {
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
 
                 $(function DOMReadyNow() {
-                    console.log("Hey, Hey!");
+                    if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
                     $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
-                        console.log("Activating Dynamics JS")
+                        if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
                         if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
                             var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
                             if (djs) RESTClient.LoadDynamicJS(djs);
