@@ -394,6 +394,11 @@ export class sfRestClient {
 
     /**
     * async: returns an numerc bit-flag indicating the user's permission level (R=1,I=2,U=4,D=8,S=16)
+    * When the user has admin permissions, these are blended (unless ucModule = WORK)
+    * @param ucModule WORK,SYS, PAGE, PART,LIST
+    * @param ucFunction see xsfUCFunction
+    * @param optionalDTK guid or undefined
+    * @param optionalProject
     */
     CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): Promise<Permits> {
         var RESTClient: sfRestClient = this;
@@ -419,6 +424,14 @@ export class sfRestClient {
             var UCFKPromise = UCFKDeferredResult.promise();
             var PPSDeferredResult = $.Deferred();
             var PPSPromise = PPSDeferredResult.promise();
+            if (!sfRestClient.PermitMapLoaded()) {
+                // new approach, lets wait for a map
+                await RESTClient.LoadUCFunctionMap();
+                if (!sfRestClient.PermitMapLoaded()) {
+                    // still no map!?
+                    console.warn("CheckPermits() could not load Permit Map!!");
+                }
+            }
             if (ucModule.length === 36) {
                 UCFK = ucModule;
                 UCFKDeferredResult.resolve(UCFK);
@@ -428,22 +441,14 @@ export class sfRestClient {
                     UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
                     UCFKDeferredResult.resolve(UCFK);
             }
-            else {
-                RESTClient.LoadUCFunctionMap().done(function () {
-                    if (sfRestClient._UCPermitMap && ucModule in sfRestClient._UCPermitMap
-                        && ucFunction in sfRestClient._UCPermitMap[ucModule] ) {
-                       UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
-                       UCFKDeferredResult.resolve(UCFK);
-                    }
-                    else UCFKDeferredResult.resolve(RESTClient.EmptyKey);
-                    if (!UCFK) {
-                        if (RESTClient._WCC.UserKey == RESTClient.EmptyKey)
-                            console.warn("CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for {0}|{1}!  LOGIN AGAIN!".sfFormat(ucModule, ucFunction))
-                        else console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
-                        ResolveThisPermit(0);
-                        return;
-                    }
-                });
+            else UCFKDeferredResult.resolve(RESTClient.EmptyKey);
+
+            if (!UCFK) {
+                if (RESTClient._WCC.UserKey == RESTClient.EmptyKey)
+                    console.warn("CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for {0}|{1}!  LOGIN AGAIN!".sfFormat(ucModule, ucFunction))
+                else console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
+                ResolveThisPermit(0);
+                return;
             }
 
             if (!(RESTClient._LoadedPermits.has(optionalProject))) {
@@ -486,7 +491,7 @@ export class sfRestClient {
                     }
                     return (finalPermit !== 31);
                 });
-                finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
+                if (ucModule !== "WORK") finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
                 if (finalPermit === 31) {
                     RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
                     ResolveThisPermit(finalPermit);
@@ -614,7 +619,7 @@ export class sfRestClient {
 
 
           var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
-            apiResultPromise  = api.getLookupResult4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],filterValues);
+            apiResultPromise  = api.getLookupResultBase(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],filterValues);
 
             apiResultPromise.then((lookupResultData) => {
                   var thisPart : PartStorageData = PartStorageData.PartStorageDataLookupFactory(this,lookupName);
@@ -947,10 +952,20 @@ export class sfRestClient {
                 sfRestClient._UCPermitMap = ls;
             }
         }
-        if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4) ||
-            (this._WCC.UserKey === this.EmptyKey)) {
-            DeferredResult.resolve(sfRestClient._UCPermitMap);
-            return permitCheck;
+
+        if ("WORK" in sfRestClient._UCPermitMap) {
+            // we have a map, lets see if we should use it as-is
+            if ((this._WCC.UserKey === this.EmptyKey)) {
+                // no session? So, now is not a good time to refreh the map, just use what we have
+                DeferredResult.resolve(sfRestClient._UCPermitMap);
+                return permitCheck;
+                }
+
+            if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4)   ) {
+                // great: we have a map and it isn't old
+                DeferredResult.resolve(sfRestClient._UCPermitMap);
+                return permitCheck;
+            }
         }
 
 
@@ -1132,7 +1147,8 @@ export class sfRestClient {
     }
 
     /** Returns a guid/uuid
-     * TODO: replace with api call */
+     *  @returns something in the form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+     * */
     async NewGuid() : Promise<GUID> {
         if (sfRestClient._NewGuidList.length == 0) {
             var api = new SessionClient(this._SiteURL);
@@ -1617,7 +1633,10 @@ export class sfRestClient {
                 }
                 ActionString = "javascript:vPgPopup('v/LibView.aspx', '{0}', 850, 950);".sfFormat(ActionOptions); // ... w,h
             }
-            else this.ModalDialog(ActionString, ActionString.sfHashCode().toString(), "", window);
+            else {
+                this.ModalDialog(ActionString, ActionString.sfHashCode().toString(), "", window);
+                return;
+            }
 
         }
         if (ActionString.indexOf("vPgPopup(") >= 0) {
@@ -1670,7 +1689,7 @@ export class sfRestClient {
             top.location.href = ActionString;
         }
         else {
-            this.DisplayUserNotification("Coming soon: could not invoike requested action.",9999);
+            this.DisplayUserNotification("Coming soon: could not invoke requested action.",9999);
             console.warn("InvokeAction() could not handle ",actionString);
         }
     }
@@ -2230,6 +2249,9 @@ export class sfRestClient {
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
     protected _UserPermitResultCache: Map<string, number> = new Map<string, number>();
+    protected static PermitMapLoaded() :boolean {
+        return sfRestClient._UCPermitMap && "WORK" in sfRestClient._UCPermitMap;
+    }
     protected static _UCPermitMap: any = {
         _etag: {
             empty: 0,

@@ -4,6 +4,7 @@ declare global {
         sfFormat(this: string, ...words: any[]): string;
         replaceAll(this: string, pattern: string, replacement: string): string;
         sfHashCode(this: string): number;
+        sfIsGuid(this: string): boolean
     }
 
     interface Date {
@@ -86,8 +87,14 @@ String.prototype.sfFormat = function formatThis(this: string, ...words): string 
         (match, number) => (typeof words[number] !== 'undefined' ? words[number] : match)
     );
 };
-String.prototype.replaceAll = function replaceAll(this: string, pattern: string, replacement: string): string {
-    return this.split(pattern).join(replacement);
+String.prototype.sfIsGuid = function IsThisStringaGuid(this: string, ): boolean {
+    return (this.match(/^[{]?[0-9a-fA-F]{8}[-]?([0-9a-fA-F]{4}[-]?){3}[0-9a-fA-F]{12}[}]?$/g) === null);
+};
+
+if (!String.prototype.replaceAll) {
+    String.prototype.replaceAll = function replaceAll(this: string, pattern: string, replacement: string): string {
+        return this.split(pattern).join(replacement);
+    }
 }
 
 var HTTPApplicationName = (typeof window !== "undefined" ?window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/")) : "sfPMS");
