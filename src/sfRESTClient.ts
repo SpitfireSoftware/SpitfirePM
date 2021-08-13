@@ -230,7 +230,7 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7889";
+    version: string = "2020.0.7892";
     /**
      * Helps decode Permit flags
      */
@@ -254,6 +254,88 @@ export class sfRestClient {
         Document: 1024,
         Unknown: 8092
     }
+
+    /**
+     * Applies removals, then changes, then additions
+     * @param rawData array of Data Model or View Model
+     * @param keyName name of key field in this data model
+     * @param changes (Add,Change,Remote)
+     * @returns merged rawData
+     */
+    ApplyDataChanges(rawData: DataModelCollection, keyName: string, changes: _SwaggerClientExports.DataDifferential) : DataModelCollection {
+        var RESTClient = this;
+        var StartAtTicks = Date.now();
+        var RemoveCount = 0, ChangeCount = 0, AddCount = 0;
+        if (!rawData) rawData = [];
+        if (changes.Remove) {
+            changes.Remove.forEach(element => {
+                var foundRow = RESTClient.FindRowIndexByKey(rawData,keyName,element);
+                if (typeof foundRow === "number" && foundRow >= 0) {
+                    rawData.splice( foundRow,1);
+                    RemoveCount ++;
+                }
+                else  if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(REMOVE) did not find a row with key {0}".sfFormat(element));
+            } );
+        }
+
+        if (changes.Change) {
+            changes.Change.forEach( (element:DataModelRow) => {
+                var thisKey : string = element[keyName];
+                var foundRow = RESTClient.FindRowIndexByKey(rawData,keyName,thisKey);
+                if (typeof foundRow === "number" && foundRow >= 0){
+                    rawData[foundRow] = element;
+                    ChangeCount ++;
+                }
+                else {
+                    if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(CHANGE) did not find a row with key {0} (changed to add)".sfFormat(element));
+                    changes.Add?.push( element); // !!! does this work?
+                }
+            } );
+        }
+        if (changes.Add) {
+            changes.Add.forEach(element=>  rawData.push(element));
+            AddCount += changes.Add.length;
+        }
+        if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges({0}) removed {1}, changed {2}, added {3} in {4}t ".sfFormat(keyName,
+                                                                            RemoveCount , ChangeCount , AddCount,            Date.now() - StartAtTicks));
+        return rawData;
+    }
+
+    /**
+     * Extracts key, etag pairs from a set of data
+     * @param rawData array of Data Models or View Models, must have etag
+     * @param keyName
+     * @returns array of key, etag pairs, suitable for passing to getChange* API endpoints
+     */
+    BuildDataSummary( rawData: DataModelCollection, keyName: string) : _SwaggerClientExports.CurrentDataSummary[] {
+        var result : _SwaggerClientExports.CurrentDataSummary[] = [];
+        if (!rawData) return result;
+        if (!Array.isArray(rawData)) {
+            var SingleElementArrayOfRawData : DataModelRow[]  = [];
+            SingleElementArrayOfRawData.push(rawData);
+            rawData = SingleElementArrayOfRawData;
+        }
+        else {
+            if (rawData.length === 0) return result;
+        }
+        if (!(keyName in rawData[0])) {
+            console.warn("BuildDataSummary() - rawData does not include keyName {0} ".sfFormat(keyName));
+            return result;
+        }
+        if (!("ETag" in rawData[0])) {
+            console.warn("BuildDataSummary() - rawData does not include ETag".sfFormat(keyName));
+            return result;
+        }
+        var RESTClient = this;
+        rawData.forEach(function(row:DataModelRow) {
+            if ( row[keyName]) {
+                result.push(new _SwaggerClientExports.CurrentDataSummary({"RowKey":row[keyName], "ETag": row["ETag"]}));
+            }
+        });
+
+        return result;
+    }
+
 
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
@@ -1376,6 +1458,25 @@ export class sfRestClient {
     }
 
     /**
+     * Finds a row using a string key match
+     * @param rawData array of rows
+     * @param keyName required key field name
+     * @param keyValue value of key in desired row
+     * @returns index of row (0-based)
+     */
+    FindRowIndexByKey( rawData: DataModelCollection, keyName: string, keyValue : string) : number | undefined {
+        if (!(keyName in rawData[0])) {
+            console.warn("FindRowIndexByKey data does not include keyName " + keyName);
+            return undefined;
+        }
+
+        for (const [index, candidateRow] of rawData.entries()) {
+            if (candidateRow[keyName] === keyValue) return index;
+          }
+        return undefined;
+    }
+
+    /**
      * Builds a string array of values that help define the context of a lookup or evaluation
      * @param dependsOnList semicolon separated list of related field and constants. eg #DocMasterDetail.Project;=Subtype
      * @param rawRow primary source of data
@@ -1995,8 +2096,54 @@ export class sfRestClient {
         console.log("onLoad::resizeDialogInFrame({1}) h={0}".sfFormat(RunHeight, frameID));
     }
 
+    LogMessageOnServer(msgText: string) : void {
+        var api = new SessionClient(this._SiteURL);
+        api.postToWebAppLog(new _SwaggerClientExports.APIData( {Data: msgText, IsURIEncoded: false}));
+    }
 
+    GetSFTabCount(tabName? : string) : number {
+        var OpenWindowCount = 0;
+        var ReUsingTab = false;
+        var TabNameList = "";
+        var OldestSaneTab = new Date().valueOf() - 36000000.0 // ten hours ago
+        if (BrowserExtensionChecker.browser.isMacOS) return 3.14;
+        for (const [k,idx] of Object.keys(top.localStorage)) {
+            if (k.startsWith("sfWindow@")) {
+                var TabAsOf = localStorage.getItem(k);
+                if (parseFloat(TabAsOf!) < OldestSaneTab) {
+                    console.log("GetSFTabCount() Forgetting tab: {0}, last loaded {1}".sfFormat(k, TabAsOf));
+                    top.localStorage.removeItem(k);
+                }
+                else OpenWindowCount++;
+                TabNameList += (OpenWindowCount > 1 ? "," : "") + k;
+                if (k.endsWith(tabName!)) {
+                    ReUsingTab = true;
+                    break;
+                }
+            }
+        }
+        if (ReUsingTab) OpenWindowCount = 0;
+        if (OpenWindowCount > 5) {
+            var HighWater : string | number | null = sessionStorage.getItem("SFTabCountHW");
+            HighWater = (typeof HighWater === "string") ? parseInt(HighWater) : 0;
+            if (OpenWindowCount > HighWater) {
+                this.LogMessageOnServer("{0} has {1} tabs: {2}".sfFormat(this._WCC.FullName,  OpenWindowCount, TabNameList));
+                sessionStorage.setItem("SFTabCountHW", OpenWindowCount.toString());
+            }
+        }
+        return OpenWindowCount;
+    }
 
+    LiveWatch() : string {
+        var result = top.name + ' ' + (top.WindowHasFocus ? "*" : "-") + '-> hub:' ;
+        if (top.$.connection.sfPMSHub) {
+            var sfPMSHub = top.$.connection.sfPMSHub
+            result += ((sfPMSHub.connection && (sfPMSHub.connection.state === $.signalR.connectionState.connected)) ? sfPMSHub.connection.transport.name : "(not connected)") ;
+        }
+        else result += "NA";
+        if (typeof this.GetSFTabCount === "function") result += '; Tabs:' + this.GetSFTabCount().toString();
+        return result;
+    }
 
     protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
         if (!this.$LookupDialog) return;
@@ -2142,11 +2289,18 @@ export class sfRestClient {
 
      protected DialogViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
 
+     /**
+      * Applies UI CFG to all rows in a dataset
+      * @param item a single UI Configuration item
+      * @param thisPart Part, including reference to raw data being upscaled to match UI CFG
+      * @param dataModelBuildKey allows thread-safe usage
+      */
     _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, dataModelBuildKey: string) {
 
         if (item.CSS) {
             if (item.CSS.indexOf("sfRowVisibleWhen") >= 0){
-                var IsWhenClear = (item.CSS.indexOf("WhenClear") >= 0);
+                // handle row visibility based on value of column marked by sfRowVisibleWhen  (multiple columns are applied in order encountered)
+                var IsWhenClear = (item.CSS.indexOf("WhenClear") >= 0);  // reverses visibility
                 const FlagVisibleFieldName = "_DefaultRowVisible";
                 if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} RowVis {1} ".sfFormat(item.ItemName, item.CSS));
                 thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowVis(rawRow: any, index: number) : void{

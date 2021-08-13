@@ -17,9 +17,14 @@ declare global {
         jQuery: JQueryStatic;
         sfClient: sfRestClient;
         ClickOnceExtension: BrowserExtensionChecker;  // not the best name, needed by legacy UI
+        WindowHasFocus: boolean;
     }
     interface JQueryStatic {
         datepicker: any;
+        signalR: any;
+        connection: {
+            sfPMSHub: any
+        }
     }
     interface JQuery {
         datepicker: any;
