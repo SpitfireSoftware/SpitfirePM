@@ -28,7 +28,14 @@ export enum LoggingLevels {
 
 type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
-
+class _SessionClientGetWCCShare {
+    APIResult: Promise<WCCData | null> | null = null;
+    ForNavHash: number | undefined;
+    public constructor( apiPromise: Promise<WCCData | null>,forPageHash : number) {
+        this.APIResult = apiPromise;
+        this.ForNavHash = forPageHash;
+    }
+}
 class PartStorageData {
 
     CFG: UIDisplayPart | null;
@@ -1081,18 +1088,34 @@ export class sfRestClient {
         return permitCheck;
     }
     /**
-     * Loads or Updates WCC session attributes
+     * Loads or Updates WCC session attributes (api/session/who)
     */
     LoadUserSessionInfo(): Promise<WCCData> {
         var RESTClient: sfRestClient = this;
-
-        var api: SessionClient = new SessionClient(this._SiteURL);
-        var apiResult: WCCData | null = api.getWCC();
+        var api: SessionClient ;
+        var apiResult: Promise<WCCData | null> | null = null;
+        if (sfRestClient._SessionClientGetWCC) {
+            if (sfRestClient._SessionClientGetWCC.ForNavHash === location.toString().sfHashCode()) {
+                //console.log("Reusing ongoing getWCC!....",sfRestClient._SessionClientGetWCC.ForNavHash);
+                apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
+            } else sfRestClient._SessionClientGetWCC = null;
+        }
+        if (!apiResult) {
+            var ForPageHash =location.toString().sfHashCode();
+            api = new SessionClient(this._SiteURL);
+            //console.log("Creating getWCC request!....",ForPageHash);
+            apiResult = <Promise<WCCData | null>> api.getWCC()
+            sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
+        }
         if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
-        return apiResult.then((r: WCCData) => {
-             this.UpdateWCCData(r);
+        apiResult.then((r: WCCData | null) => {
+            if (r) this.UpdateWCCData(r);
         });
+        return <Promise<WCCData>> apiResult;
     }
+
+    protected static _SessionClientGetWCC : _SessionClientGetWCCShare | null;
+
 
     UpdateWCCData( newWCC: WCCData ) : WCCData {
         var RESTClient: sfRestClient = this;
@@ -2135,13 +2158,20 @@ export class sfRestClient {
     }
 
     LiveWatch() : string {
-        var result = top.name + ' ' + (top.WindowHasFocus ? "*" : "-") + '-> hub:' ;
-        if (top.$.connection.sfPMSHub) {
-            var sfPMSHub = top.$.connection.sfPMSHub
-            result += ((sfPMSHub.connection && (sfPMSHub.connection.state === $.signalR.connectionState.connected)) ? sfPMSHub.connection.transport.name : "(not connected)") ;
+
+        var result = top.name + ' ';
+        try {
+            result += (top.WindowHasFocus ? "*" : "-") + '-> hub:' ;
+            if (top.$.connection.sfPMSHub) {
+                var sfPMSHub = top.$.connection.sfPMSHub
+                result += ((sfPMSHub.connection && (sfPMSHub.connection.state === $.signalR.connectionState.connected)) ? sfPMSHub.connection.transport.name : "(not connected)") ;
+            }
+            else result += "NA";
+            if (typeof this.GetSFTabCount === "function") result += '; Tabs:' + this.GetSFTabCount().toString();
         }
-        else result += "NA";
-        if (typeof this.GetSFTabCount === "function") result += '; Tabs:' + this.GetSFTabCount().toString();
+        catch (ex) {
+            result += ex.message;
+        }
         return result;
     }
 
