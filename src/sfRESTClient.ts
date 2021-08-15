@@ -540,13 +540,28 @@ export class sfRestClient {
                 return;
             }
 
+            if (!(RESTClient._LoadedPermits.has("0"))) { // global permissions
+                var api = new SessionClient(this._SiteURL);
+                var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits("0");
+                if (apiResult) {
+                    apiResult.then((r) => {
+                        if (r) {
+                            console.log("Loaded Global Permits from server...");
+                            RESTClient._LoadedPermits.set("0", r);
+                        }
+                    });
+                    await apiResult;
+                }
+            }
+
+
             if (!(RESTClient._LoadedPermits.has(optionalProject))) {
                 var api = new SessionClient(this._SiteURL);
                 var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits(optionalProject);
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
-                            console.log("Loaded Project {0} Permit set from server...".sfFormat(optionalProject));
+                            console.log("Loaded Project {0} Permits from server...".sfFormat(optionalProject));
                             RESTClient._LoadedPermits.set(optionalProject!, r);
                             ThisProjectPermitSet = r!;
                             PPSDeferredResult.resolve(r);
@@ -563,36 +578,43 @@ export class sfRestClient {
 
             $.when.apply($, finalCheck).done(function () {
                 var finalPermit : Permits = 0;
-                $.each(ThisProjectPermitSet?.Permits, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
-                    if (ThisUCFK === UCFK) {
-                        $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
-                            var thisPermitValue : Permits = 0;
-                            if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
-                                if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
-                                if (p.InsOK) thisPermitValue += RESTClient.PermissionFlags.Insert;
-                                if (p.UpdOK) thisPermitValue += RESTClient.PermissionFlags.Update;
-                                if (p.DelOK) thisPermitValue += RESTClient.PermissionFlags.Delete;
-                                if (p.BlanketOK) thisPermitValue += RESTClient.PermissionFlags.Special;
-                            }
-                            finalPermit |= thisPermitValue;
-                            return (finalPermit !== 31);
-                        });
-                    }
-                    return (finalPermit !== 31);
-                });
-                if (ucModule !== "WORK") finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
-                if (finalPermit === 31) {
-                    RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-                    ResolveThisPermit(finalPermit);
-                }
-                else {
-                    // not ideal: future we need a way to hold global permits here too
-                    var api : SessionClient = RESTClient.NewAPIClient("SessionClient");
-                    api.getCapabilityPermits(ucModule,ucFunction.replaceAll(".","!").replaceAll("/","@"),optionalProject,optionalDTK).then((r)=>{
-                        RESTClient._UserPermitResultCache.set(PermitCacheID, r);
-                        ResolveThisPermit(r);
+                var GlobalPermits = RESTClient._LoadedPermits.get("0")?.Permits;
+                $.each([ThisProjectPermitSet?.Permits,GlobalPermits],function CheckOneSource(sourceIdx, thisSource) {
+                    $.each(thisSource, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
+                        if (ThisUCFK === UCFK) {
+                            $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
+                                var thisPermitValue : Permits = 0;
+                                if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
+                                    if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
+                                    if (p.InsOK) thisPermitValue += RESTClient.PermissionFlags.Insert;
+                                    if (p.UpdOK) thisPermitValue += RESTClient.PermissionFlags.Update;
+                                    if (p.DelOK) thisPermitValue += RESTClient.PermissionFlags.Delete;
+                                    if (p.BlanketOK) thisPermitValue += RESTClient.PermissionFlags.Special;
+                                }
+                                finalPermit |= thisPermitValue;
+                                return (finalPermit !== 31);
+                            });
+                        }
+                        return (finalPermit !== 31);
                     });
-                }
+                });
+
+                if (ucModule !== "WORK") finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
+                RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+                ResolveThisPermit(finalPermit);
+                // we do have global permits above: what use case was this for???
+                // if (finalPermit === 31) {
+                //     RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+                //     ResolveThisPermit(finalPermit);
+                // }
+                // else {
+                //     // not ideal: future we need a way to hold global permits here too
+                //     var api : SessionClient = RESTClient.NewAPIClient("SessionClient");
+                //     api.getCapabilityPermits(ucModule,ucFunction.replaceAll(".","!").replaceAll("/","@"),optionalProject,optionalDTK).then((r)=>{
+                //         RESTClient._UserPermitResultCache.set(PermitCacheID, r);
+                //         ResolveThisPermit(r);
+                //     });
+                // }
 
             });
         });
@@ -1466,7 +1488,9 @@ export class sfRestClient {
     protected _SiteURL: string;
 
 
-
+    /**
+     * Collections of permits by project.  Internally, global permits are stored under project (GLOBAL)
+     */
     _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
 
     /**
