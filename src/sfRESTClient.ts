@@ -28,6 +28,7 @@ export enum LoggingLevels {
 
 type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
+type RRCacheEntry = { w: number, v: string | number | boolean };
 class _SessionClientGetWCCShare {
     APIResult: Promise<WCCData | null> | null = null;
     ForNavHash: number | undefined;
@@ -237,7 +238,7 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7892";
+    version: string = "2020.0.7899";
     /**
      * Helps decode Permit flags
      */
@@ -838,6 +839,66 @@ export class sfRestClient {
         return thisPart.CFGLoader();
     }
 
+    RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
+        var apiResultPromise: Promise<string | number | boolean | null>
+        var cacheKey: string = "GetRR:{0}T{1}F".sfFormat(ruleName, testValue.sfHashCode(), filterValue?.sfHashCode());
+
+        try {
+            var result: string | null = sessionStorage.getItem(cacheKey);
+            if (!result) {
+                // continues below - must get value
+            }
+            if (typeof result === "string") {
+                var CacheResult: RRCacheEntry = JSON.parse(result);
+
+                if ((Date.now() - CacheResult.w) < this._Options.DVCacheLife) {
+                    apiResultPromise = new Promise<string | number | boolean | null>((resolve) => {
+                        console.log("Rule Result from Cache {0}|{1}[{2}] = {3}".sfFormat(ruleName,testValue,filterValue,CacheResult.v));
+                        resolve(CacheResult.v);
+                    });
+                    return apiResultPromise;
+                }
+            }
+            // if falls through, we get a fresh value
+        }
+        catch (err2) {
+            new Error("RuleResult() cache error: " + err2.message);
+        }
+
+        // rule checks are not so numerous that we worry about in process requests
+        // if (this._CachedDVRequests.has(cacheKey)) {
+        //     if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
+        //     return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
+        // }
+
+        var RESTClient: sfRestClient = this;
+        var api: UICFGClient = new UICFGClient(this._SiteURL);
+
+        apiResultPromise  = new Promise<string | number | boolean | null>((resolve) => {
+            if (typeof defaultValue === "number") {
+                api.getRuleResultAsNumber(ruleName,testValue,filterValue,defaultValue).then(r=>resolve(r));
+            }
+            else if (typeof defaultValue === "boolean") {
+                api.getRuleResultAsBoolean(ruleName,testValue,filterValue,defaultValue).then(r=>resolve(r));
+            }
+            else {
+                api.getRuleResult(ruleName,testValue,filterValue,defaultValue).then(r=>resolve(r));
+            }
+        });
+
+        if (apiResultPromise) {
+            apiResultPromise.then(
+                (rr: string | number | boolean | null) => {
+                    if (rr) {
+                        sessionStorage.setItem(cacheKey, JSON.stringify({ v: rr, w: Date.now() }));
+                       // if (RESTClient._CachedDVRequests.has(cacheKey)) RESTClient._CachedDVRequests.delete(cacheKey);
+                    }
+                }
+            );
+        }
+        //this._CachedDVRequests.set(cacheKey, apiResultPromise);
+        return apiResultPromise;
+    }
 
     /**
      * Pops up a dialog showing result of a qAlias query
@@ -1741,7 +1802,7 @@ export class sfRestClient {
         var Context = location.href;
         if (typeof pageTypeName ==="undefined") pageTypeName = this.PageTypeNames.Unknown;
         if (pageTypeName == this.PageTypeNames.Document || this.IsDocumentPage()) {
-            console.warn("GetPageProjectKey() does not *really* support doc pages yet");
+            //console.warn("GetPageProjectKey() does not *really* support doc pages yet");
             Context = this._WCC.Project;
         }
         else {
