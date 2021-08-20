@@ -497,7 +497,7 @@ export class sfRestClient {
             if (!RESTClient._z.WCCLoaded) await RESTClient.LoadUserSessionInfo();
             if (typeof optionalDTK !== "string") optionalDTK = "";
             if (typeof optionalReference !== "string") optionalReference = "";
-            if (typeof optionalProject !== "string") optionalProject = "0";
+            if (typeof optionalProject !== "string" || !optionalProject) optionalProject = "0";
             var PermitCacheID = ucModule + "_" + ucFunction
                 + "_T" + optionalDTK.replaceAll("-", "")
                 + "_R" + optionalReference
@@ -650,6 +650,7 @@ export class sfRestClient {
                 var OnePartPermitDeferred = $.Deferred();
                 var OnePartPermitDeferredPromise = OnePartPermitDeferred.promise();
                 finalCheck.push(OnePartPermitDeferredPromise);
+                if (!pageKey && typeof pageKey === "string" ) pageKey = undefined;
                 this.CheckPermit("PART",element,undefined,pageKey).then((r)=>{
                     PageParts[element] = r;
                     OnePartPermitDeferred.resolve(r);
@@ -1807,7 +1808,8 @@ export class sfRestClient {
         }
         else {
             Context = this.GetPageQueryParameterByName(this.IsPowerUXPage() ? "project" : "id");
-            if (!Context) console.warn("GetPageProjectKey() could not resolve project key for page ",this.ResolvePageName());
+            var PageTypeName : string = this.ResolvePageName();
+            if (!Context && !this.IsHomeDashboardPage()) console.warn("GetPageProjectKey() could not resolve project key for page ",PageTypeName);
         }
         return Context;
     }
@@ -1848,17 +1850,21 @@ export class sfRestClient {
             }
 
         }
-        if (ActionString.indexOf("vPgPopup(") >= 0) {
-            var rxVPgPopup = /vPgPopup\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>\d+)/gm;
-            var match = rxVPgPopup.exec(ActionString);
-            if (match && match.groups) {
+        var match : RegExpExecArray | null = null;;
+        var rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
+        match = rxIsVPgPop.exec(ActionString);
+        if (match) {
+            if ( match.groups) {
                 if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
                 var ActionArgs : string = this.ExpandActionMarkers(match.groups.args,rowData);
-                this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),undefined);
+                this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),match.groups.default);
             }
             else {
                 console.warn("InvokeAction::VPg failed match",ActionString);
             }
+        }
+        else if (ActionString.indexOf("top.location.reload(") >= 0) {
+            top.location.reload(); // per https://developer.mozilla.org/en-US/docs/Web/API/Location/reload including (true) or (false) is ignored.
         }
         else if (ActionString.indexOf("PopDoc(") >= 0) {
             var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
@@ -1902,6 +1908,7 @@ export class sfRestClient {
             console.warn("InvokeAction() could not handle ",actionString);
         }
     }
+
 
     /** Finds $$ and other replacable values */
     protected ExpandActionMarkers(rawAction: string, rowData? : DataModelRow) : string {
@@ -1996,10 +2003,9 @@ export class sfRestClient {
                 });
             }).appendTo('BODY').first().on("click",function () { $(this).remove(); });
 
-            if (timeOutMS) msgReady.then(function () {
-                RESTClient.notificationMsgTimeoutHandle = setTimeout("notificationMsgTimeoutHandle = null; DisplayThisNotification('{0}');".sfFormat(templateURL),timeOutMS);
-            });
-
+        });
+        if (timeOutMS) msgReady.then(function () {
+            RESTClient.notificationMsgTimeoutHandle = setTimeout("notificationMsgTimeoutHandle = null; top.sfClient.DisplayThisNotification('{0}');".sfFormat(templateURL),timeOutMS);
         });
         return msgReady;
 
@@ -2273,7 +2279,9 @@ export class sfRestClient {
         var NewValueIsNew = true;
 
         if (typeof (postbackContext) == "undefined") postbackContext = window;
-        this.$LookupFrame!.attr('src', this._Options.DVCacheLife); // point frame back to blank page
+        this.$LookupFrame   = this.ResolveLookupFrame();
+        this.$LookupFrame!.attr("src",this._Options.BlankPageURI);
+
         //sfLookupHeightChangeTo(201);
         //sfLookupWidthChangeTo( 301);
         //if (  ($(window).width()! > this.$LookupDialog.data("windowWidth"))) this.sfSetParentWindowSize(true, this.$LookupDialog.data("windowWidth") + $LookupViewPortAdjustments.outsidExtraW, -1);
