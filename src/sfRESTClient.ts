@@ -282,7 +282,7 @@ export class sfRestClient {
                     rawData.splice( foundRow,1);
                     RemoveCount ++;
                 }
-                else  if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(REMOVE) did not find a row with key {0}".sfFormat(element));
+                else  if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(REMOVE) did not find a row with key {0}".sfFormat(element));
             } );
         }
 
@@ -295,7 +295,7 @@ export class sfRestClient {
                     ChangeCount ++;
                 }
                 else {
-                    if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(CHANGE) did not find a row with key {0} (changed to add)".sfFormat(element));
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(CHANGE) did not find a row with key {0} (changed to add)".sfFormat(element));
                     changes.Add?.push( element); // !!! does this work?
                 }
             } );
@@ -304,7 +304,7 @@ export class sfRestClient {
             changes.Add.forEach(element=>  rawData.push(element));
             AddCount += changes.Add.length;
         }
-        if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges({0}) removed {1}, changed {2}, added {3} in {4}t ".sfFormat(keyName,
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges({0}) removed {1}, changed {2}, added {3} in {4}t ".sfFormat(keyName,
                                                                             RemoveCount , ChangeCount , AddCount,            Date.now() - StartAtTicks));
         return rawData;
     }
@@ -466,7 +466,7 @@ export class sfRestClient {
                     if (SingleInstanceMode) FinalData = FinalData[0];
                     resolve(FinalData);
                     thisPart!.DataModels.delete(DataModelBuildKey);
-                    if (thisPart!.RestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     if (FailCount === 0) {
                         var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
@@ -541,14 +541,15 @@ export class sfRestClient {
                 return;
             }
 
-            if (!(RESTClient._LoadedPermits.has("0"))) { // global permissions
+            if (!(sfRestClient._LoadedPermits.has("0"))) { // global permissions
                 var api = new SessionClient(this._SiteURL);
+                sfRestClient._LoadedPermits.set("0",new _SwaggerClientExports.UCPermitSet()); // this prevents repeat requests
                 var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits("0");
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
                             console.log("Loaded Global Permits from server...");
-                            RESTClient._LoadedPermits.set("0", r);
+                            sfRestClient._LoadedPermits.set("0", r);
                         }
                     });
                     await apiResult;
@@ -556,14 +557,14 @@ export class sfRestClient {
             }
 
 
-            if (!(RESTClient._LoadedPermits.has(optionalProject))) {
+            if (!(sfRestClient._LoadedPermits.has(optionalProject))) {
                 var api = new SessionClient(this._SiteURL);
                 var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits(optionalProject);
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
                             console.log("Loaded Project {0} Permits from server...".sfFormat(optionalProject));
-                            RESTClient._LoadedPermits.set(optionalProject!, r);
+                            sfRestClient._LoadedPermits.set(optionalProject!, r);
                             ThisProjectPermitSet = r!;
                             PPSDeferredResult.resolve(r);
                         }
@@ -571,7 +572,7 @@ export class sfRestClient {
                 }
             }
             else {
-                ThisProjectPermitSet = RESTClient._LoadedPermits.get(optionalProject);
+                ThisProjectPermitSet = sfRestClient._LoadedPermits.get(optionalProject);
                 PPSDeferredResult.resolve(ThisProjectPermitSet);
             }
 
@@ -579,7 +580,7 @@ export class sfRestClient {
 
             $.when.apply($, finalCheck).done(function () {
                 var finalPermit : Permits = 0;
-                var GlobalPermits = RESTClient._LoadedPermits.get("0")?.Permits;
+                var GlobalPermits = sfRestClient._LoadedPermits.get("0")?.Permits;
                 $.each([ThisProjectPermitSet?.Permits,GlobalPermits],function CheckOneSource(sourceIdx, thisSource) {
                     $.each(thisSource, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
                         if (ThisUCFK === UCFK) {
@@ -781,7 +782,7 @@ export class sfRestClient {
             if (typeof result === "string") {
                 var CacheResult: DVCacheEntry = JSON.parse(result);
 
-                if ((Date.now() - CacheResult.w) < this._Options.DVCacheLife) {
+                if ((Date.now() - CacheResult.w) < sfRestClient._Options.DVCacheLife) {
                     apiResultPromise = new Promise<string | null>((resolve) => resolve(CacheResult.v));
                     return apiResultPromise;
                 }
@@ -794,7 +795,7 @@ export class sfRestClient {
 
 
         if (this._CachedDVRequests.has(cacheKey)) {
-            if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
             return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
         }
 
@@ -852,7 +853,7 @@ export class sfRestClient {
             if (typeof result === "string") {
                 var CacheResult: RRCacheEntry = JSON.parse(result);
 
-                if ((Date.now() - CacheResult.w) < this._Options.DVCacheLife) {
+                if ((Date.now() - CacheResult.w) < sfRestClient._Options.DVCacheLife) {
                     apiResultPromise = new Promise<string | number | boolean | null>((resolve) => {
                         console.log("Rule Result from Cache {0}|{1}[{2}] = {3}".sfFormat(ruleName,testValue,filterValue,CacheResult.v));
                         resolve(CacheResult.v);
@@ -928,7 +929,7 @@ export class sfRestClient {
     queryOptions.LoadFromDataAttributes(forElement);
     var url = queryOptions.QueryURL;
     if (!url) {
-        if (this._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
+        if (sfRestClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
         return forElement;
     }
     if (url.indexOf("$K")) {
@@ -962,7 +963,7 @@ export class sfRestClient {
                 }
             }
         );
-        if (RESTClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
+        if (sfRestClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
         if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
         $GCI.load(url, function (responseText, textStatus, jqXHR: JQuery.jqXHR) {
             var isEmpty = false;
@@ -1134,7 +1135,7 @@ export class sfRestClient {
                 return permitCheck;
                 }
 
-            if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (this._Options.DVCacheLife * 4)   ) {
+            if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (sfRestClient._Options.DVCacheLife * 4)   ) {
                 // great: we have a map and it isn't old
                 DeferredResult.resolve(sfRestClient._UCPermitMap);
                 return permitCheck;
@@ -1215,7 +1216,7 @@ export class sfRestClient {
         RESTClient._z.WCCLoaded = true;
         ChangeList.forEach((value,keyName) => {
             var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
-            if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             $("body").trigger(eventName,[RESTClient,keyName,value]);
         });
@@ -1244,9 +1245,9 @@ export class sfRestClient {
             var js : JQuery<HTMLScriptElement> = $("script[src^='{0}']".sfFormat(src));
             if (js.length === 0) {
                 var RESTClient: sfRestClient = this;
-                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("Dynamically Loading ",src);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Dynamically Loading ",src);
                 this.AddCachedScript(scriptSrc).then( ()=> {
-                        if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Loaded.", scriptSrc);
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Loaded.", scriptSrc);
                     });
                 AnyLoaded = true;
             }
@@ -1384,14 +1385,14 @@ export class sfRestClient {
                 //todo: determine if we should use the new or old UI based on the document type of this document
                 //todo: generate a GUID if one was not provided
                 var UseID : string;
-                var url : string =  thisRestClient._Options.PopNewDocLegacyURL;
+                var url : string =  sfRestClient._Options.PopNewDocLegacyURL;
                 if (options?.indexOf("&UseID")) {
                     UseID = options.substr(options?.indexOf("&UseID")+7,36);
                 }
                 else UseID = await this.NewGuid();  // todo: fix this!!!
-                if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopNewDocXBURL;
+                if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL;
                 url  =  url.sfFormat(thisRestClient._SiteURL, dtk,project,options) ;
-                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopNewDoc opening {0} DTK {1} using {2}".sfFormat(UseID, dtk,url));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopNewDoc opening {0} DTK {1} using {2}".sfFormat(UseID, dtk,url));
 
                 var TargetTab =  UseID.substr(UseID.lastIndexOf("-") + 1).toLowerCase();
                 //todo: determine if we need the "how many tabs" logic and dialog
@@ -1421,10 +1422,10 @@ export class sfRestClient {
                    return;
                }
                //todo: determine if we should use the new or old UI based on the document type of this document
-               var url : string =  thisRestClient._Options.PopDocLegacyURL;
-               if (thisRestClient._Options.PopDocForceXBUI) url =  thisRestClient._Options.PopDocXBURL;
+               var url : string =  sfRestClient._Options.PopDocLegacyURL;
+               if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopDocXBURL;
                url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
-               if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
+               if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
                var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
                //todo: determine if we need the "how many tabs" logic and dialog
@@ -1455,14 +1456,14 @@ export class sfRestClient {
             //    if ((typeof this[PropName] !== "undefined"  &&  typeof this[key] === typeof options[key] ) {
             //         this[PropName] = options[key];
             //    }
-            if (key === "DVCacheLife" && typeof this._Options.DVCacheLife === typeof options[key]) this._Options.DVCacheLife = options[key]
-            else if (key === "LogLevel" && typeof this._Options.LogLevel === typeof options[key]) this._Options.LogLevel = options[key]
-            else if (key === "PopDocForceXBUI" && typeof this._Options.PopDocForceXBUI === typeof options[key]) this._Options.PopDocForceXBUI = options[key]
-            else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) this._Options[PropName] = options[key];
+            if (key === "DVCacheLife" && typeof sfRestClient._Options.DVCacheLife === typeof options[key]) sfRestClient._Options.DVCacheLife = options[key]
+            else if (key === "LogLevel" && typeof sfRestClient._Options.LogLevel === typeof options[key]) sfRestClient._Options.LogLevel = options[key]
+            else if (key === "PopDocForceXBUI" && typeof sfRestClient._Options.PopDocForceXBUI === typeof options[key]) sfRestClient._Options.PopDocForceXBUI = options[key]
+            else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) sfRestClient._Options[PropName] = options[key];
         });
     }
 
-    protected _Options : NVPair  = {
+    protected static _Options : NVPair  = {
     /**
      * How long (in milliseconds) should a DV result be cached for reuse
     */
@@ -1537,7 +1538,7 @@ export class sfRestClient {
 
     protected _GetAPIXHR(url: string): JQueryXHR {
         url = this._APIURL(url);
-        if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log(url);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(url);
         return $.getJSON(url);
     }
     protected _APIURL(suffix: any) {
@@ -1550,10 +1551,6 @@ export class sfRestClient {
     protected _SiteURL: string;
 
 
-    /**
-     * Collections of permits by project.  Internally, global permits are stored under project (GLOBAL)
-     */
-    _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
 
     /**
      *  Returns value from object that matches the field/property name
@@ -1832,7 +1829,7 @@ export class sfRestClient {
             if (actionString.HRef)         ActionString = actionString.HRef;
         }
         if (!ActionString) {
-            if (this._Options.LogLevel >= LoggingLevels.Verbose) console.warn("InvokeAction ignoring empty action");
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.warn("InvokeAction ignoring empty action");
             return;
         }
         if (ActionString.startsWith(this._SiteURL)) {
@@ -1851,11 +1848,13 @@ export class sfRestClient {
 
         }
         var match : RegExpExecArray | null = null;;
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction: ",ActionString);
+
         var rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
         match = rxIsVPgPop.exec(ActionString);
         if (match) {
             if ( match.groups) {
-                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
                 var ActionArgs : string = this.ExpandActionMarkers(match.groups.args,rowData);
                 this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),match.groups.default);
             }
@@ -1870,7 +1869,7 @@ export class sfRestClient {
             var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             var match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
-                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
                 this.PopDoc( match.groups.idguid );
             }
             else {
@@ -1881,7 +1880,7 @@ export class sfRestClient {
             var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             var match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
-                if (this._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
                 var Project = this.GetPageProjectKey();
                 this.PopNewDoc( match.groups.idguid ,Project);
             }
@@ -1902,6 +1901,9 @@ export class sfRestClient {
         else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
             console.warn("InvokeAction::tools not really done",ActionString);
             top.location.href = ActionString;
+        }
+        else if (ActionString.startsWith("http")) {
+            window.open(ActionString);
         }
         else {
             this.DisplayUserNotification("Coming soon: could not invoke requested action.",9999);
@@ -2081,9 +2083,9 @@ export class sfRestClient {
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (!this.$LookupDialog) {
                 this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
-                .sfFormat(this._Options.BlankPageURI))
+                .sfFormat(sfRestClient._Options.BlankPageURI))
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
-                        close: this.sfModalDialogClosed,
+                        close: top.sfClient.sfModalDialogClosed,
                         dialogClass: "lookup",
                         resizeStop:  this.sfModelDialogResizedHandler
                     });
@@ -2100,7 +2102,7 @@ export class sfRestClient {
             }
             this.$LookupDialog.data("postbackEventId", eventId);
             this.$LookupDialog.data("postbackEventArg", eventArg);
-            this.$LookupDialog.data("postback", (eventId != this._Options.NonPostbackEventID));
+            this.$LookupDialog.data("postback", (eventId != sfRestClient._Options.NonPostbackEventID));
             this.$LookupDialog.data("postbackContext", eventContext);
             this.$LookupDialog.data("idName", url);
             this.$LookupDialog.data("newValue", eventArg);  // must reset to null or prior lookup result value may get used
@@ -2123,8 +2125,9 @@ export class sfRestClient {
                 console.warn("Could not open dialog (missing IFRAME), lost",url);
                 return false;
             }
-            this.$LookupFrame!.attr('src', OpenUrl); // only w iframe
+            this.$LookupFrame!.attr("src",sfRestClient._Options.BlankPageURI);
             this.SetModalDialogTitle(this.$LookupDialog,"");
+            this.$LookupFrame!.attr('src', OpenUrl); // only w iframe
 
             this.$LookupDialog.dialog('open');
 
@@ -2280,7 +2283,7 @@ export class sfRestClient {
 
         if (typeof (postbackContext) == "undefined") postbackContext = window;
         this.$LookupFrame   = this.ResolveLookupFrame();
-        this.$LookupFrame!.attr("src",this._Options.BlankPageURI);
+        this.$LookupFrame!.attr("src",sfRestClient._Options.BlankPageURI);
 
         //sfLookupHeightChangeTo(201);
         //sfLookupWidthChangeTo( 301);
@@ -2425,7 +2428,7 @@ export class sfRestClient {
                 // handle row visibility based on value of column marked by sfRowVisibleWhen  (multiple columns are applied in order encountered)
                 var IsWhenClear = (item.CSS.indexOf("WhenClear") >= 0);  // reverses visibility
                 const FlagVisibleFieldName = "_DefaultRowVisible";
-                if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} RowVis {1} ".sfFormat(item.ItemName, item.CSS));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} RowVis {1} ".sfFormat(item.ItemName, item.CSS));
                 thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowVis(rawRow: any, index: number) : void{
                     var ShowRow = false;
                     var UpdateFlagProperty = !(FlagVisibleFieldName in rawRow);
@@ -2444,7 +2447,7 @@ export class sfRestClient {
         if (item.DV || item.LookupName ||
             (item.OtherProperties && item.OtherProperties.DataType && item.OtherProperties.DataType === "Guid")) {
             if (item.DV) {
-                if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} DV {1} ".sfFormat(item.ItemName, item.DV));
                 thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowDVApplication(rawRow: any, index: number) : void{
                     var ThisSuffix : string = "_dv";
                     if (item.DataField?.startsWith("cmp_")) {
@@ -2518,7 +2521,7 @@ export class sfRestClient {
 
     public ClearCache(alsoClearSessionStorage? : boolean):void {
         this._UserPermitResultCache.clear();
-        this._LoadedPermits.clear();
+        sfRestClient._LoadedPermits.clear();
         PartStorageData._LoadedParts.clear();
         if (alsoClearSessionStorage) sessionStorage.clear();
     }
@@ -2570,6 +2573,11 @@ export class sfRestClient {
     protected static _GlobalClientConstructFlag : boolean = false;
     protected static ExternalToolsLoadedPromise: Promise<boolean | undefined>;
     protected static _NewGuidList : GUID[] = [];
+    /**
+     * Collections of permits by project.  Internally, global permits are stored under project (0)
+     */
+     protected static _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
+
 
     constructor() {
         if (typeof sfApplicationRootPath === "string") {
@@ -2581,6 +2589,8 @@ export class sfRestClient {
         }
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
+        this.exports.LoggingLevels = LoggingLevels;
+
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
         if (window.sfClient && window.sfClient._z.WCCLoaded) {
@@ -2600,9 +2610,9 @@ export class sfRestClient {
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
 
                 $(function DOMReadyNow() {
-                    if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
                     $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
-                        if (RESTClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
                         if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
                             var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
                             if (djs) RESTClient.LoadDynamicJS(djs);
