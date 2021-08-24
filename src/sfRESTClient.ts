@@ -808,7 +808,10 @@ export class sfRestClient {
             });
         }
         else if (dependsOn) DependsOnSet[0] = dependsOn;
-        var apiResultPromise: Promise<string | null> = api.getDisplayValue(displayName, "1", keyValue, DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3]);
+        var DVFilters : QueryFilters  = new QueryFilters();
+        DVFilters.MatchingSeed = keyValue;
+        DVFilters.DependsOn = DependsOnSet;
+        var apiResultPromise: Promise<string | null> = api.getDisplayValueViaPost(displayName, "1", DVFilters);
         if (apiResultPromise) {
             apiResultPromise.then(
                 (dvResult: string | null) => {
@@ -1414,10 +1417,17 @@ export class sfRestClient {
    PopDoc(id : GUID) : Promise<Window | null>
    {
        return new Promise<Window | null>((resolve) => {
+           if (!id.sfIsGuid()) {
+                console.warn("PopDoc(): Document id expected; received",id);
+                this.DisplayUserNotification("Document key expected",9876);
+                resolve(null);
+                return;
+           }
            this.GetDV("DocMasterType",id,undefined).then((thisDocType) => {
                var thisRestClient = this;
                if (!thisDocType) {
-                   console.warn("Document not found"); //hmmm maybe a popup?
+                   console.warn("PopDoc(): Document not found"); //hmmm maybe a popup?
+                   this.DisplayUserNotification("Document not found",9876);
                    resolve(null);
                    return;
                }
@@ -1833,6 +1843,8 @@ export class sfRestClient {
             return;
         }
         if (ActionString.startsWith(this._SiteURL)) {
+
+            //if (ActionString.indexOf("?") === -1 &&  ActionString.indexOf(".aspx&set") > 0 )  ActionString = ActionString.replaceAll("&set","?set");// kludge to fix ?set being &set
             if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0) ActionString += "&xbia=1";
             if (ActionString.indexOf("libview.aspx") > 1) {
                 var ActionOptions : string = "";
@@ -2022,7 +2034,7 @@ export class sfRestClient {
     /** Displays a simple user notification, with "dismiss" session memory
      * @param notificationText The message.  Message is skipped if the same exact message has already been dismissed.
      */
-    DisplayUserNotification(notificationText : string, timeOutMS: number): Promise<JQuery<HTMLElement>> {
+    DisplayUserNotification(notificationText : string, timeOutMS?: number): Promise<JQuery<HTMLElement>> {
         return this.DisplayThisNotification("ajhx/UsrNotification.html", notificationText, timeOutMS);
     }
 

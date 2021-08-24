@@ -88,7 +88,7 @@ String.prototype.sfFormat = function formatThis(this: string, ...words): string 
     );
 };
 String.prototype.sfIsGuid = function IsThisStringaGuid(this: string, ): boolean {
-    return (this.match(/^[{]?[0-9a-fA-F]{8}[-]?([0-9a-fA-F]{4}[-]?){3}[0-9a-fA-F]{12}[}]?$/g) === null);
+    return (this.match(/^[{]?[0-9a-fA-F]{8}[-]?([0-9a-fA-F]{4}[-]?){3}[0-9a-fA-F]{12}[}]?$/g) !== null);
 };
 
 if (!String.prototype.replaceAll) {
