@@ -29,6 +29,7 @@ export enum LoggingLevels {
 type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
 type RRCacheEntry = { w: number, v: string | number | boolean };
+
 class _SessionClientGetWCCShare {
     APIResult: Promise<WCCData | null> | null = null;
     ForNavHash: number | undefined;
@@ -37,6 +38,7 @@ class _SessionClientGetWCCShare {
         this.ForNavHash = forPageHash;
     }
 }
+
 class PartStorageData {
 
     CFG: UIDisplayPart | null;
@@ -1115,6 +1117,7 @@ export class sfRestClient {
 
     /**
      * Loads UC Function Keys and corresponding Module/System Names
+     * NOTE: returns a JQueryPromise
     */
     protected LoadUCFunctionMap(): JQueryPromise<any> {
         var RESTClient: sfRestClient = this;
@@ -1146,8 +1149,9 @@ export class sfRestClient {
         }
 
 
-        var GetPermitMapRequest = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]).done(function DoneGetPermitMapRequest(r) {
-            if (GetPermitMapRequest.status !== 304) {
+        if (!sfRestClient._SessionClientGetUCFKMap) sfRestClient._SessionClientGetUCFKMap = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]);
+        sfRestClient._SessionClientGetUCFKMap.done(function DoneGetPermitMapRequest(r) {
+            if (sfRestClient._SessionClientGetUCFKMap!.status !== 304) {
                 if (typeof r === "object" && typeof r._etag === "object") {
                     r._etag.w = Date.now();
                     console.log("Loaded Function Map from server...");
@@ -1155,7 +1159,7 @@ export class sfRestClient {
                     sfRestClient._UCPermitMap = r;
                 }
                 else {
-                    console.log("LoadUCFunctionMap() could not load Function Map from server...", GetPermitMapRequest);
+                    console.log("LoadUCFunctionMap() could not load Function Map from server...", sfRestClient._SessionClientGetUCFKMap);
                 }
             } else {
                 console.log("LoadUCFunctionMap() resolved as not modified...");
@@ -1182,27 +1186,36 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
-        if (sfRestClient._SessionClientGetWCC) {
-            if (sfRestClient._SessionClientGetWCC.ForNavHash === location.toString().sfHashCode()) {
-                //console.log("Reusing ongoing getWCC!....",sfRestClient._SessionClientGetWCC.ForNavHash);
-                apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
-            } else sfRestClient._SessionClientGetWCC = null;
-        }
-        if (!apiResult) {
-            var ForPageHash =location.toString().sfHashCode();
-            api = new SessionClient(this._SiteURL);
-            //console.log("Creating getWCC request!....",ForPageHash);
-            apiResult = <Promise<WCCData | null>> api.getWCC()
-            sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
-        }
-        if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
-        apiResult.then((r: WCCData | null) => {
-            if (r) this.UpdateWCCData(r);
+        return new Promise<WCCData>( (resolve)  =>{
+            if (sfRestClient._SessionClientGetWCC) {
+                if (sfRestClient._SessionClientGetWCC.ForNavHash === location.toString().sfHashCode()) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("Reusing ongoing getWCC!....",sfRestClient._SessionClientGetWCC.ForNavHash);
+                    apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
+                } else sfRestClient._SessionClientGetWCC = null;
+            }
+            if (!apiResult) {
+                var ForPageHash =location.toString().sfHashCode();
+                api = new SessionClient(this._SiteURL);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("Creating getWCC request!....",ForPageHash);
+                apiResult = <Promise<WCCData | null>> api.getWCC()
+                sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
+            }
+            if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
+            apiResult.then((r: WCCData | null) => {
+                if (r) {
+                    this.UpdateWCCData(r);
+                    resolve(r);
+                }
+                else {
+                    console.warn("SessionClient.getWCC() did not return data!");
+                    resolve(new WCCData());
+                }
+            });
         });
-        return <Promise<WCCData>> apiResult;
     }
 
     protected static _SessionClientGetWCC : _SessionClientGetWCCShare | null;
+    protected static _SessionClientGetUCFKMap : JQueryXHR | null;
 
 
     UpdateWCCData( newWCC: WCCData ) : WCCData {
@@ -1219,7 +1232,7 @@ export class sfRestClient {
         RESTClient._z.WCCLoaded = true;
         ChangeList.forEach((value,keyName) => {
             var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             $("body").trigger(eventName,[RESTClient,keyName,value]);
         });
@@ -1477,7 +1490,7 @@ export class sfRestClient {
     /**
      * How long (in milliseconds) should a DV result be cached for reuse
     */
-        BlankPageURI: "ABOUT:blank",
+        BlankPageURI: "about:blank",
         DVCacheLife:  16 * 60000, // 16 minutes
         LogLevel:  LoggingLevels.None,
         NonPostbackEventID: "DNPB",
@@ -2602,6 +2615,8 @@ export class sfRestClient {
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
         this.exports.LoggingLevels = LoggingLevels;
+        var MyHostName = window.location.host;
+        if (MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) this.SetOptions({ LogLevel: 2 }); // verbose
 
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
@@ -2617,20 +2632,11 @@ export class sfRestClient {
 
         var WCCLoadPromise =this.LoadUserSessionInfo();
         WCCLoadPromise.then(() => {
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: WCC Ready on Window[{0}]; Instance: ".sfFormat(window.name),(window.sfClient && window.sfClient === this) ? "Global" : "peon");
             if (window.sfClient && window.sfClient === this) {
                 var RESTClient = this;
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
-
-                $(function DOMReadyNow() {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
-                    $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
-                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
-                        if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
-                            var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
-                            if (djs) RESTClient.LoadDynamicJS(djs);
-                        }
-                    });
-               });
+                if ($("title").text().length === 0 ) $("title").text("Spitfire PM");
             }
         });
 
@@ -2640,6 +2646,18 @@ export class sfRestClient {
                 window.sfClient = new sfRestClient();
                 if (!window.$) window.$ = $;
                 if (!top.$) top.$ = $;
+                var RESTClient = window.sfClient;
+                $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
+                    if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
+                        var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
+                        if (djs) RESTClient.LoadDynamicJS(djs);
+                    }
+                });
+                $(function DOMReadyNow() {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
+
+               });
                 sfRestClient._GlobalClientConstructFlag = false;
             }
         });

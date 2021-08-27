@@ -15,6 +15,10 @@ declare global {
         oneDay(this: Date): number;
     }
 
+    interface Window {
+        __doPostBack(eventTarget: string, eventArgument : string | undefined): void;
+    }
+
 }
 
 export interface String { };
@@ -72,6 +76,22 @@ if (!Date.prototype.isDate) {
     };
 }
 
+if (!Window.prototype.__doPostBack) {
+    Window.prototype.__doPostBack = function(eventTarget, eventArgument) {
+        var DefaultFormName: string = "Form1";
+    var theForm : HTMLFormElement | null = null;
+    if (DefaultFormName in this.document.forms) theForm = document.forms[<any>DefaultFormName];
+    if (!theForm) {
+        console.warn("No form found for classic postbacks");
+    }
+    else {
+        if (!theForm.onsubmit || (theForm.onsubmit(new Event("onsubmit")) !== false)) {
+            theForm.__EVENTTARGET.value = eventTarget;
+            theForm.__EVENTARGUMENT.value = eventArgument;
+            theForm.submit();
+        }
+    }
+}
 
 
 String.prototype.sfHashCode = function caclHashCode(this: string): number {
