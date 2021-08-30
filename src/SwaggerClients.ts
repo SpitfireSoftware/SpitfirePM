@@ -7,7 +7,7 @@
 //----------------------
 // ReSharper disable InconsistentNaming
 
-import { APIClientBase } from './BrowserExtensionChecker';
+import { APIClientBase } from './APIClientBase';
 import * as jQuery from 'jquery';
 
 export class DocumentToolsClient extends APIClientBase {

@@ -118,6 +118,8 @@ if (!String.prototype.replaceAll) {
     }
 }
 
+
+
 var HTTPApplicationName = (typeof window !== "undefined" ?window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/")) : "sfPMS");
 var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");
 export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
