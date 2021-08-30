@@ -79,16 +79,17 @@ if (!Date.prototype.isDate) {
 if (!Window.prototype.__doPostBack) {
     Window.prototype.__doPostBack = function(eventTarget, eventArgument) {
         var DefaultFormName: string = "Form1";
-    var theForm : HTMLFormElement | null = null;
-    if (DefaultFormName in this.document.forms) theForm = document.forms[<any>DefaultFormName];
-    if (!theForm) {
-        console.warn("No form found for classic postbacks");
-    }
-    else {
-        if (!theForm.onsubmit || (theForm.onsubmit(new Event("onsubmit")) !== false)) {
-            theForm.__EVENTTARGET.value = eventTarget;
-            theForm.__EVENTARGUMENT.value = eventArgument;
-            theForm.submit();
+        var theForm : HTMLFormElement | null = null;
+        if (DefaultFormName in this.document.forms) theForm = document.forms[<any>DefaultFormName];
+        if (!theForm) {
+            console.warn("No form found for classic postbacks");
+        }
+        else {
+            if (!theForm.onsubmit || (theForm.onsubmit(new Event("onsubmit")) !== false)) {
+                theForm.__EVENTTARGET.value = eventTarget;
+                theForm.__EVENTARGUMENT.value = eventArgument;
+                theForm.submit();
+            }
         }
     }
 }
