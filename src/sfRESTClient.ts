@@ -504,8 +504,9 @@ export class sfRestClient {
                 + "_T" + optionalDTK.replaceAll("-", "")
                 + "_R" + optionalReference
                 + "_P" + optionalProject;
-            var ValueFromCache = RESTClient._UserPermitResultCache.get(PermitCacheID);
+            var ValueFromCache = sfRestClient._UserPermitResultCache.get(PermitCacheID);
             if (typeof ValueFromCache === "number") {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) = {3}; used static cache  ".sfFormat(ucModule, ucFunction, optionalProject,ValueFromCache));
                 ResolveThisPermit(ValueFromCache);
                 return;
             }
@@ -558,10 +559,16 @@ export class sfRestClient {
                 }
             }
 
-
             if (!(sfRestClient._LoadedPermits.has(optionalProject))) {
-                var api = new SessionClient(this._SiteURL);
-                var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits(optionalProject);
+                var apiResult: Promise<UCPermitSet | null>;
+                var MyAPIRequest : boolean = false;
+                if (!sfRestClient._LoadingPermitRequests.has(optionalProject)) {
+                    var api = new SessionClient(this._SiteURL);
+                    apiResult  = api.getProjectPermits(optionalProject);
+                    sfRestClient._LoadingPermitRequests.set(optionalProject,apiResult);
+                    MyAPIRequest = true;
+                }
+                else apiResult = sfRestClient._LoadingPermitRequests.get(optionalProject)!;
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
@@ -569,6 +576,7 @@ export class sfRestClient {
                             sfRestClient._LoadedPermits.set(optionalProject!, r);
                             ThisProjectPermitSet = r!;
                             PPSDeferredResult.resolve(r);
+                            if (MyAPIRequest && optionalProject) sfRestClient._LoadingPermitRequests.delete(optionalProject!);
                         }
                     });
                 }
@@ -584,9 +592,12 @@ export class sfRestClient {
                 var finalPermit : Permits = 0;
                 var GlobalPermits = sfRestClient._LoadedPermits.get("0")?.Permits;
                 $.each([ThisProjectPermitSet?.Permits,GlobalPermits],function CheckOneSource(sourceIdx, thisSource) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) checking".sfFormat(ucModule, ucFunction, optionalProject),thisSource===ThisProjectPermitSet?.Permits ? "project": "global");
                     $.each(thisSource, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
                         if (ThisUCFK === UCFK) {
+                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) ".sfFormat(ucModule, ucFunction, optionalProject),UCFK,capabilitySet);
                             $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
+                                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) ".sfFormat(ucModule, ucFunction, optionalProject),UCFK,p);
                                 var thisPermitValue : Permits = 0;
                                 if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
                                     if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
@@ -604,7 +615,7 @@ export class sfRestClient {
                 });
 
                 if (ucModule !== "WORK") finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
-                RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+                sfRestClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
                 ResolveThisPermit(finalPermit);
                 // we do have global permits above: what use case was this for???
                 // if (finalPermit === 31) {
@@ -1474,6 +1485,7 @@ export class sfRestClient {
             console.warn("No options passed. Use JSON object");
             return;
         }
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfRestClient.SetOptions() ",options);
         Object.keys(options).forEach((key) => {
             var PropName : any = '_' + key;
             //    if ((typeof this[PropName] !== "undefined"  &&  typeof this[key] === typeof options[key] ) {
@@ -1712,6 +1724,10 @@ export class sfRestClient {
         }
 
         return ( this.ResolvePageTypeName() === pageWanted);
+    }
+
+    protected IsGlobalInstance() : boolean {
+        return (window.sfClient && window.sfClient === this );
     }
 
     public ResolvePageTypeName() : PageTypeName {
@@ -2545,15 +2561,22 @@ export class sfRestClient {
     }
 
     public ClearCache(alsoClearSessionStorage? : boolean):void {
-        this._UserPermitResultCache.clear();
-        sfRestClient._LoadedPermits.clear();
+        var InGlobalInstance = this.IsGlobalInstance();
+        console.warn("sfRestClient.ClearCache()",alsoClearSessionStorage ? " w/sessionStorage" : "", InGlobalInstance ? " Global" : "");
         PartStorageData._LoadedParts.clear();
+        sfRestClient._UserPermitResultCache.clear();
+        sfRestClient._LoadedPermits.clear();
+        sfRestClient._LoadingPermitRequests.clear();
+        this._WCC.AdminLevel = 0;
+        this._CachedDVRequests.clear();
+        if (!InGlobalInstance) window.sfClient.ClearCache(false);
+        // note: _UCPermitMap does not need to be cleared, it is the same for all users
         if (alsoClearSessionStorage) sessionStorage.clear();
     }
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
-    protected _UserPermitResultCache: Map<string, number> = new Map<string, number>();
+    protected static _UserPermitResultCache: Map<string, number> = new Map<string, number>();
     protected static PermitMapLoaded() :boolean {
         return sfRestClient._UCPermitMap && "WORK" in sfRestClient._UCPermitMap;
     }
@@ -2602,6 +2625,7 @@ export class sfRestClient {
      * Collections of permits by project.  Internally, global permits are stored under project (0)
      */
      protected static _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
+     private static _LoadingPermitRequests: Map<string, Promise<UCPermitSet | null> > = new Map<string, Promise<UCPermitSet | null> >();
 
 
     constructor() {
@@ -2616,7 +2640,7 @@ export class sfRestClient {
         this.exports.$ = $;
         this.exports.LoggingLevels = LoggingLevels;
         var MyHostName = window.location.host;
-        if (MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) this.SetOptions({ LogLevel: 2 }); // verbose
+        if ((MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) && sfRestClient._Options.LogLevel < 2 ) this.SetOptions({ LogLevel: 2 }); // verbose
 
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
@@ -2632,8 +2656,9 @@ export class sfRestClient {
 
         var WCCLoadPromise =this.LoadUserSessionInfo();
         WCCLoadPromise.then(() => {
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: WCC Ready on Window[{0}]; Instance: ".sfFormat(window.name),(window.sfClient && window.sfClient === this) ? "Global" : "peon");
-            if (window.sfClient && window.sfClient === this) {
+            var ThisIsGlobal = this.IsGlobalInstance();
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: WCC Ready on Window[{0}]; Instance: ".sfFormat(window.name),ThisIsGlobal ? "Global" : "peon");
+            if (ThisIsGlobal) {
                 var RESTClient = this;
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
                 if ($("title").text().length === 0 ) $("title").text("Spitfire PM");
