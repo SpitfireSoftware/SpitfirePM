@@ -5,6 +5,8 @@ import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPerm
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
+//import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
+import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
@@ -240,7 +242,7 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7899";
+    version: string = "2020.0.7918";
     /**
      * Helps decode Permit flags
      */
@@ -495,8 +497,8 @@ export class sfRestClient {
     CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): Promise<Permits> {
         var RESTClient: sfRestClient = this;
         //was $.Deferred();
-        var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit) => {
-            if (!RESTClient._z.WCCLoaded) await RESTClient.LoadUserSessionInfo();
+        var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit,rejectThisPermit) => {
+            if (!RESTClient._z.WCCLoaded) try { await RESTClient.LoadUserSessionInfo();} catch (ex:any) {rejectThisPermit(ex.message);}
             if (typeof optionalDTK !== "string") optionalDTK = "";
             if (typeof optionalReference !== "string") optionalReference = "";
             if (typeof optionalProject !== "string" || !optionalProject) optionalProject = "0";
@@ -802,10 +804,9 @@ export class sfRestClient {
             }
             // if falls through, we get a fresh value
         }
-        catch (err2) {
+        catch (err2:any        ) {
             new Error("GetDV() cache error: " + err2.message);
         }
-
 
         if (this._CachedDVRequests.has(cacheKey)) {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
@@ -879,7 +880,7 @@ export class sfRestClient {
             }
             // if falls through, we get a fresh value
         }
-        catch (err2) {
+        catch (err2:any) {
             new Error("RuleResult() cache error: " + err2.message);
         }
 
@@ -965,7 +966,7 @@ export class sfRestClient {
     }
 
     // open div in the top window, not the current dialog (no nesting)
-    $GCI = window.top.$("<div class='{0}' />".sfFormat(queryOptions.DialogCSS));
+    $GCI = window.top!.$("<div class='{0}' />".sfFormat(queryOptions.DialogCSS));
     $GCI.html("Loading....");
     // //width: window.top.$(window.top).width() * 0.88
 
@@ -975,6 +976,7 @@ export class sfRestClient {
             title: queryOptions?.DialogTitle, height: "auto", width: "auto", position: "top center"
             , show: { effect: "blind", duration: 100 }
             , close: function (event?:any, ui?:any) {
+                console.log("PopQAInfo() Dialog Closing...",queryOptions?.QueryURL);
                 $GCI.dialog('destroy');
                 }
             }
@@ -991,7 +993,7 @@ export class sfRestClient {
             }
             else if (jqXHR.status !== 200 && textStatus) {
                 $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
-                if (jqXHR.responseText.length > 1234) $GCI.css("width",$(window.top).width()! - 48);
+                if (jqXHR.responseText.length > 1234) $GCI.css("width",$(window.top!).width()! - 48);
             }
             else if (!responseText || (typeof responseText === "string" && responseText === "[]")) isEmpty = true;
             if (isEmpty) {
@@ -1265,7 +1267,7 @@ export class sfRestClient {
         // }
 
         var AnyLoaded: boolean = false;
-        if (top.sfClient !== this) return;
+        if (top!.sfClient !== this) return;
         jsResourceList.forEach(scriptSrc => {
             var src = scriptSrc;
             if (src.indexOf("?")>0) src= src.substring(0,src.indexOf("?"));
@@ -1874,6 +1876,7 @@ export class sfRestClient {
         if (ActionString.startsWith(this._SiteURL)) {
 
             //if (ActionString.indexOf("?") === -1 &&  ActionString.indexOf(".aspx&set") > 0 )  ActionString = ActionString.replaceAll("&set","?set");// kludge to fix ?set being &set
+            if (ActionString.indexOf("?") < 0 && ActionString.indexOf("#") < 0) ActionString += "?fq=1"; //fake query parameter
             if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0) ActionString += "&xbia=1";
             if (ActionString.indexOf("libview.aspx") > 1) {
                 var ActionOptions : string = "";
@@ -1904,7 +1907,7 @@ export class sfRestClient {
             }
         }
         else if (ActionString.indexOf("top.location.reload(") >= 0) {
-            top.location.reload(); // per https://developer.mozilla.org/en-US/docs/Web/API/Location/reload including (true) or (false) is ignored.
+            top!.location.reload(); // per https://developer.mozilla.org/en-US/docs/Web/API/Location/reload including (true) or (false) is ignored.
         }
         else if (ActionString.indexOf("PopDoc(") >= 0) {
             var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
@@ -1941,7 +1944,17 @@ export class sfRestClient {
         }
         else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
             console.warn("InvokeAction::tools not really done",ActionString);
-            top.location.href = ActionString;
+            top!.location.href = ActionString;
+        }
+        else if (ActionString.startsWith("javascript:")) {
+            try {
+                eval(ActionString.substr(11));
+            }
+            catch (ex:any) {
+                console.warn("InvokeAction::failed javascript ",ActionString, ex.message);
+                this.DisplayUserNotification("Coming soon: failed to invoke requested action.",9999);
+            }
+
         }
         else if (ActionString.startsWith("http")) {
             window.open(ActionString);
@@ -1982,9 +1995,9 @@ export class sfRestClient {
      * @returns height of top frame
      */
     UsablePageHeight() : number {
-        var RunHeight = top.$("BODY").height()!;
-        var $FooterInfo = top.$('TD#sfUIShowClientInfo');
-        if ($FooterInfo.length === 0) $FooterInfo = top.$("DIV.project-dashboard__footer-buttons");
+        var RunHeight = top!.$("BODY").height()!;
+        var $FooterInfo = top!.$('TD#sfUIShowClientInfo');
+        if ($FooterInfo.length === 0) $FooterInfo = top!.$("DIV.project-dashboard__footer-buttons");
         if ($FooterInfo.length > 0) RunHeight =$FooterInfo.position().top + $FooterInfo.height()! + 16;
         return RunHeight;
     }
@@ -2006,7 +2019,7 @@ export class sfRestClient {
     MarkNotificationAsShown(notificationMsg: string) : void {
         var msgHash = "sfNoted:L{0}H{1}".sfFormat(notificationMsg.length, notificationMsg.sfHashCode());
         try {
-            top.sessionStorage.setItem(msgHash, "true");
+            top!.sessionStorage.setItem(msgHash, "true");
         }
         catch (e) {
             console.warn(e);
@@ -2077,6 +2090,9 @@ export class sfRestClient {
      * @param defaultResponse
      */
     public VModalPage( vpg: string, opts: string, w:number, h:number, defaultResponse: string | undefined ): void{
+        if (!this.IsGlobalInstance()) {
+            return top?.sfClient.VModalPage(vpg,opts,w,h,defaultResponse);
+        }
         if (!defaultResponse ) defaultResponse = "";
         var context : Window = window;
         var innerContext = window;
@@ -2085,11 +2101,11 @@ export class sfRestClient {
            // if (sfWCC.isAsyncPart) context = parent;
         }
 
-        var UIPromise: Promise<boolean | undefined> = this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
+        var UIPromise: Promise<boolean | undefined> | undefined = this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
 
-        UIPromise.then((unused) => {
-        // if (w != null) context.sfLookupWidthChangeTo( w);
-        if (h != null) this.sfLookupHeightChangeTo(h + this._LookupViewPortAdjustments.outsidExtraH);
+        UIPromise?.then((unused) => {
+            if (w != null) top?.sfClient.sfLookupWidthChangeTo(this.$LookupDialog!, w);
+            if (h != null) top?.sfClient.sfLookupHeightChangeTo( this.$LookupDialog!,h + this._LookupViewPortAdjustments.outsidExtraH);
         // else {
         //     var $FRAME = $LookupDialog.find("IFRAME");
         //     if (typeof ($FRAME) === "undefined") {
@@ -2105,10 +2121,12 @@ export class sfRestClient {
 
     }
 
-    ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : Promise<boolean|undefined>  {
+    ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : Promise<boolean|undefined> | undefined {
         var newValue;
         var formName = "0";
-
+        if (!this.IsGlobalInstance()) {
+            return top?.sfClient.ModalDialog(url,eventId,eventArg,eventContext);
+        }
 
         if (eventId == null) eventId = 'mDialog';
         if (eventArg == null) eventArg = url;
@@ -2123,13 +2141,18 @@ export class sfRestClient {
             if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (!this.$LookupDialog) {
-                this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
+                this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
                 .sfFormat(sfRestClient._Options.BlankPageURI))
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
-                        close: top.sfClient.sfModalDialogClosed,
+                        close: top!.sfClient.sfModalDialogClosed,
                         dialogClass: "lookup",
-                        resizeStop:  this.sfModelDialogResizedHandler
+                        resizeStop:  top?.sfClient.sfModelDialogResizedHandler
                     });
+                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnMaximizeDialog","Maximize","ui-icon-maximize").on("click",function() {
+                    $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog").css({top:15,left:15});
+                    top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-32);
+                    top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-32);
+                });
             }
 
             var  OpenUrl = url;
@@ -2185,14 +2208,16 @@ export class sfRestClient {
 
     return sfRestClient.ExternalToolsLoadedPromise;  // so anchor click event doesn't also do work
     }
-    protected $LookupDialog : JQuery<HTMLElement> | undefined ;
+    protected $LookupDialog : JQuery<HTMLDivElement> | undefined ;
     protected $LookupFrame : JQuery<HTMLIFrameElement> | undefined ;
 
-    protected ResolveLookupFrame() : JQuery<HTMLIFrameElement> | undefined {
-        if (!this.$LookupDialog) {
+    protected ResolveLookupFrame( forDialog?: JQuery<HTMLDivElement> | undefined) : JQuery<HTMLIFrameElement> | undefined {
+        if (!forDialog) forDialog = this.$LookupDialog
+        if (!forDialog) {
+            console.log("sfClient ResolveLookupFrame() called without current Dialog, returning undefined");
             return undefined;
         }
-        return $(this.$LookupDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
+        return $(forDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
 
     }
 
@@ -2207,7 +2232,38 @@ export class sfRestClient {
         return theDialog;
     }
 
+
+    AddDialogTitleButton($Dialog : JQuery<HTMLElement>, btnID: string, btnText: string, btnIcon?: string) {
+        var $DialogTitleBar = $Dialog.parent().children(".ui-dialog-titlebar");
+        var $NewButton = $("<button type='button' id='{0}' />".sfFormat(btnID)).text(btnText);
+        var $LastButton = <JQuery<HTMLButtonElement>>$DialogTitleBar.find("BUTTON[type='button']:last");
+        var ButtonCount = $DialogTitleBar.find("BUTTON[type='button']").length;
+        var RightPosOfLeftmostButton = $LastButton.css("right");
+        var WidthOfButtons = Math.ceil($LastButton!.width()! * 1.375);
+        $NewButton.button({ icons: { primary: btnIcon }, text: false })
+            .addClass("ui-dialog-titlebar-close") // essential to get size
+            .css("right", ((parseInt(RightPosOfLeftmostButton) + WidthOfButtons) * ButtonCount) + "px")
+            .appendTo($DialogTitleBar);
+
+
+        return $NewButton;
+    }
+
+    AddDialogHelpButton($Dialog : JQuery<HTMLElement>, helpURL: string) {
+        var $HelpButton = this.AddDialogTitleButton($Dialog,'btnHelp' ,"Help",'ui-icon-help');
+
+        if (helpURL) $HelpButton.on("click",function () {
+            top!.open(helpURL, 'sfHelp');
+        });
+        return $HelpButton;
+    }
+
+
     RefreshiFrameSrc() {
+        if (!this.IsGlobalInstance()) {
+            top!.sfClient.RefreshiFrameSrc();
+            return;
+        }
         if (!this.$LookupDialog) {
             this.$LookupDialog =  $("div.clsJQLookup");
             this.$LookupFrame   = this.ResolveLookupFrame();
@@ -2220,15 +2276,15 @@ export class sfRestClient {
         var RESTClient = this;
         var $LookupFrameDOM = this.$LookupFrame![0].contentDocument || this.$LookupFrame[0].contentWindow!.document;
         // last verified as needed w/Chrome  Feb 2017
-        if (typeof ($LookupFrameDOM) != 'undefined') {
+        if (typeof ($LookupFrameDOM) !== 'undefined') {
             var locNow = $LookupFrameDOM.location.href;
             var wantSrc = this.$LookupFrame.attr('src');
             if (!locNow.endsWith(wantSrc!)) {
                 console.log("mDialog frame src re-get, is " + $LookupFrameDOM.location + '; want ' + this.$LookupFrame.attr('src') + '.');
                 var DialogContext = window;
                 try {
-                    this.$LookupDialog!.find("IFRAME").on("load",  function () {
-                        RESTClient.ResizeDialogInFrame(this, RESTClient);
+                    top?.sfClient.$LookupDialog!.find("IFRAME").on("load",  function () {
+                        setTimeout("top.sfClient.ResizeDialogInFrame(undefined, top.sfClient);",1234);
                     });
                 } catch (e) {
                         console.log("<!> refreshiFrameSrc could not find IFRAME" );
@@ -2238,10 +2294,13 @@ export class sfRestClient {
         }
     }
 
-    ResizeDialogInFrame(FrameElement : HTMLElement, RESTClient : sfRestClient) : void {
-        var $FrameElement = $(FrameElement);
+    ResizeDialogInFrame(FrameElement : HTMLIFrameElement | undefined, RESTClient : sfRestClient) : void {
+        var $FrameElement : JQuery<HTMLIFrameElement>
+        if (FrameElement) $FrameElement = $(FrameElement)!;
+        else   $FrameElement =  top?.sfClient.ResolveLookupFrame()!;
+
         var RunHeight = $FrameElement.contents().find("html").outerHeight()! + 16;  // see also ResetPartFrameHeight() in sfPMS
-        var MaxHeight :number = $(top).height()! - 64;
+        var MaxHeight :number = $(top!).height()! - 64;
         if (!RunHeight) {
             console.log("ResizeDialogInFrame() could not find content height, using 65% of ",MaxHeight);
             RunHeight = Math.round(MaxHeight * 0.65);
@@ -2265,12 +2324,12 @@ export class sfRestClient {
         var TabNameList = "";
         var OldestSaneTab = new Date().valueOf() - 36000000.0 // ten hours ago
         if (BrowserExtensionChecker.browser.isMacOS) return 3.14;
-        for (const [k,idx] of Object.keys(top.localStorage)) {
+        for (const [k,idx] of Object.keys(top!.localStorage)) {
             if (k.startsWith("sfWindow@")) {
                 var TabAsOf = localStorage.getItem(k);
                 if (parseFloat(TabAsOf!) < OldestSaneTab) {
                     console.log("GetSFTabCount() Forgetting tab: {0}, last loaded {1}".sfFormat(k, TabAsOf));
-                    top.localStorage.removeItem(k);
+                    top!.localStorage.removeItem(k);
                 }
                 else OpenWindowCount++;
                 TabNameList += (OpenWindowCount > 1 ? "," : "") + k;
@@ -2294,42 +2353,44 @@ export class sfRestClient {
 
     LiveWatch() : string {
 
-        var result = top.name + ' ';
+        var result = top!.name + ' ';
         try {
-            result += (top.WindowHasFocus ? "*" : "-") + '-> hub:' ;
-            if (top.$.connection.sfPMSHub) {
-                var sfPMSHub = top.$.connection.sfPMSHub
+            result += (top!.WindowHasFocus ? "*" : "-") + '-> hub:' ;
+            if (top!.$.connection.sfPMSHub) {
+                var sfPMSHub = top!.$.connection.sfPMSHub
                 result += ((sfPMSHub.connection && (sfPMSHub.connection.state === $.signalR.connectionState.connected)) ? sfPMSHub.connection.transport.name : "(not connected)") ;
             }
             else result += "NA";
             if (typeof this.GetSFTabCount === "function") result += '; Tabs:' + this.GetSFTabCount().toString();
         }
-        catch (ex) {
+        catch (ex: any) {
             result += ex.message;
         }
         return result;
     }
 
     protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
-        if (!this.$LookupDialog) return;
-        var postbackEventId = this.$LookupDialog.data("postbackEventId");
-        var postbackEventArg = this.$LookupDialog.data("postbackEventArg");
-        var postbackContext = this.$LookupDialog.data("postbackContext");
-        var postBack = this.$LookupDialog.data("postback");
-        var idName = this.$LookupDialog.data("idName");
-        var newValue = this.$LookupDialog.data("newValue");
-        var IsMultiSelect = this.$LookupDialog.data("multiSelect");
-        var dialogMode = this.$LookupDialog.data("mode");
+        var $LookupDialog : JQuery<HTMLDivElement> = $(<HTMLDivElement><unknown>this );
+        var RESTClient = top?.sfClient;
+        console.log("sfModalDialogClosed() ....",$LookupDialog);
+        var postbackEventId = $LookupDialog.data("postbackEventId");
+        var postbackEventArg = $LookupDialog.data("postbackEventArg");
+        var postbackContext = $LookupDialog.data("postbackContext");
+        var postBack = $LookupDialog.data("postback");
+        var idName = $LookupDialog.data("idName");
+        var newValue = $LookupDialog.data("newValue");
+        var IsMultiSelect = $LookupDialog.data("multiSelect");
+        var dialogMode = $LookupDialog.data("mode");
         var NewValueIsNew = true;
 
         if (typeof (postbackContext) == "undefined") postbackContext = window;
-        this.$LookupFrame   = this.ResolveLookupFrame();
-        this.$LookupFrame!.attr("src",sfRestClient._Options.BlankPageURI);
+        var $LookupFrame   = RESTClient?.ResolveLookupFrame();
+        $LookupFrame!.attr("src",sfRestClient._Options.BlankPageURI);
 
         //sfLookupHeightChangeTo(201);
         //sfLookupWidthChangeTo( 301);
         //if (  ($(window).width()! > this.$LookupDialog.data("windowWidth"))) this.sfSetParentWindowSize(true, this.$LookupDialog.data("windowWidth") + $LookupViewPortAdjustments.outsidExtraW, -1);
-        this.$LookupDialog.dialog('option', 'position', 'center');
+        $LookupDialog.dialog('option', 'position', 'center');
         // $LookupDialog.dialog('option', 'zIndex', $.maxZIndex() + 1); neither this nor .dialog('moveToTop') helped
 
 
@@ -2380,9 +2441,18 @@ export class sfRestClient {
                 }
             }
     }
+
+    /** Internal to the class
+     * this is the lookup DIV
+     */
     protected sfModelDialogResizedHandler() : void {
-        if (!this.$LookupDialog) return;
-        this.sfModelDialogResized(this.$LookupDialog)
+        var $LookupDialog : JQuery<HTMLDivElement> = $(<HTMLDivElement><unknown>this );
+        var RESTClient = top?.sfClient;
+        if (!$LookupDialog) {
+            console.log("sfModelDialogResizedHandler() - no current dialog?");
+            return;
+        }
+        top?.sfClient.sfModelDialogResized($LookupDialog)
     }
 
     protected sfSetParentWindowSize(canShrink : boolean, DesiredWidth: number, DesiredHeight: number) : void {
@@ -2396,9 +2466,9 @@ export class sfRestClient {
         // }
 
     }
-     private  sfLookupHeightChangeTo(newValue : number):void {
-        // here newValue represents the intended size for the inner iFrame's rending area
-        var ld = this.$LookupDialog;
+
+     private  sfLookupHeightChangeTo(ld: JQuery<HTMLDivElement>, newValue : number):void {
+        // here newValue represents the intended size for the inner iFrame's rendering area
         if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
         if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
         if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) {
@@ -2411,14 +2481,13 @@ export class sfRestClient {
         ld!.dialog('option', "height", tdh);
 
         //var LookupFrame = $(ld.children("iframe").get(0))
-        this.sfModelDialogResized(ld!);
+        top?.sfClient.sfModelDialogResized(ld!);
         ld!.dialog('option', 'position', 'center');
         console.log('dialog height explicitly set to ' + newValue);
     }
     private _LookupViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
 
-    private sfLookupWidthChangeTo( newValue:number):void {
-        var ld = this.$LookupDialog;
+    private sfLookupWidthChangeTo(ld: JQuery<HTMLDivElement>, newValue:number):void {
         if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) this.sfSetParentWindowSize(false, newValue + this._LookupViewPortAdjustments.outsidExtraW + this._LookupViewPortAdjustments.vpExtraW, -1);
         if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) {
             // requested size still too wide
@@ -2428,13 +2497,13 @@ export class sfRestClient {
         }
 
         ld!.dialog('option', "width", newValue + this._LookupViewPortAdjustments.vpExtraW);
-        this.sfModelDialogResized(ld!);
+        top?.sfClient.sfModelDialogResized(ld!);
         setTimeout(function () { ld!.dialog('option', 'position', 'center'); }, 259); // need this to happen after above has all completed
         console.log('dialog width explicitly set to ' + newValue);
     }
 
 
-    protected sfModelDialogResized(forDialog : JQuery) : void {
+    protected sfModelDialogResized(forDialog : JQuery<HTMLDivElement>) : void {
 
             // this is called after a user resizes the dialog
                 var dg = forDialog
@@ -2560,18 +2629,39 @@ export class sfRestClient {
         return newController;
     }
 
+    /**
+     * Call to reset the client state (important when changing users)
+     * This method also clears static resources shared by all instances of sfRestClient
+     *
+     * @param alsoClearSessionStorage set true to also clear session storage (appropriate for logoffs)
+     */
     public ClearCache(alsoClearSessionStorage? : boolean):void {
         var InGlobalInstance = this.IsGlobalInstance();
-        console.warn("sfRestClient.ClearCache()",alsoClearSessionStorage ? " w/sessionStorage" : "", InGlobalInstance ? " Global" : "");
+        console.log("sfRestClient.ClearCache()", alsoClearSessionStorage ? " w/sessionStorage" : "", InGlobalInstance ? " Global" : "", ", UPRC:", sfRestClient._UserPermitResultCache.size);
         PartStorageData._LoadedParts.clear();
         sfRestClient._UserPermitResultCache.clear();
         sfRestClient._LoadedPermits.clear();
         sfRestClient._LoadingPermitRequests.clear();
+        sfRestClient._SessionClientGetWCC = null;
+        this._z.WCCLoaded = false;
         this._WCC.AdminLevel = 0;
         this._CachedDVRequests.clear();
-        if (!InGlobalInstance) window.sfClient.ClearCache(false);
+        if (!InGlobalInstance)
+            window.sfClient.ClearCache(false);
         // note: _UCPermitMap does not need to be cleared, it is the same for all users
-        if (alsoClearSessionStorage) sessionStorage.clear();
+        if (alsoClearSessionStorage)
+            sessionStorage.clear();
+    }
+
+    /**
+     * Not intended for production use: Clears cross-session storage
+     */
+    public QAClearEnvironment(alsoClearSessionStorage? : boolean):void {
+        var InGlobalInstance = this.IsGlobalInstance();
+        console.warn("sfRestClient.QAClearEnvironment()",alsoClearSessionStorage ? " w/sessionStorage" : "", InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
+        sessionStorage.clear();
+        localStorage.clear()
+        localForage.clear();
     }
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
@@ -2638,6 +2728,7 @@ export class sfRestClient {
         }
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
+        this.exports.sfRestClient = sfRestClient;
         this.exports.LoggingLevels = LoggingLevels;
         var MyHostName = window.location.host;
         if ((MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) && sfRestClient._Options.LogLevel < 2 ) this.SetOptions({ LogLevel: 2 }); // verbose
@@ -2670,7 +2761,7 @@ export class sfRestClient {
                 sfRestClient._GlobalClientConstructFlag = true;
                 window.sfClient = new sfRestClient();
                 if (!window.$) window.$ = $;
-                if (!top.$) top.$ = $;
+                if (!top!.$) top!.$ = $;
                 var RESTClient = window.sfClient;
                 $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")

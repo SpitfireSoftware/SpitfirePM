@@ -29,6 +29,7 @@ declare global {
     interface JQuery {
         datepicker: any;
         dialog:  any;
+        button: any;
     }
 }
 

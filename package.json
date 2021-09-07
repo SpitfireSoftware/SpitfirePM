@@ -1,6 +1,6 @@
 {
   "name": "spitfirepm",
-  "version": "1.8.45",
+  "version": "1.9.46",
   "description": "Client API Tools for Spitfire Project Management",
   "main": "",
   "keywords": [
@@ -32,5 +32,7 @@
   "files": [
     "dist"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "localforage": "^1.10.0"
+  }
 }
