@@ -35,9 +35,22 @@ type RRCacheEntry = { w: number, v: string | number | boolean };
 class _SessionClientGetWCCShare {
     APIResult: Promise<WCCData | null> | null = null;
     ForNavHash: number | undefined;
+    AsOf:number  = Date.now();
+    IsResolved= false;
     public constructor( apiPromise: Promise<WCCData | null>,forPageHash : number) {
         this.APIResult = apiPromise;
         this.ForNavHash = forPageHash;
+        apiPromise.finally(()=>{
+            this.IsResolved = true;
+            this.AsOf = Date.now();
+        });
+    }
+    public AppliesFor(testHash: number) {
+        return !this.Expired() && (this.ForNavHash === testHash);
+
+    }
+    public Expired(): boolean {
+        return (this.IsResolved && (Date.now() - this.AsOf) > 4321);
     }
 }
 
@@ -1195,13 +1208,13 @@ export class sfRestClient {
     /**
      * Loads or Updates WCC session attributes (api/session/who)
     */
-    LoadUserSessionInfo(): Promise<WCCData> {
+    LoadUserSessionInfo(bypassCache?:boolean): Promise<WCCData> {
         var RESTClient: sfRestClient = this;
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
         return new Promise<WCCData>( (resolve)  =>{
             if (sfRestClient._SessionClientGetWCC) {
-                if (sfRestClient._SessionClientGetWCC.ForNavHash === location.toString().sfHashCode()) {
+                if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("Reusing ongoing getWCC!....",sfRestClient._SessionClientGetWCC.ForNavHash);
                     apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
                 } else sfRestClient._SessionClientGetWCC = null;
