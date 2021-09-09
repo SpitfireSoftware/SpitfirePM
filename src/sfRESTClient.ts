@@ -10,6 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
+const ClientPackageVersion : string = "1.9.51";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -257,7 +258,8 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    version: string = "2020.0.7918";
+    ServerVersion: string = "2020.0.7919";
+    ClientVersion: string = `${ClientPackageVersion}`;
     /**
      * Helps decode Permit flags
      */
@@ -3042,7 +3044,7 @@ export class sfRestClient {
         var WCCLoadPromise =this.LoadUserSessionInfo();
         WCCLoadPromise.then(() => {
             var ThisIsGlobal = this.IsGlobalInstance();
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient: WCC Resolved; Window[${window.name}];  ${ThisIsGlobal ? "Global" : "Instance"}#${this.ThisInstanceID}`);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient ${this.ClientVersion}; Window[${window.name}];  ${ThisIsGlobal ? "Global" : "Instance"}#${this.ThisInstanceID}`);
             if (ThisIsGlobal) {
                 var RESTClient = this;
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
