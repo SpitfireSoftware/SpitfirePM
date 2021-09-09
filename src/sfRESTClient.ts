@@ -552,7 +552,7 @@ export class sfRestClient {
             else UCFKDeferredResult.resolve(RESTClient.EmptyKey);
 
             if (!UCFK) {
-                if (RESTClient._WCC.UserKey == RESTClient.EmptyKey)
+                if (sfRestClient._WCC.UserKey === RESTClient.EmptyKey)
                     console.warn("CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for {0}|{1}!  LOGIN AGAIN!".sfFormat(ucModule, ucFunction))
                 else console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
                 ResolveThisPermit(0);
@@ -629,8 +629,10 @@ export class sfRestClient {
                     });
                 });
 
-                if (ucModule !== "WORK") finalPermit = finalPermit |  RESTClient._WCC.AdminLevel;
+                if (ucModule !== "WORK") finalPermit = finalPermit |  sfRestClient._WCC.AdminLevel;
                 sfRestClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) = {3}{4}; set static cache  ".sfFormat(ucModule, ucFunction, optionalProject,ValueFromCache,sfRestClient._WCC.AdminLevel));
+
                 ResolveThisPermit(finalPermit);
                 // we do have global permits above: what use case was this for???
                 // if (finalPermit === 31) {
@@ -1161,7 +1163,7 @@ export class sfRestClient {
 
         if ("WORK" in sfRestClient._UCPermitMap) {
             // we have a map, lets see if we should use it as-is
-            if ((this._WCC.UserKey === this.EmptyKey)) {
+            if ((sfRestClient._WCC.UserKey === this.EmptyKey)) {
                 // no session? So, now is not a good time to refreh the map, just use what we have
                 DeferredResult.resolve(sfRestClient._UCPermitMap);
                 return permitCheck;
@@ -1248,13 +1250,13 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         var ChangeList: Map<string, any> = new Map<string,any>();
         $.each(newWCC, function SetWCCProperties(pname: string  , pvalue) {
-            var HasChanged = typeof RESTClient._WCC[pname] === "undefined" || RESTClient._WCC[pname] != pvalue;
+            var HasChanged = (typeof sfRestClient._WCC[pname] === "undefined") || (sfRestClient._WCC[pname] !== pvalue);
             if (HasChanged) {
-                RESTClient._WCC[pname] = pvalue;
+                sfRestClient._WCC[pname] = pvalue;
                 ChangeList.set(pname,pvalue);
             }
         });
-        RESTClient._WCC.PageName = RESTClient.ResolvePageName();
+        sfRestClient._WCC.PageName = RESTClient.ResolvePageName();
         RESTClient._z.WCCLoaded = true;
         ChangeList.forEach((value,keyName) => {
             var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
@@ -1311,7 +1313,7 @@ export class sfRestClient {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
                 if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
-                this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,this._WCC.Version));
+                this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,sfRestClient._WCC.Version));
                 if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
                     $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
 
@@ -1540,7 +1542,7 @@ export class sfRestClient {
         asPath: boolean, priorList: string | string[], idx: number, dv: any): string {
         if (dv) {
             if (typeof dv === "string")
-                if (dv.indexOf("$") >= 0) dv = dv.replaceAll("$DTK", this._WCC.DocTypeKey);
+                if (dv.indexOf("$") >= 0) dv = dv.replaceAll("$DTK", sfRestClient._WCC.DocTypeKey);
         }
         if (asPath) asPath = (priorList.indexOf("?") < 0);
         var parmSep: string = '&';
@@ -1657,9 +1659,9 @@ export class sfRestClient {
                         result.push(this.FieldValueFromRow(rawRow,FieldName));
                     }
                     else {
-                        if (FieldName in this._WCC) {
+                        if (FieldName in sfRestClient._WCC) {
                             SourceResolved = true;
-                            result.push(this._WCC[FieldName]);
+                            result.push(sfRestClient._WCC[FieldName]);
                         }
                     }
                     if (!SourceResolved) {
@@ -1681,7 +1683,7 @@ export class sfRestClient {
      */
     public  async SharePageContext( contextData: NVPair) : Promise<boolean> {
         if (!this._z.WCCLoaded) await this.LoadUserSessionInfo();
-        if (!this._WCC ) {
+        if (!sfRestClient._WCC ) {
             console.warn("SharePageContext() _WCC missing?");
             return false;
         }
@@ -1692,20 +1694,36 @@ export class sfRestClient {
                     console.warn("Not a document");
                     return false;
                 }
-                this._WCC[key] = contextData[key];
+                sfRestClient._WCC[key] = contextData[key];
             }
-            else if (key === "DataPK" && typeof this._WCC.DataPK === typeof contextData[key]) this._WCC.DataPK = contextData[key]
-            else if (key === "dsCacheKey" ) this._WCC.dsCacheKey = contextData[key]
-            else if (key in this._WCC && typeof this._WCC[key]  === typeof contextData[key]) this._WCC[key] = contextData[key] // update if same type
-            else if (!(key in this._WCC)) this._WCC[key] = contextData[key]
+            else if (key === "DataPK" && typeof sfRestClient._WCC.DataPK === typeof contextData[key]) sfRestClient._WCC.DataPK = contextData[key]
+            else if (key === "dsCacheKey" ) sfRestClient._WCC.dsCacheKey = contextData[key]
+            else if (key in sfRestClient._WCC && typeof sfRestClient._WCC[key]  === typeof contextData[key]) sfRestClient._WCC[key] = contextData[key] // update if same type
+            else if (!(key in sfRestClient._WCC)) sfRestClient._WCC[key] = contextData[key]
             else console.warn("SharePageContext() rejected {0}={1} due to a type mismatch".sfFormat(key,contextData[key]));
         });
 
         return true;
 
     }
+
+    /**
+     * Returns named value from Web Context (WCC)
+     *
+     * Example: GetPageContext("UserKey");
+     *
+     * @param key name of a context property
+     */
+    public GetPageContextValue( key : string) : any {
+        if (!(key in sfRestClient._WCC)) {
+            return sfRestClient._WCC[key];
+        }
+        console.warn("GetPageContext() no value known for key",key);
+        return "";
+    }
+
     public IsDocExclusiveToMe() : boolean {
-        return ((!this.IsDocumentPage()) || (this._WCC.DataLockFlag >= "2"));
+        return ((!this.IsDocumentPage()) || (sfRestClient._WCC.DataLockFlag >= "2"));
     }
 
     public IsPowerUXPage() : boolean {
@@ -1725,11 +1743,11 @@ export class sfRestClient {
     }
     /** @deprecated use IsPageOfType() */
     public IsPageOfTypeByName(pageWanted: string) : boolean {
-        if (!this._WCC ) { console.warn("_WCC missing?"); return false; }
-        if (!this._WCC.PageName) this._WCC.PageName = this.ResolvePageName();
+        if (!sfRestClient._WCC ) { console.warn("_WCC missing?"); return false; }
+        if (!sfRestClient._WCC.PageName) sfRestClient._WCC.PageName = this.ResolvePageName();
         var XBUIPageName : string = this.XBVariantOfPageName(this.ResolveStringPageNametoPageTypeName(pageWanted));
-        return (    (this._WCC.PageName == pageWanted)  ||
-                    (this._WCC.PageName == XBUIPageName)
+        return (    (sfRestClient._WCC.PageName == pageWanted)  ||
+                    (sfRestClient._WCC.PageName == XBUIPageName)
                 );
     }
 
@@ -1855,7 +1873,7 @@ export class sfRestClient {
         if (typeof pageTypeName ==="undefined") pageTypeName = this.PageTypeNames.Unknown;
         if (pageTypeName == this.PageTypeNames.Document || this.IsDocumentPage()) {
             //console.warn("GetPageProjectKey() does not *really* support doc pages yet");
-            Context = this._WCC.Project;
+            Context = sfRestClient._WCC.Project;
         }
         else {
             Context = this.GetPageQueryParameterByName(this.IsPowerUXPage() ? "project" : "id");
@@ -2154,7 +2172,7 @@ export class sfRestClient {
             if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (!this.$LookupDialog) {
-                this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='{0}}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
+                this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='{0}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
                 .sfFormat(sfRestClient._Options.BlankPageURI))
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
                         close: top!.sfClient.sfModalDialogClosed,
@@ -2357,7 +2375,7 @@ export class sfRestClient {
             var HighWater : string | number | null = sessionStorage.getItem("SFTabCountHW");
             HighWater = (typeof HighWater === "string") ? parseInt(HighWater) : 0;
             if (OpenWindowCount > HighWater) {
-                this.LogMessageOnServer("{0} has {1} tabs: {2}".sfFormat(this._WCC.FullName,  OpenWindowCount, TabNameList));
+                this.LogMessageOnServer("{0} has {1} tabs: {2}".sfFormat(sfRestClient._WCC.FullName,  OpenWindowCount, TabNameList));
                 sessionStorage.setItem("SFTabCountHW", OpenWindowCount.toString());
             }
         }
@@ -2657,7 +2675,7 @@ export class sfRestClient {
         sfRestClient._LoadingPermitRequests.clear();
         sfRestClient._SessionClientGetWCC = null;
         this._z.WCCLoaded = false;
-        this._WCC.AdminLevel = 0;
+        sfRestClient._WCC.AdminLevel = 0;
         this._CachedDVRequests.clear();
         if (!InGlobalInstance)
             window.sfClient.ClearCache(false);
@@ -2702,7 +2720,7 @@ export class sfRestClient {
 
         return result;
     }
-    _WCC: WCCData = {
+    protected static _WCC: WCCData = {
         AdminLevel: 0,
         DataPK: "00000000-0000-0000-0000-000000000000", // set by SharePageContext()
         DocRevKey: "00000000-0000-0000-0000-000000000000", // set by SharePageContext()
@@ -2748,15 +2766,15 @@ export class sfRestClient {
 
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
-        if (window.sfClient && window.sfClient._z.WCCLoaded) {
-            var TargetClient = this;
-            $.each(window.sfClient._WCC, function CopyWCC(pname: string  , pvalue) {
-                var HasChanged = typeof TargetClient._WCC[pname] === "undefined" || TargetClient._WCC[pname] != pvalue;
-                if (HasChanged) {
-                    TargetClient._WCC[pname] = pvalue;
-                }
-            });
-        }
+        // if (window.sfClient && window.sfClient._z.WCCLoaded) {
+        //     var TargetClient = this;
+        //     $.each(sfRestClient._WCC, function CopyWCC(pname: string  , pvalue) {
+        //         var HasChanged = typeof TargetClient._WCC[pname] === "undefined" || TargetClient._WCC[pname] != pvalue;
+        //         if (HasChanged) {
+        //             TargetClient._WCC[pname] = pvalue;
+        //         }
+        //     });
+        // }
 
         var WCCLoadPromise =this.LoadUserSessionInfo();
         WCCLoadPromise.then(() => {
@@ -2778,8 +2796,8 @@ export class sfRestClient {
                 var RESTClient = window.sfClient;
                 $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
-                    if (typeof RESTClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
-                        var djs: string[] = JSON.parse(RESTClient._WCC._DynamicJS);
+                    if (typeof sfRestClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
+                        var djs: string[] = JSON.parse(sfRestClient._WCC._DynamicJS);
                         if (djs) RESTClient.LoadDynamicJS(djs);
                     }
                 });
