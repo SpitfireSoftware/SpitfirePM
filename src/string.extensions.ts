@@ -24,7 +24,6 @@ declare global {
 export interface String { };
 export interface Date {};
 
-
 if (!Date.prototype.addDays) {
     Date.prototype.addDays = function (d) {
         return new Date(this.valueOf() + 864E5 * d);

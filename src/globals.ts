@@ -30,6 +30,8 @@ declare global {
         datepicker: any;
         dialog:  any;
         button: any;
+        autocomplete: any;
+        hasData:any;
     }
 }
 

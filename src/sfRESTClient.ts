@@ -32,6 +32,7 @@ export enum LoggingLevels {
 type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
 type RRCacheEntry = { w: number, v: string | number | boolean };
+type CoordinateWithSize = {top:number,left:number,width:number,height:number};
 
 class _SessionClientGetWCCShare {
     APIResult: Promise<WCCData | null> | null = null;
@@ -2162,6 +2163,225 @@ export class sfRestClient {
 
     }
 
+    static GAPageHitSent: boolean = false; // !!! this needs work
+    static GAMonitorSendFailed: boolean = false;
+    private GAMonitorPageHit(propertyID:string, clientID:string, url?:string, title?:string) {
+        if (sfRestClient.GAPageHitSent) return;
+        if (!url) {
+
+            url = `${top?.location?.origin}${top?.location?.pathname}`;
+            var s = top?.location.search;
+            if (s && (!s.startsWith("?id=")) && (!s.startsWith("?add=")) ) url = url + s;
+        }
+        if (!title) title = $('title').text();
+        var payload = {
+            v: 1,
+            t: "pageview",
+            tid: propertyID,
+            cid: clientID,
+            dl: url,
+            dt: title,
+        }
+        sfRestClient.GAPageHitSent = true;
+        return this.GAMonitorSend(payload)
+                         .done(function (data, textStatus, jqXHR) {
+                             console.log(`GAMonitor(pageview:${top?.location.pathname}) ok`);
+                         })
+                        .fail(function (jqXHR, textStatus) {
+                            sfRestClient.GAMonitorSendFailed = true;
+                            console.warn(`GAMonitor(pgvw:${top?.location.pathname}) failed: ${jqXHR.responseText} ` );
+                        });
+    }
+
+
+    private GAMonitorSend(payload:string | JQuery.PlainObject):JQuery.Promise<any> {
+        //ref https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide#page
+        if ((typeof (sfRestClient.GAMonitorSendFailed) === "boolean") && (sfRestClient.GAMonitorSendFailed)) {
+            var darnSoon = $.Deferred();
+            var GASendDone = darnSoon.promise();
+            darnSoon.resolve("fake");  //makes GASendDone be ready
+            return GASendDone;
+        }
+        return $.ajax({
+            type: "POST",
+            url: "//www.google-analytics.com/collect",
+            async: true,
+            data: payload
+        });
+    }
+
+    GAMonitorEvent(propertyID:string, clientID:string, category:string, action:string, label:string, value:number) {
+        if (!sfRestClient.GAPageHitSent) this.GAMonitorPageHit(propertyID, clientID);
+
+        var payload = {
+            v: 1,
+            t: "event",
+            tid: propertyID,
+            cid: clientID,
+            ec: category,
+            ea: action,
+            el: label,
+            ev: value
+        }
+
+        return this.GAMonitorSend(payload)
+                        .done(function (data, textStatus, jqXHR) {
+                            console.log(`GAMonitor(${category}:${action}) ok`);
+                        })
+                        .fail(function (jqXHR, textStatus) {
+                            console.warn(`GAMonitor(${category}:${action}) failed: ${jqXHR.responseText}`);
+                        });
+
+    }
+
+    sfGAEvent(category:string, action:string, label:string, value:number) {
+        if (!value) value = 0;
+        if (sfRestClient._WCC.GAFMOptOut) {
+            console.log(`GA opt out: ${category} + ${action} '${label}' = ${value} `);
+            return;
+        }
+        this.GAMonitorEvent('UA-6465434-4', sfRestClient._WCC.SiteID, category, action, label, value);
+    }
+
+    sfGADialogEvent(action:string, dialogName:string) {
+        this.sfGAEvent("Dialog", action, dialogName, 1);
+    }
+
+    private ValueHasWildcard(theVal:string) :boolean {
+        if (theVal.indexOf("%") >= 0) return true;
+        if (theVal.indexOf("*") >= 0) return true;
+        if (theVal.indexOf("_") >= 0) return true;
+        if (theVal.indexOf("?") >= 0) return true;
+        return false;
+    }
+
+    private sfClearACHeighLimit():void {
+        var $ACList = $('ul.ui-autocomplete');
+        $ACList.css("max-height", "");
+    }
+
+    /**
+     * / Note: this only returns Async Frames, not frames for lookups and other dialog scenarios
+     * @returns
+     */
+    private sfGetParentIFrame(): JQuery<HTMLElement> {
+    // from INSIDE a frame, this returns the PARENT IFRAME
+    if (window === parent || typeof window.parent.$ === "undefined") return $();
+    return window.parent.$(`IFRAME.sfAsyncPartFrame[src='${location.pathname}${location.search}']`);
+}
+
+    private sfLimitACHeightInFrame($AnchorEL:JQuery):void {
+        var $ACList = $('ul.ui-autocomplete');
+        if ($ACList.length === 0) return;
+        var $PFrame: JQuery<HTMLElement> = this.sfGetParentIFrame();
+        if ((!$PFrame) || ($PFrame.length === 0)) return;
+        var FrameHeightNow = $PFrame.height()!;
+        var AnchorPos = $AnchorEL.position();
+        var ListPos = $ACList.position();
+        var ListNeeds = $ACList.height()!;
+        var ListHeight = $AnchorEL.height();
+        if (ListPos.top < 0) {
+            ListHeight = AnchorPos.top - 30;  // + ListPos.top)
+            var newTop = AnchorPos.top - ListHeight
+            console.log(`sfLimitACHeightInFrame() list height reduced from ${ListNeeds} to ${ListHeight} for top of frame `);
+            $ACList.css({ "max-height": `${Math.round(ListHeight)}px`, "top": `${newTop}px` });
+        }
+        else if (ListPos.top + ListNeeds > FrameHeightNow) {
+            ListHeight = FrameHeightNow - ListPos.top;
+            console.log(`sfLimitACHeightInFrame() list height limited to ${ListHeight} in ${FrameHeightNow}`);
+            $ACList.css({ "max-height": `${ListHeight}px`});
+        }
+    }
+
+    /**
+     * Enhance an INPUT element with Autocomplete (classic UI)
+     * @param $AC NAME attribute of INPUT or the Input Element
+     * @param lookupName source of autocomplete choices
+     * @param depends1
+     * @param dep2
+     * @param dep3
+     * @param dep4
+     */
+    sfAC($AC: string | JQuery<HTMLInputElement>, lookupName:string, depends1:string|string[], dep2?:string, dep3?:string, dep4?:string) {
+        if (typeof $AC === "string") $AC = $("#" + $AC);
+        var SourceURL = `${sfApplicationRootPath}/api/suggestions/${lookupName}/${this.GetPageContextValue("dsCacheKey")}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
+        $AC.data("sourceurl",SourceURL).autocomplete({
+            source: SourceURL
+            , minLength: 3
+            , delay: 400
+            , position: { collision: "flip" }
+            , autoFocus: false
+            , open: function (event:any, ui:any) {
+                var $EL = $(this);
+                $EL.data('acOpen', true);
+                this.sfLimitACHeightInFrame($EL);
+                // too late to increase frame height
+            }
+            //, search: function (event, ui) { $(this).autocomplete("option", "autoFocus", false); }
+            , response: function (event:any, choices:any) {
+                $AC = $(this);
+                if (!$AC.hasClass("ui-autocomplete-input")) return;
+                var enableAF = !this.ValueHasWildcard($AC.val());
+                $AC.autocomplete("option", "autoFocus", enableAF);
+                //hint: do not use $.each to modify choices.content, must update directly
+                $AC.trigger("sfAutoCompleted.Response", choices); // yes is synchronous legacy name
+                $AC.trigger("sfAC.response", [choices]); // yes is synchronous , normalized (event is always passed)
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`sfAC autofocus ${enableAF}`);
+            }
+            , close: function (event:any, ui:any) {
+                var ib = $(this);
+                this.sfClearACHeighLimit();
+                ib.data('acOpen', false);
+                if (ib.data("acChange")) {
+                    var kv = ib.data("acKey");
+                    if (kv) {
+                        if (!ib.hasData('acPostbackKey') || ib.data('acPostbackKey')) {
+                            ib.css('color', 'white');
+                            this.value = kv;
+                        }
+                        ib.trigger("sfAutoCompletedKV", [kv]);  // legacy, pre 2019
+                        ib.trigger("sfAC.KV", [kv]);            // normalized naming
+                    }
+                    ib.data("acChange", false).trigger("change");
+                }
+            }
+            , select: function (event:any, ui:any) {
+                var ib = $(this);
+                ib.data("acChange", true);
+                var kv = ui.item.key;
+                if (kv) {
+                    ib.data('acKey', kv)
+                }
+                ib.trigger("sfAC.AutoCompleteSelect", [ib]);  // legacy name, pre 2019
+                ib.trigger("sfAC.select", [ui,ib]);    // normalized event name
+                let ibValue = ib?.val() as string;
+                if (typeof ibValue ===  "string" && ibValue.length === 0) {
+                    // prevent auto-select if had data and is now empty (Provides way to "blank out" the selection)
+                    if ((ib.hasData("ValLen")) && (ib.data("ValLen") ) ) {
+                        // event.preventDefault();
+                        return false;
+                    }
+                }
+            }
+            , change: function (event:any, ui:any) {
+                if (ui.item === null) return;
+                $(this).data("acChange", true);
+            }
+        });
+        $AC.on("blur",function (e:any) {
+            //if ($(this).data("acOpen")) { e.preventDefault(); return false
+        }).on("keypress",function(e:any) {
+            var ib = $(this);
+            if (e.which === 13) return;
+            let ibValue = ib?.val() as string;
+            if (typeof ibValue ===  "string" && ibValue.length > 0) ib.data("ValLen",  ibValue.length);
+            ib.autocomplete("option", "autoFocus", false);
+            ib.autocomplete("close");
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`sfAC Key ${e.which}; autofocus off`);
+        }).data("acOpen", false).data("acChange", false);
+
+    }
+
     ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : Promise<boolean|undefined> | undefined {
         var newValue;
         var formName = "0";
@@ -2189,10 +2409,40 @@ export class sfRestClient {
                         dialogClass: "lookup",
                         resizeStop:  top?.sfClient.sfModelDialogResizedHandler
                     });
-                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnMaximizeDialog","Maximize","ui-icon-maximize").on("click",function() {
-                    $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog").css({top:15,left:15});
-                    top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-32);
-                    top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-32);
+                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnMaximizeDialog","Maximize","ui-icon-arrow-4-diag").on("click",function() {
+                    var $BTN = $(this);
+                    var $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
+                    let PriorSizeData: CoordinateWithSize;
+                    if ($BTN.data("priorsize")) {
+                        // "restore" prior size
+                        PriorSizeData = $BTN.data("priorsize");
+                        $DialogDiv.css({top:PriorSizeData.top,left:PriorSizeData.left});
+                        top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,PriorSizeData.height);
+                        top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,PriorSizeData.width);
+
+                        $BTN.toggleClass("ui-icon-arrow-4-diag",true).toggleClass("ui-icon-arrow-4",false).data("priorsize",null);
+                    }
+                    else {
+                        // "maximize"
+                        var PositionNow = $DialogDiv.position();
+                        $BTN.toggleClass("ui-icon-arrow-4-diag",false);
+                        $BTN.toggleClass("ui-icon-arrow-4",true);
+                        PriorSizeData = {top:PositionNow.top,
+                                left : PositionNow.left,
+                                width : $DialogDiv.width()!,
+                                height : $DialogDiv.height()!
+                        };
+                        $DialogDiv.css({top:15,left:15});
+                        top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
+                        top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
+                        $BTN.toggleClass("ui-icon-arrow-4-diag",false).toggleClass("ui-icon-arrow-4",true).data("priorsize",PriorSizeData);
+                    }
+                });
+            }
+            if (url.indexOf("xbia=1")) {
+                //ui-icon-script
+                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI","ui-icon-script").on("click",function() {
+                    top!.location.href = url.replace("xbia=1","xbia=0");
                 });
             }
 
@@ -2266,7 +2516,7 @@ export class sfRestClient {
         var $LookupTitle = theDialog.prev();               //fragile...another version might break this
         if (!ptSize) ptSize = ".7em";
         theDialog.dialog('option', 'title', toText);
-        $LookupTitle.css('padding', '1px 1px 1px 4px');
+        $LookupTitle.css('padding', '1px 1px 4px 4px');
         theDialog.css('padding', '0px 0px 0px 1px');
         theDialog.css('margin', '0');
         $LookupTitle.css('font-size', ptSize);
