@@ -25,7 +25,8 @@ export enum LoggingLevels {
     None,
     Normal,
     Verbose,
-    Debug
+    Debug=9,
+    VerboseDebug=93
 }
 
 type PartStorageList = Map<PartContextKey, PartStorageData>;
@@ -105,12 +106,12 @@ class PartStorageData {
     }
 
     public static GetPartContextKey(partName: string, forDocType: GUID | undefined, context: string | undefined): PartContextKey {
-        return "{0}[{2}]::{1}".sfFormat(partName, forDocType, context);
+        return `${partName}[${context}]::${forDocType}`; //   "{0}[{2}]::{1}".sfFormat(partName, forDocType, context);
     }
 
     public static GetDataModelBuildContextKey(): string {
         this._DMCount++;
-        return "DVM#{0}".sfFormat(this._DMCount);
+        return `DVM#${this._DMCount}`;
     }
 
     protected constructor(client: sfRestClient, partName: string, forDocType: GUID | undefined, context: string | undefined) {
@@ -824,7 +825,7 @@ export class sfRestClient {
         }
 
         if (this._CachedDVRequests.has(cacheKey)) {
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`GetDV(${displayName}:${keyValue}) reused pending request `);
             return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
         }
 
@@ -875,7 +876,7 @@ export class sfRestClient {
 
     RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
         var apiResultPromise: Promise<string | number | boolean | null>
-        var cacheKey: string = "GetRR:{0}T{1}F".sfFormat(ruleName, testValue.sfHashCode(), filterValue?.sfHashCode());
+        var cacheKey: string = `GetRR:${ruleName}T${testValue.sfHashCode()}F${filterValue?.sfHashCode()}`;
 
         try {
             var result: string | null = sessionStorage.getItem(cacheKey);
@@ -1215,6 +1216,7 @@ export class sfRestClient {
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
         return new Promise<WCCData>( (resolve)  =>{
+            RESTClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
             if (sfRestClient._SessionClientGetWCC) {
                 if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("Reusing ongoing getWCC!....",sfRestClient._SessionClientGetWCC.ForNavHash);
@@ -1235,8 +1237,16 @@ export class sfRestClient {
                     resolve(r);
                 }
                 else {
-                    console.warn("SessionClient.getWCC() did not return data!");
-                    resolve(new WCCData());
+                    //console.warn("SessionClient.getWCC() did not return data!");
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`SessionClient.getWCC() did not return data`);
+                    let FakeWCC =new WCCData();
+                    FakeWCC.AdminLevel = 0;
+                    FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
+                    FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
+                    FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
+                    FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
+                    FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
+                    resolve(FakeWCC);
                 }
             });
         });
@@ -2747,9 +2757,12 @@ export class sfRestClient {
      */
      protected static _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
      private static _LoadingPermitRequests: Map<string, Promise<UCPermitSet | null> > = new Map<string, Promise<UCPermitSet | null> >();
-
+     private static InstanceSerialNumberSource: number=0;
+     private ThisInstanceID: number;
 
     constructor() {
+        this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
+
         if (typeof sfApplicationRootPath === "string") {
             this._SiteURL = sfApplicationRootPath;
         }
@@ -2779,7 +2792,7 @@ export class sfRestClient {
         var WCCLoadPromise =this.LoadUserSessionInfo();
         WCCLoadPromise.then(() => {
             var ThisIsGlobal = this.IsGlobalInstance();
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: WCC Ready on Window[{0}]; Instance: ".sfFormat(window.name),ThisIsGlobal ? "Global" : "peon");
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient: WCC Resolved; Window[${window.name}];  ${ThisIsGlobal ? "Global" : "Instance"}#${this.ThisInstanceID}`);
             if (ThisIsGlobal) {
                 var RESTClient = this;
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
