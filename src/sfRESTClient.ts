@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.53";
+const ClientPackageVersion : string = "1.9.54";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -53,7 +53,7 @@ class _SessionClientGetWCCShare {
 
     }
     public Expired(): boolean {
-        return (this.IsResolved && (Date.now() - this.AsOf) > 4321);
+        return (this.IsResolved && (Date.now() - this.AsOf) > 3210);
     }
 }
 
@@ -370,7 +370,7 @@ export class sfRestClient {
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
     BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: [{}] | {}): Promise<DataModelCollection> {
-        if (!this._z.WCCLoaded) this.LoadUserSessionInfo();
+        if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
         if (!thisPart) {
             console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, context)));
@@ -390,7 +390,7 @@ export class sfRestClient {
      *  Legacy version of BuildViewModelForContext  - use .done()
      */
     BuildViewModel(partName: string, context: string, rawData: any, unusedCfgData: undefined, forDocType: GUID | undefined): JQueryPromise<any> {
-        if (!this._z.WCCLoaded) this.LoadUserSessionInfo();
+        if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
         var darnSoon = $.Deferred();
         var ResultReady = darnSoon.promise();
@@ -515,7 +515,7 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         //was $.Deferred();
         var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit,rejectThisPermit) => {
-            if (!RESTClient._z.WCCLoaded) try { await RESTClient.LoadUserSessionInfo();} catch (ex:any) {rejectThisPermit(ex.message);}
+            if (!sfRestClient._z.WCCLoaded) try { await RESTClient.LoadUserSessionInfo();} catch (ex:any) {rejectThisPermit(ex.message);}
             if (typeof optionalDTK !== "string") optionalDTK = "";
             if (typeof optionalReference !== "string") optionalReference = "";
             if (typeof optionalProject !== "string" || !optionalProject) optionalProject = "0";
@@ -525,7 +525,7 @@ export class sfRestClient {
                 + "_P" + optionalProject;
             var ValueFromCache = sfRestClient._UserPermitResultCache.get(PermitCacheID);
             if (typeof ValueFromCache === "number") {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) = {3}; used static cache  ".sfFormat(ucModule, ucFunction, optionalProject,ValueFromCache));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) = ${ValueFromCache}; from static cache  `);
                 ResolveThisPermit(ValueFromCache);
                 return;
             }
@@ -570,7 +570,7 @@ export class sfRestClient {
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
-                            console.log("Loaded Global Permits from server...");
+                            console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Global Permits from server...`);
                             sfRestClient._LoadedPermits.set("0", r);
                         }
                     });
@@ -591,7 +591,7 @@ export class sfRestClient {
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
-                            console.log("Loaded Project {0} Permits from server...".sfFormat(optionalProject));
+                            console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Project ${optionalProject} Permits from server...`);
                             sfRestClient._LoadedPermits.set(optionalProject!, r);
                             ThisProjectPermitSet = r!;
                             PPSDeferredResult.resolve(r);
@@ -611,12 +611,13 @@ export class sfRestClient {
                 var finalPermit : Permits = 0;
                 var GlobalPermits = sfRestClient._LoadedPermits.get("0")?.Permits;
                 $.each([ThisProjectPermitSet?.Permits,GlobalPermits],function CheckOneSource(sourceIdx, thisSource) {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) checking".sfFormat(ucModule, ucFunction, optionalProject),thisSource===ThisProjectPermitSet?.Permits ? "project": "global");
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) checking ${thisSource===ThisProjectPermitSet?.Permits ? "project": "global"}`);
+
                     $.each(thisSource, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
                         if (ThisUCFK === UCFK) {
-                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) ".sfFormat(ucModule, ucFunction, optionalProject),UCFK,capabilitySet);
+                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, cl:`,capabilitySet);
                             $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
-                                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) ".sfFormat(ucModule, ucFunction, optionalProject),UCFK,p);
+                                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, p:`,p);
                                 var thisPermitValue : Permits = 0;
                                 if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
                                     if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
@@ -635,7 +636,7 @@ export class sfRestClient {
 
                 if (ucModule !== "WORK") finalPermit = finalPermit |  sfRestClient._WCC.AdminLevel;
                 sfRestClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit(${ucModule}:${ucFunction},${optionalProject}) = ${finalPermit}${sfRestClient._WCC.AdminLevel}; static cache set by Instance ${RESTClient.ThisInstanceID}`);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) = Usr:${finalPermit},Adm:${sfRestClient._WCC.AdminLevel}; static cache set `);
 
                 ResolveThisPermit(finalPermit);
                 // we do have global permits above: what use case was this for???
@@ -1158,7 +1159,7 @@ export class sfRestClient {
 
         if (sfRestClient._UCPermitMap._etag.w === 0) {
             // see about localStorage
-            var ls = JSON.parse(localStorage.getItem(RESTClient._z.lsKeys.api_session_permits_map)!);
+            var ls = JSON.parse(localStorage.getItem(sfRestClient._z.lsKeys.api_session_permits_map)!);
             if (ls && typeof ls._etag.w === "number") {
                 console.log("Loaded Function Map from localStorage...");
                 sfRestClient._UCPermitMap = ls;
@@ -1187,7 +1188,7 @@ export class sfRestClient {
                 if (typeof r === "object" && typeof r._etag === "object") {
                     r._etag.w = Date.now();
                     console.log("Loaded Function Map from server...");
-                    localStorage.setItem(RESTClient._z.lsKeys.api_session_permits_map, JSON.stringify(r));
+                    localStorage.setItem(sfRestClient._z.lsKeys.api_session_permits_map, JSON.stringify(r));
                     sfRestClient._UCPermitMap = r;
                 }
                 else {
@@ -1218,7 +1219,7 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
-        RESTClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
+        sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
             if (sfRestClient._SessionClientGetWCC) {
                 if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
@@ -1270,7 +1271,7 @@ export class sfRestClient {
             }
         });
         sfRestClient._WCC.PageName = RESTClient.ResolvePageName();
-        RESTClient._z.WCCLoaded = true;
+        sfRestClient._z.WCCLoaded = true;
         ChangeList.forEach((value,keyName) => {
             var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
@@ -1319,8 +1320,8 @@ export class sfRestClient {
     public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
         var XToolLoadPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
             if (self !== top) {console.log("AssureJQUITools() only applicable for global/top"); return false;}
-            if (this._z.XternalScriptsLoaded ) {console.log("AssureJQUITools() already done"); return false;}
-            this._z.XternalScriptsLoaded = true;
+            if (sfRestClient._z.XternalScriptsLoaded ) {console.log("AssureJQUITools() already done"); return false;}
+            sfRestClient._z.XternalScriptsLoaded = true;
             if (!$element) $element = $("<div />");
             if (typeof $element.dialog !== "function") {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
@@ -1695,7 +1696,7 @@ export class sfRestClient {
      * @returns true if successful usually sychronously
      */
     public  async SharePageContext( contextData: NVPair) : Promise<boolean> {
-        if (!this._z.WCCLoaded) await this.LoadUserSessionInfo();
+        if (!sfRestClient._z.WCCLoaded) await this.LoadUserSessionInfo();
         if (!sfRestClient._WCC ) {
             console.warn("SharePageContext() _WCC missing?");
             return false;
@@ -2529,14 +2530,15 @@ export class sfRestClient {
 
     AddDialogTitleButton($Dialog : JQuery<HTMLElement>, btnID: string, btnText: string, btnIcon?: string) {
         var $DialogTitleBar = $Dialog.parent().children(".ui-dialog-titlebar");
-        var $NewButton = $("<button type='button' id='{0}' />".sfFormat(btnID)).text(btnText);
         var $LastButton = <JQuery<HTMLButtonElement>>$DialogTitleBar.find("BUTTON[type='button']:last");
-        var ButtonCount = $DialogTitleBar.find("BUTTON[type='button']").length;
+        var $NewButton = $(`<button type='button' id='${btnID}' />`).text(btnText);
+        //var ButtonCount = $DialogTitleBar.find("BUTTON[type='button']").length;
         var RightPosOfLeftmostButton = $LastButton.css("right");
         var WidthOfButtons = Math.ceil($LastButton!.width()! * 1.375);
+        $DialogTitleBar.find(`BUTTON#${btnID}`).remove();
         $NewButton.button({ icons: { primary: btnIcon }, text: false })
             .addClass("ui-dialog-titlebar-close") // essential to get size
-            .css("right", ((parseInt(RightPosOfLeftmostButton) + WidthOfButtons) * ButtonCount) + "px")
+            .css("right", ((parseInt(RightPosOfLeftmostButton) + WidthOfButtons)  ) + "px")
             .appendTo($DialogTitleBar);
 
 
@@ -2686,7 +2688,9 @@ export class sfRestClient {
         //if (  ($(window).width()! > this.$LookupDialog.data("windowWidth"))) this.sfSetParentWindowSize(true, this.$LookupDialog.data("windowWidth") + $LookupViewPortAdjustments.outsidExtraW, -1);
         $LookupDialog.dialog('option', 'position', 'center');
         // $LookupDialog.dialog('option', 'zIndex', $.maxZIndex() + 1); neither this nor .dialog('moveToTop') helped
-
+        $LookupDialog.dialog('destroy');
+        this.$LookupDialog?.remove();
+        this.$LookupDialog = undefined;
 
         if (dialogMode == 'modalDialog') {
             if (newValue == null) newValue = postbackEventArg;
@@ -2931,13 +2935,13 @@ export class sfRestClient {
      */
     public ClearCache(alsoClearSessionStorage? : boolean):void {
         var InGlobalInstance = this.IsGlobalInstance();
-        console.log("sfRestClient.ClearCache()", alsoClearSessionStorage ? " w/sessionStorage" : "", InGlobalInstance ? " Global" : "", ", UPRC:", sfRestClient._UserPermitResultCache.size);
+        console.log(`sfRestClient.ClearCache(${this.ThisInstanceID}), ${alsoClearSessionStorage ? " w/sessionStorage" : ""}, ${InGlobalInstance ? " Global" : ""}, UPRC:${sfRestClient._UserPermitResultCache.size}`);
         PartStorageData._LoadedParts.clear();
         sfRestClient._UserPermitResultCache.clear();
         sfRestClient._LoadedPermits.clear();
         sfRestClient._LoadingPermitRequests.clear();
         sfRestClient._SessionClientGetWCC = null;
-        this._z.WCCLoaded = false;
+        sfRestClient._z.WCCLoaded = false;
         sfRestClient._WCC.AdminLevel = 0;
         this._CachedDVRequests.clear();
         if (!InGlobalInstance)
@@ -2995,9 +2999,9 @@ export class sfRestClient {
         UserKey: "00000000-0000-0000-0000-000000000000",
         Version: "2020.0.7000.00000"
     }
-    protected _z: any = {
+    protected static _z: any = {
         lsKeys: {
-            api_session_permits_map: "sfUCFunctionNameMap"
+             api_session_permits_map: "sfUCFunctionNameMap"
         },
         WCCLoaded: false,
         XternalScriptsLoaded: false
@@ -3045,7 +3049,7 @@ export class sfRestClient {
         var WCCLoadPromise =this.LoadUserSessionInfo();
         WCCLoadPromise.then(() => {
             var ThisIsGlobal = this.IsGlobalInstance();
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient ${this.ClientVersion}; Window[${window.name}];  ${ThisIsGlobal ? "Global" : "Instance"}#${this.ThisInstanceID}`);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient#${this.ThisInstanceID} ${this.ClientVersion}; Window[${window.name}];  ${ThisIsGlobal ? "Global" : ""}`);
             if (ThisIsGlobal) {
                 var RESTClient = this;
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
