@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.51";
+const ClientPackageVersion : string = "1.9.52";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1728,7 +1728,7 @@ export class sfRestClient {
      * @param key name of a context property
      */
     public GetPageContextValue( key : string) : any {
-        if (!(key in sfRestClient._WCC)) {
+        if (key in sfRestClient._WCC) {
             return sfRestClient._WCC[key];
         }
         console.warn("GetPageContext() no value known for key",key);
@@ -2306,6 +2306,7 @@ export class sfRestClient {
      */
     sfAC($AC: string | JQuery<HTMLInputElement>, lookupName:string, depends1:string|string[], dep2?:string, dep3?:string, dep4?:string) {
         if (typeof $AC === "string") $AC = $("#" + $AC);
+        var RESTClient = this;
         var SourceURL = `${sfApplicationRootPath}/api/suggestions/${lookupName}/${this.GetPageContextValue("dsCacheKey")}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
         $AC.data("sourceurl",SourceURL).autocomplete({
             source: SourceURL
@@ -2316,14 +2317,14 @@ export class sfRestClient {
             , open: function (event:any, ui:any) {
                 var $EL = $(this);
                 $EL.data('acOpen', true);
-                this.sfLimitACHeightInFrame($EL);
+                RESTClient.sfLimitACHeightInFrame($EL);
                 // too late to increase frame height
             }
             //, search: function (event, ui) { $(this).autocomplete("option", "autoFocus", false); }
             , response: function (event:any, choices:any) {
                 $AC = $(this);
                 if (!$AC.hasClass("ui-autocomplete-input")) return;
-                var enableAF = !this.ValueHasWildcard($AC.val());
+                var enableAF = !RESTClient.ValueHasWildcard(<string>$AC.val());
                 $AC.autocomplete("option", "autoFocus", enableAF);
                 //hint: do not use $.each to modify choices.content, must update directly
                 $AC.trigger("sfAutoCompleted.Response", choices); // yes is synchronous legacy name
@@ -2332,7 +2333,7 @@ export class sfRestClient {
             }
             , close: function (event:any, ui:any) {
                 var ib = $(this);
-                this.sfClearACHeighLimit();
+                RESTClient.sfClearACHeighLimit();
                 ib.data('acOpen', false);
                 if (ib.data("acChange")) {
                     var kv = ib.data("acKey");
