@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.52";
+const ClientPackageVersion : string = "1.9.53";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -635,7 +635,7 @@ export class sfRestClient {
 
                 if (ucModule !== "WORK") finalPermit = finalPermit |  sfRestClient._WCC.AdminLevel;
                 sfRestClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("CheckPermit({0}:{1},{2}) = {3}{4}; set static cache  ".sfFormat(ucModule, ucFunction, optionalProject,ValueFromCache,sfRestClient._WCC.AdminLevel));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit(${ucModule}:${ucFunction},${optionalProject}) = ${finalPermit}${sfRestClient._WCC.AdminLevel}; static cache set by Instance ${RESTClient.ThisInstanceID}`);
 
                 ResolveThisPermit(finalPermit);
                 // we do have global permits above: what use case was this for???
@@ -1218,18 +1218,18 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
+        RESTClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
-            RESTClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
             if (sfRestClient._SessionClientGetWCC) {
                 if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("Reusing ongoing getWCC!....",sfRestClient._SessionClientGetWCC.ForNavHash);
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Reusing ongoing getWCC for HREF hash ${sfRestClient._SessionClientGetWCC.ForNavHash}`);
                     apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
                 } else sfRestClient._SessionClientGetWCC = null;
             }
             if (!apiResult) {
                 var ForPageHash =location.toString().sfHashCode();
                 api = new SessionClient(this._SiteURL);
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("Creating getWCC request!....",ForPageHash);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Creating getWCC request for HREF hash ${ForPageHash}`);
                 apiResult = <Promise<WCCData | null>> api.getWCC()
                 sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
             }
