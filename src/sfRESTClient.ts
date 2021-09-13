@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.54";
+const ClientPackageVersion : string = "1.9.55";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -2405,9 +2405,19 @@ export class sfRestClient {
             var DefaultWidth = $("body").width();
             if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
+            if (this.$LookupDialog) {
+                try {
+                    this.$LookupDialog.dialog('destroy');
+                }
+                catch (e:any) {
+                    console.warn(`LookupDialog destroy:`,e)
+                }
+                this.$LookupDialog?.remove();
+                this.$LookupDialog = undefined;
+            }
+
             if (!this.$LookupDialog) {
-                this.$LookupDialog =  $("<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='{0}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>"
-                .sfFormat(sfRestClient._Options.BlankPageURI))
+                this.$LookupDialog =  $(`<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='${sfRestClient._Options.BlankPageURI}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>`)
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
                         close: top!.sfClient.sfModalDialogClosed,
                         dialogClass: "lookup",
@@ -2436,22 +2446,26 @@ export class sfRestClient {
                                 width : $DialogDiv.width()!,
                                 height : $DialogDiv.height()!
                         };
-                        $DialogDiv.css({top:15,left:15});
+                        $DialogDiv.css({top:15,left:14});
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`ModalDialog() maximize; autofocus off`,PriorSizeData);
                         top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
                         top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
                         $BTN.toggleClass("ui-icon-arrow-4-diag",false).toggleClass("ui-icon-arrow-4",true).data("priorsize",PriorSizeData);
+                        $DialogDiv.css({top:15,left:14});
                     }
-                });
-            }
-            if (url.indexOf("xbia=1")) {
-                //ui-icon-script
-                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI","ui-icon-script").on("click",function() {
-                    top!.location.href = url.replace("xbia=1","xbia=0");
                 });
             }
 
             var  OpenUrl = url;
             if (!OpenUrl.startsWith(sfApplicationRootPath)) OpenUrl = sfApplicationRootPath + url;
+
+            if (OpenUrl.indexOf("xbia=1")) {
+                //ui-icon-script
+                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI","ui-icon-script").on("click",function() {
+                    top!.location.href = OpenUrl.replace("xbia=1","xbia=0");
+                });
+            }
+
             //LookupOpenUrl = LookupOpenUrl + '&lookupName=' + lookupName +
             //	        '&resultName=' + resultName +
             //	        '&postBack=' + postBack + fromPage + dependsList;
