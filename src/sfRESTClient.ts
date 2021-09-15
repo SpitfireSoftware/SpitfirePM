@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.55";
+const ClientPackageVersion : string = "1.9.56";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -65,6 +65,7 @@ class PartStorageData {
     _PromiseList: Promise<any>[] | null;
     protected _InitializationResultPromise: Promise<UIDisplayPart | null> | null;
     protected _ReferenceKey: PartContextKey;
+    protected _ForPartName:string;
     protected static _SiteURL: string;
     protected static _DMCount: number = 0;
 
@@ -111,9 +112,9 @@ class PartStorageData {
         return `${partName}[${context}]::${forDocType}`; //   "{0}[{2}]::{1}".sfFormat(partName, forDocType, context);
     }
 
-    public static GetDataModelBuildContextKey(): string {
-        this._DMCount++;
-        return `DVM#${this._DMCount}`;
+    public GetDataModelBuildContextKey(): string {
+        PartStorageData._DMCount++;
+        return `DVM-${this._ForPartName}#${PartStorageData._DMCount}`;
     }
 
     protected constructor(client: sfRestClient, partName: string, forDocType: GUID | undefined, context: string | undefined) {
@@ -122,6 +123,7 @@ class PartStorageData {
         this.RestClient = client;
         this._PromiseList = null;
         this._ReferenceKey = PartStorageData.GetPartContextKey(partName, forDocType, context);
+        this._ForPartName = partName;
         PartStorageData._LoadedParts.set(this._ReferenceKey, this);
         this._InitializationResultPromise = null;
 
@@ -464,7 +466,7 @@ export class sfRestClient {
     protected _ConstructViewModel(thisPart: PartStorageData, rawData: any): Promise<DataModelCollection> {
         if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) new Error("Cannot construct this ViewModel");
         var StartAtTicks: number = Date.now();
-        var DataModelBuildKey: string = PartStorageData.GetDataModelBuildContextKey();
+        var DataModelBuildKey: string = thisPart.GetDataModelBuildContextKey();
         var FailCount: number= 0;
         var SingleInstanceMode = false;
         if (!Array.isArray(rawData)) {
