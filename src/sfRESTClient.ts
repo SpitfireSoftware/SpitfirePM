@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.56";
+const ClientPackageVersion : string = "1.9.57";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1506,6 +1506,45 @@ export class sfRestClient {
            });
        });
    }
+
+  /**
+     * Opens a new tab with location specified based on Document Key and UI version
+     * @param id the guid DocMasterKey for the document to be opened
+     */
+   OpenProject(id : string) : Promise<Window | null>
+   {
+       var RESTClient = this;
+       return new Promise<Window | null>((resolve) => {
+
+           this.GetDV("Project",id,undefined).then((thisProjectName) => {
+               var thisRestClient = this;
+               if (!thisProjectName) {
+                   console.warn("Project not found");
+                   this.DisplayUserNotification(`Project ${id} not found`,9876);
+                   resolve(null);
+                   return;
+               }
+               var url : string =  sfRestClient._Options.ProjectLegacyURL;
+               if (RESTClient.IsPowerUXPage()) {
+                    url = sfRestClient._Options.ProjectXBURL;
+               }
+               url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
+               if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`OpenProject opening ${id} using ${url}`);
+
+
+               //todo: determine if we need the "how many tabs" logic and dialog
+               if (!window) {
+                   console.error("OpenProject() Must be called from a browser window");
+                   resolve(null);
+                   return;
+               }
+               self.location.href = url;
+               resolve(self);
+           });
+       });
+   }
+
+
     /**
      * Sets sfRestClient Options
      *
@@ -1547,6 +1586,8 @@ export class sfRestClient {
         PopDocXBURL:  "{0}#!/document?id={1}",
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
         PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
+        ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
+        ProjectXBURL: '{0}/v21.html#!/main/projectDashboard?project={1}'
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
