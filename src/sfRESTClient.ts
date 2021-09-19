@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.58B";
+const ClientPackageVersion : string = "1.9.58C";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -34,6 +34,8 @@ type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
 type RRCacheEntry = { w: number, v: string | number | boolean };
 type CoordinateWithSize = {top:number,left:number,width:number,height:number};
+
+
 
 class _SessionClientGetWCCShare {
     APIResult: Promise<WCCData | null> | null = null;
@@ -284,7 +286,8 @@ export class sfRestClient {
         Contacts: 64,
         Document: 1024,
         Unknown: 8092,
-        Login: 16384
+        Login: 16384,
+        DiagUtilities: 32768
     }
 
     /**
@@ -1334,8 +1337,10 @@ export class sfRestClient {
                 if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
                     $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
 
-                    this.AddCachedScript('{0}/Scripts/jquery.signalR-2.4.2.min.js'.sfFormat(this._SiteURL),true).then((likelyTrue) => {
-                        this.AddCachedScript('{0}/signalR/hubs'.sfFormat(this._SiteURL),true);
+                    this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.2.min.js`,true).then((likelyTrue) => {
+                        this.AddCachedScript(`${this._SiteURL}/signalR/hubs`,true).then((likelyTrue)=>{
+                            sfRestClient.StartSignalRClientHub();
+                        });
                     });
                     this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',true).then( (likelyTrue) => {
                         console.log("jQuery UI extensions loaded.");
@@ -1847,10 +1852,13 @@ export class sfRestClient {
                 result = this.PageTypeNames.AdminDashboard;
                 break;
             case "cuManager":
-                    result = this.PageTypeNames.ManageDashboard;
-                    break;
-            case "cusysm":
+                result = this.PageTypeNames.ManageDashboard;
+                break;
+            case "login":
                 result = this.PageTypeNames.Login;
+                break;
+            case "dxutil":
+                result = this.PageTypeNames.DiagUtilities;
                 break;
 
             default:
@@ -3039,14 +3047,20 @@ export class sfRestClient {
             sessionStorage.clear();
     }
 
+
     /**
      * Called by the global instance to connect to SignalR
      */
     protected static StartSignalRClientHub():void {
         if (self !== top) return;
-
+        if (!$.connection || !$.connection.sfPMSHub) {
+            setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
+            return;
+        }
         if ($.connection) {
             var sfHub = $.connection.sfPMSHub;
+            if (top.sfPMSHub === sfHub) return;
+            top.sfPMSHub = sfHub;
             sfHub.client.ReConnectDelay = 5000;
             sfHub.client.ForWindowRX = /^javascript.+-(?<WindowName>[a-z0-9]{12})'\);/
             sfHub.client.systemWideUserNotification = function (msgText:string) {
@@ -3058,25 +3072,42 @@ export class sfRestClient {
 
             sfHub.client.documentChangeBy = function (loginSessionKey:string, otherUserName:string, changeCount:number, refreshEvent:string) {
                 console.log("sfPMSHub documentChangeBy...",otherUserName,changeCount); // subscribed, not myself, offer reload
+
                 if (top?.sfClient.GetPageContextValue("LoginSessionKey") === loginSessionKey) return;
+                var HubEvent =  jQuery.Event("sfPMSHubSignal.documentChangeBy");
+                $("body").trigger(HubEvent,  [otherUserName,changeCount,refreshEvent] );
+                if (HubEvent.isDefaultPrevented()) return;
                 if (typeof top?.DocumentChangedByAnotherUser === "function") top.DocumentChangedByAnotherUser(refreshEvent, otherUserName, changeCount);
             };
 
-            sfHub.client.afterDocumentSaved = function (dtk:string) {
+            sfHub.client.afterDocumentSaved = function (dtk:string, project: string) {
                 console.log("sfPMSHub afterDocumentSaved..."); // always myself, refresh related dashboards
-                if (top?.sfClient.IsProjectPage()) {
+                var HubEvent = jQuery.Event("sfPMSHubSignal.afterDocumentSaved");
+                $("body").trigger(HubEvent,  [dtk,project] );
+                if (HubEvent.isDefaultPrevented()) {
+                    console.log("sfPMSHub afterDocumentSaved handled...");
+                    return;
+                }
+
+                if (!top?.sfClient.IsPowerUXPage()) {
+                    if (top?.sfClient.IsProjectPage()) {
                         top?.refreshPartbyName('ProjDocSummary', 'refresh', 'afterDocumentSaved');
                         top?.refreshPartbyName('ProjTypedDocList', 'SlctDocType', dtk);
                 }
                 else if (top?.sfClient.IsHomeDashboardPage()) {
                         top?.refreshPartbyName('actionitems', 'refresh', 'afterDocumentSaved');
                     }
+                }
             }
 
             sfHub.client.nowViewingDocument = function (target, loginSessionKey, request) {
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
                 console.log(`sfPMSHub received from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
                 if (top?.sfClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
+                    var HubEvent = jQuery.Event("sfPMSHubSignal.nowViewingDocument");
+                    $("body").trigger(HubEvent,  [target,loginSessionKey,request] );
+                    if (HubEvent.isDefaultPrevented()) return;
+
                     request = request.substring(11);
                     try {
                         eval(request);
@@ -3096,6 +3127,10 @@ export class sfRestClient {
                 console.log(`sfPMSHub received to [${target}]:${request} `);
 
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
+                var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardOpenLink");
+                $("body").trigger(HubEvent,  [target,request,RequestForWindowMatches] );
+                if (HubEvent.isDefaultPrevented()) return;
+
                 if (top?.name!.length! > 0 && target.startsWith(top?.name!)) {
                     if (request.startsWith("javascript:")) {
                         request = request.substring(11);
@@ -3138,6 +3173,9 @@ export class sfRestClient {
             };
             sfHub.client.dashboardRefreshPartByName = function (target) {
                 console.log(`sfPMSHub received dashboardRefreshPartByName for [${target}] `);
+                var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardRefreshPartByName");
+                $("body").trigger(HubEvent,  [target] );
+                if (HubEvent.isDefaultPrevented()) return;
                 if (typeof top?.refreshPartbyName === "function") {
                     top?.refreshPartbyName(target);
                 }
@@ -3162,6 +3200,10 @@ export class sfRestClient {
             }
             sfHub.client.userLoggedOut = function () {
                 console.log("sfPMSHub received logout notification ");
+                var HubEvent = jQuery.Event("sfPMSHubSignal.userLoggedOut");
+                $("body").trigger(HubEvent, [top?.sfClient.GetPageContextValue("UserKey")] );
+                if (HubEvent.isDefaultPrevented()) return;
+
                 top?.sfClient.DisplayUserNotification("You have been logged out!");
                 if (top?.sfClient.IsPowerUXPage()) {
                     setTimeout(`top.location.href = '${sfApplicationRootPath}/v21.html#!/login?m=LoggedOut'; //signalr log out`, 3210);
@@ -3273,7 +3315,6 @@ export class sfRestClient {
      private ThisInstanceID: number;
 
 
-
     constructor() {
         this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
 
@@ -3331,8 +3372,9 @@ export class sfRestClient {
                 $(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
                });
-               sfRestClient.StartSignalRClientHub();
-                sfRestClient._GlobalClientConstructFlag = false;
+
+               sfRestClient.StartSignalRClientHub(); // for classic pages, XB pages are started after lazy load of SignalR
+               sfRestClient._GlobalClientConstructFlag = false;
             }
         });
     }

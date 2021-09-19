@@ -13,7 +13,7 @@ interface Math {
 
 declare global {
 
-    interface AfterDocumentSaved {(dtk:string):void}
+    interface AfterDocumentSaved {(dtk:string, project: string):void}
     interface DashboardOpenLink {(targetWindowName: string, request: string):void}
     interface DashboardRefreshPartByName {(partName: string):void}
     interface DMKMethod {(dmk:GUID):void}
@@ -61,7 +61,9 @@ declare global {
         $: JQueryStatic;
         jQuery: JQueryStatic;
         sfClient: sfRestClient;
+        sfPMSHub: sfPMSHub;
         ClickOnceExtension: BrowserExtensionChecker;  // not the best name, needed by legacy UI
+
         WindowHasFocus: boolean;
 
         // sf classic
