@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.57";
+const ClientPackageVersion : string = "1.9.58B";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -283,7 +283,8 @@ export class sfRestClient {
         ManageDashboard: 32,
         Contacts: 64,
         Document: 1024,
-        Unknown: 8092
+        Unknown: 8092,
+        Login: 16384
     }
 
     /**
@@ -1848,6 +1849,9 @@ export class sfRestClient {
             case "cuManager":
                     result = this.PageTypeNames.ManageDashboard;
                     break;
+            case "cusysm":
+                result = this.PageTypeNames.Login;
+                break;
 
             default:
                 console.warn("Unexpected page type: ", pageNameString);
@@ -2090,7 +2094,7 @@ export class sfRestClient {
         return RunHeight;
     }
 
-    protected   notificationMsgTimeoutHandle: number | undefined;
+    notificationMsgTimeoutHandle: number | undefined;
     WasNotificationShown(notificationMsg : string) : boolean {
         var result = false;
         var msgHash = "sfNoted:L{0}H{1}".sfFormat(notificationMsg.length, notificationMsg.sfHashCode());
@@ -2126,12 +2130,12 @@ export class sfRestClient {
 
         var RESTClient = this;
         var msgReady : Promise<JQuery<HTMLElement>> = new Promise<JQuery<HTMLElement>>( (msgDisplayResolved) => {
-            if (this.notificationMsgTimeoutHandle) {
-                clearTimeout(this.notificationMsgTimeoutHandle);
-                this.notificationMsgTimeoutHandle = undefined;
+            if (RESTClient.notificationMsgTimeoutHandle) {
+                clearTimeout(RESTClient.notificationMsgTimeoutHandle);
+                RESTClient.notificationMsgTimeoutHandle = undefined;
             }
             var $MsgDiv = $('<div />');
-            if ((!notificationText) || (this.WasNotificationShown(notificationText))) {
+            if ((!notificationText) || (RESTClient.WasNotificationShown(notificationText))) {
                 if (notificationText) console.log("Notification Already Shown: {0}".sfFormat(notificationText));
                 $MsgDiv.data("alreadyshown",true);
                 msgDisplayResolved( $MsgDiv );
@@ -2149,13 +2153,16 @@ export class sfRestClient {
 
         });
         if (timeOutMS) msgReady.then(function () {
-            RESTClient.notificationMsgTimeoutHandle = setTimeout("notificationMsgTimeoutHandle = null; top.sfClient.DisplayThisNotification('{0}');".sfFormat(templateURL),timeOutMS);
+            RESTClient.notificationMsgTimeoutHandle = setTimeout("top.sfClient.ClearNotificationMsgTimeoutHandle(); top.sfClient.DisplayThisNotification('{0}');".sfFormat(templateURL),timeOutMS);
         });
         return msgReady;
 
     }
 
-    DisplaySysNotification(responseText: string | number, timeOutMS:number) : Promise<JQuery<HTMLElement>>{
+    ClearNotificationMsgTimeoutHandle() : void {
+        this.notificationMsgTimeoutHandle = undefined;
+    }
+    DisplaySysNotification(responseText: string | number, timeOutMS?:number) : Promise<JQuery<HTMLElement>>{
         if (typeof responseText === "number") responseText = responseText.toString();
         if (responseText.startsWith("SysNotification")) responseText = responseText.substring(16);
         return this.DisplayThisNotification("ajhx/sysnotification.html", responseText, timeOutMS);
@@ -2453,7 +2460,7 @@ export class sfRestClient {
                     this.$LookupDialog.dialog('destroy');
                 }
                 catch (e:any) {
-                    console.warn(`LookupDialog destroy:`,e)
+                   // console.warn(`LookupDialog destroy:`,e)
                 }
                 this.$LookupDialog?.remove();
                 this.$LookupDialog = undefined;
@@ -2470,20 +2477,21 @@ export class sfRestClient {
                     var $BTN = $(this);
                     var $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
                     let PriorSizeData: CoordinateWithSize;
-                    if ($BTN.data("priorsize")) {
+                    const RestoreSizeDataName = "restoresize";
+                    if ($BTN.data(RestoreSizeDataName)) {
                         // "restore" prior size
-                        PriorSizeData = $BTN.data("priorsize");
+                        PriorSizeData = $BTN.data(RestoreSizeDataName);
                         $DialogDiv.css({top:PriorSizeData.top,left:PriorSizeData.left});
                         top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,PriorSizeData.height);
                         top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,PriorSizeData.width);
 
-                        $BTN.toggleClass("ui-icon-arrow-4-diag",true).toggleClass("ui-icon-arrow-4",false).data("priorsize",null);
+                        $BTN.toggleClass("ui-icon-arrow-4-diag",true).toggleClass("ui-icon-arrow-4",false).data(RestoreSizeDataName,null);
                     }
                     else {
                         // "maximize"
-                        var PositionNow = $DialogDiv.position();
                         $BTN.toggleClass("ui-icon-arrow-4-diag",false);
                         $BTN.toggleClass("ui-icon-arrow-4",true);
+                        var PositionNow = $DialogDiv.position();
                         PriorSizeData = {top:PositionNow.top,
                                 left : PositionNow.left,
                                 width : $DialogDiv.width()!,
@@ -2493,7 +2501,7 @@ export class sfRestClient {
                         if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`ModalDialog() maximize; autofocus off`,PriorSizeData);
                         top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
                         top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
-                        $BTN.toggleClass("ui-icon-arrow-4-diag",false).toggleClass("ui-icon-arrow-4",true).data("priorsize",PriorSizeData);
+                        $BTN.toggleClass("ui-icon-arrow-4-diag",false).toggleClass("ui-icon-arrow-4",true).data(RestoreSizeDataName,PriorSizeData);
                         $DialogDiv.css({top:15,left:14});
                     }
                 });
@@ -2545,16 +2553,25 @@ export class sfRestClient {
             this.SetModalDialogTitle(this.$LookupDialog,"");
             this.$LookupFrame!.attr('src', OpenUrl); // only w iframe
 
+
             this.$LookupDialog.dialog('open');
 
-                try {
-                    var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
-                    if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
-                        // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
-                        setTimeout("top.sfClient.RefreshiFrameSrc();", 1234);
-                    }
+            try {
+                var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
+                if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
+                    // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
+                    setTimeout("top.sfClient.RefreshiFrameSrc();", 1234);
                 }
-                catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
+                var ThisURLHash = OpenUrl.sfHashCode();
+                if (sfRestClient._DialogCoordinateCache.has(ThisURLHash)) {
+                    var TargetSizeData: CoordinateWithSize = sfRestClient._DialogCoordinateCache.get(ThisURLHash)!;
+                    var $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
+                    top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.height);
+                    top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.width);
+                    $DialogDiv.css({top:TargetSizeData.top,left:TargetSizeData.left});
+                }
+            }
+            catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
 
         });
 
@@ -2857,24 +2874,38 @@ export class sfRestClient {
         console.log('dialog width explicitly set to ' + newValue);
     }
 
-
+/**
+ * Updates internal sizes after the dialog frame size is changed
+ * @param forDialog reference to DIV with jQueryUI dialog widget
+ * @returns
+ */
     protected sfModelDialogResized(forDialog : JQuery<HTMLDivElement>) : void {
 
-            // this is called after a user resizes the dialog
-                var dg = forDialog
-                if (!$(window)) return;
-                var tdh = Math.floor(dg.dialog("option", "height"));
-                var tdw = Math.floor(dg.dialog("option", "width"));
-                var height = dg.height()!; // actual content area
-                var width = Math.round(dg.width()! + 1);  // actual content area
-                var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
-                console.log('sfDialogResized resized to {0}w, {1}h inside {2}x{3}, frame h={4}'.sfFormat( width ,height , tdw , tdh, fh));
-                if ((($(window).width()! < (width + this.DialogViewPortAdjustments.outsidExtraW)) || ($(window).height()! < (height + this.DialogViewPortAdjustments.outsidExtraH)))) this.sfSetParentWindowSize(false, width + this.DialogViewPortAdjustments.outsidExtraW, height + this.DialogViewPortAdjustments.outsidExtraH);
-                var $DFrame = $(dg.children("iframe").get(0)) // what if there is no frame???
-                // $($DFrame).contents().find("html").outerHeight()  -- but not a good place to force the height
-                $DFrame.css('height', fh); // also iframe
-                $DFrame.css('width', '100%'); // also iframe
+    // this is called after a user resizes the dialog
+        var dg = forDialog
+        if (!$(window)) return;
+        var tdh = Math.floor(dg.dialog("option", "height"));
+        var tdw = Math.floor(dg.dialog("option", "width"));
+        var height = dg.height()!; // actual content area
+        var width = Math.round(dg.width()! + 1);  // actual content area
+        var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
+        console.log('sfDialogResized resized to {0}w, {1}h inside {2}x{3}, frame h={4}'.sfFormat( width ,height , tdw , tdh, fh));
+        if ((($(window).width()! < (width + this.DialogViewPortAdjustments.outsidExtraW)) || ($(window).height()! < (height + this.DialogViewPortAdjustments.outsidExtraH)))) this.sfSetParentWindowSize(false, width + this.DialogViewPortAdjustments.outsidExtraW, height + this.DialogViewPortAdjustments.outsidExtraH);
+        var $DFrame = $(dg.children("iframe").get(0)) // what if there is no frame???
+        // $($DFrame).contents().find("html").outerHeight()  -- but not a good place to force the height
+        $DFrame.css('height', fh); // also iframe
+        $DFrame.css('width', '100%'); // also iframe
 
+        var NewSizeData : CoordinateWithSize;
+        var PositionNow = dg.position();
+        NewSizeData = {top:PositionNow.top,
+                left : PositionNow.left,
+                width : dg.width()!,
+                height : dg.height()!
+        };
+        var DialogURL:string = $DFrame.attr("src")!;
+        var DialogURLHash = DialogURL.sfHashCode();
+        sfRestClient._DialogCoordinateCache.set(DialogURLHash,NewSizeData);
     }
 //var $LookupFrame = $($LookupDialog.children("iframe").get(0))
 
@@ -3009,6 +3040,172 @@ export class sfRestClient {
     }
 
     /**
+     * Called by the global instance to connect to SignalR
+     */
+    protected static StartSignalRClientHub():void {
+        if (self !== top) return;
+
+        if ($.connection) {
+            var sfHub = $.connection.sfPMSHub;
+            sfHub.client.ReConnectDelay = 5000;
+            sfHub.client.ForWindowRX = /^javascript.+-(?<WindowName>[a-z0-9]{12})'\);/
+            sfHub.client.systemWideUserNotification = function (msgText:string) {
+                top?.sfClient.DisplayUserNotification(msgText);
+            };
+            sfHub.client.systemNotificationHasChanged = function (sysNoticeHC:string) {
+                top?.sfClient.DisplaySysNotification(sysNoticeHC);
+            };
+
+            sfHub.client.documentChangeBy = function (loginSessionKey:string, otherUserName:string, changeCount:number, refreshEvent:string) {
+                console.log("sfPMSHub documentChangeBy...",otherUserName,changeCount); // subscribed, not myself, offer reload
+                if (top?.sfClient.GetPageContextValue("LoginSessionKey") === loginSessionKey) return;
+                if (typeof top?.DocumentChangedByAnotherUser === "function") top.DocumentChangedByAnotherUser(refreshEvent, otherUserName, changeCount);
+            };
+
+            sfHub.client.afterDocumentSaved = function (dtk:string) {
+                console.log("sfPMSHub afterDocumentSaved..."); // always myself, refresh related dashboards
+                if (top?.sfClient.IsProjectPage()) {
+                        top?.refreshPartbyName('ProjDocSummary', 'refresh', 'afterDocumentSaved');
+                        top?.refreshPartbyName('ProjTypedDocList', 'SlctDocType', dtk);
+                }
+                else if (top?.sfClient.IsHomeDashboardPage()) {
+                        top?.refreshPartbyName('actionitems', 'refresh', 'afterDocumentSaved');
+                    }
+            }
+
+            sfHub.client.nowViewingDocument = function (target, loginSessionKey, request) {
+                var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
+                console.log(`sfPMSHub received from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
+                if (top?.sfClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
+                    request = request.substring(11);
+                    try {
+                        eval(request);
+                    }
+                    catch (ej:any) {
+                        if (ej.name === "ReferenceError") {
+                            console.log(`sfPMSHub ignored js - ${ej.message}  `);
+                        }
+                        else {
+                            console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+                        }
+                    }
+                }
+            }
+
+            sfHub.client.dashboardOpenLink = function (target, request) {
+                console.log(`sfPMSHub received to [${target}]:${request} `);
+
+                var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
+                if (top?.name!.length! > 0 && target.startsWith(top?.name!)) {
+                    if (request.startsWith("javascript:")) {
+                        request = request.substring(11);
+                        try {
+                            eval(request);
+                        }
+                        catch (ej:any) {
+                            if (ej.name === "ReferenceError") {
+                                console.log(`sfPMSHub ignored js - ${ej.message}  `);
+                            }
+                            else {
+                                console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+                            }
+                        }
+                    }
+                    else if (request.startsWith("refresh")) {
+                        if (top?.sfClient.IsProjectPage()) {
+                           top.refreshPartbyName('DocSearch', request, 'signalR');
+                            top.refreshPartbyName('ProjTypedDocList', request, 'signalR');
+                        }
+                        else if (top?.sfClient.IsHomeDashboardPage()) {
+                            top.refreshPartbyName('actionitems', 'refresh', 'signalR');
+                        }
+                        else if (typeof top?.refreshPageParts === "function") {
+                            top.refreshPageParts(request, 'signalR');
+                        }
+                    }
+
+                    else if (request.startsWith(sfApplicationRootPath)) {
+                        top!.location.href = request;
+                    }
+                }
+                else if (top?.name!.length! > 0 && top?.sfClient.GetPageContextValue("DataPK").endsWith(top.name)
+                    && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === top.name) {
+                    // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
+                    console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
+                    setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
+                }
+                else console.log(`sfPMSHub ignoring request to [${target}]:${request}`);
+            };
+            sfHub.client.dashboardRefreshPartByName = function (target) {
+                console.log(`sfPMSHub received dashboardRefreshPartByName for [${target}] `);
+                if (typeof top?.refreshPartbyName === "function") {
+                    top?.refreshPartbyName(target);
+                }
+            };
+            sfHub.client.onApplicationStart = function () {
+                console.log("sfPMSHub:OnApplicationStart", self.location.pathname);
+                if (!top?.sfClient.IsDocumentPage()) {
+                    if (top?.location.pathname.endsWith("login.aspx")) {
+                        self.location.href = self.location.pathname + "?rwapp=1";
+                        return;
+                    }
+                    sfHub.server.sessionAlive();
+                }
+                sfHub.server.sessionAlive();
+            }
+            sfHub.client.tickleSession = function () {
+                console.log("sfPMSHub:tickleSession");
+                sfHub.client.ReConnectDelay = 5000;
+                if (!top?.sfClient.IsDocumentPage()) {
+                    sfHub.server.sessionAlive();
+                }
+            }
+            sfHub.client.userLoggedOut = function () {
+                console.log("sfPMSHub received logout notification ");
+                top?.sfClient.DisplayUserNotification("You have been logged out!");
+                if (top?.sfClient.IsPowerUXPage()) {
+                    setTimeout(`top.location.href = '${sfApplicationRootPath}/v21.html#!/login?m=LoggedOut'; //signalr log out`, 3210);
+                }
+                else {
+                    setTimeout(`top.location = '${sfApplicationRootPath}/admin/SessionLost.aspx?m=LoggedOut'; //signalr log out`, 3210);
+                }
+            }
+            if (top.localStorage.getItem("SignalR-Logging")) $.connection.hub.logging = true;
+
+            $.connection.hub.connectionSlow(function () {
+                console.log('sfPMSHub: experiencing difficulties with the connection.');
+                $("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
+            });
+
+            $.connection.hub.disconnected(function () {
+                console.log(`${new Date().toLocaleTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms`);
+                if ($.connection.hub.lastError) {
+                    console.log($.connection.hub.lastError.message);
+                }
+                setTimeout(function () {
+                    $.connection.hub.start().done(function hubReStart() {
+                        console.log(`${new Date().toLocaleTimeString()} sfPMSHub Hub has been re-started...`);
+                        if (top?.sfClient.IsDocumentPage()) {
+                            sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
+                        }
+                    });
+                }, sfHub.client.ReConnectDelay); // Restart connection after 5 seconds.
+                if (sfHub.client.ReConnectDelay < 120000) sfHub.client.ReConnectDelay *= 2;
+            });
+
+            $.connection.hub.start().done(function () {
+                console.log("sfPMSHub Hub has started...");
+                //if (typeof top.sfPMSHub === "undefined") top.sfPMSHub = $.connection.sfPMSHub; // $.connection.hub.proxies.sfpmshub;
+                if (top?.sfClient.IsDocumentPage()) {
+                    sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
+                }
+            });
+        }
+    }
+
+
+
+    /**
      * Not intended for production use: Clears cross-session storage
      */
     public QAClearEnvironment(alsoClearSessionStorage? : boolean):void {
@@ -3021,6 +3218,7 @@ export class sfRestClient {
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
+    protected static _DialogCoordinateCache: Map<number, CoordinateWithSize> = new Map<number, CoordinateWithSize>();
     protected static _UserPermitResultCache: Map<string, number> = new Map<string, number>();
     protected static PermitMapLoaded() :boolean {
         return sfRestClient._UCPermitMap && "WORK" in sfRestClient._UCPermitMap;
@@ -3073,6 +3271,8 @@ export class sfRestClient {
      private static _LoadingPermitRequests: Map<string, Promise<UCPermitSet | null> > = new Map<string, Promise<UCPermitSet | null> >();
      private static InstanceSerialNumberSource: number=0;
      private ThisInstanceID: number;
+
+
 
     constructor() {
         this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
@@ -3130,11 +3330,10 @@ export class sfRestClient {
                 });
                 $(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
-
                });
+               sfRestClient.StartSignalRClientHub();
                 sfRestClient._GlobalClientConstructFlag = false;
             }
         });
     }
 };
-

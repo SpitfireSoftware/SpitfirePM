@@ -12,18 +12,71 @@ interface Math {
 }
 
 declare global {
+
+    interface AfterDocumentSaved {(dtk:string):void}
+    interface DashboardOpenLink {(targetWindowName: string, request: string):void}
+    interface DashboardRefreshPartByName {(partName: string):void}
+    interface DMKMethod {(dmk:GUID):void}
+    interface DocumentChangeBy { (loginSessionKey: GUID, otherUserName :string,   changeCount:number, nextEvent:string):void }
+    interface NowViewingDocument {(targetWindowName: string, loginSessionKey: GUID, request: string):void}
+    // sfClass interfaces
+    interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
+    interface RefreshPartbyName {(partName: string, eventTarget?: string, eventArg?: string):void}
+    interface RefreshPageParts {(eventTarget: string, eventArg:string):void}
+    interface SimpleMethod {():void}
+    // sfClassic interfaces ^^^
+
+    interface sfPMSHub {
+
+        client: {
+            ReConnectDelay: number;
+            ForWindowRX : RegExp //= /^javascript.+-(?<WindowName>[a-z0-9]{12})'\);/
+
+            afterDocumentSaved: AfterDocumentSaved;
+            dashboardOpenLink: DashboardOpenLink;
+            dashboardRefreshPartByName: DashboardRefreshPartByName;
+            documentChangeBy: DocumentChangeBy;
+            nowViewingDocument: NowViewingDocument;
+            onApplicationStart: SimpleMethod;
+            systemNotificationHasChanged: any;
+            systemWideUserNotification: any;
+            tickleSession:SimpleMethod;
+            userLoggedOut:SimpleMethod;
+        }
+        connection: {
+
+            state: number;
+            transport: {
+                name: string;
+            }
+        }
+        server: {
+            sessionAlive: SimpleMethod;
+            subscribeToDocument:  DMKMethod;
+        }
+
+    }
+
     interface Window {
         $: JQueryStatic;
         jQuery: JQueryStatic;
         sfClient: sfRestClient;
         ClickOnceExtension: BrowserExtensionChecker;  // not the best name, needed by legacy UI
         WindowHasFocus: boolean;
+
+        // sf classic
+        DocumentChangedByAnotherUser:DocumentChangedByAnotherUser;
+        refreshPartbyName: RefreshPartbyName;
+        refreshPageParts: RefreshPageParts;
+        // sf classic ^^^
+
     }
     interface JQueryStatic {
         datepicker: any;
         signalR: any;
         connection: {
-            sfPMSHub: any
+            hub: any;
+            sfPMSHub: sfPMSHub
         }
     }
     interface JQuery {
