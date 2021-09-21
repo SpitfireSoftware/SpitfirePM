@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.9.58C";
+const ClientPackageVersion : string = "1.10.61";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -262,8 +262,12 @@ export type PagePartList= {[key: string]: Permits};
 
 
 export class sfRestClient {
-    ServerVersion: string = "2020.0.7919";
     ClientVersion: string = `${ClientPackageVersion}`;
+    ServerVersion():string {
+        var result ="2020.0.7919";
+        if (sfRestClient._WCC.Version) result = sfRestClient._WCC.Version;
+        return result;
+    }
     /**
      * Helps decode Permit flags
      */
@@ -1577,10 +1581,12 @@ export class sfRestClient {
     }
 
     protected static _Options : NVPair  = {
+
+        BasicPingServerInterval: 33*1000,
+        BlankPageURI: "about:blank",
     /**
      * How long (in milliseconds) should a DV result be cached for reuse
     */
-        BlankPageURI: "about:blank",
         DVCacheLife:  16 * 60000, // 16 minutes
         LogLevel:  LoggingLevels.None,
         NonPostbackEventID: "DNPB",
@@ -1777,12 +1783,12 @@ export class sfRestClient {
      *
      * @param key name of a context property
      */
-    public GetPageContextValue( key : string) : any {
+    public GetPageContextValue( key : string, defaultValue? : any) : any {
         if (key in sfRestClient._WCC) {
             return sfRestClient._WCC[key];
         }
         console.warn("GetPageContext() no value known for key",key);
-        return "";
+        return defaultValue;
     }
 
     public IsDocExclusiveToMe() : boolean {
@@ -2133,7 +2139,7 @@ export class sfRestClient {
      * @param timeOutMS if specified, message auto-clears in this many milliseconds.  Which does not count as dismissed.
      * @returns the DIV containing the message, .data("alreadyshown") = true if already shown.
      */
-    DisplayThisNotification(templateURL : string, notificationText : string, timeOutMS? : number) : Promise<JQuery<HTMLElement>>{
+    DisplayThisNotification(templateURL : string, notificationText? : string, timeOutMS? : number) : Promise<JQuery<HTMLElement>>{
         $("DIV#SNotificationContainerHolder").remove();
 
         var RESTClient = this;
@@ -2179,7 +2185,7 @@ export class sfRestClient {
     /** Displays a simple user notification, with "dismiss" session memory
      * @param notificationText The message.  Message is skipped if the same exact message has already been dismissed.
      */
-    DisplayUserNotification(notificationText : string, timeOutMS?: number): Promise<JQuery<HTMLElement>> {
+    DisplayUserNotification(notificationText? : string, timeOutMS?: number): Promise<JQuery<HTMLElement>> {
         return this.DisplayThisNotification("ajhx/UsrNotification.html", notificationText, timeOutMS);
     }
 
@@ -3057,6 +3063,9 @@ export class sfRestClient {
             setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
             return;
         }
+        if (top.sfClient.IsPowerUXPage() && !top.sfClient.IsPageOfType(top.sfClient.PageTypeNames.Document)) {
+            setTimeout("top.sfClient.pingServer();",234);
+        }
         if ($.connection) {
             var sfHub = $.connection.sfPMSHub;
             if (top.sfPMSHub === sfHub) return;
@@ -3205,12 +3214,7 @@ export class sfRestClient {
                 if (HubEvent.isDefaultPrevented()) return;
 
                 top?.sfClient.DisplayUserNotification("You have been logged out!");
-                if (top?.sfClient.IsPowerUXPage()) {
-                    setTimeout(`top.location.href = '${sfApplicationRootPath}/v21.html#!/login?m=LoggedOut'; //signalr log out`, 3210);
-                }
-                else {
-                    setTimeout(`top.location = '${sfApplicationRootPath}/admin/SessionLost.aspx?m=LoggedOut'; //signalr log out`, 3210);
-                }
+                setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoggedOut")}; //signalr log out`, 3210);
             }
             if (top.localStorage.getItem("SignalR-Logging")) $.connection.hub.logging = true;
 
@@ -3245,6 +3249,215 @@ export class sfRestClient {
         }
     }
 
+    protected static LogoutPageURL(mValue: string) : string {
+        var isPowerUX =top?.sfClient.IsPowerUXPage();
+        isPowerUX = false;
+        var result = `${sfApplicationRootPath}/${isPowerUX ? "v21.html#!/login" : "admin/Logout.aspx"}?m={mValue}`;
+        return result;
+    }
+    protected static LoginPageURL(mValue: string) : string {
+        var isPowerUX =top?.sfClient.IsPowerUXPage();
+        var result : string;
+        if (isPowerUX) {
+            result = `${sfApplicationRootPath}/v21.html#!/login?m=${mValue}`;
+        }
+        else {
+            result = `${sfApplicationRootPath}/admin/SessionLost.aspx?m=${mValue}`;
+        }
+        return result;
+    }
+
+    protected static _NextPingTimerID :number | undefined= undefined;
+    public pingServer():void {
+        var id:string = "TBD";
+        try {
+            var RESTClient = this;
+            if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== $.signalR.connectionState.connected) {
+                sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for hub ", 123);
+                return;
+            }
+
+            var retryInterval = (sfRestClient._Options.BasicPingServerInterval * (1.1 + Math.random()));
+            var $ALERT;
+            var ActionAfterAlert = "";
+            var MaxIdleTime = RESTClient.GetPageContextValue("IdleForce",33) * 59000;
+            var id:string = RESTClient.GetPageContextValue("DocSessionKey","");
+            if ($("DIV.ui-dialog-content.sfStopPingServer").length > 0) return;
+            sfRestClient.PageServerPingAttempts ++;
+            if (top.sfPMSHub && top.sfPMSHub.connection.state === $.signalR.connectionState.connected ) top.sfPMSHub.server.sessionAlive();
+
+            top.sfPMSHub.server.dashboardHeartbeat(id,sfRestClient.PageNotificationCount)
+                .then(function (responseText) {
+                if (responseText > "") {
+                    var isOK = (responseText.startsWith("OK"));
+
+                    //$(jqSelector).html(responseText);
+
+                    if (isOK) {
+                        if (typeof top?.clearHomeTabCount === "function") top.clearHomeTabCount(true);
+                        //else { homeTab.text("Home"); }
+
+                        retryInterval = (sfRestClient._Options.BasicPingServerInterval + ((top?.WindowHasFocus ? 10000 : 18000) * Math.random())); // ~32-50 secs;
+                        sfRestClient.PageNotificationCount ++;
+                        var d = new Date();
+                        var hourNow = d.getHours();
+                        if (((sfRestClient.PageNotificationCount > 33) && (hourNow < 2)) || (((sfRestClient.PageNotificationCount * retryInterval) > MaxIdleTime))) {
+                            RESTClient.DisplaySysNotification("This window has been idle and will logoff in 1 minute.  ", 60000);
+                            setTimeout(`location="${sfRestClient.LogoutPageURL('idle')}";` , 66000);
+                            retryInterval = 99000;
+                        }
+                    }
+                    else if (responseText === "NAK: Not Authenticated") {
+                        RESTClient.DisplaySysNotification("Lost authentication.  ", 60000);
+                        setTimeout(`location="${sfRestClient.LogoutPageURL('idle')}";` , 9753);
+                    }
+                    else {
+                        var msgText : boolean | string = false;
+                        if (responseText.startsWith("refresh")) {
+                            console.log("pingServer() Classic Refresh ignored");
+                        }
+
+                        else if (responseText.startsWith('[{"DocMasterkey":')) {
+                            var ldata = JSON.parse(responseText);
+                            sfRestClient.PageNotificationCount ++
+                            responseText = `OK w/${ldata.length} New Documents`;
+                            if (!RESTClient.IsPowerUXPage() && RESTClient.IsHomeDashboardPage()) {
+                                setTimeout("if (typeof top.refreshPartbyName === 'function') top.refreshPartbyName('actionitems'); // pingServer::dasho", 222);
+                            }
+                            // deprecated: used to put a number on the classic home tab
+
+
+                        }
+                        else if (responseText.startsWith('{"link":')) {
+                            var ldata = JSON.parse(responseText);
+                            if ((location.pathname.toUpperCase() + location.search.toUpperCase()) == ldata.link.toUpperCase()) {
+                                top?.__doPostBack("refresh", "dasho");  // this makes the pending window.close irrelavent....
+                            }
+                            else {
+                                msgText = ldata.text;
+                                retryInterval = retryInterval * 3;
+                                ActionAfterAlert = ldata.link;
+                            }
+                        }
+
+                        else {
+                            msgText = responseText;
+                            retryInterval = -1;
+                        }
+                        RESTClient.PageServerPingBackAlert(msgText, ActionAfterAlert);
+                    }
+
+                    retryInterval = Math.round(retryInterval);
+                    RESTClient.PageServerPingBackOk("dasho", id, responseText, retryInterval);
+                    if (retryInterval > 0) setTimeout('pingServer("' + id + '");', retryInterval);
+                }
+                }).catch(function (failMessage) {
+                    var retryNow = RESTClient.PageServerPingBackFailed("dasho", id, failMessage, retryInterval / 2,"pingServer");
+                if (retryNow) setTimeout('pingServer("' + id + '"); // weak connection retry', retryInterval);
+            });
+
+        } catch (exx:any) {
+            console.log(`pingServer(${id}) - ${exx.message}`);
+            this.DisplaySysNotification(`The server could not be contacted : ${exx.message}`,99999);
+            // how to recover??
+        }
+    }
+
+    static PageServerPingAttempts = 0
+    static PageServerPingOK = 0
+    static PageServerPingFailRunCount = 0
+    static PageServerPingFailThreshold = 6
+    static PageServerPingUserNotificationShown = false;
+    static PageNotificationCount = 0;
+
+
+    protected PageServerPingBackAlert(msgText: string | boolean, actionAfterAlert:string) {
+        if (typeof msgText === "string") {
+            console.warn(`PageServerPingBackAlert ${msgText}`)
+             //$ALERT = jqAlert(msgText,"Server Ping");
+            }
+        if (actionAfterAlert.length > 0) {
+            console.warn(`PageServerPingBackAlert does not support actionAfterAlert ${actionAfterAlert}` );
+            // retryInterval = -1;
+            // //if (typeof (AllowToLeavePage) == "function") AllowToLeavePage();
+            // $ALERT.bind('dialogclose', function (event) {
+            //     if (actionAfterAlert == "Close") { window.top.close(); }
+            //     else if (actionAfterAlert.length > 0) top.location = actionAfterAlert;
+            // });
+        }
+    }
+
+    protected PageServerPingBackOk(marker:string, id:string, responseText:string, nextMS:number) {
+        sfRestClient.PageServerPingFailRunCount = 0;
+        sfRestClient.PageServerPingOK ++;
+        $("SPAN#spnDashOWarning.sfPingHealthTip").detach();
+        if (sfRestClient.PageServerPingUserNotificationShown) {
+            top?.sfClient.DisplayUserNotification();
+            sfRestClient.PageServerPingUserNotificationShown = false;
+        }
+    if ((top?.sfClient.DevMode()) || sfRestClient.PageServerPingOK < 2 || ((top?.sfPMSHub) && top.sfPMSHub.connection.logging) || ((responseText) && (responseText != "OK")))
+        console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - ${responseText}; Next: ${nextMS}ms at ${new Date(new Date().valueOf() + nextMS).toLocaleTimeString()}`);
+        sfRestClient.PageServerPingFailRunCount = 0;
+        top!.sfPMSHub.client.ReConnectDelay = 5000;
+}
+
+    protected PageServerPingBackFailed(marker:string, id:string, jqXHR: string | JQueryXHR, nextMS:number, methodName:string) {
+    var responseText;
+    if (typeof jqXHR === "string") responseText = jqXHR;
+    if (typeof jqXHR === "object") {
+        responseText = jqXHR.responseText;
+        if (typeof responseText !== "string") {
+            console.log(jqXHR);
+            responseText = "";
+        }
+        if ((responseText.length === 0) || (responseText.length > 200)) responseText = jqXHR.statusText;
+    }
+    if (responseText === "NAK: Not Authenticated") {
+        var msgText = "You are no longer logged into this server.  This window will close when you click OK";
+        //retryInterval = -1;
+        var ActionAfterAlert = "about:blank"
+        if ((typeof self.name === "string") && (self.name === "Dashboard")) {
+            ActionAfterAlert = sfRestClient.LoginPageURL("lost");
+            msgText = "You are no longer logged into this server.  You will be redirected back to the login page when you click OK";
+        }
+        this.PageServerPingBackAlert(msgText, ActionAfterAlert);
+        return false;
+    }
+
+    var continueAutoRetry = true;
+    sfRestClient.PageServerPingFailRunCount ++;
+
+    if (sfRestClient.PageServerPingFailRunCount > (sfRestClient.PageServerPingFailThreshold * 0.75)) {
+        if (sfRestClient.PageServerPingFailRunCount > sfRestClient.PageServerPingFailThreshold) {
+            top?.sfClient.DisplaySysNotification(`Warning: Server not responding ${responseText}`);
+            // $ALERT = jqAlert("Server is not responding. (" + responseText + ") Close dialog to retry","Connection Check");  // was jqAlert
+            // $ALERT.bind('dialogclose', function (event) {
+            //      setTimeout('{0}("{1}"); // manual retry '.format(methodName, id), 222);
+            // });
+            continueAutoRetry = false;
+        }
+        else {
+            top?.sfClient.DisplayUserNotification("Warning: Ongoing Interuption of Server Connection...");
+            sfRestClient.PageServerPingUserNotificationShown = true;
+        }
+    }
+    $("SPAN#spnDashOWarning.sfPingHealthTip").detach();
+    $("SPAN.clsBrandingFooterText")
+        .append(`<span id='spnDashOWarning' class='sfPingHealthTip' title='${responseText}'>Weak server connection. (${(Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2))}% successful)</span>` );
+
+    console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - failed ${responseText}; Next ${nextMS}ms`);
+    return continueAutoRetry;
+}
+
+    /** Returns current time in minutes */
+    public TODInMinutes():number {
+        var d = new Date();
+        return (d.getHours() * 60) + d.getMinutes();
+    }
+
+    public DevMode() : boolean {
+        return top?.sfClient.GetPageContextValue("DevMode",false);
+    }
 
 
     /**

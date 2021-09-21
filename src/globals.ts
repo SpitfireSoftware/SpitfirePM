@@ -16,8 +16,10 @@ declare global {
     interface AfterDocumentSaved {(dtk:string, project: string):void}
     interface DashboardOpenLink {(targetWindowName: string, request: string):void}
     interface DashboardRefreshPartByName {(partName: string):void}
+
     interface DMKMethod {(dmk:GUID):void}
     interface DocumentChangeBy { (loginSessionKey: GUID, otherUserName :string,   changeCount:number, nextEvent:string):void }
+    interface HeartbeatMonitor { (dsk: string, rep: number):Promise<string>}
     interface NowViewingDocument {(targetWindowName: string, loginSessionKey: GUID, request: string):void}
     // sfClass interfaces
     interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
@@ -45,12 +47,14 @@ declare global {
         }
         connection: {
 
+            logging: boolean;
             state: number;
             transport: {
                 name: string;
             }
         }
         server: {
+            dashboardHeartbeat: HeartbeatMonitor;
             sessionAlive: SimpleMethod;
             subscribeToDocument:  DMKMethod;
         }
@@ -67,9 +71,11 @@ declare global {
         WindowHasFocus: boolean;
 
         // sf classic
+        clearHomeTabCount: any;
         DocumentChangedByAnotherUser:DocumentChangedByAnotherUser;
         refreshPartbyName: RefreshPartbyName;
         refreshPageParts: RefreshPageParts;
+
         // sf classic ^^^
 
     }
