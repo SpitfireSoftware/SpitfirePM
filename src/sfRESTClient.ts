@@ -1,6 +1,6 @@
 //import { contains } from "jquery";
 import { GUID } from "./globals";
-import  { sfApplicationRootPath } from "./string.extensions";
+//import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.61";
+const ClientPackageVersion : string = "1.10.63";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1150,11 +1150,9 @@ export class sfRestClient {
      * Make sure the URL starts with application root path
     */
     MakeSiteRelativeURL(url:string):string {
-        if (typeof sfApplicationRootPath !== 'undefined') {
-            if (url.startsWith("../")) url = url.substring(3);
-            if (url.toUpperCase().startsWith(sfApplicationRootPath.toUpperCase())) return url;
-            url = sfApplicationRootPath + '/' + url;
-        }
+        if (this.IsSiteURL(url)) return url;
+        if (url.startsWith("../")) url = url.substring(3);
+        url = `${this._SiteRootURL}/${url}`;
         return url;
     }
 
@@ -1337,7 +1335,7 @@ export class sfRestClient {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
                 if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
-                this.AddCSSResource("{0}/theme-fa/styles.css?v={1}".sfFormat(this._SiteURL,sfRestClient._WCC.Version));
+                this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
                 if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
                     $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
 
@@ -1400,7 +1398,7 @@ export class sfRestClient {
      */
     public AddCSSResource(cssRef : string): void {
         if (!cssRef) return;
-        if (cssRef.indexOf("/") < 0) cssRef = "{0}/wv.aspx/js/{1}.css".sfFormat(sfApplicationRootPath, cssRef);
+        if (cssRef.indexOf("/") < 0) cssRef = `${this._SiteRootURL}/wv.aspx/js/${cssRef}.css`;
         if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
 
         $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
@@ -1559,6 +1557,12 @@ export class sfRestClient {
        });
    }
 
+   /** returns true if url starts with _SiteURL  */
+   public IsSiteURL(url : string) : boolean {
+    if (url.sfStartsWithCI(this._SiteURL)) return true;
+    if (url.sfStartsWithCI(this._SiteRootURL)) return true;
+    return false;
+   }
 
     /**
      * Sets sfRestClient Options
@@ -1675,6 +1679,7 @@ export class sfRestClient {
      * For example: http://server.domain.com/sfPMS  (does not include ending slash)
      */
     protected _SiteURL: string;
+    protected _SiteRootURL: string;
 
 
 
@@ -2377,7 +2382,7 @@ export class sfRestClient {
     sfAC($AC: string | JQuery<HTMLInputElement>, lookupName:string, depends1:string|string[], dep2?:string, dep3?:string, dep4?:string) {
         if (typeof $AC === "string") $AC = $("#" + $AC);
         var RESTClient = this;
-        var SourceURL = `${sfApplicationRootPath}/api/suggestions/${lookupName}/${this.GetPageContextValue("dsCacheKey")}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
+        var SourceURL = `${RESTClient._SiteRootURL}/api/suggestions/${lookupName}/${this.GetPageContextValue("dsCacheKey")}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
         $AC.data("sourceurl",SourceURL).autocomplete({
             source: SourceURL
             , minLength: 3
@@ -2469,6 +2474,7 @@ export class sfRestClient {
             return new Promise<boolean>((b) => {  b(false)});;
         }
         if (eventContext == null) eventContext = window;
+        var RESTClient = this;
 
         sfRestClient.ExternalToolsLoadedPromise.then((unused)=>{
             var DefaultWidth = $("body").width();
@@ -2527,7 +2533,7 @@ export class sfRestClient {
             }
 
             var  OpenUrl = url;
-            if (!OpenUrl.startsWith(sfApplicationRootPath)) OpenUrl = sfApplicationRootPath + url;
+            if (!RESTClient.IsSiteURL(OpenUrl)) OpenUrl = `${RESTClient._SiteRootURL}/${url}`;
 
             if (OpenUrl.indexOf("xbia=1")) {
                 //ui-icon-script
@@ -3146,45 +3152,49 @@ export class sfRestClient {
                 $("body").trigger(HubEvent,  [target,request,RequestForWindowMatches] );
                 if (HubEvent.isDefaultPrevented()) return;
 
-                if (top?.name!.length! > 0 && target.sfStartsWithCI(top?.name!)) {
-                    if (request.startsWith("javascript:")) {
-                        request = request.substring(11);
-                        try {
-                            eval(request);
-                        }
-                        catch (ej:any) {
-                            if (ej.name === "ReferenceError") {
-                                console.log(`sfPMSHub ignored js - ${ej.message}  `);
+                if (top) {
+                    var RESTClient = top.sfClient;
+                    if (top.name!.length! > 0 && target.sfStartsWithCI(top?.name!)) {
+                        if (request.startsWith("javascript:")) {
+                            request = request.substring(11);
+                            try {
+                                eval(request);
                             }
-                            else {
-                                console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+                            catch (ej:any) {
+                                if (ej.name === "ReferenceError") {
+                                    console.log(`sfPMSHub ignored js - ${ej.message}  `);
+                                }
+                                else {
+                                    console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+                                }
                             }
                         }
-                    }
-                    else if (request.sfStartsWithCI("refresh")) {
-                        if (top?.sfClient.IsProjectPage()) {
-                           top.refreshPartbyName('DocSearch', request, 'signalR');
-                            top.refreshPartbyName('ProjTypedDocList', request, 'signalR');
+                        else if (request.sfStartsWithCI("refresh")) {
+                            if (RESTClient.IsProjectPage()) {
+                            top.refreshPartbyName('DocSearch', request, 'signalR');
+                                top.refreshPartbyName('ProjTypedDocList', request, 'signalR');
+                            }
+                            else if (RESTClient.IsHomeDashboardPage()) {
+                                top.refreshPartbyName('actionitems', 'refresh', 'signalR');
+                            }
+                            else if (typeof top?.refreshPageParts === "function") {
+                                top.refreshPageParts(request, 'signalR');
+                            }
                         }
-                        else if (top?.sfClient.IsHomeDashboardPage()) {
-                            top.refreshPartbyName('actionitems', 'refresh', 'signalR');
-                        }
-                        else if (typeof top?.refreshPageParts === "function") {
-                            top.refreshPageParts(request, 'signalR');
-                        }
-                    }
 
-                    else if (request.sfStartsWithCI(sfApplicationRootPath)) {
-                        top!.location.href = request;
+                        else if ( RESTClient.IsSiteURL(request)) {
+                            top!.location.href = request;
+                        }
                     }
+                    else if (top?.name!.length! > 0 && RESTClient.GetPageContextValue("DataPK").endsWith(top.name)
+                        && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === top.name) {
+                        // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
+                        console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
+                        setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
+                    }
+                    else console.log(`sfPMSHub ignoring request to [${target}]:${request}`);
                 }
-                else if (top?.name!.length! > 0 && top?.sfClient.GetPageContextValue("DataPK").endsWith(top.name)
-                    && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === top.name) {
-                    // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
-                    console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
-                    setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
-                }
-                else console.log(`sfPMSHub ignoring request to [${target}]:${request}`);
+
             };
             sfHub.client.dashboardRefreshPartByName = function (target) {
                 console.log(`sfPMSHub received dashboardRefreshPartByName for [${target}] `);
@@ -3256,19 +3266,24 @@ export class sfRestClient {
     }
 
     protected static LogoutPageURL(mValue: string) : string {
-        var isPowerUX =top?.sfClient.IsPowerUXPage();
-        isPowerUX = false;
-        var result = `${sfApplicationRootPath}/${isPowerUX ? "v21.html#!/login" : "admin/Logout.aspx"}?m={mValue}`;
+        var result = "admin/Logout.aspx";
+        if (top) {
+            var RESTClient = top.sfClient;
+            var isPowerUX =RESTClient.IsPowerUXPage();
+            isPowerUX = false;
+            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "v21.html#!/login" : "admin/Logout.aspx"}?m={mValue}`;
+        }
         return result;
     }
     protected static LoginPageURL(mValue: string) : string {
-        var isPowerUX =top?.sfClient.IsPowerUXPage();
+        var isPowerUX = top?.sfClient.IsPowerUXPage();
+        var root = top?.sfClient._SiteRootURL;
         var result : string;
         if (isPowerUX) {
-            result = `${sfApplicationRootPath}/v21.html#!/login?m=${mValue}`;
+            result = `${root}/v21.html#!/login?m=${mValue}`;
         }
         else {
-            result = `${sfApplicationRootPath}/admin/SessionLost.aspx?m=${mValue}`;
+            result = `${root}/admin/SessionLost.aspx?m=${mValue}`;
         }
         return result;
     }
@@ -3537,13 +3552,11 @@ export class sfRestClient {
     constructor() {
         this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
 
-        if (typeof sfApplicationRootPath === "string") {
-            this._SiteURL = sfApplicationRootPath;
-        }
-        else {
+
             var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
-        }
+            this._SiteRootURL = `/${ApplicationPath || 'sfPMS'}`;
+
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
         this.exports.sfRestClient = sfRestClient;
