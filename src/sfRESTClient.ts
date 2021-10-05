@@ -1483,6 +1483,7 @@ export class sfRestClient {
      */
    PopDoc(id : GUID) : Promise<Window | null>
    {
+       var RESTClient = this;
        return new Promise<Window | null>((resolve) => {
            if (!id.sfIsGuid()) {
                 console.warn("PopDoc(): Document id expected; received",id);
@@ -1490,7 +1491,7 @@ export class sfRestClient {
                 resolve(null);
                 return;
            }
-           this.GetDV("DocMasterType",id,undefined).then((thisDocType) => {
+           RESTClient.GetDV("DocMasterType",id,undefined).then(async (thisDocType) => {
                var thisRestClient = this;
                if (!thisDocType) {
                    console.warn("PopDoc(): Document not found"); //hmmm maybe a popup?
@@ -1500,7 +1501,11 @@ export class sfRestClient {
                }
                //todo: determine if we should use the new or old UI based on the document type of this document
                var url : string =  sfRestClient._Options.PopDocLegacyURL;
-               if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopDocXBURL;
+               if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopDocXBURL
+               else {
+                   if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",thisDocType,false)) url =  sfRestClient._Options.PopDocXBURL;
+               }
+
                url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
@@ -3054,6 +3059,7 @@ export class sfRestClient {
     }
 
 
+
     /**
      * Called by the global instance to connect to SignalR
      */
@@ -3064,7 +3070,7 @@ export class sfRestClient {
             return;
         }
         if (top.sfClient.IsPowerUXPage() && !top.sfClient.IsPageOfType(top.sfClient.PageTypeNames.Document)) {
-            setTimeout("top.sfClient.pingServer();",234);
+            if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout("top.sfClient.pingServer();",234);
         }
         if ($.connection) {
             var sfHub = $.connection.sfPMSHub;
@@ -3140,7 +3146,7 @@ export class sfRestClient {
                 $("body").trigger(HubEvent,  [target,request,RequestForWindowMatches] );
                 if (HubEvent.isDefaultPrevented()) return;
 
-                if (top?.name!.length! > 0 && target.startsWith(top?.name!)) {
+                if (top?.name!.length! > 0 && target.sfStartsWithCI(top?.name!)) {
                     if (request.startsWith("javascript:")) {
                         request = request.substring(11);
                         try {
@@ -3155,7 +3161,7 @@ export class sfRestClient {
                             }
                         }
                     }
-                    else if (request.startsWith("refresh")) {
+                    else if (request.sfStartsWithCI("refresh")) {
                         if (top?.sfClient.IsProjectPage()) {
                            top.refreshPartbyName('DocSearch', request, 'signalR');
                             top.refreshPartbyName('ProjTypedDocList', request, 'signalR');
@@ -3168,7 +3174,7 @@ export class sfRestClient {
                         }
                     }
 
-                    else if (request.startsWith(sfApplicationRootPath)) {
+                    else if (request.sfStartsWithCI(sfApplicationRootPath)) {
                         top!.location.href = request;
                     }
                 }
@@ -3349,7 +3355,7 @@ export class sfRestClient {
 
                     retryInterval = Math.round(retryInterval);
                     RESTClient.PageServerPingBackOk("dasho", id, responseText, retryInterval);
-                    if (retryInterval > 0) setTimeout('pingServer("' + id + '");', retryInterval);
+                    if (retryInterval > 0) sfRestClient._NextPingTimerID = setTimeout(`top.sfClient.pingServer("${id}");`, retryInterval);
                 }
                 }).catch(function (failMessage) {
                     var retryNow = RESTClient.PageServerPingBackFailed("dasho", id, failMessage, retryInterval / 2,"pingServer");

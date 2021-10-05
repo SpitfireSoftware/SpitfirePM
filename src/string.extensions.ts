@@ -4,7 +4,8 @@ declare global {
         sfFormat(this: string, ...words: any[]): string;
         replaceAll(this: string, pattern: string, replacement: string): string;
         sfHashCode(this: string): number;
-        sfIsGuid(this: string): boolean
+        sfIsGuid(this: string): boolean;
+        sfStartsWithCI(this:string,testString: string) : boolean;
     }
 
     interface Date {
@@ -101,6 +102,8 @@ String.prototype.sfHashCode = function caclHashCode(this: string): number {
     }
     return hash;
 };
+
+/** alternative to template string `${varname}` */
 String.prototype.sfFormat = function formatThis(this: string, ...words): string {
     return this.replace(
         /{(\d+)}/g,
@@ -117,7 +120,9 @@ if (!String.prototype.replaceAll) {
     }
 }
 
-
+ String.prototype.sfStartsWithCI = function (testString) {
+        return this.slice(0, testString.length).toLowerCase()  === testString.toLowerCase();
+    };
 
 var HTTPApplicationName = (typeof window !== "undefined" ?window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/")) : "sfPMS");
 var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");
