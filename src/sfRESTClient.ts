@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.63";
+const ClientPackageVersion : string = "1.10.64";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1608,7 +1608,7 @@ export class sfRestClient {
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
         PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
-        ProjectXBURL: '{0}/v21.html#!/main/projectDashboard?project={1}'
+        ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}'
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
@@ -3271,7 +3271,7 @@ export class sfRestClient {
             var RESTClient = top.sfClient;
             var isPowerUX =RESTClient.IsPowerUXPage();
             isPowerUX = false;
-            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "v21.html#!/login" : "admin/Logout.aspx"}?m={mValue}`;
+            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "spax.html#!/login" : "admin/Logout.aspx"}?m={mValue}`;
         }
         return result;
     }
@@ -3280,7 +3280,7 @@ export class sfRestClient {
         var root = top?.sfClient._SiteRootURL;
         var result : string;
         if (isPowerUX) {
-            result = `${root}/v21.html#!/login?m=${mValue}`;
+            result = `${root}/spax.html#!/login?m=${mValue}`;
         }
         else {
             result = `${root}/admin/SessionLost.aspx?m=${mValue}`;
@@ -3295,6 +3295,10 @@ export class sfRestClient {
             var RESTClient = this;
             if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== $.signalR.connectionState.connected) {
                 sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for hub ", 123);
+                return;
+            }
+            if (this.IsPageOfType( this.PageTypeNames.Login ) ) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log("pingServer() Log in pending (ignored)");
                 return;
             }
 
@@ -3484,9 +3488,9 @@ export class sfRestClient {
     /**
      * Not intended for production use: Clears cross-session storage
      */
-    public QAClearEnvironment(alsoClearSessionStorage? : boolean):void {
+    public QAClearEnvironment( ):void {
         var InGlobalInstance = this.IsGlobalInstance();
-        console.warn("sfRestClient.QAClearEnvironment()",alsoClearSessionStorage ? " w/sessionStorage" : "", InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
+        console.warn("sfRestClient.QAClearEnvironment()",  InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
         sessionStorage.clear();
         localStorage.clear()
         localForage.clear();
