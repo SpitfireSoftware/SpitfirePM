@@ -1,3 +1,4 @@
+import { datepicker } from "jquery";
 
 declare global {
     interface String {
@@ -14,6 +15,8 @@ declare global {
         isDate(this:Date, d?: Date | string ): boolean;
         isMidnight(this: Date): boolean;
         oneDay(this: Date): number;
+        /** returns hh:mm:ss.tt */
+        toSFLogTimeString(this: Date): string;
     }
 
     interface Window {
@@ -52,7 +55,7 @@ if (!Date.prototype.diffDays) {
     };
 }
 if (!Date.prototype.isMidnight) {
-    Date.prototype.isMidnight = function () {
+    Date.prototype.isMidnight = function () : boolean {
         return this.getHours() === 0 && this.getMinutes() === 0 && this.getSeconds() === 0;
     };
 }
@@ -74,6 +77,13 @@ if (!Date.prototype.isDate) {
         }
         return result;
     };
+}
+
+if (!Date.prototype.toSFLogTimeString) {
+    Date.prototype.toSFLogTimeString = function () : string {
+        new Date
+        return this.toISOString().substr(11,11);
+    }
 }
 
 if (!Window.prototype.__doPostBack) {

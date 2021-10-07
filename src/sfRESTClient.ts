@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.64";
+const ClientPackageVersion : string = "1.10.65";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1527,6 +1527,10 @@ export class sfRestClient {
    OpenProject(id : string) : Promise<Window | null>
    {
        var RESTClient = this;
+       if (this.IsDocumentPage()) {
+            $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
+            return new Promise<null>((resolve)=> resolve(null));
+       }
        return new Promise<Window | null>((resolve) => {
 
            this.GetDV("Project",id,undefined).then((thisProjectName) => {
@@ -3092,7 +3096,7 @@ export class sfRestClient {
             };
 
             sfHub.client.documentChangeBy = function (loginSessionKey:string, otherUserName:string, changeCount:number, refreshEvent:string) {
-                console.log("sfPMSHub documentChangeBy...",otherUserName,changeCount); // subscribed, not myself, offer reload
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.documentChangeBy ${otherUserName}, ${changeCount}`); // subscribed, not myself, offer reload
 
                 if (top?.sfClient.GetPageContextValue("LoginSessionKey") === loginSessionKey) return;
                 var HubEvent =  jQuery.Event("sfPMSHubSignal.documentChangeBy");
@@ -3102,11 +3106,11 @@ export class sfRestClient {
             };
 
             sfHub.client.afterDocumentSaved = function (dtk:string, project: string) {
-                console.log("sfPMSHub afterDocumentSaved..."); // always myself, refresh related dashboards
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.afterDocumentSaved dtk:${dtk}, project:${project}.`); // always myself, refresh related dashboards
                 var HubEvent = jQuery.Event("sfPMSHubSignal.afterDocumentSaved");
                 $("body").trigger(HubEvent,  [dtk,project] );
                 if (HubEvent.isDefaultPrevented()) {
-                    console.log("sfPMSHub afterDocumentSaved handled...");
+                    console.log("sfPMSHub afterDocumentSaved handled...");  // in general .preventDefault() was called
                     return;
                 }
 
@@ -3123,7 +3127,7 @@ export class sfRestClient {
 
             sfHub.client.nowViewingDocument = function (target, loginSessionKey, request) {
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
-                console.log(`sfPMSHub received from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.nowViewingDocument from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
                 if (top?.sfClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
                     var HubEvent = jQuery.Event("sfPMSHubSignal.nowViewingDocument");
                     $("body").trigger(HubEvent,  [target,loginSessionKey,request] );
@@ -3145,7 +3149,7 @@ export class sfRestClient {
             }
 
             sfHub.client.dashboardOpenLink = function (target, request) {
-                console.log(`sfPMSHub received to [${target}]:${request} `);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.dashboardOpenLink to [${target}]:${request} `);
 
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardOpenLink");
@@ -3197,7 +3201,7 @@ export class sfRestClient {
 
             };
             sfHub.client.dashboardRefreshPartByName = function (target) {
-                console.log(`sfPMSHub received dashboardRefreshPartByName for [${target}] `);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.dashboardRefreshPartByName for [${target}] `);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardRefreshPartByName");
                 $("body").trigger(HubEvent,  [target] );
                 if (HubEvent.isDefaultPrevented()) return;
@@ -3206,7 +3210,7 @@ export class sfRestClient {
                 }
             };
             sfHub.client.onApplicationStart = function () {
-                console.log("sfPMSHub:OnApplicationStart", self.location.pathname);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.OnApplicationStart ${self.location.pathname}`);
                 if (!top?.sfClient.IsDocumentPage()) {
                     if (top?.location.pathname.endsWith("login.aspx")) {
                         self.location.href = self.location.pathname + "?rwapp=1";
@@ -3217,30 +3221,31 @@ export class sfRestClient {
                 sfHub.server.sessionAlive();
             }
             sfHub.client.tickleSession = function () {
-                console.log("sfPMSHub:tickleSession");
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.tickleSession`);
                 sfHub.client.ReConnectDelay = 5000;
                 if (!top?.sfClient.IsDocumentPage()) {
                     sfHub.server.sessionAlive();
                 }
             }
+
             sfHub.client.userLoggedOut = function () {
-                console.log("sfPMSHub received logout notification ");
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.userLoggedOut`);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.userLoggedOut");
                 $("body").trigger(HubEvent, [top?.sfClient.GetPageContextValue("UserKey")] );
                 if (HubEvent.isDefaultPrevented()) return;
 
-                top?.sfClient.DisplayUserNotification("You have been logged out!");
-                setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoggedOut")}; //signalr log out`, 3210);
+                top?.sfClient.DisplayUserNotification("You have been logged out!",8765);
+                setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoggedOut")}'; //signalr log out`, 3210);
             }
             if (top.localStorage.getItem("SignalR-Logging")) $.connection.hub.logging = true;
 
             $.connection.hub.connectionSlow(function () {
-                console.log('sfPMSHub: experiencing difficulties with the connection.');
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: experiencing difficulties with the connection. `);
                 $("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
             });
 
             $.connection.hub.disconnected(function () {
-                console.log(`${new Date().toLocaleTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms`);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms`);
                 if ($.connection.hub.lastError) {
                     console.log($.connection.hub.lastError.message);
                 }
@@ -3256,7 +3261,7 @@ export class sfRestClient {
             });
 
             $.connection.hub.start().done(function () {
-                console.log("sfPMSHub Hub has started...");
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: started...`);
                 //if (typeof top.sfPMSHub === "undefined") top.sfPMSHub = $.connection.sfPMSHub; // $.connection.hub.proxies.sfpmshub;
                 if (top?.sfClient.IsDocumentPage()) {
                     sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
@@ -3299,6 +3304,7 @@ export class sfRestClient {
             }
             if (this.IsPageOfType( this.PageTypeNames.Login ) ) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log("pingServer() Log in pending (ignored)");
+                sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for login ", 345);
                 return;
             }
 
@@ -3342,7 +3348,7 @@ export class sfRestClient {
                             console.log("pingServer() Classic Refresh ignored");
                         }
 
-                        else if (responseText.startsWith('[{"DocMasterkey":')) {
+                        else if (responseText.startsWith('[{"DocMasterKey":')) {
                             var ldata = JSON.parse(responseText);
                             sfRestClient.PageNotificationCount ++
                             responseText = `OK w/${ldata.length} New Documents`;
@@ -3353,7 +3359,7 @@ export class sfRestClient {
 
 
                         }
-                        else if (responseText.startsWith('{"link":')) {
+                        else if (responseText.sfStartsWithCI('{"link":')) {
                             var ldata = JSON.parse(responseText);
                             if ((location.pathname.toUpperCase() + location.search.toUpperCase()) == ldata.link.toUpperCase()) {
                                 top?.__doPostBack("refresh", "dasho");  // this makes the pending window.close irrelavent....
@@ -3367,7 +3373,7 @@ export class sfRestClient {
 
                         else {
                             msgText = responseText;
-                            retryInterval = -1;
+                            retryInterval = retryInterval * 2;
                         }
                         RESTClient.PageServerPingBackAlert(msgText, ActionAfterAlert);
                     }
@@ -3381,10 +3387,15 @@ export class sfRestClient {
                 if (retryNow) setTimeout('pingServer("' + id + '"); // weak connection retry', retryInterval);
             });
 
-        } catch (exx:any) {
-            console.log(`pingServer(${id}) - ${exx.message}`);
-            this.DisplaySysNotification(`The server could not be contacted : ${exx.message}`,99999);
-            // how to recover??
+        }
+        catch (exx:any) {
+            if (exx.message) {
+                console.warn(`pingServer(${id}) - ${exx.message}`);
+                this.DisplaySysNotification(`The server could not be contacted : ${exx.message}`,99999);
+                // how to recover??
+            }
+            else  console.warn(`pingServer(${id}) - catch  ${typeof exx}`,exx);
+
         }
     }
 
@@ -3607,6 +3618,7 @@ export class sfRestClient {
                 });
                 $(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
+                    if (!RESTClient.IsDocumentPage() && top && !(top?.name)) top.name = "Dashboard";
                });
 
                sfRestClient.StartSignalRClientHub(); // for classic pages, XB pages are started after lazy load of SignalR

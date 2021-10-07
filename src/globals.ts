@@ -55,6 +55,7 @@ declare global {
         }
         server: {
             dashboardHeartbeat: HeartbeatMonitor;
+            dashboardOpenLink: DashboardOpenLink;
             sessionAlive: SimpleMethod;
             subscribeToDocument:  DMKMethod;
         }
