@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.65";
+const ClientPackageVersion : string = "1.10.66";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1993,11 +1993,12 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.warn("InvokeAction ignoring empty action");
             return;
         }
+        if (!sfRestClient.ExternalToolsLoadedPromise) sfRestClient.ExternalToolsLoadedPromise = new Promise<boolean>(r=>{r(false);});
         if (ActionString.startsWith(this._SiteURL)) {
 
             //if (ActionString.indexOf("?") === -1 &&  ActionString.indexOf(".aspx&set") > 0 )  ActionString = ActionString.replaceAll("&set","?set");// kludge to fix ?set being &set
             if (ActionString.indexOf("?") < 0 && ActionString.indexOf("#") < 0) ActionString += "?fq=1"; //fake query parameter
-            if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0) ActionString += "&xbia=1";
+            if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0 && this.IsPowerUXPage()) ActionString += "&xbia=1";
             if (ActionString.indexOf("libview.aspx") > 1) {
                 var ActionOptions : string = "";
                 if (ActionString.indexOf("?") > 0) {
@@ -2485,13 +2486,7 @@ export class sfRestClient {
             if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (this.$LookupDialog) {
-                try {
-                    this.$LookupDialog.dialog('destroy');
-                }
-                catch (e:any) {
-                   // console.warn(`LookupDialog destroy:`,e)
-                }
-                this.$LookupDialog?.remove();
+                this.$LookupDialogStack.push(this.$LookupDialog);
                 this.$LookupDialog = undefined;
             }
 
@@ -2539,7 +2534,7 @@ export class sfRestClient {
             var  OpenUrl = url;
             if (!RESTClient.IsSiteURL(OpenUrl)) OpenUrl = `${RESTClient._SiteRootURL}/${url}`;
 
-            if (OpenUrl.indexOf("xbia=1")) {
+            if (OpenUrl.indexOf("xbia=1") && top?.sfClient.IsPowerUXPage()) {
                 //ui-icon-script
                 top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI","ui-icon-script").on("click",function() {
                     top!.location.href = OpenUrl.replace("xbia=1","xbia=0");
@@ -2607,6 +2602,7 @@ export class sfRestClient {
     return sfRestClient.ExternalToolsLoadedPromise;  // so anchor click event doesn't also do work
     }
     protected $LookupDialog : JQuery<HTMLDivElement> | undefined ;
+    protected $LookupDialogStack  : JQuery<HTMLDivElement>[] = [];
     protected $LookupFrame : JQuery<HTMLIFrameElement> | undefined ;
 
     protected ResolveLookupFrame( forDialog?: JQuery<HTMLDivElement> | undefined) : JQuery<HTMLIFrameElement> | undefined {
@@ -2792,13 +2788,17 @@ export class sfRestClient {
         $LookupDialog.dialog('option', 'position', 'center');
         // $LookupDialog.dialog('option', 'zIndex', $.maxZIndex() + 1); neither this nor .dialog('moveToTop') helped
         $LookupDialog.dialog('destroy');
+
         this.$LookupDialog?.remove();
         this.$LookupDialog = undefined;
+        if (this.$LookupDialogStack.length > 0) this.$LookupDialog = this.$LookupDialogStack.pop();
 
         if (dialogMode == 'modalDialog') {
             if (newValue == null) newValue = postbackEventArg;
             postbackEventArg = newValue;
         }
+
+
 
         if (newValue != null) {
             console.log(dialogMode +' result: ' + idName + ' = ' + newValue);
