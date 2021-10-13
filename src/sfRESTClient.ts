@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.66";
+const ClientPackageVersion : string = "1.10.67";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -3054,6 +3054,7 @@ export class sfRestClient {
         var InGlobalInstance = this.IsGlobalInstance();
         console.log(`sfRestClient.ClearCache(${this.ThisInstanceID}), ${alsoClearSessionStorage ? " w/sessionStorage" : ""}, ${InGlobalInstance ? " Global" : ""}, UPRC:${sfRestClient._UserPermitResultCache.size}`);
         PartStorageData._LoadedParts.clear();
+        try {$.connection.hub.stop(); } catch {}
         sfRestClient._UserPermitResultCache.clear();
         sfRestClient._LoadedPermits.clear();
         sfRestClient._LoadingPermitRequests.clear();
@@ -3245,18 +3246,19 @@ export class sfRestClient {
             });
 
             $.connection.hub.disconnected(function () {
-                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms`);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms;  Reconnect:${!sfHub.client.SkipAutoReconnect}`);
                 if ($.connection.hub.lastError) {
                     console.log($.connection.hub.lastError.message);
                 }
-                setTimeout(function () {
-                    $.connection.hub.start().done(function hubReStart() {
-                        console.log(`${new Date().toLocaleTimeString()} sfPMSHub Hub has been re-started...`);
-                        if (top?.sfClient.IsDocumentPage()) {
-                            sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
-                        }
-                    });
-                }, sfHub.client.ReConnectDelay); // Restart connection after 5 seconds.
+                if (!sfHub.client.SkipAutoReconnect)
+                    setTimeout(function () {
+                        $.connection.hub.start().done(function hubReStart() {
+                            console.log(`${new Date().toLocaleTimeString()} sfPMSHub Hub has been re-started...`);
+                            if (top?.sfClient.IsDocumentPage()) {
+                                sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
+                            }
+                        });
+                    }, sfHub.client.ReConnectDelay); // Restart connection after 5 seconds.
                 if (sfHub.client.ReConnectDelay < 120000) sfHub.client.ReConnectDelay *= 2;
             });
 
@@ -3276,7 +3278,7 @@ export class sfRestClient {
             var RESTClient = top.sfClient;
             var isPowerUX =RESTClient.IsPowerUXPage();
             isPowerUX = false;
-            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "spax.html#!/login" : "admin/Logout.aspx"}?m={mValue}`;
+            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "spax.html#!/login" : "admin/Logout.aspx"}?m=${mValue}`;
         }
         return result;
     }
@@ -3294,7 +3296,7 @@ export class sfRestClient {
     }
 
     protected static _NextPingTimerID :number | undefined= undefined;
-    public pingServer():void {
+    public async  pingServer(): Promise<void> {
         var id:string = "TBD";
         try {
             var RESTClient = this;
@@ -3315,10 +3317,10 @@ export class sfRestClient {
             var id:string = RESTClient.GetPageContextValue("DocSessionKey","");
             if ($("DIV.ui-dialog-content.sfStopPingServer").length > 0) return;
             sfRestClient.PageServerPingAttempts ++;
-            if (top.sfPMSHub && top.sfPMSHub.connection.state === $.signalR.connectionState.connected ) top.sfPMSHub.server.sessionAlive();
+            top.sfPMSHub.server.sessionAlive();
 
             top.sfPMSHub.server.dashboardHeartbeat(id,sfRestClient.PageNotificationCount)
-                .then(function (responseText) {
+                .then(async function (responseText) {
                 if (responseText > "") {
                     var isOK = (responseText.startsWith("OK"));
 
@@ -3339,8 +3341,37 @@ export class sfRestClient {
                         }
                     }
                     else if (responseText === "NAK: Not Authenticated") {
-                        RESTClient.DisplaySysNotification("Lost authentication.  ", 60000);
-                        setTimeout(`location="${sfRestClient.LogoutPageURL('idle')}";` , 9753);
+                        // first try and repair
+                        await top!.sfPMSHub.server.sessionAlive().then(async (isAlive:boolean)=>{
+                            if (!isAlive) {
+                                console.log("pingServer() signalR begin stop/start....");
+                                try {
+                                    top!.sfPMSHub.client.SkipAutoReconnect  = true;
+                                    await $.connection.hub.stop();
+                                    await $.connection.hub.start();
+                                }
+                                catch {
+                                    console.warn("pingServer() signalR stop/start exception....");
+                                }
+                                finally {
+                                    top!.sfPMSHub.client.SkipAutoReconnect = false;
+                                }
+                                console.log("pingServer() signalR after stop/start....",top!.sfPMSHub.connection.state);
+                            }
+                        });
+
+                        await top!.sfPMSHub.server.sessionAlive().then(async (isAlive:boolean)=>{
+                            if (!isAlive) {
+                                console.log("pingServer() NAK persists....");
+                                RESTClient.DisplaySysNotification("Lost authentication.  ", 65432);
+                                setTimeout(`location="${sfRestClient.LogoutPageURL('auth-lost')}";` , 9753);
+                            }
+                            else {
+                                responseText = "NAK:Rejuvinated";
+                                retryInterval = 8642;
+                            }
+                        });
+
                     }
                     else {
                         var msgText : boolean | string = false;
@@ -3434,7 +3465,8 @@ export class sfRestClient {
     if ((top?.sfClient.DevMode()) || sfRestClient.PageServerPingOK < 2 || ((top?.sfPMSHub) && top.sfPMSHub.connection.logging) || ((responseText) && (responseText != "OK")))
         console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - ${responseText}; Next: ${nextMS}ms at ${new Date(new Date().valueOf() + nextMS).toLocaleTimeString()}`);
         sfRestClient.PageServerPingFailRunCount = 0;
-        top!.sfPMSHub.client.ReConnectDelay = 5000;
+        top!.sfPMSHub.client.ReConnectDelay = 2500;
+        top!.sfPMSHub.client.SkipAutoReconnect = false;
 }
 
     protected PageServerPingBackFailed(marker:string, id:string, jqXHR: string | JQueryXHR, nextMS:number, methodName:string) {

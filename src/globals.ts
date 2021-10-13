@@ -25,6 +25,7 @@ declare global {
     interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
     interface RefreshPartbyName {(partName: string, eventTarget?: string, eventArg?: string):void}
     interface RefreshPageParts {(eventTarget: string, eventArg:string):void}
+    interface SimpleBooleanPromise {(): Promise<boolean>}
     interface SimpleMethod {():void}
     // sfClassic interfaces ^^^
 
@@ -33,6 +34,7 @@ declare global {
         client: {
             ReConnectDelay: number;
             ForWindowRX : RegExp //= /^javascript.+-(?<WindowName>[a-z0-9]{12})'\);/
+            SkipAutoReconnect: boolean;
 
             afterDocumentSaved: AfterDocumentSaved;
             dashboardOpenLink: DashboardOpenLink;
@@ -56,7 +58,7 @@ declare global {
         server: {
             dashboardHeartbeat: HeartbeatMonitor;
             dashboardOpenLink: DashboardOpenLink;
-            sessionAlive: SimpleMethod;
+            sessionAlive: SimpleBooleanPromise;
             subscribeToDocument:  DMKMethod;
         }
 
