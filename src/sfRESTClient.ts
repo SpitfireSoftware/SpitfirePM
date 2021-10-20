@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.68";
+const ClientPackageVersion : string = "1.10.69";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -2465,6 +2465,50 @@ export class sfRestClient {
 
     }
 
+    /** Displays a modal dialog and returns a reference to the dialog for further manipulation
+     * @argument msg the text for the dialog message.  Can include html
+     * @argument title optional title
+     * @argument uiAlertIcon if specified, and not false, ui-icon class name (see https://api.jqueryui.com/theming/icons/)
+     */
+    jqAlert(msg: string, title?: string , uiAlertIcon?: string ) : JQuery<HTMLElement> {
+        console.log("jqAlert: " + msg);
+        var $ALERT: JQuery<HTMLElement> ;
+        if (!title) title = "Message from Web Application";
+        if ((typeof uiAlertIcon === "undefined") || (typeof uiAlertIcon === "boolean" && uiAlertIcon)) {
+            uiAlertIcon = '<span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>';
+        }
+        else if ((typeof uiAlertIcon === "boolean" && !uiAlertIcon)) uiAlertIcon = "";
+        else if ((typeof uiAlertIcon === "string") && (uiAlertIcon.length > 1))  uiAlertIcon = `<span class="ui-icon ${uiAlertIcon}" style="float: left; margin: 0 7px 20px 0;"></span>`;
+
+        var fullMsg = `<div id="sfUI-Dialog-Alert" title="${title}" style="font-size: 0.8em">${uiAlertIcon}<span id="AlertMsgText">${msg}</span></div>`;
+        var dialogOptions = {
+            modal: true,
+            minWidth: 250,
+            width: "300",
+            height: 'auto',
+            show: {
+                effect: "blind",
+                duration: 444
+            },
+            hide: {
+                effect: "puff",
+                duration: 333
+            },
+            buttons: {
+                Ok: function () {
+                    $(this).dialog("close");
+                }
+            },
+            open: function () {
+                $(this).parent('DIV').find('.ui-dialog-buttonpane button:eq(0)').trigger("focus");
+            }
+        };
+        if (msg.length > 20) dialogOptions.width = "auto";
+        $ALERT = $(fullMsg).dialog(dialogOptions);
+        return ($ALERT);
+    }
+
+
     ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : Promise<boolean|undefined> | undefined {
         var newValue;
         var formName = "0";
@@ -2495,7 +2539,8 @@ export class sfRestClient {
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
                         close: top!.sfClient.sfModalDialogClosed,
                         dialogClass: "lookup",
-                        resizeStop:  top?.sfClient.sfModelDialogResizedHandler
+                        resizeStop:  top?.sfClient.sfModelDialogResizedHandler,
+                        dragStop: top?.sfClient.sfModelDialogResizedHandler
                     });
                 top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnMaximizeDialog","Maximize","ui-icon-arrow-4-diag").on("click",function() {
                     var $BTN = $(this);
@@ -2589,6 +2634,7 @@ export class sfRestClient {
                 var ThisURLHash = OpenUrl.sfHashCode();
                 if (sfRestClient._DialogCoordinateCache.has(ThisURLHash)) {
                     var TargetSizeData: CoordinateWithSize = sfRestClient._DialogCoordinateCache.get(ThisURLHash)!;
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('ModalDialog() Target size/loc',TargetSizeData);
                     var $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
                     top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.height);
                     top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.width);
@@ -2791,6 +2837,10 @@ export class sfRestClient {
 
         this.$LookupDialog?.remove();
         this.$LookupDialog = undefined;
+        if (!Array.isArray(this.$LookupDialogStack)) {
+            console.warn("sfModalDialogClosed: re-init $LookupDialogStack");
+            this.$LookupDialogStack = [];
+        }
         if (this.$LookupDialogStack.length > 0) this.$LookupDialog = this.$LookupDialogStack.pop();
 
         if (dialogMode == 'modalDialog') {
@@ -2856,7 +2906,14 @@ export class sfRestClient {
         top?.sfClient.sfModelDialogResized($LookupDialog)
     }
 
-    protected sfSetParentWindowSize(canShrink : boolean, DesiredWidth: number, DesiredHeight: number) : void {
+    /**
+     * (OBSOLETE) Resize parent sfDash window
+     * @deprecated We cannot change the size of the parent window (dates back to sfDash)
+     * @param canShrink
+     * @param DesiredWidth
+     * @param DesiredHeight
+     */
+     protected sfSetParentWindowSize(canShrink : boolean, DesiredWidth: number, DesiredHeight: number) : void {
         console.warn("sfSetParentWindowSize not implemented");
 
         // if (top == window) {
@@ -2870,13 +2927,16 @@ export class sfRestClient {
 
      private  sfLookupHeightChangeTo(ld: JQuery<HTMLDivElement>, newValue : number):void {
         // here newValue represents the intended size for the inner iFrame's rendering area
+        if (typeof newValue === "undefined") newValue = 890;
+        if (typeof newValue === "string") newValue = Number.parseInt(newValue);
+        if (newValue === NaN) newValue = 789;
         if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
-        if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
+      //  if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
         if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) {
             // requested size still too large
             var requestedH = newValue;
             newValue = $(window).height()! - this._LookupViewPortAdjustments.outsidExtraH;
-            console.log('dialog height requested cannot be accomidated by window, reduce from ' + requestedH + ' to ' + newValue);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('dialog height requested cannot be accomidated by window, reduce from ' + requestedH + ' to ' + newValue);
         }
         var tdh = newValue + this._LookupViewPortAdjustments.vpExtraH + this._LookupViewPortAdjustments.frameExtraH;
         ld!.dialog('option', "height", tdh);
@@ -2884,23 +2944,23 @@ export class sfRestClient {
         //var LookupFrame = $(ld.children("iframe").get(0))
         top?.sfClient.sfModelDialogResized(ld!);
         ld!.dialog('option', 'position', 'center');
-        console.log('dialog height explicitly set to ' + newValue);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log('dialog height explicitly set to ' + newValue);
     }
     private _LookupViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
 
     private sfLookupWidthChangeTo(ld: JQuery<HTMLDivElement>, newValue:number):void {
-        if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) this.sfSetParentWindowSize(false, newValue + this._LookupViewPortAdjustments.outsidExtraW + this._LookupViewPortAdjustments.vpExtraW, -1);
+      //  if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) this.sfSetParentWindowSize(false, newValue + this._LookupViewPortAdjustments.outsidExtraW + this._LookupViewPortAdjustments.vpExtraW, -1);
         if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) {
             // requested size still too wide
             var requestedW = newValue;
             newValue = $(window).width()! - this._LookupViewPortAdjustments.outsidExtraW;
-            console.log('dialog width requested cannot be accomidated by window, reduce from ' + requestedW + ' to ' + newValue);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('dialog width requested cannot be accomidated by window, reduce from ' + requestedW + ' to ' + newValue);
         }
 
         ld!.dialog('option', "width", newValue + this._LookupViewPortAdjustments.vpExtraW);
         top?.sfClient.sfModelDialogResized(ld!);
         setTimeout(function () { ld!.dialog('option', 'position', 'center'); }, 259); // need this to happen after above has all completed
-        console.log('dialog width explicitly set to ' + newValue);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log('dialog width explicitly set to ' + newValue);
     }
 
 /**
@@ -2910,7 +2970,7 @@ export class sfRestClient {
  */
     protected sfModelDialogResized(forDialog : JQuery<HTMLDivElement>) : void {
 
-    // this is called after a user resizes the dialog
+    // this is called after a user resizes or moves the dialog
         var dg = forDialog
         if (!$(window)) return;
         var tdh = Math.floor(dg.dialog("option", "height"));
@@ -2918,15 +2978,15 @@ export class sfRestClient {
         var height = dg.height()!; // actual content area
         var width = Math.round(dg.width()! + 1);  // actual content area
         var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
-        console.log('sfDialogResized resized to {0}w, {1}h inside {2}x{3}, frame h={4}'.sfFormat( width ,height , tdw , tdh, fh));
-        if ((($(window).width()! < (width + this.DialogViewPortAdjustments.outsidExtraW)) || ($(window).height()! < (height + this.DialogViewPortAdjustments.outsidExtraH)))) this.sfSetParentWindowSize(false, width + this.DialogViewPortAdjustments.outsidExtraW, height + this.DialogViewPortAdjustments.outsidExtraH);
+       // console.log('sfDialogResized resized to {0}w, {1}h inside {2}x{3}, frame h={4}'.sfFormat( width ,height , tdw , tdh, fh));
+        // if ((($(window).width()! < (width + this.DialogViewPortAdjustments.outsidExtraW)) || ($(window).height()! < (height + this.DialogViewPortAdjustments.outsidExtraH)))) this.sfSetParentWindowSize(false, width + this.DialogViewPortAdjustments.outsidExtraW, height + this.DialogViewPortAdjustments.outsidExtraH);
         var $DFrame = $(dg.children("iframe").get(0)) // what if there is no frame???
         // $($DFrame).contents().find("html").outerHeight()  -- but not a good place to force the height
         $DFrame.css('height', fh); // also iframe
         $DFrame.css('width', '100%'); // also iframe
 
         var NewSizeData : CoordinateWithSize;
-        var PositionNow = dg.position();
+        var PositionNow = dg.closest("DIV.ui-dialog").position();
         NewSizeData = {top:PositionNow.top,
                 left : PositionNow.left,
                 width : dg.width()!,
@@ -2935,6 +2995,7 @@ export class sfRestClient {
         var DialogURL:string = $DFrame.attr("src")!;
         var DialogURLHash = DialogURL.sfHashCode();
         sfRestClient._DialogCoordinateCache.set(DialogURLHash,NewSizeData);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`sfDialogResized(${width}w,${height}h) size cache `,NewSizeData);
     }
 //var $LookupFrame = $($LookupDialog.children("iframe").get(0))
 
