@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.69";
+const ClientPackageVersion : string = "1.10.70";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -2063,7 +2063,32 @@ export class sfRestClient {
             if (rowData && rowData["acct"]) Acct = rowData["acct"];
             this.VModalPage("TranHistory","&project={0}&task={1}&acct={2}&period=%".sfFormat(Project,Task,Acct),999,444,undefined);
         }
-        else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
+        else if (   ActionString.indexOf("PopXLTool(") >= 0 ||
+                    ActionString.indexOf("PopFVC(") >= 0 ||
+                    ActionString.indexOf("PopMSWindowTool(") >= 0 ||
+                    ActionString.indexOf("PopAuditTool(") >= 0) {
+                var targetURL = "";
+                if (ActionString.indexOf("PopFVC(") >= 0) {
+                    var rx = /javascript:PopFVC\(['"`](?<URL>.*)[`'"],['"`](?<fileKey>.*)[`'"],['"`](?<idname>.*)[`'"],['"`](?<command>.*)[`'"]/gm;
+                    var match = rx.exec(ActionString);
+                    if (match && match.groups) {
+                        targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${match.groups.fileKey}&id=${match.groups.idname}&cmd=${match.groups.command}`;
+                    }
+                    else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
+                    }
+                else {
+                        var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
+                        var match = rx.exec(ActionString);
+                        if (match && match.groups) {
+                            targetURL = match.groups.URL
+                        }
+                        else console.warn("InvokeAction() could not parse",actionString);
+                    }
+
+                    this.FollowLinkViaSFLink(targetURL,false);
+                }
+
+            else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
             console.warn("InvokeAction::tools not really done",ActionString);
             top!.location.href = ActionString;
         }
@@ -2084,6 +2109,111 @@ export class sfRestClient {
             this.DisplayUserNotification("Coming soon: could not invoke requested action.",9999);
             console.warn("InvokeAction() could not handle ",actionString);
         }
+    }
+
+    public FollowLinkViaSFLink(targetURL: string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
+        var RESTClient = this;
+        if (!top?.ClickOnceExtension.HasDotNetApplicationExtension()) {
+            var RetryLater = `FollowLinkViaSFLink('${targetURL}'`;
+            if (typeof afterOpenArg !== "undefined") {
+                RetryLater = RetryLater + `,${afterOpenArg}`;
+                if (typeof autoCloseDoc !== "undefined") RetryLater = RetryLater + `,${autoCloseDoc}`;
+            }
+            RetryLater = RetryLater + ");"
+            setTimeout(RetryLater, 222);
+            return;
+        }
+        if (!top.ClickOnceExtension.HasDotNetApplicationExtension() ) {
+            var DialogButtons = [];
+            DialogButtons.push(
+                {
+                    text: "Install",
+                    "id": "btnOK",
+                    click: function () {
+                        RESTClient.InvokeAction(BrowserExtensionChecker.WRemixWebstoreLink);
+                        $(this).dialog("close");
+                    }
+                });
+            DialogButtons.push(
+                {
+                    text: "Ignore",
+                    "id": "btnIgnore",
+                    click: function () {
+                        top?.ClickOnceExtension.IgnoreMissingExtension();
+                        $(this).dialog("close");
+                        RESTClient.jqAlert("Please try your action again.  If you see a prompt to keep or open (at the bottom), click to proceed!", ".NET Link Helper Recommended");
+                        return;
+                    }
+                });
+            var $A = RESTClient.jqAlert(`ClickOnce Helper is required.  Please install <a href='${BrowserExtensionChecker.WRemixWebstoreLink}' style='text-decoration: underline' target='_blank'>this extension</a>!`,
+                             ".NET Link Helper Required");
+            $A.dialog('option', 'buttons', DialogButtons);
+            return;
+        }
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("FollowLinkViaSFLink() xt for: " + targetURL);
+
+        var api =  new SessionClient(RESTClient._SiteURL);
+        var tokeArgs = new _SwaggerClientExports.TokenRequest();
+        tokeArgs.Args = targetURL;
+        tokeArgs.UserKey = RESTClient.GetPageContextValue("UserKey");
+        tokeArgs.LoginSessionKey = RESTClient.GetPageContextValue("LoginSessionKey");
+        tokeArgs.DataLockFlag = RESTClient.GetPageContextValue("DataLockFlag");
+        tokeArgs.DataPK = RESTClient.GetPageContextValue("DataPK");
+        tokeArgs.DocSessionKey = RESTClient.GetPageContextValue("DocSessionKey");
+        tokeArgs.dsCacheKey = RESTClient.GetPageContextValue("dsCacheKey");
+        tokeArgs.SiteID = RESTClient.GetPageContextValue("SiteID");
+        tokeArgs.PageName = RESTClient.GetPageContextValue("PageName");
+        tokeArgs.PartName = RESTClient.GetPageContextValue("PartName");
+        tokeArgs.TZOffset = RESTClient.GetPageContextValue("TZOffset");
+        api.createExchangeToken(tokeArgs).then((xToken)=>{
+
+            if (xToken && xToken?.length > 3) {
+                if (!autoCloseDoc && typeof autoCloseDoc !== "boolean") autoCloseDoc = false;
+                RESTClient.OpenWindowsLinkHelper(xToken, afterOpenArg, autoCloseDoc);
+            }
+            else {
+                RESTClient.jqAlert("Could not get link exchange token - contact support");
+            }
+        });
+    }
+
+    /**
+     *
+     * @param et token passed to sfLink
+     * @param afterOpenArg  boolean/true: closes document page; false/0: posts back default refresh; ['e','a']: posts back e with a;
+     * @param autoCloseDoc
+     */
+    public OpenWindowsLinkHelper(et:string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
+        var RESTClient = this;
+        var openURL = `${this._SiteURL}/cabs/sflink/sfLink.application?et=${et}&ak=${this.getCookie("ARRAffinity")}`;
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("OpenWindowsLinkHelper() to: " + openURL);
+        var xscript = "";
+        var innerScript = "";
+        var innerDelay = 255 + (BrowserExtensionChecker.browser.isEdge ? 789 : 0);
+        xscript = `top.location.href = '${openURL}';`;
+        // afterOpenArg: boolean/true: closes document page; false/0: posts back default refresh; ['e','a']: posts back e with a;
+        if (RESTClient.IsDocumentPage() && typeof afterOpenArg === "boolean" && afterOpenArg) {
+            innerScript = "top.ResetUnsavedChanges();";
+            if (autoCloseDoc) {
+                innerScript += 'setTimeout(\\\'top.location.href = "about:blank";\\\', 842);';
+                innerScript += "window.top.close();"
+            }
+            xscript = `setTimeout(\'${innerScript};\', 242);` + xscript;
+        }
+        else if (!afterOpenArg || typeof afterOpenArg === "string" || (Array.isArray(afterOpenArg)  && afterOpenArg.length === 2)) {
+            if (!afterOpenArg) afterOpenArg = "ibtnRefreshAttachList"
+            var pbArg = 'AfterPopFVC';
+            if (Array.isArray(afterOpenArg) && afterOpenArg.length === 2) {
+                pbArg = afterOpenArg[1];
+                afterOpenArg = afterOpenArg[0];
+            }
+            innerScript = `PostbackRefresh(\\\'${afterOpenArg}\\\',\\\'${pbArg}\\\');`;
+        }
+        else if (typeof afterOpenArg === "function") afterOpenArg(et)
+        else console.log("OpenWindowsLinkHelper() - no post action", afterOpenArg);
+
+        if (typeof innerScript === "string" && innerScript.length > 0) xscript = `setTimeout(\'${innerScript};\', ${innerDelay});`   + xscript;
+        setTimeout(xscript, 211);
     }
 
 
@@ -2111,6 +2241,17 @@ export class sfRestClient {
         return result;
     }
 
+    protected getCookie(cname:string):string {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i]; //.trim() did not work in IE
+            while ( c.length > 0  &&  c.charAt(0) === ' ') c = c.substring(1, c.length);
+
+            if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
+        }
+        return "";
+    }
     /**
      * Figures out the type of page and the amount of viewable height (without scrolling)
      * @returns height of top frame

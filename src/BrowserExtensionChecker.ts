@@ -1,5 +1,7 @@
 export class BrowserExtensionChecker {
     static browser: { [key: string]: boolean; } = {detected:false};
+    static readonly ChromeWebstoreLink = "https://chrome.google.com/webstore/";
+    static readonly WRemixWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}/detail/wremix-clickonce/dgpgholdldjjbcmpeckiephjigdpikan`;
     DetectedID: string = "";
     DetectedName: string = "";
     // always returns false the first time
