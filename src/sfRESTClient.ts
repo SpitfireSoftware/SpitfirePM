@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.70";
+const ClientPackageVersion : string = "1.10.71";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -398,6 +398,7 @@ export class sfRestClient {
 
     /**
      *  Legacy version of BuildViewModelForContext  - use .done()
+     *  @deprecated use BuildViewModelForContext()
      */
     BuildViewModel(partName: string, context: string, rawData: any, unusedCfgData: undefined, forDocType: GUID | undefined): JQueryPromise<any> {
         if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
@@ -852,7 +853,15 @@ export class sfRestClient {
             });
         }
         else if (dependsOn) DependsOnSet[0] = dependsOn;
+
+        //removed all "undefined" from the end, leaving at least one
+        for (let index = DependsOnSet.length - 1; index >= 1; index--) {
+            if (DependsOnSet[index - 1] != "undefined") break;
+            if (DependsOnSet[index] == "undefined") DependsOnSet.pop();
+          }
+
         var DVFilters : QueryFilters  = new QueryFilters();
+
         DVFilters.MatchingSeed = keyValue;
         DVFilters.DependsOn = DependsOnSet;
         var apiResultPromise: Promise<string | null> = api.getDisplayValueViaPost(displayName, "1", DVFilters);
@@ -1719,7 +1728,7 @@ export class sfRestClient {
 
     /**
      * Builds a string array of values that help define the context of a lookup or evaluation
-     * @param dependsOnList semicolon separated list of related field and constants. eg #DocMasterDetail.Project;=Subtype
+     * @param dependsOnList semicolon separated list of related field and constants. eg #DocMasterDetail.Project;=Subtype (# is optional)
      * @param rawRow primary source of data
      */
     GatherDependsOnValues(dependsOnList:string, rawRow: any) : string[] | undefined {
@@ -1727,9 +1736,9 @@ export class sfRestClient {
         var result: string[] = [];
 
         dependsOnList.split(";").forEach(element => {
-            if (element.startsWith("=")) result.push(element.substring(1));
-            if (element.startsWith("#")) {
-                element = element.substring(1);
+            if (element.startsWith("=")) result.push(element.substring(1))
+            else {
+                if (element.startsWith("#")) element = element.substring(1);
                 if (element.indexOf(".")> 0 ) {
                     var ElementNameParts :string[] = element.split(".");
                     var TableName : string = ElementNameParts[0];
@@ -2113,6 +2122,7 @@ export class sfRestClient {
 
     public FollowLinkViaSFLink(targetURL: string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
         var RESTClient = this;
+        if (targetURL.endsWith("&Project=")) targetURL += RESTClient.GetPageProjectKey();
         if (!top?.ClickOnceExtension.HasDotNetApplicationExtension()) {
             var RetryLater = `FollowLinkViaSFLink('${targetURL}'`;
             if (typeof afterOpenArg !== "undefined") {
