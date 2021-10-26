@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.71";
+const ClientPackageVersion : string = "1.10.72";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1620,6 +1620,7 @@ export class sfRestClient {
         PopDocXBURL:  "{0}#!/document?id={1}",
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
         PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
+        PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
         ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}'
     }
@@ -2025,11 +2026,12 @@ export class sfRestClient {
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction: ",ActionString);
 
         var rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
-        match = rxIsVPgPop.exec(ActionString);
+        match = rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
         if (match) {
             if ( match.groups) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::VPg({0}}) {1}".sfFormat(match.groups!.vpgName , match.groups.args));
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::VPg(${match.groups!.vpgName}) ${match.groups.args} w${match.groups.width},h${match.groups.height}`);
                 var ActionArgs : string = this.ExpandActionMarkers(match.groups.args,rowData);
+                if (ActionArgs && ActionArgs.indexOf("&Project") < 0) ActionArgs += "&Project="+ this.GetPageProjectKey();
                 this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),match.groups.default);
             }
             else {
@@ -2321,6 +2323,17 @@ export class sfRestClient {
                 msgDisplayResolved( $MsgDiv );
                 return msgReady;
             }
+            if (notificationText.indexOf("$PopDoc()") > 0 && notificationText.indexOf("data-key")) {
+                var rx = /data-key=["'](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
+                var match = rx.exec(notificationText);
+                if (match) {
+                    if ( match.groups && match.groups.idguid) {
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`DisplayThis::key() {match.group.idguid}`);
+                        notificationText = notificationText.replaceAll("$PopDoc();",`PopDoc('${match.groups.idguid}');`);
+                    }
+                }
+            }
+
             // snhc is included for legacy use cases
             $MsgDiv.data('snhc', notificationText).data('notification', notificationText).data("snhash", notificationText.sfHashCode()).load(this.MakeSiteRelativeURL(templateURL), function (loadedHtml) {
                 var $BTN = $MsgDiv.find("BUTTON.sfNotificationDismiss");
@@ -2376,22 +2389,15 @@ export class sfRestClient {
            // if (sfWCC.isAsyncPart) context = parent;
         }
 
-        var UIPromise: Promise<boolean | undefined> | undefined = this.ModalDialog('/pvp.aspx?vpg={0}'.sfFormat(vpg) + opts, vpg, defaultResponse, innerContext);
+        var UIPromise: Promise<boolean | undefined> | undefined = this.ModalDialog(`pvp.aspx?vpg=${vpg}${opts}`, vpg, defaultResponse, innerContext);
 
         UIPromise?.then((unused) => {
-            if (w != null) top?.sfClient.sfLookupWidthChangeTo(this.$LookupDialog!, w);
-            if (h != null) top?.sfClient.sfLookupHeightChangeTo( this.$LookupDialog!,h + this._LookupViewPortAdjustments.outsidExtraH);
-        // else {
-        //     var $FRAME = $LookupDialog.find("IFRAME");
-        //     if (typeof ($FRAME) === "undefined") {
-        //         console.log("vPgDialog iFrame not found!");
-        //     }
-        //     else {
-        //         $FRAME.off("load.vPgDialog").on("load.vPgDialog", function () {
-        //             resizeDialogInFrame(this, context);
-        //         });
-        //     }
-        // }
+
+            if (!this.$LookupDialog!.data("RestoredSize")) {
+                if (w === 440) w = Math.round($(window).width()! * 0.5);
+                if (w != null) top?.sfClient.sfLookupWidthChangeTo(this.$LookupDialog!, w);
+                if (h != null) top?.sfClient.sfLookupHeightChangeTo( this.$LookupDialog!,h + this._LookupViewPortAdjustments.outsidExtraH);
+            }
         });
 
     }
@@ -2717,12 +2723,12 @@ export class sfRestClient {
                                 width : $DialogDiv.width()!,
                                 height : $DialogDiv.height()!
                         };
-                        $DialogDiv.css({top:15,left:14});
+                        $DialogDiv.css({top:sfRestClient._Options.PopupWindowTop,left:14});
                         if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`ModalDialog() maximize; autofocus off`,PriorSizeData);
                         top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
                         top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
                         $BTN.toggleClass("ui-icon-arrow-4-diag",false).toggleClass("ui-icon-arrow-4",true).data(RestoreSizeDataName,PriorSizeData);
-                        $DialogDiv.css({top:15,left:14});
+                        $DialogDiv.css({top:sfRestClient._Options.PopupWindowTop,left:14});
                     }
                 });
             }
@@ -2744,10 +2750,23 @@ export class sfRestClient {
                 console.warn("Could not open dialog (missing DIV), lost",url);
                 return false;
             }
+            var ThisURLHash = OpenUrl.sfHashCode();
+            var ApplySizeAndPosition:boolean = (sfRestClient._DialogCoordinateCache.has(ThisURLHash));
+            var TargetSizeData: CoordinateWithSize;
+            var $DialogDiv : JQuery<HTMLDivElement>;
+            if (ApplySizeAndPosition) {
+                this.$LookupDialog!.data("RestoredSize",true );
+                this.$LookupDialog!.data("SizePending",true );
+                TargetSizeData = sfRestClient._DialogCoordinateCache.get(ThisURLHash)!;
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('ModalDialog() Target size/loc',TargetSizeData);
+
+            }
+            else TargetSizeData = {top:0,left:0,width:0,height:0};
             this.$LookupDialog.data("postbackEventId", eventId);
             this.$LookupDialog.data("postbackEventArg", eventArg);
             this.$LookupDialog.data("postback", (eventId != sfRestClient._Options.NonPostbackEventID));
             this.$LookupDialog.data("postbackContext", eventContext);
+            this.$LookupDialog.data("urlHash", ThisURLHash);
             this.$LookupDialog.data("idName", url);
             this.$LookupDialog.data("newValue", eventArg);  // must reset to null or prior lookup result value may get used
             this.$LookupDialog.data("multiSelect", false);
@@ -2775,6 +2794,7 @@ export class sfRestClient {
 
 
             this.$LookupDialog.dialog('open');
+            $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
 
             try {
                 var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
@@ -2782,14 +2802,14 @@ export class sfRestClient {
                     // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
                     setTimeout("top.sfClient.RefreshiFrameSrc();", 1234);
                 }
-                var ThisURLHash = OpenUrl.sfHashCode();
-                if (sfRestClient._DialogCoordinateCache.has(ThisURLHash)) {
-                    var TargetSizeData: CoordinateWithSize = sfRestClient._DialogCoordinateCache.get(ThisURLHash)!;
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('ModalDialog() Target size/loc',TargetSizeData);
-                    var $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
+
+                if (ApplySizeAndPosition && TargetSizeData && $DialogDiv) {
+                    this.$LookupDialog!.data("RestoredSize",true );
+                    $DialogDiv.css({top:TargetSizeData.top,left:TargetSizeData.left});
                     top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.height);
                     top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.width);
                     $DialogDiv.css({top:TargetSizeData.top,left:TargetSizeData.left});
+                    this.$LookupDialog!.data("SizePending",false );
                 }
             }
             catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
@@ -2943,6 +2963,7 @@ export class sfRestClient {
         return OpenWindowCount;
     }
 
+    /** For Chrome Debug watch */
     LiveWatch() : string {
 
         var result = top!.name + ' ';
@@ -3078,34 +3099,38 @@ export class sfRestClient {
 
      private  sfLookupHeightChangeTo(ld: JQuery<HTMLDivElement>, newValue : number):void {
         // here newValue represents the intended size for the inner iFrame's rendering area
+        if (!ld) return;
         if (typeof newValue === "undefined") newValue = 890;
         if (typeof newValue === "string") newValue = Number.parseInt(newValue);
         if (newValue === NaN) newValue = 789;
         if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
       //  if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
-        if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) {
+        var PositionNow = ld.closest("DIV.ui-dialog").position();
+        if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH + PositionNow.top))) {
             // requested size still too large
             var requestedH = newValue;
-            newValue = $(window).height()! - this._LookupViewPortAdjustments.outsidExtraH;
+            newValue = $(window).height()! - ( PositionNow.top + this._LookupViewPortAdjustments.outsidExtraH);
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('dialog height requested cannot be accomidated by window, reduce from ' + requestedH + ' to ' + newValue);
         }
         var tdh = newValue + this._LookupViewPortAdjustments.vpExtraH + this._LookupViewPortAdjustments.frameExtraH;
-        ld!.dialog('option', "height", tdh);
+        ld.dialog('option', "height", tdh);
 
         //var LookupFrame = $(ld.children("iframe").get(0))
         top?.sfClient.sfModelDialogResized(ld!);
-        ld!.dialog('option', 'position', 'center');
+        ld.dialog('option', 'position', 'center');
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log('dialog height explicitly set to ' + newValue);
     }
-    private _LookupViewPortAdjustments = { outsidExtraW: 65, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
+
+    private _LookupViewPortAdjustments = { outsidExtraW: 48, outsidExtraH: 64, vpExtraW: 16, vpExtraH: 32, frameExtraH: 8 };
 
     private sfLookupWidthChangeTo(ld: JQuery<HTMLDivElement>, newValue:number):void {
       //  if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) this.sfSetParentWindowSize(false, newValue + this._LookupViewPortAdjustments.outsidExtraW + this._LookupViewPortAdjustments.vpExtraW, -1);
-        if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) {
+      var ww =$(window).width()!;
+        if ( ww < (newValue + this._LookupViewPortAdjustments.outsidExtraW)) {
             // requested size still too wide
             var requestedW = newValue;
-            newValue = $(window).width()! - this._LookupViewPortAdjustments.outsidExtraW;
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('dialog width requested cannot be accomidated by window, reduce from ' + requestedW + ' to ' + newValue);
+            newValue = ww - this._LookupViewPortAdjustments.outsidExtraW;
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`Dialog width requested ${requestedW} cannot be accomidated by window ${ww}: reduced to ${newValue}` );
         }
 
         ld!.dialog('option', "width", newValue + this._LookupViewPortAdjustments.vpExtraW);
@@ -3129,24 +3154,27 @@ export class sfRestClient {
         var height = dg.height()!; // actual content area
         var width = Math.round(dg.width()! + 1);  // actual content area
         var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
-       // console.log('sfDialogResized resized to {0}w, {1}h inside {2}x{3}, frame h={4}'.sfFormat( width ,height , tdw , tdh, fh));
-        // if ((($(window).width()! < (width + this.DialogViewPortAdjustments.outsidExtraW)) || ($(window).height()! < (height + this.DialogViewPortAdjustments.outsidExtraH)))) this.sfSetParentWindowSize(false, width + this.DialogViewPortAdjustments.outsidExtraW, height + this.DialogViewPortAdjustments.outsidExtraH);
-        var $DFrame = $(dg.children("iframe").get(0)) // what if there is no frame???
-        // $($DFrame).contents().find("html").outerHeight()  -- but not a good place to force the height
+        var $DFrame = $(dg.children("iframe").get(0));
         $DFrame.css('height', fh); // also iframe
         $DFrame.css('width', '100%'); // also iframe
 
-        var NewSizeData : CoordinateWithSize;
-        var PositionNow = dg.closest("DIV.ui-dialog").position();
-        NewSizeData = {top:PositionNow.top,
-                left : PositionNow.left,
-                width : dg.width()!,
-                height : dg.height()!
-        };
-        var DialogURL:string = $DFrame.attr("src")!;
-        var DialogURLHash = DialogURL.sfHashCode();
-        sfRestClient._DialogCoordinateCache.set(DialogURLHash,NewSizeData);
-        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`sfDialogResized(${width}w,${height}h) size cache `,NewSizeData);
+        if (!dg.data("SizePending")) {
+            var NewSizeData : CoordinateWithSize;
+            var PositionNow = dg.closest("DIV.ui-dialog").position();
+            NewSizeData = {top:PositionNow.top,
+                    left : PositionNow.left,
+                    width : dg.width()!,
+                    height : dg.height()!
+            };
+            if(NewSizeData.top < sfRestClient._Options.PopupWindowTop) {
+                NewSizeData.height -= ( sfRestClient._Options.PopupWindowTop - NewSizeData.top);
+                NewSizeData.top =  sfRestClient._Options.PopupWindowTop;
+            }
+            var DialogURL:string = $DFrame.attr("src")!;
+            var DialogURLHash = DialogURL.sfHashCode();
+            sfRestClient._DialogCoordinateCache.set(DialogURLHash,NewSizeData);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`sfDialogResized(${width}w,${height}h) size cache `,NewSizeData);
+        }
     }
 //var $LookupFrame = $($LookupDialog.children("iframe").get(0))
 
