@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.72";
+const ClientPackageVersion : string = "1.10.73";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1980,6 +1980,11 @@ export class sfRestClient {
             if (!Context && !this.IsHomeDashboardPage()) console.warn("GetPageProjectKey() could not resolve project key for page ",PageTypeName);
         }
         return Context;
+    }
+
+    /** display support panel */
+    public InvokeSupportPanel() : void {
+        this.DisplaySysNotification("Coming soon...");
     }
 
     /**
