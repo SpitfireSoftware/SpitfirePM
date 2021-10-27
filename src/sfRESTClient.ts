@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.73";
+const ClientPackageVersion : string = "1.10.74";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1620,6 +1620,9 @@ export class sfRestClient {
         PopDocXBURL:  "{0}#!/document?id={1}",
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
         PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
+        PopupWindowLargeCWS: {top: -1, left: -1, width: 1000, height: 750},
+        PopupWindowHelpMenuCWS: {top: -1, left: -1, width: 750, height: 700},
+        PopupWindowUserSettingsCWS: {top: -1, left: -1, width: 830, height: 750},
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
         ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}'
@@ -2019,10 +2022,10 @@ export class sfRestClient {
                 if (ActionString.indexOf("?") > 0) {
                     ActionOptions = "&"+  ActionString.substring(ActionString.indexOf("?")+1);
                 }
-                ActionString = "javascript:vPgPopup('v/LibView.aspx', '{0}', 850, 950);".sfFormat(ActionOptions); // ... w,h
+                ActionString = `javascript:vPgPopup('v/LibView.aspx', '${ActionOptions}', 850, 950);`; // ... w,h
             }
             else {
-                this.ModalDialog(ActionString, ActionString.sfHashCode().toString(), "", window);
+                this.ModalDialog(ActionString, undefined, undefined, window);
                 return;
             }
 
@@ -2671,15 +2674,15 @@ export class sfRestClient {
     }
 
 
-    ModalDialog(url: string, eventId: string, eventArg: string, eventContext: Window) : Promise<boolean|undefined> | undefined {
+    ModalDialog(url: string, eventId: string | undefined, eventArg: string | undefined, eventContext: Window) : Promise<boolean|undefined> | undefined {
         var newValue;
         var formName = "0";
         if (!this.IsGlobalInstance()) {
             return top?.sfClient.ModalDialog(url,eventId,eventArg,eventContext);
         }
 
-        if (eventId == null) eventId = 'mDialog';
-        if (eventArg == null) eventArg = url;
+        if (!eventId) eventId = 'mDialog';
+        if (typeof eventArg === "undefined") eventArg = url;
         if (!window) {
             console.warn("ModalDialog() must be called in a browser window!", url);
             return new Promise<boolean>((b) => {  b(false)});;
@@ -2692,7 +2695,7 @@ export class sfRestClient {
             if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (this.$LookupDialog) {
-                this.$LookupDialogStack.push(this.$LookupDialog);
+                sfRestClient.$LookupDialogStack.push(this.$LookupDialog);
                 this.$LookupDialog = undefined;
             }
 
@@ -2757,23 +2760,31 @@ export class sfRestClient {
             }
             var ThisURLHash = OpenUrl.sfHashCode();
             var ApplySizeAndPosition:boolean = (sfRestClient._DialogCoordinateCache.has(ThisURLHash));
-            var TargetSizeData: CoordinateWithSize;
+            var TargetSizeData: CoordinateWithSize | undefined;
             var $DialogDiv : JQuery<HTMLDivElement>;
             if (ApplySizeAndPosition) {
                 this.$LookupDialog!.data("RestoredSize",true );
                 this.$LookupDialog!.data("SizePending",true );
                 TargetSizeData = sfRestClient._DialogCoordinateCache.get(ThisURLHash)!;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('ModalDialog() Target size/loc',TargetSizeData);
-
             }
-            else TargetSizeData = {top:0,left:0,width:0,height:0};
-            this.$LookupDialog.data("postbackEventId", eventId);
-            this.$LookupDialog.data("postbackEventArg", eventArg);
+            else {
+                if (url.indexOf("cuManager.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS
+                else if (url.indexOf("cusysm.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS
+                else if (url.indexOf("vpg=HelpMenu") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowHelpMenuCWS
+                else if (url.indexOf("whoami.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowUserSettingsCWS
+                else if (url.indexOf("users.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS;
+
+                if (TargetSizeData) ApplySizeAndPosition = true
+                else TargetSizeData = {top:0,left:0,width:0,height:0};
+            }
+            this.$LookupDialog.data("postbackEventId", eventId!);
+            this.$LookupDialog.data("postbackEventArg", eventArg!);
             this.$LookupDialog.data("postback", (eventId != sfRestClient._Options.NonPostbackEventID));
             this.$LookupDialog.data("postbackContext", eventContext);
             this.$LookupDialog.data("urlHash", ThisURLHash);
             this.$LookupDialog.data("idName", url);
-            this.$LookupDialog.data("newValue", eventArg);  // must reset to null or prior lookup result value may get used
+            this.$LookupDialog.data("newValue", eventArg!);  // must reset to null or prior lookup result value may get used
             this.$LookupDialog.data("multiSelect", false);
             this.$LookupDialog.data("mode", 'modalDialog');
 
@@ -2810,6 +2821,15 @@ export class sfRestClient {
 
                 if (ApplySizeAndPosition && TargetSizeData && $DialogDiv) {
                     this.$LookupDialog!.data("RestoredSize",true );
+                    if (TargetSizeData.top < 0) {
+                        var wh =$(window).height()!;
+                        TargetSizeData.top = Math.round((wh - TargetSizeData.height) / 2.0);
+                    }
+                    if (TargetSizeData.left < 0) {
+                        var ww =$(window).width()!;
+                        TargetSizeData.left = Math.round((ww - TargetSizeData.width) / 2.0);
+                    }
+
                     $DialogDiv.css({top:TargetSizeData.top,left:TargetSizeData.left});
                     top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.height);
                     top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.width);
@@ -2824,7 +2844,7 @@ export class sfRestClient {
     return sfRestClient.ExternalToolsLoadedPromise;  // so anchor click event doesn't also do work
     }
     protected $LookupDialog : JQuery<HTMLDivElement> | undefined ;
-    protected $LookupDialogStack  : JQuery<HTMLDivElement>[] = [];
+    static $LookupDialogStack  : JQuery<HTMLDivElement>[] = [];
     protected $LookupFrame : JQuery<HTMLIFrameElement> | undefined ;
 
     protected ResolveLookupFrame( forDialog?: JQuery<HTMLDivElement> | undefined) : JQuery<HTMLIFrameElement> | undefined {
@@ -2837,10 +2857,18 @@ export class sfRestClient {
 
     }
 
-    SetModalDialogTitle(theDialog: JQuery<HTMLElement>, toText : string, ptSize?: string | number | undefined) {
+    SetModalDialogTitle(theDialog: JQuery<HTMLElement> | undefined, titleText : string, ptSize?: string | number | undefined) {
+
+        if (!theDialog) {
+            theDialog = top?.sfClient.$LookupDialog;
+            if (!theDialog) {
+                console.warn("SetModalDialogTitle could not resolve the current dialog");
+                return;
+            }
+        }
         var $LookupTitle = theDialog.prev();               //fragile...another version might break this
         if (!ptSize) ptSize = ".7em";
-        theDialog.dialog('option', 'title', toText);
+        theDialog.dialog('option', 'title', titleText);
         $LookupTitle.css('padding', '1px 1px 4px 4px');
         theDialog.css('padding', '0px 0px 0px 1px');
         theDialog.css('margin', '0');
@@ -2894,18 +2922,17 @@ export class sfRestClient {
         var $LookupFrameDOM = this.$LookupFrame![0].contentDocument || this.$LookupFrame[0].contentWindow!.document;
         // last verified as needed w/Chrome  Feb 2017
         if (typeof ($LookupFrameDOM) !== 'undefined') {
+            try {
+                top?.sfClient.$LookupDialog!.find("IFRAME").on("load",  function () {
+                    setTimeout("top.sfClient.ResizeDialogInFrame(undefined, top.sfClient);",1234);
+                });
+            } catch (e) {
+                    console.log("<!> refreshiFrameSrc could not find IFRAME" );
+                    }
             var locNow = $LookupFrameDOM.location.href;
             var wantSrc = this.$LookupFrame.attr('src');
             if (!locNow.endsWith(wantSrc!)) {
                 console.log("mDialog frame src re-get, is " + $LookupFrameDOM.location + '; want ' + this.$LookupFrame.attr('src') + '.');
-                var DialogContext = window;
-                try {
-                    top?.sfClient.$LookupDialog!.find("IFRAME").on("load",  function () {
-                        setTimeout("top.sfClient.ResizeDialogInFrame(undefined, top.sfClient);",1234);
-                    });
-                } catch (e) {
-                        console.log("<!> refreshiFrameSrc could not find IFRAME" );
-                        }
                 $LookupFrameDOM.location.href = this.$LookupFrame.attr('src') as string;
             }
         }
@@ -2990,7 +3017,7 @@ export class sfRestClient {
     protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
         var $LookupDialog : JQuery<HTMLDivElement> = $(<HTMLDivElement><unknown>this );
         var RESTClient = top?.sfClient;
-        console.log("sfModalDialogClosed() ....",$LookupDialog);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfModalDialogClosed() ....",$LookupDialog);
         var postbackEventId = $LookupDialog.data("postbackEventId");
         var postbackEventArg = $LookupDialog.data("postbackEventArg");
         var postbackContext = $LookupDialog.data("postbackContext");
@@ -3001,45 +3028,36 @@ export class sfRestClient {
         var dialogMode = $LookupDialog.data("mode");
         var NewValueIsNew = true;
 
-        if (typeof (postbackContext) == "undefined") postbackContext = window;
+        if (typeof postbackContext === "undefined") postbackContext = window;
         var $LookupFrame   = RESTClient?.ResolveLookupFrame();
-        $LookupFrame!.attr("src",sfRestClient._Options.BlankPageURI);
-
-        //sfLookupHeightChangeTo(201);
-        //sfLookupWidthChangeTo( 301);
-        //if (  ($(window).width()! > this.$LookupDialog.data("windowWidth"))) this.sfSetParentWindowSize(true, this.$LookupDialog.data("windowWidth") + $LookupViewPortAdjustments.outsidExtraW, -1);
-        $LookupDialog.dialog('option', 'position', 'center');
-        // $LookupDialog.dialog('option', 'zIndex', $.maxZIndex() + 1); neither this nor .dialog('moveToTop') helped
         $LookupDialog.dialog('destroy');
-
         this.$LookupDialog?.remove();
         this.$LookupDialog = undefined;
-        if (!Array.isArray(this.$LookupDialogStack)) {
+
+        if (!Array.isArray(sfRestClient.$LookupDialogStack)) {
             console.warn("sfModalDialogClosed: re-init $LookupDialogStack");
-            this.$LookupDialogStack = [];
+            sfRestClient.$LookupDialogStack = [];
         }
-        if (this.$LookupDialogStack.length > 0) this.$LookupDialog = this.$LookupDialogStack.pop();
+        if (sfRestClient.$LookupDialogStack.length > 0) this.$LookupDialog = sfRestClient.$LookupDialogStack.pop();
 
         if (dialogMode == 'modalDialog') {
             if (newValue == null) newValue = postbackEventArg;
             postbackEventArg = newValue;
         }
 
-
-
         if (newValue != null) {
-            console.log(dialogMode +' result: ' + idName + ' = ' + newValue);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(dialogMode +' result: ' + idName + ' = ' + newValue);
             if ((dialogMode == 'lookup') && (!IsMultiSelect)) {
                 var $LookupInputSource = postbackContext.$('input[name="' + idName + '"]');
                 NewValueIsNew = !($LookupInputSource.val() == newValue);
                 if (NewValueIsNew) {
                     $LookupInputSource.val( newValue );
-                    console.log(dialogMode + ' result stored into: ' + idName);
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(dialogMode + ' result stored into: ' + idName);
                     $LookupInputSource.trigger("sfLookup.Stored", [newValue]);
                 }
                 else {
                     if (postBack) postBack = false;
-                    console.log(dialogMode + ' result - form ALREADY HAS NEW VALUE for ' + idName);
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(dialogMode + ' result - form ALREADY HAS NEW VALUE for ' + idName);
                 }
             }
 
@@ -3057,14 +3075,22 @@ export class sfRestClient {
                 if (postBack) {
                     var ctlID = postbackContext.$('input[name="' + idName + '"]').attr('id');
                     var theInput = postbackContext.$('#' + ctlID);
+                    var postedback = false;
                     if (typeof postbackContext.ShowPleaseWaitUsingDialog != "undefined") postbackContext.ShowPleaseWaitUsingDialog();
                     if (theInput.hasClass('sfUI-UseChangeEventForPostbacks')) {
                         theInput.change();
+                        postedback = true;
                         //var inputs = theInput.closest('form').find('input').filter(':visible');
                         //inputs.eq(inputs.index(theInput[0]) + 1).focus();
                     }
-                    else postbackContext.__doPostBack(postbackEventId, postbackEventArg);
-                    console.log(dialogMode +' result: ' + idName + ' -- posting back [' + postbackEventId + '] / [' + postbackEventArg +']');
+                    else {
+                        if (postbackContext.__hasPostBackTarget()) {
+                            postbackContext.__doPostBack(postbackEventId, postbackEventArg);
+                            postedback = true;
+                        }
+                        else  if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`${dialogMode} result: ${idName} has no post back target form `);
+                    }
+                    if (postedback && sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`${dialogMode} result: ${idName} -- posting back [${postbackEventId}] / [${postbackEventArg}]`);
                     }
                 }
             }
@@ -3085,21 +3111,13 @@ export class sfRestClient {
 
     /**
      * (OBSOLETE) Resize parent sfDash window
-     * @deprecated We cannot change the size of the parent window (dates back to sfDash)
+     * @deprecated sfDash relic:  we cannot change the size of the parent window
      * @param canShrink
      * @param DesiredWidth
      * @param DesiredHeight
      */
      protected sfSetParentWindowSize(canShrink : boolean, DesiredWidth: number, DesiredHeight: number) : void {
         console.warn("sfSetParentWindowSize not implemented");
-
-        // if (top == window) {
-        //     if (sfSmartSize != undefined) return sfSmartSize(canShrink, DesiredWidth, DesiredHeight);
-        // }
-        // else {
-        //     return sfSetParentDialogSize(canShrink, DesiredWidth, DesiredHeight)
-        // }
-
     }
 
      private  sfLookupHeightChangeTo(ld: JQuery<HTMLDivElement>, newValue : number):void {

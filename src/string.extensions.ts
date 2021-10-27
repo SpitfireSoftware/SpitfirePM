@@ -21,6 +21,8 @@ declare global {
 
     interface Window {
         __doPostBack(eventTarget: string, eventArgument : string | undefined): void;
+        __sfPostBackTargetForm() :HTMLFormElement | undefined;
+        __hasPostBackTarget(): boolean;
     }
 
 }
@@ -85,12 +87,23 @@ if (!Date.prototype.toSFLogTimeString) {
         return this.toISOString().substr(11,11);
     }
 }
-
+if (!Window.prototype.__sfPostBackTargetForm) {
+    Window.prototype.__sfPostBackTargetForm = function():HTMLFormElement | undefined {
+        var DefaultFormName: string = "Form1";
+        var theForm : HTMLFormElement | undefined;
+        if (DefaultFormName in this.document.forms) theForm = document.forms[<any>DefaultFormName];
+        return theForm;
+    }
+}
+if (!Window.prototype.__hasPostBackTarget) {
+    Window.prototype.__hasPostBackTarget = function(): boolean {
+        var theForm : HTMLFormElement | undefined = this.__sfPostBackTargetForm();
+        return theForm !== undefined;
+    }
+}
 if (!Window.prototype.__doPostBack) {
     Window.prototype.__doPostBack = function(eventTarget, eventArgument) {
-        var DefaultFormName: string = "Form1";
-        var theForm : HTMLFormElement | null = null;
-        if (DefaultFormName in this.document.forms) theForm = document.forms[<any>DefaultFormName];
+        var theForm : HTMLFormElement | undefined = this.__sfPostBackTargetForm();
         if (!theForm) {
             console.warn("No form found for classic postbacks");
         }
