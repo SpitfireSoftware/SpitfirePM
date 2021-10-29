@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.74";
+const ClientPackageVersion : string = "1.10.75";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -897,6 +897,7 @@ export class sfRestClient {
         return thisPart.CFGLoader();
     }
 
+    /** Async get of a non-user specific setting (always the same for all users) */
     RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
         var apiResultPromise: Promise<string | number | boolean | null>
         var cacheKey: string = `GetRR:${ruleName}T${testValue.sfHashCode()}F${filterValue?.sfHashCode()}`;
@@ -911,7 +912,7 @@ export class sfRestClient {
 
                 if ((Date.now() - CacheResult.w) < sfRestClient._Options.DVCacheLife) {
                     apiResultPromise = new Promise<string | number | boolean | null>((resolve) => {
-                        console.log("Rule Result from Cache {0}|{1}[{2}] = {3}".sfFormat(ruleName,testValue,filterValue,CacheResult.v));
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Rule Result from Cache: ${ruleName}|${testValue}[${filterValue}] = ${CacheResult.v}`);
                         resolve(CacheResult.v);
                     });
                     return apiResultPromise;
@@ -925,7 +926,7 @@ export class sfRestClient {
 
         // rule checks are not so numerous that we worry about in process requests
         // if (this._CachedDVRequests.has(cacheKey)) {
-        //     if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
+        //     if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("GetDV({0}:{1}) reused pending request ".sfFormat(displayName, keyValue, "request"));
         //     return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
         // }
 
@@ -947,7 +948,8 @@ export class sfRestClient {
         if (apiResultPromise) {
             apiResultPromise.then(
                 (rr: string | number | boolean | null) => {
-                    if (rr) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Rule Result: ${ruleName}|${testValue}[${filterValue}] = ${rr}`);
+                    if (typeof rr !== "undefined" && rr !== null) {
                         sessionStorage.setItem(cacheKey, JSON.stringify({ v: rr, w: Date.now() }));
                        // if (RESTClient._CachedDVRequests.has(cacheKey)) RESTClient._CachedDVRequests.delete(cacheKey);
                     }
@@ -1623,6 +1625,7 @@ export class sfRestClient {
         PopupWindowLargeCWS: {top: -1, left: -1, width: 1000, height: 750},
         PopupWindowHelpMenuCWS: {top: -1, left: -1, width: 750, height: 700},
         PopupWindowUserSettingsCWS: {top: -1, left: -1, width: 830, height: 750},
+        PopupWindowViewUserVWS:{top: -1, left: -1, width: 1000, height: 605},
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
         ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}'
@@ -2771,8 +2774,10 @@ export class sfRestClient {
             else {
                 if (url.indexOf("cuManager.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS
                 else if (url.indexOf("cusysm.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS
+                else if (url.indexOf("dxutil.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowViewUserCWS
                 else if (url.indexOf("vpg=HelpMenu") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowHelpMenuCWS
                 else if (url.indexOf("whoami.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowUserSettingsCWS
+                else if (url.indexOf("viewuser.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowViewUserCWS
                 else if (url.indexOf("users.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS;
 
                 if (TargetSizeData) ApplySizeAndPosition = true
@@ -2927,12 +2932,12 @@ export class sfRestClient {
                     setTimeout("top.sfClient.ResizeDialogInFrame(undefined, top.sfClient);",1234);
                 });
             } catch (e) {
-                    console.log("<!> refreshiFrameSrc could not find IFRAME" );
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("<!> refreshiFrameSrc could not find IFRAME" );
                     }
             var locNow = $LookupFrameDOM.location.href;
             var wantSrc = this.$LookupFrame.attr('src');
             if (!locNow.endsWith(wantSrc!)) {
-                console.log("mDialog frame src re-get, is " + $LookupFrameDOM.location + '; want ' + this.$LookupFrame.attr('src') + '.');
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("mDialog frame src re-get, is " + $LookupFrameDOM.location + '; want ' + this.$LookupFrame.attr('src') + '.');
                 $LookupFrameDOM.location.href = this.$LookupFrame.attr('src') as string;
             }
         }
@@ -2946,15 +2951,20 @@ export class sfRestClient {
         var RunHeight = $FrameElement.contents().find("html").outerHeight()! + 16;  // see also ResetPartFrameHeight() in sfPMS
         var MaxHeight :number = $(top!).height()! - 64;
         if (!RunHeight) {
-            console.log("ResizeDialogInFrame() could not find content height, using 65% of ",MaxHeight);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ResizeDialogInFrame() could not find content height, using 65% of ",MaxHeight);
             RunHeight = Math.round(MaxHeight * 0.65);
         }
+
+        var fh = $FrameElement.height()!;
+        var frameID = ($FrameElement.attr("id")) ? $FrameElement.attr("id") : $FrameElement.closest("[id]").attr("id");
         if (RunHeight) {
             if (RunHeight > MaxHeight) RunHeight = MaxHeight;
-            RESTClient.$LookupDialog!.dialog('option', 'height', RunHeight + 8).height(RunHeight + 16).find('iframe').height(RunHeight)
-        }else
-        var frameID = ($FrameElement.attr("id")) ? $FrameElement.attr("id") : $FrameElement.closest("[id]").attr("id");
-        console.log("onLoad::resizeDialogInFrame({1}) h={0}".sfFormat(RunHeight, frameID));
+            if (fh < RunHeight) {
+                RESTClient.$LookupDialog!.dialog('option', 'height', RunHeight + 8).height(RunHeight + 16).find('iframe').height(RunHeight)
+            }
+            else RunHeight = fh;
+        }
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`onLoad::resizeDialogInFrame(${frameID}) frame:${fh} set to=${RunHeight}`);
     }
 
     LogMessageOnServer(msgText: string) : void {
@@ -2972,7 +2982,7 @@ export class sfRestClient {
             if (k.startsWith("sfWindow@")) {
                 var TabAsOf = localStorage.getItem(k);
                 if (parseFloat(TabAsOf!) < OldestSaneTab) {
-                    console.log("GetSFTabCount() Forgetting tab: {0}, last loaded {1}".sfFormat(k, TabAsOf));
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("GetSFTabCount() Forgetting tab: {0}, last loaded {1}".sfFormat(k, TabAsOf));
                     top!.localStorage.removeItem(k);
                 }
                 else OpenWindowCount++;
@@ -3129,11 +3139,12 @@ export class sfRestClient {
         if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
       //  if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
         var PositionNow = ld.closest("DIV.ui-dialog").position();
-        if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH + PositionNow.top))) {
+        var wh : number =$(window).height()!;
+        if ((wh < (newValue + this._LookupViewPortAdjustments.outsidExtraH + PositionNow.top))) {
             // requested size still too large
             var requestedH = newValue;
-            newValue = $(window).height()! - ( PositionNow.top + this._LookupViewPortAdjustments.outsidExtraH);
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('dialog height requested cannot be accomidated by window, reduce from ' + requestedH + ' to ' + newValue);
+            newValue = wh - ( PositionNow.top + this._LookupViewPortAdjustments.outsidExtraH);
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`dialog height requested ${requestedH} cannot be accomidated by window ${wh}, reduced to ${newValue}` );
         }
         var tdh = newValue + this._LookupViewPortAdjustments.vpExtraH + this._LookupViewPortAdjustments.frameExtraH;
         ld.dialog('option', "height", tdh);
