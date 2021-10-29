@@ -3266,14 +3266,18 @@ export class sfRestClient {
                             else console.warn("_ApplyUICFGtoRawData(cmp) base field {0} not found in row".sfFormat(RealFieldName));
                         }
                     }
-                    else if (!((item.DataField + ThisSuffix) in rawRow)) {
+                    else {
+                        //if (!((item.DataField + ThisSuffix) in rawRow)) {
                         var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
-                        ///!!! future: handle depends on #DocMasterDetail.project
-                        var DependsOn : string[] | undefined;
-                        if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
-                        thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
-                            thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix, r);
-                        }));
+                        if (!((item.DataField + "_ov") in rawRow) || (FieldValue !== thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField + "_ov")) ) {
+                            ///!!! future: handle depends on #DocMasterDetail.project
+                            var DependsOn : string[] | undefined;
+                            if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
+                            thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
+                                thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, "_ov", FieldValue);
+                                thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix, r);
+                            }));
+                        }
                     }
                 });
             }
@@ -3293,8 +3297,17 @@ export class sfRestClient {
             // future: finish support for resolution using LookupName ...
         }
     }
+    /**
+     *
+     * @param thisPart instance of PartStorageData
+     * @param dataModelBuildKey unique per vm build
+     * @param index row index into data
+     * @param dataField base field name
+     * @param suffix added to base name (_dv, _ov, _IsInactive, etc)
+     * @param newValue value for the target
+     */
     protected _AddDVValueToDataModel(thisPart: PartStorageData, dataModelBuildKey: string, index: number, dataField: string, suffix : string, newValue: string | boolean | null) {
-        //if (this._Options.LogLevel >= LoggingLevels.Debug) console.log("Row {0}, adding {1}_dv = {2} ".sfFormat(index,DataField,newValue ));
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Row ${index}, setting ${dataField}${suffix} = ${newValue} `);
         thisPart.DataModels.get(dataModelBuildKey)![index][dataField + suffix] = newValue;
     }
 
