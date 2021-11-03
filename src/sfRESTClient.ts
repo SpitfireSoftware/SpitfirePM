@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.75";
+const ClientPackageVersion : string = "1.10.77";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -20,7 +20,7 @@ const ClientPackageVersion : string = "1.10.75";
 /* eslint-disable vars-on-top */
 /* eslint-disable no-var */
 
-// script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
+// original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
 
 export enum LoggingLevels {
     None,
@@ -1619,9 +1619,9 @@ export class sfRestClient {
          */
         PopDocForceXBUI :  false,
         PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
-        PopDocXBURL:  "{0}#!/document?id={1}",
+        PopDocXBURL:  "{0}/spax.html#!/document?id={1}",
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
-        PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
+        PopNewDocXBURL:  "{0}/spax.html#!/document?add={1}&project={2}{3}",
         PopupWindowLargeCWS: {top: -1, left: -1, width: 1000, height: 750},
         PopupWindowHelpMenuCWS: {top: -1, left: -1, width: 750, height: 700},
         PopupWindowUserSettingsCWS: {top: -1, left: -1, width: 830, height: 750},
@@ -1990,7 +1990,75 @@ export class sfRestClient {
 
     /** display support panel */
     public InvokeSupportPanel() : void {
-        this.DisplaySysNotification("Coming soon...");
+        var RESTClient = this;
+        if (!top) this.DisplayUserNotification("Missing Window Context...");
+        var $DVI : JQuery<HTMLDivElement> = top!.$("<div class='sfUIShowDevInfo'  style='font-size:0.6em'/>");
+        $DVI.html("Loading....");
+        //width: window.top.$(window.top).width() * 0.88
+        $DVI.dialog({
+            title: 'WCC Info', height: "auto", width: "auto", position: "bottom of window"
+            , show: { effect: "blind", duration: 100 }
+        });
+
+        var $tbl = $("<ul class='WCCList' />");
+        var sortPad = "";
+        $.each(sfRestClient._WCC, function (index:string, rItem) {
+            var isJS = false;
+            var isGuid = false;
+            var isSkipped = false;
+            if  (typeof rItem === "string") {
+                isJS = rItem.startsWith("javascript:");
+                isGuid = rItem.length === 36;
+            } else console.warn(`InvokeSupportPanel rItem is ${typeof rItem}`);
+            sortPad = ((isGuid || (index.endsWith("Key")) || (index.endsWith("ID")) || isJS) ? "" : " ");
+            if (isJS) {
+                rItem = `<i class="fas fa-boxes sfShowPointer" data-js="${rItem.substr(11)}"></i>`;
+            }
+            else if (isGuid && rItem !== RESTClient.EmptyKey ) {
+                rItem = `<span>${rItem}</span>&nbsp;<i class="far fa-clipboard clsEnabledImgBtn" title="Copy" data-text="${rItem}" />`;
+            }
+            else if (index === "Likeness") isSkipped = true;
+            if (!isSkipped) $tbl.append(`<li>${sortPad}${index} = ${rItem}</li>`);
+        });
+
+        $DVI.html("");
+        // if (!$.browser.msie) {
+        //     var SortedList = $tbl.find("li").sort(function (a, b) { return ($(b).text().toUpperCase()) < ($(a).text().toUpperCase()) ? 1 : -1; });
+        //     $tbl.html("").append(SortedList);
+        // }
+        $tbl.appendTo($DVI);
+        $tbl.find("i.fa-clipboard").on("click",(event)=>{
+            var $btn = $(event.currentTarget);
+            var text = $btn.data('text');
+            if (text.length > 0)  RESTClient.SetClipboard(text);
+        });
+        $tbl.find("i.fa-boxes").on("click",function (event) {
+            var js = $(event.currentTarget).data("js")
+            if (!js) return;
+            eval(js); // see                ShowPageResourceString
+        });
+    }
+
+    SetClipboard(text:string) {
+
+        var textArea = document.createElement("textarea");
+        var result = false;
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            var successful = document.execCommand('copy');
+            result = successful;
+            if (result) this. DisplayUserNotification(`FYI: Clipboard set [${text}]`, 3456);
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+
+        document.body.removeChild(textArea);
+
+        return result;
     }
 
     /**
@@ -3307,7 +3375,7 @@ export class sfRestClient {
      * @param newValue value for the target
      */
     protected _AddDVValueToDataModel(thisPart: PartStorageData, dataModelBuildKey: string, index: number, dataField: string, suffix : string, newValue: string | boolean | null) {
-        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Row ${index}, setting ${dataField}${suffix} = ${newValue} `);
+        //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Row ${index}, setting ${dataField}${suffix} = ${newValue} `);
         thisPart.DataModels.get(dataModelBuildKey)![index][dataField + suffix] = newValue;
     }
 
