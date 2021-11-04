@@ -1992,7 +1992,7 @@ export class sfRestClient {
     public InvokeSupportPanel() : void {
         var RESTClient = this;
         if (!top) this.DisplayUserNotification("Missing Window Context...");
-        var $DVI : JQuery<HTMLDivElement> = top!.$("<div class='sfUIShowDevInfo'  style='font-size:0.6em'/>");
+        var $DVI : JQuery<HTMLDivElement> = top!.$("<div class='sfUIShowDevInfo'  style='font-size:0.9em'/>");
         $DVI.html("Loading....");
         //width: window.top.$(window.top).width() * 0.88
         $DVI.dialog({
@@ -2002,36 +2002,74 @@ export class sfRestClient {
 
         var $tbl = $("<ul class='WCCList' />");
         var sortPad = "";
-        $.each(sfRestClient._WCC, function (index:string, rItem) {
+        $.each(sfRestClient._WCC, function (index:string, rItemRaw:number | string | boolean) {
             var isJS = false;
             var isGuid = false;
             var isSkipped = false;
-            if  (typeof rItem === "string") {
-                isJS = rItem.startsWith("javascript:");
-                isGuid = rItem.length === 36;
-            } else console.warn(`InvokeSupportPanel rItem is ${typeof rItem}`);
-            sortPad = ((isGuid || (index.endsWith("Key")) || (index.endsWith("ID")) || isJS) ? "" : " ");
+            var rItem : string;
+            if  (typeof rItemRaw === "string") {
+                isJS = rItemRaw.startsWith("javascript:");
+                isGuid = rItemRaw.length === 36;
+                rItem = rItemRaw;
+            }
+            else if (typeof rItemRaw === "boolean")  rItem = <boolean>rItemRaw ? "true" : "false";
+            else if (typeof rItemRaw === "number")  rItem = `${rItemRaw}`;
+            else rItem = `Unexpected ${typeof rItemRaw}`;
+            sortPad = ((isGuid || (index.endsWith("ID")) || isJS) ? "" : " ");
             if (isJS) {
                 rItem = `<i class="fas fa-boxes sfShowPointer" data-js="${rItem.substr(11)}"></i>`;
             }
             else if (isGuid && rItem !== RESTClient.EmptyKey ) {
-                rItem = `<span>${rItem}</span>&nbsp;<i class="far fa-clipboard clsEnabledImgBtn" title="Copy" data-text="${rItem}" />`;
+                rItem = `${rItem} &nbsp;<i class="far fa-clipboard clsEnabledImgBtn" title="Copy" data-text="${rItem}"></i>`;
             }
             else if (index === "Likeness") isSkipped = true;
-            if (!isSkipped) $tbl.append(`<li>${sortPad}${index} = ${rItem}</li>`);
+            if (!isSkipped) $tbl.append("<li>" + sortPad + `${index} = ${rItem}</li>`); // avoid trim of sortPad
+        });
+        //$tbl.append(`<li><i class="fas fa-pump-soap  clsEnabledImgBtn" title="Clear cache (safe)"></i>Clear local cache</li>`);
+        RESTClient.AddDialogTitleButton($DVI,"btnDeleteLocalDB","Discard Local Configuration","ui-icon-trash").on("click",function() {
+            var $A = RESTClient.jqAlert("Warning!  This blows away all user settings, including grid columns, home dashboard layout, etc)!","Discard User Settings");
+            var DialogButtons = [];
+            DialogButtons.push(
+                {
+                    text: "Discard",
+                    "id": "btnOK",
+                    click: function () {
+                        RESTClient.QAClearEnvironment();
+                        $(this).dialog("close");
+                    }
+                });
+            DialogButtons.push(
+                {
+                    text: "Cancel",
+                    "id": "btnIgnore",
+                    click: function () {
+                        $(this).dialog("close");
+                    }
+                });
+            $A.dialog('option', 'buttons', DialogButtons);
+        });
+        RESTClient.AddDialogTitleButton($DVI,"btnClearLocalCache","Clear Cache","ui-icon-arrowrefresh-1-n").on("click",()=>{
+            this.ClearCache(true);
+            this.DisplayUserNotification("Cache has been cleared",4321);
         });
 
+        var SortedList = (<any>($tbl.find("li"))).sort(function (a:any, b:any) { return ($(b).text().toUpperCase()) < ($(a).text().toUpperCase()) ? 1 : -1; });
+        $tbl.html("").append(SortedList);
+        //$tbl.append(`<li><i class="fas fa-dumpster-fire clsEnabledImgBtn" title="Warning!"></i> Discard all settings</li>`);
         $DVI.html("");
-        // if (!$.browser.msie) {
-        //     var SortedList = $tbl.find("li").sort(function (a, b) { return ($(b).text().toUpperCase()) < ($(a).text().toUpperCase()) ? 1 : -1; });
-        //     $tbl.html("").append(SortedList);
-        // }
+
         $tbl.appendTo($DVI);
         $tbl.find("i.fa-clipboard").on("click",(event)=>{
             var $btn = $(event.currentTarget);
             var text = $btn.data('text');
             if (text.length > 0)  RESTClient.SetClipboard(text);
         });
+        // $tbl.find("i.fa-pump-soap").on("click",(event)=>{
+        //     this.ClearCache(true);
+        //     this.DisplayUserNotification("Cache has been cleared");
+        // });
+
+
         $tbl.find("i.fa-boxes").on("click",function (event) {
             var js = $(event.currentTarget).data("js")
             if (!js) return;
@@ -2051,7 +2089,10 @@ export class sfRestClient {
         try {
             var successful = document.execCommand('copy');
             result = successful;
-            if (result) this. DisplayUserNotification(`FYI: Clipboard set [${text}]`, 3456);
+            if (result) {
+                if (text.length > 20) text = text.substring(0, 16) + "...";
+                this.DisplayUserNotification(`FYI: Clipboard [${text}]`, 3456);
+            }
         } catch (err) {
             console.error('Fallback: Oops, unable to copy', err);
         }
@@ -2949,7 +2990,9 @@ export class sfRestClient {
         return theDialog;
     }
 
-
+    /** Adds a small button
+     * @param btnIcon see
+     */
     AddDialogTitleButton($Dialog : JQuery<HTMLElement>, btnID: string, btnText: string, btnIcon?: string) {
         var $DialogTitleBar = $Dialog.parent().children(".ui-dialog-titlebar");
         var $LastButton = <JQuery<HTMLButtonElement>>$DialogTitleBar.find("BUTTON[type='button']:last");
@@ -3891,7 +3934,8 @@ export class sfRestClient {
         console.warn("sfRestClient.QAClearEnvironment()",  InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
         sessionStorage.clear();
         localStorage.clear()
-        localForage.clear();
+        indexedDB.deleteDatabase("spitfireApp");
+        if (this.IsPowerUXPage()) setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);
     }
 
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
