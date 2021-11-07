@@ -3365,29 +3365,31 @@ export class sfRestClient {
                         var RealFieldName = item.DataField.substr(4);
                         if (!(RealFieldName in rawRow)) {
                             if (RealFieldName.indexOf("_") > 0) RealFieldName = RealFieldName.substr(0,RealFieldName.indexOf("_"));
-                            if ((RealFieldName in rawRow)) {
+                            if ((RealFieldName in rawRow && !(item.DataField in rawRow))) {
                                 var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, RealFieldName);
-                                ///!!! future: handle depends on #DocMasterDetail.project
                                 var DependsOn : string[] | undefined;
                                 if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
                                 thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
                                     thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, "", r);
                                 }));
                             }
-                            else console.warn("_ApplyUICFGtoRawData(cmp) base field {0} not found in row".sfFormat(RealFieldName));
+                            else if (!(RealFieldName in rawRow)) console.warn("_ApplyUICFGtoRawData(cmp) base field {0} not found in row".sfFormat(RealFieldName));
                         }
                     }
                     else {
                         //if (!((item.DataField + ThisSuffix) in rawRow)) {
                         var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField!);
                         if (!((item.DataField + "_ov") in rawRow) || (FieldValue !== thisPart.RestClient.FieldValueFromRow(rawRow, item.DataField + "_ov")) ) {
-                            ///!!! future: handle depends on #DocMasterDetail.project
-                            var DependsOn : string[] | undefined;
-                            if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
-                            thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
-                                thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, "_ov", FieldValue);
-                                thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix, r);
-                            }));
+                            thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, "_ov", FieldValue);
+                            // when XB stops swapping _dv and base, we MAY may need tweaks here.
+                            if (!((item.DataField + ThisSuffix) in rawRow)) {  // need we think about aging of the _dv value?
+                                var DependsOn : string[] | undefined;
+                                if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow); ///!!! future: handle depends on #DocMasterDetail.project
+                                thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
+
+                                    thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix, r);
+                               }));
+                            }
                         }
                     }
                 });
