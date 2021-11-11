@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.81";
+const ClientPackageVersion : string = "1.10.83";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -715,13 +715,14 @@ export class sfRestClient {
      * Returns set of choices for an auto-complete based on the seed value
      * @param lookupName
      * @param seedValue 0 or more characters which will limit the suggestions
-     * @param dependsOn 0 to 4 values required by the lookup for context
+     * @param dependsOn 0 to 4 values required by the lookup for context; see sfRestClient.GatherDependsOnValues() to process string
      * @param limit a reasonable number of suggestions to be returned
      * @returns
      */
     GetLookupSuggestions(lookupName : string, seedValue: string,
           /**
          * either a string or string array (up to 4 elements);
+         * @see sfRestClient.GatherDependsOnValues
         */
            dependsOn: string | string[] | undefined,
           limit: number) : Promise<Suggestion[] | null> {
@@ -1743,7 +1744,8 @@ export class sfRestClient {
         var result: string[] = [];
 
         dependsOnList.split(";").forEach(element => {
-            if (element.startsWith("=")) result.push(element.substring(1))
+            if (!element) element=""
+            else if (element.startsWith("=")) result.push(element.substring(1))
             else {
                 if (element.startsWith("#")) element = element.substring(1);
                 if (element.indexOf(".")> 0 ) {
@@ -2785,8 +2787,14 @@ export class sfRestClient {
         return ($ALERT);
     }
 
-
-    ModalDialog(url: string, eventId: string | undefined, eventArg: string | undefined, eventContext: Window) : Promise<boolean|undefined> | undefined {
+    /** Opens a jquery ui dialog with an iframe to display the requested url
+     * @param url a same-site url
+     * @param eventId optional - used when dialog is closed
+     * @param eventArg optional - used when dialog is closed
+     * @param eventContext optional - used when dialog is closed
+     *
+    */
+    ModalDialog(url: string, eventId?: string | undefined, eventArg?: string | undefined, eventContext?: Window | undefined | null) : Promise<boolean|undefined> | undefined {
         var newValue;
         var formName = "0";
         if (!this.IsGlobalInstance()) {
@@ -2799,7 +2807,7 @@ export class sfRestClient {
             console.warn("ModalDialog() must be called in a browser window!", url);
             return new Promise<boolean>((b) => {  b(false)});;
         }
-        if (eventContext == null) eventContext = window;
+        if (!eventContext) eventContext = window;
         var RESTClient = this;
 
         sfRestClient.ExternalToolsLoadedPromise.then((unused)=>{
@@ -2895,7 +2903,7 @@ export class sfRestClient {
             this.$LookupDialog.data("postbackEventId", eventId!);
             this.$LookupDialog.data("postbackEventArg", eventArg!);
             this.$LookupDialog.data("postback", (eventId != sfRestClient._Options.NonPostbackEventID));
-            this.$LookupDialog.data("postbackContext", eventContext);
+            this.$LookupDialog.data("postbackContext", <any> eventContext);
             this.$LookupDialog.data("urlHash", ThisURLHash);
             this.$LookupDialog.data("idName", url);
             this.$LookupDialog.data("newValue", eventArg!);  // must reset to null or prior lookup result value may get used
@@ -2928,6 +2936,7 @@ export class sfRestClient {
 
             try {
                 var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
+                this.$LookupFrame[0].contentWindow!.name = `MD${ThisURLHash}`;
                 if ($LookupFrameDOM.location.href !== this.$LookupFrame.attr('src')) {
                     // we have confirmed that in a nested child frame, $LookupFrame is correct, but sometimes src does not update location
                     setTimeout("top.sfClient.RefreshiFrameSrc();", 1234);
@@ -2945,14 +2954,19 @@ export class sfRestClient {
                     }
 
                     $DialogDiv.css({top:TargetSizeData.top,left:TargetSizeData.left});
-                    top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.height);
-                    top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,TargetSizeData.width);
+                    top?.sfClient.sfLookupHeightChangeTo(RESTClient.$LookupDialog!,TargetSizeData.height);
+                    top?.sfClient.sfLookupWidthChangeTo(RESTClient.$LookupDialog!,TargetSizeData.width);
                     $DialogDiv.css({top:TargetSizeData.top,left:TargetSizeData.left});
                     this.$LookupDialog!.data("SizePending",false );
                 }
             }
             catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
 
+            $(top!).off(`resize.${ThisURLHash}`).on(`resize.${ThisURLHash}`,(e) => {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(e);
+                top?.sfClient.sfLookupHeightChangeTo(RESTClient.$LookupDialog!,$(RESTClient.$LookupDialog!).height()!);
+                top?.sfClient.sfLookupWidthChangeTo(RESTClient.$LookupDialog!,$(RESTClient.$LookupDialog!).width()!);
+            });
         });
 
     return sfRestClient.ExternalToolsLoadedPromise;  // so anchor click event doesn't also do work
@@ -2964,7 +2978,7 @@ export class sfRestClient {
     protected ResolveLookupFrame( forDialog?: JQuery<HTMLDivElement> | undefined) : JQuery<HTMLIFrameElement> | undefined {
         if (!forDialog) forDialog = this.$LookupDialog
         if (!forDialog) {
-            console.log("sfClient ResolveLookupFrame() called without current Dialog, returning undefined");
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient ResolveLookupFrame() called without current Dialog, returning undefined");
             return undefined;
         }
         return $(forDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
@@ -3138,7 +3152,6 @@ export class sfRestClient {
     protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
         var $LookupDialog : JQuery<HTMLDivElement> = $(<HTMLDivElement><unknown>this );
         var RESTClient = top?.sfClient;
-        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfModalDialogClosed() ....",$LookupDialog);
         var postbackEventId = $LookupDialog.data("postbackEventId");
         var postbackEventArg = $LookupDialog.data("postbackEventArg");
         var postbackContext = $LookupDialog.data("postbackContext");
@@ -3147,10 +3160,13 @@ export class sfRestClient {
         var newValue = $LookupDialog.data("newValue");
         var IsMultiSelect = $LookupDialog.data("multiSelect");
         var dialogMode = $LookupDialog.data("mode");
+        var ThisURLHash = $LookupDialog.data("urlHash");
         var NewValueIsNew = true;
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfModalDialogClosed(${ThisURLHash}) ....`,$LookupDialog);
 
         if (typeof postbackContext === "undefined") postbackContext = window;
         var $LookupFrame   = RESTClient?.ResolveLookupFrame();
+        $(top!).off(`resize.${ThisURLHash}`);
         $LookupDialog.dialog('destroy');
         this.$LookupDialog?.remove();
         this.$LookupDialog = undefined;
