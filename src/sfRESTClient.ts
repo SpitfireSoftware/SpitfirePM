@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.84";
+const ClientPackageVersion : string = "1.10.86";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -728,10 +728,10 @@ export class sfRestClient {
           limit: number) : Promise<Suggestion[] | null> {
 
             var apiResultPromise: Promise<Suggestion[] | null>
-
-            //var RESTClient: sfRestClient = this;
+            var RESTClient: sfRestClient = this;
             var api: LookupClient = new LookupClient(this._SiteURL);
             var DependsOnSet: string[] = ["", "", "", "",""];
+
             if (Array.isArray(dependsOn)) {
                 $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
             }
@@ -745,7 +745,7 @@ export class sfRestClient {
             SuggestionContext.DependsOn = DependsOnSet;
             SuggestionContext.MatchingSeed = seedValue;
             SuggestionContext.ResultLimit = limit;
-            var apiResultPromise : Promise<Suggestion[] | null> = api.getSuggestionsWithContext(lookupName,"1",SuggestionContext)
+            var apiResultPromise : Promise<Suggestion[] | null> = api.getSuggestionsWithContext(lookupName,RESTClient.GetPageContextValue("dsCacheKey"),SuggestionContext)
 
             return apiResultPromise;
     }
@@ -753,34 +753,23 @@ export class sfRestClient {
     /**
      * Returns a View Model constructured for the result rows matching specified lookup context and filters
      * @param lookupName
-     * @param dependsOn 0 to 4 values required by the lookup for context
-     * @param filterValues  default to {}
+     * @param filterValues  default to {} can include NVPs and zero to 4 dependsOn strings
      * @returns
      */
     GetLookupResults(lookupName : string,
         /**
        * either a string or string array (up to 4 elements);
       */
-         dependsOn: string | string[] | undefined,
          filterValues: QueryFilters
          ) : Promise<DataModelCollection> {
 
           var apiResultPromise: Promise<{[key:string]:any}[] | null>;
-
-
-          //var RESTClient: sfRestClient = this;
+          var RESTClient: sfRestClient = this;
           var api: LookupClient = new LookupClient(this._SiteURL);
-          var DependsOnSet: string[] = ["", "", "", "",""];
-          if (Array.isArray(dependsOn)) {
-              $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
-          }
-          else if (dependsOn) {
-              DependsOnSet[0] = dependsOn;
-          }
-
+          
 
           var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
-            apiResultPromise  = api.getLookupResultBase(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],filterValues);
+            apiResultPromise  = api.getLookupResultAll(lookupName, RESTClient.GetPageContextValue("dsCacheKey"),  filterValues);
 
             apiResultPromise.then((lookupResultData) => {
                   var thisPart : PartStorageData = PartStorageData.PartStorageDataLookupFactory(this,lookupName);
@@ -1251,7 +1240,7 @@ export class sfRestClient {
                 var ForPageHash =location.toString().sfHashCode();
                 api = new SessionClient(this._SiteURL);
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Creating getWCC request for HREF hash ${ForPageHash}`);
-                apiResult = <Promise<WCCData | null>> api.getWCC()
+                apiResult = <Promise<WCCData | null>> api.getWCC(RESTClient.GetPageQueryContent());
                 sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
             }
             if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
@@ -1968,12 +1957,19 @@ export class sfRestClient {
 
     public GetPageQueryParameterByName(name:string):string {
         name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-        var QPSource = location.search;
-        if (!QPSource) QPSource = location.hash;
+        var QPSource = this.GetPageQueryContent();
         var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
             results = regex.exec(QPSource);
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
+
+    /** Returns the search or hash portion of the page location */
+    public GetPageQueryContent():string {
+        var QPSource = location.search;
+        if (!QPSource) QPSource = location.hash;
+        return QPSource;
+    }
+
 
     public GetPageProjectKey(pageTypeName?: PageTypeName) :string {
         var Context = location.href;
