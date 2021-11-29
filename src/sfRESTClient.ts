@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.86";
+const ClientPackageVersion : string = "1.10.87";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -766,7 +766,7 @@ export class sfRestClient {
           var apiResultPromise: Promise<{[key:string]:any}[] | null>;
           var RESTClient: sfRestClient = this;
           var api: LookupClient = new LookupClient(this._SiteURL);
-          
+
 
           var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
             apiResultPromise  = api.getLookupResultAll(lookupName, RESTClient.GetPageContextValue("dsCacheKey"),  filterValues);
