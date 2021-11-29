@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.88";
+const ClientPackageVersion : string = "1.10.89";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -1036,6 +1036,40 @@ export class sfRestClient {
     return forElement;
     }
 
+    /** checks with server up to 5 times a second.  promise resolves when task has ended or callback returns true;
+     * @param taskKey guid key for task
+     * @param sessionClient optional existing SessionClient
+     * @param progressCallback optional callback for when task status is not 200;  if this callback returns true, promise is resolved
+     */
+    public async WaitForTask( taskKey: GUID,sessionClient? : SessionClient, progressCallback?: (state:_SwaggerClientExports.HttpResponseJsonContent) => boolean ) : Promise<_SwaggerClientExports.HttpResponseJsonContent> {
+        if (!sessionClient) sessionClient = new SessionClient();
+        var RESTClient = this;
+        if (sfRestClient._Options.TaskStatePollInterval < 200) sfRestClient._Options.TaskStatePollInterval = 200;
+        return new Promise<_SwaggerClientExports.HttpResponseJsonContent>(async result =>  {
+            var taskResult : _SwaggerClientExports.HttpResponseJsonContent, waitResult : _SwaggerClientExports.HttpResponseJsonContent;
+            taskResult = new _SwaggerClientExports.HttpResponseJsonContent( {ThisStatus: 202});
+            var aborted= false;
+            while (!aborted && taskResult.ThisStatus == 202) {
+                await new Promise(r => setTimeout(r, sfRestClient._Options.TaskStatePollInterval));
+                var taskCheck =   sessionClient!.getTaskState(taskKey).then(t=>taskResult = t).catch(x=>{taskResult = x;});
+                await taskCheck;
+
+                if (taskResult!.ThisStatus == 202) {
+                    if (progressCallback) {
+                        if (progressCallback(taskResult)) {
+                            result(taskResult);
+                            aborted = true;
+                        }
+                    }
+                    else if (taskResult.ThisReason) {
+                         RESTClient.DisplayUserNotification(taskResult.ThisReason);
+                    }
+                }
+            }
+            result(taskResult);
+        });
+    }
+
     /**
      * Maps .NET placeholders (dn) to webix placeholders (dx)
      * Important: order matters (eg: dd must be remapped before d, or the d map would be used)
@@ -1618,7 +1652,9 @@ export class sfRestClient {
         PopupWindowViewUserVWS:{top: -1, left: -1, width: 1000, height: 605},
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
-        ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}'
+        ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}',
+
+        TaskStatePollInterval: 357
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
