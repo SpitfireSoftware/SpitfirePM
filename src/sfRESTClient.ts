@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.10.89";
+const ClientPackageVersion : string = "1.20.90";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -802,7 +802,7 @@ export class sfRestClient {
          * when true, a unique value is added to defeat cache
         */
         autoVary?: boolean | undefined): Promise<string | null> {
-        // future: finish support for dependsOn list
+
         var apiResultPromise: Promise<string | null>
         if (!keyValue) return new Promise<string | null>((resolve) => resolve(""));
 
@@ -850,11 +850,13 @@ export class sfRestClient {
             if (DependsOnSet[index] == "undefined") DependsOnSet.pop();
           }
 
-        var DVFilters : QueryFilters  = new QueryFilters();
-
-        DVFilters.MatchingSeed = keyValue;
+        var DVFilters : _SwaggerClientExports.DVRequest  = new _SwaggerClientExports.DVRequest();
+        DVFilters.DVName = displayName;
+        DVFilters.MatchingValue = keyValue;
         DVFilters.DependsOn = DependsOnSet;
-        var apiResultPromise: Promise<string | null> = api.getDisplayValueViaPost(displayName, "1", DVFilters);
+        DVFilters.RequestID = cacheKey;
+        //DVFilters.DataContext = "1";
+        var apiResultPromise: Promise<string | null> = this._ThrottleDVRequests(api,DVFilters);
         if (apiResultPromise) {
             apiResultPromise.then(
                 (dvResult: string | null) => {
@@ -869,6 +871,51 @@ export class sfRestClient {
         this._CachedDVRequests.set(cacheKey, apiResultPromise);
         return apiResultPromise;
     }
+
+    private _ThrottleDVRequests(api : LookupClient, dvRequest : _SwaggerClientExports.DVRequest) : Promise<string|null> {
+        var DVResultPromise: Promise<string | null>;
+        var RESTClient = this;
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`ThrottleDV(${dvRequest.DVName}:${dvRequest.MatchingValue}) with ${this._CachedDVRequests.size} pending `);
+
+        if (this._CachedDVRequests.size > 0) {
+            DVResultPromise = new Promise<string|null>((resolvedTo)=> {
+                if (!RESTClient._DVRequestTimerHandle) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`ThrottleDV() created BatchDV  `);
+                    RESTClient._DVRequestTimerHandle = setTimeout(() => {
+                        var thisGroup : _SwaggerClientExports.DVRequest[] = [];
+                        Object.assign(thisGroup,RESTClient._DVRequestQueue);
+                        RESTClient._DVRequestQueue = [];
+                        RESTClient._DVRequestTimerHandle = undefined;
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`BatchDV() with ${thisGroup.length} in group `);
+                        api.getDisplayValueCollection(thisGroup).then( dvList => {
+                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`BatchDV().THEN  `,dvList);
+                            if (dvList)
+                                dvList.forEach(element => {
+                                    if (element.value) {
+                                        var DVDonePromise = this._DVThrottledResolvers.get(element.value);
+                                        if (DVDonePromise)  {
+                                            DVDonePromise(element.value);
+                                            this._DVThrottledResolvers.delete(element.value);
+                                        }
+                                        else console.warn("Batch DV could not find element",element);
+                                    }
+                                    else console.warn("Batch DV could not find cacheId",element);
+                                });
+                        });
+                    }, 321);
+                }
+                RESTClient._DVRequestQueue.push(dvRequest);
+                this._DVThrottledResolvers.set(dvRequest.RequestID,resolvedTo);
+            });
+        }
+        else DVResultPromise = api.getDisplayableValue(dvRequest.DVName,dvRequest );
+        return DVResultPromise;
+    }
+    private _DVRequestQueue : _SwaggerClientExports.DVRequest[] = [];
+    //private _DVThrottledResolvers1 : {[key:string]:(params:string)=>void; }
+    private _DVThrottledResolvers : Map<string,(v:string)=>void>  = new Map<string,(v:string)=>void>();
+    private _DVRequestTimerHandle: number | undefined = undefined;
+
     /**
      * Async Get Part Configuration Data given part name, doc type and context
     */
