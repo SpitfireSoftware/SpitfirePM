@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.90";
+const ClientPackageVersion : string = "1.20.91";
 //export type GUID = string //& { isGuid: true };
 /* eslint-disable prefer-template */
 /* eslint-disable no-extend-native */
@@ -875,26 +875,26 @@ export class sfRestClient {
     private _ThrottleDVRequests(api : LookupClient, dvRequest : _SwaggerClientExports.DVRequest) : Promise<string|null> {
         var DVResultPromise: Promise<string | null>;
         var RESTClient = this;
-        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`ThrottleDV(${dvRequest.DVName}:${dvRequest.MatchingValue}) with ${this._CachedDVRequests.size} pending `);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`ThrottleDV(${dvRequest.DVName}:${dvRequest.MatchingValue}) with ${this._CachedDVRequests.size} pending `);
 
         if (this._CachedDVRequests.size > 0) {
             DVResultPromise = new Promise<string|null>((resolvedTo)=> {
                 if (!RESTClient._DVRequestTimerHandle) {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`ThrottleDV() created BatchDV  `);
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`ThrottleDV() created BatchDV  `);
                     RESTClient._DVRequestTimerHandle = setTimeout(() => {
                         var thisGroup : _SwaggerClientExports.DVRequest[] = [];
                         Object.assign(thisGroup,RESTClient._DVRequestQueue);
                         RESTClient._DVRequestQueue = [];
                         RESTClient._DVRequestTimerHandle = undefined;
-                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`BatchDV() with ${thisGroup.length} in group `);
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`BatchDV() with ${thisGroup.length} in group `);
                         api.getDisplayValueCollection(thisGroup).then( dvList => {
-                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`BatchDV().THEN  `,dvList);
+                            if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`BatchDV().THEN  `,dvList);
                             if (dvList)
                                 dvList.forEach(element => {
                                     if (element.value) {
                                         var DVDonePromise = this._DVThrottledResolvers.get(element.value);
                                         if (DVDonePromise)  {
-                                            DVDonePromise(element.value);
+                                            DVDonePromise(element.label!);
                                             this._DVThrottledResolvers.delete(element.value);
                                         }
                                         else console.warn("Batch DV could not find element",element);
@@ -913,7 +913,7 @@ export class sfRestClient {
     }
     private _DVRequestQueue : _SwaggerClientExports.DVRequest[] = [];
     //private _DVThrottledResolvers1 : {[key:string]:(params:string)=>void; }
-    private _DVThrottledResolvers : Map<string,(v:string)=>void>  = new Map<string,(v:string)=>void>();
+    private _DVThrottledResolvers : Map<string,(v:string|null)=>void>  = new Map<string,(v:string|null)=>void>();
     private _DVRequestTimerHandle: number | undefined = undefined;
 
     /**
