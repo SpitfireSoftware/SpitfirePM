@@ -10,15 +10,8 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.91";
-//export type GUID = string //& { isGuid: true };
-/* eslint-disable prefer-template */
-/* eslint-disable no-extend-native */
-/* eslint-disable prefer-spread */
-/* eslint-disable no-undef */
-/* eslint-disable prefer-arrow-callback */
-/* eslint-disable vars-on-top */
-/* eslint-disable no-var */
+const ClientPackageVersion : string = "1.20.92";
+
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -130,7 +123,7 @@ class PartStorageData {
         this._InitializationResultPromise = null;
 
         if (!PartStorageData._SiteURL) {
-            var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
+            var ApplicationPath = window.location.pathname.substring(1, window.location.pathname.substring(1).indexOf("/")+1);
             PartStorageData._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
     }
@@ -1083,6 +1076,56 @@ export class sfRestClient {
     return forElement;
     }
 
+    private AdjustFluidDialog(dialog :  any,$this:JQuery<HTMLElement>):void {
+        if (!$this) $this = dialog.closest("ui-dialog");
+        var $DialogContent = $this.find(".ui-dialog-content");
+            // if fluid option == true
+        if (dialog.options.fluid) {
+            dialog.option("width", "auto"); // temp...to calc required size
+                var wWidth = $(window).width()!;
+                var dWidth = $DialogContent.width()!;
+                // check window width against dialog width
+                if (wWidth < (dWidth + 50)) {
+                    // keep dialog from filling entire screen
+                    $this.css("max-width", "90%");
+                } else {
+                    // fix maxWidth bug
+                    dialog.option("width", dWidth);
+                }
+                //reposition dialog
+                dialog.option("position", dialog.options.position);
+            }
+        }
+
+    UpdateFluidDialogs():void {
+        var RESTClient = this;
+        var $visible = $(".ui-dialog:visible");
+        if ($visible.length === 0) $visible = self.top!.$(".ui-dialog:visible");
+        // each open dialog
+        $visible.each(function () {
+            var $this = $(this);
+            var dialog = $this.find(".ui-dialog-content").data("ui-dialog");
+            RESTClient.AdjustFluidDialog(dialog, $this);
+        });
+
+    }
+
+
+    AutoSizeDialog($D : JQuery<HTMLElement>): JQuery<HTMLElement> {
+        var RESTClient = this;
+        var dialogOptions = {
+            width: 400,
+            minWidth: 250,
+            height: "auto",
+            fluid: true
+        };
+        $D.dialog(dialogOptions);
+        //$D.dialog("options","width", $D.width());
+        RESTClient.UpdateFluidDialogs();
+        return $D;
+    }
+
+
     /** checks with server up to 5 times a second.  promise resolves when task has ended or callback returns true;
      * @param taskKey guid key for task
      * @param sessionClient optional existing SessionClient
@@ -1115,6 +1158,110 @@ export class sfRestClient {
             }
             result(taskResult);
         });
+    }
+
+
+
+    public  ExportCompetitiveBidData():void {
+        var PostBackArgs = "";
+        var TemplateTypeCode = "BA";
+        var RESTClient = this;
+
+        console.log(`sfExportCobra(${TemplateTypeCode}) ${PostBackArgs}`);
+        $("DIV#divDialogExportGrid").remove();
+        var $Box = $("<div id='divDialogExportGrid' />");
+        var $Dialog : JQuery;
+        $Dialog = $Box.load(`${RESTClient._SiteURL}/ajhx/ExportGridDialog.html`, function PopFromParentDialogLoaded() {
+            // after loaded
+            var $TemplateDocument: JQuery<HTMLInputElement> = <JQuery<HTMLInputElement>>$Box.find("#txtTemplate")!;
+            var $ButtonPane = $Box.parent().find(".ui-dialog-buttonpane");
+            var $CancelBTN = $ButtonPane.find("#btnDismiss");
+
+
+            RESTClient.sfAC($TemplateDocument, "TemplateList", TemplateTypeCode);
+            $TemplateDocument.autocomplete("option", "minLength", 0).autocomplete("option", "delay", 200);
+            $TemplateDocument.data("acPostbackKey", false); // prevent Auto complete from stuffing the key into our input field
+            $TemplateDocument.on("sfAutoCompletedKV sfLookup.Stored", function (e, kv) {
+                console.log(`ExportGrid Template-on:${e.type} = ${kv}`);
+                $TemplateDocument.data("TemplateKey", kv);
+                PostBackArgs = kv;
+            }).on("sfAC.response", function (e, choices) {
+                if (choices.content.length === 1) {
+                    var newChoice = choices.content[0];
+                    $TemplateDocument.val(newChoice.value).data("acKey", newChoice.key).data("acChange", true);
+                }
+            }).on("focus", () => {
+                $TemplateDocument.autocomplete("search", $TemplateDocument.val());
+                $TemplateDocument.trigger("select");
+            });
+
+            $TemplateDocument.trigger("focus");
+            RESTClient.AutoSizeDialog($Dialog);
+            return false;
+        }).dialog({
+            title: "Export Competitive Bid Data...",
+            close: function () { $Dialog.dialog('destroy'); }
+        });
+        var DialogButtons = [{
+            text: "Export",
+            "id": "btnExport",
+            click: function () {
+
+                RESTClient.GADialogEvent("Completed", "ExportCobra");
+                $Dialog.dialog("close");
+                RESTClient.HeyPleaseWait();
+                var api = new _SwaggerClientExports.ExcelToolsClient();
+                api.getCobraExport(PostBackArgs,RESTClient.GetPageContextValue("dsCacheKey")).then( crt => {
+                    RESTClient.WaitForTask(crt).then( (crtResult) => {
+                        RESTClient.ClearPleaseWaitDialog();
+                        if (crtResult!.ThisReason!.indexOf("Failed!") >= 0) {
+                            RESTClient.DisplayUserNotification(crtResult!.ThisReason!);
+                        }
+                        else {
+                            console.log(crtResult!.ThisReason);
+                            var fn = "CobraExport.xlsx";
+                            if (crtResult!.ThisReason?.startsWith("{")) {
+                                var result = JSON.parse(crtResult!.ThisReason);
+                                if (result.fn) fn = result.fn;
+                            }
+                            RESTClient.DisplayUserNotification();
+                            window.open(`${top!.sfClient._SiteURL}/sfImg.ashx/CRT/${crt}/${fn}`);
+                        }
+                    });
+                });
+                //setTimeout("top.sfClient.ClearPleaseWaitDialog(); if (top.sfClient.ClearInClientSidePostbackFlag) top.sfClient.ClearInClientSidePostbackFlag(); //ExportCobra", 2345);
+            }
+        }, {
+            "id": "btnDismiss",
+            text: "Dismiss",
+            click: function () {
+                $Dialog.dialog("close");
+            }
+        }];
+
+
+        $Dialog.dialog('option', 'buttons', DialogButtons);
+
+        //return false; // do not return false, IE anchor href issue
+
+    }
+
+    static $CurrentPleaseWaitDialog : JQuery<HTMLDivElement> | null;
+    HeyPleaseWait() {
+        // this variant applies inside a frame
+        if (sfRestClient.$CurrentPleaseWaitDialog && sfRestClient.$CurrentPleaseWaitDialog.is(":visible")) return sfRestClient.$CurrentPleaseWaitDialog;
+
+        sfRestClient.$CurrentPleaseWaitDialog = this.jqAlert("Please wait...", "Working", "ui-icon-locked").addClass("sfPleaseWait");
+        var DialogButtons = {};
+        if (DialogButtons) sfRestClient.$CurrentPleaseWaitDialog .dialog('option', 'buttons', DialogButtons);
+        return sfRestClient.$CurrentPleaseWaitDialog;
+    }
+    ClearPleaseWaitDialog():void {
+
+        if (sfRestClient.$CurrentPleaseWaitDialog ) {
+            sfRestClient.$CurrentPleaseWaitDialog.dialog("close")
+            sfRestClient.$CurrentPleaseWaitDialog  = null;
+        }
     }
 
     /**
@@ -1537,14 +1684,14 @@ export class sfRestClient {
                 var UseID : string;
                 var url : string =  sfRestClient._Options.PopNewDocLegacyURL;
                 if (options?.indexOf("&UseID")) {
-                    UseID = options.substr(options?.indexOf("&UseID")+7,36);
+                    UseID = options.substring(options?.indexOf("&UseID")+7,36);
                 }
                 else UseID = await this.NewGuid();  // todo: fix this!!!
                 if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL;
                 url  =  url.sfFormat(thisRestClient._SiteURL, dtk,project,options) ;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopNewDoc opening {0} DTK {1} using {2}".sfFormat(UseID, dtk,url));
 
-                var TargetTab =  UseID.substr(UseID.lastIndexOf("-") + 1).toLowerCase();
+                var TargetTab =  UseID.substring(UseID.lastIndexOf("-") + 1).toLowerCase();
                 //todo: determine if we need the "how many tabs" logic and dialog
                 if (!window) {
                     console.error("PopNewDoc() Must be called from a browser window");
@@ -1589,7 +1736,7 @@ export class sfRestClient {
                url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
-               var TargetTab =  url.substr(url.lastIndexOf("-") + 1).toLowerCase();
+               var TargetTab =  url.substring(url.lastIndexOf("-") + 1).toLowerCase();
                //todo: determine if we need the "how many tabs" logic and dialog
                if (!window) {
                    console.error("PopDoc() Must be called from a browser window");
@@ -1983,9 +2130,9 @@ export class sfRestClient {
         var pgname : string = location.pathname;
         var pgHash : string = location.hash;
         if (pgHash.length > 0) pgname = pgHash; // for xb style
-        if (pgname.indexOf("/") >= 0) pgname = pgname.substr(pgname.lastIndexOf("/") + 1)
-        if (pgname.indexOf("?") >= 0) pgname = pgname.substr(0,pgname.indexOf("?") )
-        if (pgname.indexOf(".") >= 0) pgname = pgname.substr(0,pgname.indexOf(".") )
+        if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
+        if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
+        if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
         return pgname;
     }
 
@@ -2098,7 +2245,7 @@ export class sfRestClient {
             else rItem = `Unexpected ${typeof rItemRaw}`;
             sortPad = ((isGuid || (index.endsWith("ID")) || isJS) ? "" : " ");
             if (isJS) {
-                rItem = `<i class="fas fa-boxes sfShowPointer" data-js="${rItem.substr(11)}"></i>`;
+                rItem = `<i class="fas fa-boxes sfShowPointer" data-js="${rItem.substring(11)}"></i>`;
             }
             else if (isGuid && rItem !== RESTClient.EmptyKey ) {
                 rItem = `${rItem} &nbsp;<i class="far fa-clipboard clsEnabledImgBtn" title="Copy" data-text="${rItem}"></i>`;
@@ -2292,7 +2439,7 @@ export class sfRestClient {
                         var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
                         var match = rx.exec(ActionString);
                         if (match && match.groups) {
-                            targetURL = match.groups.URL
+                            targetURL = this.ExpandActionMarkers(match.groups.URL,rowData);
                         }
                         else console.warn("InvokeAction() could not parse",actionString);
                     }
@@ -2304,9 +2451,13 @@ export class sfRestClient {
             console.warn("InvokeAction::tools not really done",ActionString);
             top!.location.href = ActionString;
         }
+        else if (ActionString.startsWith("javascript:sfExportCompetitiveBidData")) {
+            this.ExportCompetitiveBidData();
+        }
+
         else if (ActionString.startsWith("javascript:")) {
             try {
-                eval(ActionString.substr(11));
+                eval(ActionString.substring(11));
             }
             catch (ex:any) {
                 console.warn("InvokeAction::failed javascript ",ActionString, ex.message);
@@ -2323,9 +2474,12 @@ export class sfRestClient {
         }
     }
 
+    /** Creates an exchange token and calls OpenWindowsLinkHelper() */
     public FollowLinkViaSFLink(targetURL: string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
         var RESTClient = this;
         if (targetURL.endsWith("&Project=")) targetURL += RESTClient.GetPageProjectKey();
+        console.log(`sfLink(${targetURL})`);
+        if (targetURL.indexOf("$$") > 0) targetURL = this.ExpandActionMarkers(targetURL);
         if (!top?.ClickOnceExtension.HasDotNetApplicationExtension()) {
             var RetryLater = `FollowLinkViaSFLink('${targetURL}'`;
             if (typeof afterOpenArg !== "undefined") {
@@ -2393,7 +2547,7 @@ export class sfRestClient {
     /**
      *
      * @param et token passed to sfLink
-     * @param afterOpenArg  boolean/true: closes document page; false/0: posts back default refresh; ['e','a']: posts back e with a;
+     * @param afterOpenArg  boolean/true: closes document page; false/0: posts back default refresh; ['e','a']: posts back e with a; callback function is passed et
      * @param autoCloseDoc
      */
     public OpenWindowsLinkHelper(et:string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
@@ -2413,7 +2567,7 @@ export class sfRestClient {
             }
             xscript = `setTimeout(\'${innerScript};\', 242);` + xscript;
         }
-        else if (!afterOpenArg || typeof afterOpenArg === "string" || (Array.isArray(afterOpenArg)  && afterOpenArg.length === 2)) {
+        else if (typeof self.PostbackRefresh === "function" &&  !afterOpenArg || typeof afterOpenArg === "string" || (Array.isArray(afterOpenArg)  && afterOpenArg.length === 2)) {
             if (!afterOpenArg) afterOpenArg = "ibtnRefreshAttachList"
             var pbArg = 'AfterPopFVC';
             if (Array.isArray(afterOpenArg) && afterOpenArg.length === 2) {
@@ -2430,25 +2584,38 @@ export class sfRestClient {
     }
 
 
-    /** Finds $$ and other replacable values */
+    /** Finds $$ markers and other replacable values.
+     * Markers are case sensative
+     */
     protected ExpandActionMarkers(rawAction: string, rowData? : DataModelRow) : string {
         if (rawAction.indexOf("$$PROJECT") >= 0) {
             rawAction = rawAction.replaceAll("$$PROJECT",this.GetActionMarkerReplacement("$$PROJECT",rowData));
+        }
+        if (rawAction.indexOf("$$PDSKEY") >= 0) {
+            rawAction = rawAction.replaceAll("$$PDSKEY",this.GetActionMarkerReplacement("$$PDSKEY",rowData));
         }
         // general case: regex??
         return rawAction;
     }
 
+    /** given a mark name, returns the replacement value
+     * @see ExpandActionMarkers()
+     * @argument markerName such as $$Project or $$PDSKEY
+     * @argument rowData object containing row data - first source for value to replace the marker
+     */
     protected GetActionMarkerReplacement(markerName: string, rowData? : DataModelRow) : string {
         var result: string = "";
         if (markerName.startsWith("$$")) {
-            markerName = markerName.substr(2,1) + markerName.substr(3).toLowerCase();
+            markerName = markerName.substring(2,3) + markerName.substring(3).toLowerCase();
         }
 
         if (rowData ) result = this.FieldValueFromRow(rowData,markerName);
         if (!result) {
             if (markerName === "Project") {
                 result = this.GetPageProjectKey();
+            }
+            if (markerName === "Pdskey") {
+                result = this.GetPageContextValue("dsCacheKey");
             }
         }
         return result;
@@ -2603,16 +2770,16 @@ export class sfRestClient {
 
     }
 
-    static GAPageHitSent: boolean = false; // !!! this needs work
+    private static GALastPageHitSent: number = 0; // !!! this needs work
     static GAMonitorSendFailed: boolean = false;
     private GAMonitorPageHit(propertyID:string, clientID:string, url?:string, title?:string) {
-        if (sfRestClient.GAPageHitSent) return;
+        var RESTClient = this;
         if (!url) {
-
-            url = `${top?.location?.origin}${top?.location?.pathname}`;
-            var s = top?.location.search;
-            if (s && (!s.startsWith("?id=")) && (!s.startsWith("?add=")) ) url = url + s;
+            url = `${RESTClient._SiteURL}/${RESTClient.ResolvePageName()}`;
         }
+        var pageHash : number = url.sfHashCode();
+        if (sfRestClient.GALastPageHitSent === pageHash ) return;
+
         if (!title) title = $('title').text();
         var payload = {
             v: 1,
@@ -2622,14 +2789,14 @@ export class sfRestClient {
             dl: url,
             dt: title,
         }
-        sfRestClient.GAPageHitSent = true;
+        sfRestClient.GALastPageHitSent = pageHash ;
         return this.GAMonitorSend(payload)
                          .done(function (data, textStatus, jqXHR) {
-                             console.log(`GAMonitor(pageview:${top?.location.pathname}) ok`);
+                             console.log(`GAMonitor(pageview:${url}) ok`);
                          })
                         .fail(function (jqXHR, textStatus) {
                             sfRestClient.GAMonitorSendFailed = true;
-                            console.warn(`GAMonitor(pgvw:${top?.location.pathname}) failed: ${jqXHR.responseText} ` );
+                            console.warn(`GAMonitor(pgvw:${url}) failed: ${jqXHR.responseText} ` );
                         });
     }
 
@@ -2651,7 +2818,7 @@ export class sfRestClient {
     }
 
     GAMonitorEvent(propertyID:string, clientID:string, category:string, action:string, label:string, value:number) {
-        if (!sfRestClient.GAPageHitSent) this.GAMonitorPageHit(propertyID, clientID);
+        this.GAMonitorPageHit(propertyID, clientID);
 
         var payload = {
             v: 1,
@@ -2666,7 +2833,7 @@ export class sfRestClient {
 
         return this.GAMonitorSend(payload)
                         .done(function (data, textStatus, jqXHR) {
-                            console.log(`GAMonitor(${category}:${action}) ok`);
+                            console.log(`GAMonitor(${category}:${action}) ${label} ok`);
                         })
                         .fail(function (jqXHR, textStatus) {
                             console.warn(`GAMonitor(${category}:${action}) failed: ${jqXHR.responseText}`);
@@ -2674,7 +2841,8 @@ export class sfRestClient {
 
     }
 
-    sfGAEvent(category:string, action:string, label:string, value:number) {
+    /** Google Analytics Event */
+    GAEvent(category:string, action:string, label:string, value:number) {
         if (!value) value = 0;
         if (sfRestClient._WCC.GAFMOptOut) {
             console.log(`GA opt out: ${category} + ${action} '${label}' = ${value} `);
@@ -2683,8 +2851,9 @@ export class sfRestClient {
         this.GAMonitorEvent('UA-6465434-4', sfRestClient._WCC.SiteID, category, action, label, value);
     }
 
-    sfGADialogEvent(action:string, dialogName:string) {
-        this.sfGAEvent("Dialog", action, dialogName, 1);
+    /** Shortcut that calls GAEvent("dialog",action, dialogName,1) */
+    GADialogEvent(action:string, dialogName:string) {
+        this.GAEvent("Dialog", action, dialogName, 1);
     }
 
     private ValueHasWildcard(theVal:string) :boolean {
@@ -2828,9 +2997,9 @@ export class sfRestClient {
      * @argument title optional title
      * @argument uiAlertIcon if specified, and not false, ui-icon class name (see https://api.jqueryui.com/theming/icons/)
      */
-    jqAlert(msg: string, title?: string , uiAlertIcon?: string ) : JQuery<HTMLElement> {
+    jqAlert(msg: string, title?: string , uiAlertIcon?: string ) : JQuery<HTMLDivElement> {
         console.log("jqAlert: " + msg);
-        var $ALERT: JQuery<HTMLElement> ;
+        var $ALERT: JQuery<HTMLDivElement> ;
         if (!title) title = "Message from Web Application";
         if ((typeof uiAlertIcon === "undefined") || (typeof uiAlertIcon === "boolean" && uiAlertIcon)) {
             uiAlertIcon = '<span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>';
@@ -3457,9 +3626,9 @@ export class sfRestClient {
                     var ThisSuffix : string = "_dv";
                     if (item.DataField?.startsWith("cmp_")) {
                         // cmp_realfieldname_suffix
-                        var RealFieldName = item.DataField.substr(4);
+                        var RealFieldName = item.DataField.substring(4);
                         if (!(RealFieldName in rawRow)) {
-                            if (RealFieldName.indexOf("_") > 0) RealFieldName = RealFieldName.substr(0,RealFieldName.indexOf("_"));
+                            if (RealFieldName.indexOf("_") > 0) RealFieldName = RealFieldName.substring(0,RealFieldName.indexOf("_"));
                             if ((RealFieldName in rawRow && !(item.DataField in rawRow))) {
                                 var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, RealFieldName);
                                 var DependsOn : string[] | undefined;
@@ -4096,7 +4265,7 @@ export class sfRestClient {
         this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
 
 
-            var ApplicationPath = window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/"));
+            var ApplicationPath = window.location.pathname.substring(1, window.location.pathname.substring(1).indexOf("/")+1);
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
             this._SiteRootURL = `/${ApplicationPath || 'sfPMS'}`;
 
@@ -4125,6 +4294,9 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient#${this.ThisInstanceID} ${this.ClientVersion}; Window[${window.name}];  ${ThisIsGlobal ? "Global" : ""}`);
             if (ThisIsGlobal) {
                 var RESTClient = this;
+                if (!$.hasData) $.fn.extend({hasData: function (this:JQuery<HTMLElement>, name:string):boolean {
+                    return this.data(name) !== undefined;
+                }});
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
                 if ($("title").text().length === 0 ) $("title").text("Spitfire PM");
             }

@@ -76,6 +76,7 @@ declare global {
         // sf classic
         clearHomeTabCount: any;
         DocumentChangedByAnotherUser:DocumentChangedByAnotherUser;
+        PostbackRefresh: RefreshPageParts;
         refreshPartbyName: RefreshPartbyName;
         refreshPageParts: RefreshPageParts;
 
