@@ -25,6 +25,7 @@ declare global {
     interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
     interface RefreshPartbyName {(partName: string, eventTarget?: string, eventArg?: string):void}
     interface RefreshPageParts {(eventTarget: string, eventArg:string):void}
+    interface StringThenBooleanPromise { (stringValue:string): Promise<boolean>}
     interface SimpleBooleanPromise {(): Promise<boolean>}
     interface SimpleMethod {():void}
     // sfClassic interfaces ^^^
@@ -56,10 +57,12 @@ declare global {
             }
         }
         server: {
+            activateExchangeToken: StringThenBooleanPromise;
             dashboardHeartbeat: HeartbeatMonitor;
             dashboardOpenLink: DashboardOpenLink;
             sessionAlive: SimpleBooleanPromise;
             subscribeToDocument:  DMKMethod;
+
         }
 
     }

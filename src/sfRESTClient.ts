@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.92";
+const ClientPackageVersion : string = "1.20.93";
 
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
@@ -2580,7 +2580,21 @@ export class sfRestClient {
         else console.log("OpenWindowsLinkHelper() - no post action", afterOpenArg);
 
         if (typeof innerScript === "string" && innerScript.length > 0) xscript = `setTimeout(\'${innerScript};\', ${innerDelay});`   + xscript;
-        setTimeout(xscript, 211);
+        try{
+            $.connection.sfPMSHub.server.activateExchangeToken(openURL).then( ok =>{
+                if (!ok) setTimeout(xscript, 211)
+                else {
+                    console.log("Activated via SignalR");
+                    if (typeof innerScript === "string" && innerScript.length > 0) setTimeout(innerScript ,innerDelay);
+                }
+            }).catch(r=>{
+                setTimeout(xscript, 211);
+            });
+        }
+        catch(x){
+            console.warn(x);
+            setTimeout(xscript, 211);
+         }
     }
 
 
