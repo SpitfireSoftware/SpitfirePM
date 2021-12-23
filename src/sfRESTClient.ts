@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.93";
+const ClientPackageVersion : string = "1.20.94";
 
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
@@ -123,7 +123,7 @@ class PartStorageData {
         this._InitializationResultPromise = null;
 
         if (!PartStorageData._SiteURL) {
-            var ApplicationPath = window.location.pathname.substring(1, window.location.pathname.substring(1).indexOf("/")+1);
+            var ApplicationPath = window.__HTTPApplicationName();
             PartStorageData._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
     }
@@ -4279,7 +4279,7 @@ export class sfRestClient {
         this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
 
 
-            var ApplicationPath = window.location.pathname.substring(1, window.location.pathname.substring(1).indexOf("/")+1);
+            var ApplicationPath = window.__HTTPApplicationName();
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
             this._SiteRootURL = `/${ApplicationPath || 'sfPMS'}`;
 

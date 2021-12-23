@@ -23,6 +23,8 @@ declare global {
         __doPostBack(eventTarget: string, eventArgument : string | undefined): void;
         __sfPostBackTargetForm() :HTMLFormElement | undefined;
         __hasPostBackTarget(): boolean;
+        /** Returns the portion of the URL after the hostname (and optional port).  For example https://your.server.com:8080/alpha/beta return alpha */
+        __HTTPApplicationName() : string
     }
 
 }
@@ -84,7 +86,7 @@ if (!Date.prototype.isDate) {
 if (!Date.prototype.toSFLogTimeString) {
     Date.prototype.toSFLogTimeString = function () : string {
         new Date
-        return this.toISOString().substr(11,11);
+        return this.toISOString().substring(11,22);
     }
 }
 if (!Window.prototype.__sfPostBackTargetForm) {
@@ -108,12 +110,20 @@ if (!Window.prototype.__doPostBack) {
             console.warn("No form found for classic postbacks");
         }
         else {
-            if (!theForm.onsubmit || (theForm.onsubmit(new Event("onsubmit")) !== false)) {
+            if (!theForm.onsubmit || (theForm.onsubmit(<any> new Event("onsubmit")) !== false)) {
                 theForm.__EVENTTARGET.value = eventTarget;
                 theForm.__EVENTARGUMENT.value = eventArgument;
                 theForm.submit();
             }
         }
+    }
+}
+
+if (!Window.prototype.__HTTPApplicationName) {
+    Window.prototype.__HTTPApplicationName = (): string => {
+        var ApplicationPath = window.location.pathname;
+        ApplicationPath = ApplicationPath.substring(1, ApplicationPath.length === 1 && ApplicationPath === "/" ? 1 : ApplicationPath.substring(1).indexOf("/") + 1);
+        return ApplicationPath;
     }
 }
 
@@ -149,7 +159,7 @@ if (!String.prototype.replaceAll) {
 
 
 
-var HTTPApplicationName = (typeof window !== "undefined" ?window.location.pathname.substr(1, window.location.pathname.substr(1).indexOf("/")) : "sfPMS");
+var HTTPApplicationName = (typeof window !== "undefined" ? window.__HTTPApplicationName() : "sfPMS");
 var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");
 export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
 export const sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
