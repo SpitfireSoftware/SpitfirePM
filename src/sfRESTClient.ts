@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.95";
+const ClientPackageVersion : string = "1.20.96";
 
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
@@ -2054,7 +2054,9 @@ export class sfRestClient {
     public IsHomeDashboardPage() : boolean {
         return this.IsPageOfType(this.PageTypeNames.HomeDashboard) ;
     }
-
+    public IsCatalogPage() : boolean {
+        return this.IsPageOfType(this.PageTypeNames.Catalog) ;
+    }
 
     public IsDocumentPage() : boolean {
         return this.IsPageOfType(this.PageTypeNames.Document);// "DocDetail") ;
@@ -2103,7 +2105,7 @@ export class sfRestClient {
             case "users":
                 result = this.PageTypeNames.Contacts;
                 break;
-            case "libview":
+            case "libview": case "LibView":
                 result = this.PageTypeNames.Catalog;
                 break;
             case "cusysm":
@@ -2131,6 +2133,7 @@ export class sfRestClient {
         var pgname : string = location.pathname;
         var pgHash : string = location.hash;
         if (pgHash.length > 0) pgname = pgHash; // for xb style
+        if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
         if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
@@ -2151,7 +2154,7 @@ export class sfRestClient {
                     break;
 
             default:
-                console.warn("Unexpected page type: ", classicPageName);
+                console.warn("No XB varient for page type: ", classicPageName);
                 result = classicPageName.toString();
                 break;
         }
@@ -2365,6 +2368,7 @@ export class sfRestClient {
                 if (ActionString.indexOf("?") > 0) {
                     ActionOptions = "&"+  ActionString.substring(ActionString.indexOf("?")+1);
                 }
+                ActionOptions = ActionOptions.replaceAll("xbia=1","xbia=2");
                 ActionString = `javascript:vPgPopup('v/LibView.aspx', '${ActionOptions}', 850, 950);`; // ... w,h
                 UseNewTabWindow = true
             }
@@ -2604,10 +2608,10 @@ export class sfRestClient {
         if (RESTClient.IsDocumentPage() && typeof afterOpenArg === "boolean" && afterOpenArg) {
             innerScript = "top.ResetUnsavedChanges();";
             if (autoCloseDoc) {
-                innerScript += 'setTimeout(\\\'top.location.href = "about:blank";\\\', 842);';
+                innerScript += "setTimeout('top.location.href = \"about:blank\";', 842);";
                 innerScript += "window.top.close();"
             }
-            xscript = `setTimeout(\'${innerScript};\', 242);` + xscript;
+            xscript = `setTimeout('${innerScript};', 242);` + xscript;
         }
         else if (typeof self.PostbackRefresh === "function" &&  !afterOpenArg || typeof afterOpenArg === "string" || (Array.isArray(afterOpenArg)  && afterOpenArg.length === 2)) {
             if (!afterOpenArg) afterOpenArg = "ibtnRefreshAttachList"
@@ -2616,18 +2620,21 @@ export class sfRestClient {
                 pbArg = afterOpenArg[1];
                 afterOpenArg = afterOpenArg[0];
             }
-            innerScript = `PostbackRefresh(\\\'${afterOpenArg}\\\',\\\'${pbArg}\\\');`;
+            innerScript = `PostbackRefresh('${afterOpenArg}','${pbArg}');`;
         }
         else if (typeof afterOpenArg === "function") afterOpenArg(et)
         else console.log("OpenWindowsLinkHelper() - no post action", afterOpenArg);
 
-        if (typeof innerScript === "string" && innerScript.length > 0) xscript = `setTimeout(\'${innerScript};\', ${innerDelay});`   + xscript;
+        if (typeof innerScript === "string" && innerScript.length > 0) xscript = `setTimeout('${innerScript};', ${innerDelay});`   + xscript;
         try{
             $.connection.sfPMSHub.server.activateExchangeToken(openURL).then( ok =>{
                 if (!ok) setTimeout(xscript, 211)
                 else {
                     console.log("Activated via SignalR");
-                    if (typeof innerScript === "string" && innerScript.length > 0) setTimeout(innerScript ,innerDelay);
+                    if (typeof innerScript === "string" && innerScript.length > 0) {
+                        console.log("Post Activation, Scheduled",innerScript);
+                        setTimeout(innerScript ,innerDelay);
+                    }
                 }
             }).catch(r=>{
                 setTimeout(xscript, 211);
@@ -3879,7 +3886,9 @@ export class sfRestClient {
 
                 if (top) {
                     var RESTClient = top.sfClient;
-                    if (top.name!.length! > 0 && target.sfStartsWithCI(top?.name!)) {
+                    var TopName = top.name!;
+                    if (TopName && TopName === 'v/LibView.aspx') TopName = "Dashboard"
+                    if (TopName.length! > 0 && target.sfStartsWithCI(TopName)) {
                         if (request.startsWith("javascript:")) {
                             request = request.substring(11);
                             try {
@@ -3895,11 +3904,12 @@ export class sfRestClient {
                             }
                         }
                         else if (request.sfStartsWithCI("refresh")) {
-                            if (RESTClient.IsProjectPage()) {
-                            top.refreshPartbyName('DocSearch', request, 'signalR');
+                            var HasRefreshPageParts = (typeof top?.refreshPageParts === "function")
+                            if (HasRefreshPageParts && RESTClient.IsProjectPage()) {
+                                top.refreshPartbyName('DocSearch', request, 'signalR');
                                 top.refreshPartbyName('ProjTypedDocList', request, 'signalR');
                             }
-                            else if (RESTClient.IsHomeDashboardPage()) {
+                            else if (HasRefreshPageParts && RESTClient.IsHomeDashboardPage()) {
                                 top.refreshPartbyName('actionitems', 'refresh', 'signalR');
                             }
                             else if (typeof top?.refreshPageParts === "function") {
@@ -3911,13 +3921,13 @@ export class sfRestClient {
                             top!.location.href = request;
                         }
                     }
-                    else if (top?.name!.length! > 0 && RESTClient.GetPageContextValue("DataPK").endsWith(top.name)
-                        && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === top.name) {
+                    else if (TopName.length! > 0 && RESTClient.GetPageContextValue("DataPK").endsWith(TopName)
+                        && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === TopName) {
                         // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
                         console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
                         setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
                     }
-                    else console.log(`sfPMSHub ignoring request to [${target}]:${request}`);
+                    else console.log(`sfPMSHub ignoring ${request} to [${target}]`);
                 }
 
             };
