@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.97";
+const ClientPackageVersion : string = "1.20.98";
 
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
@@ -2189,11 +2189,23 @@ export class sfRestClient {
         return result;
     }
 
+    /** finds value of name= in location.search (or location.hash) */
     public GetPageQueryParameterByName(name:string):string {
         name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
         var QPSource = this.GetPageQueryContent();
+        return this.GetQueryParameterValueByName(QPSource,name);
+    }
+
+    /** finds value of name= in the supplied string
+     * @argument source the string to be searched for name; delimited by ampersand or #
+     * @argument name the id of the value wanted
+     * @see GetPageQueryParameterByName() calls this method with location.search (or location.hash)
+    */
+    public GetQueryParameterValueByName(source: string, name:string):string {
+        name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+
         var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-            results = regex.exec(QPSource);
+            results = regex.exec(source);
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
@@ -2347,7 +2359,7 @@ export class sfRestClient {
      */
     public InvokeAction(actionString: string | _SwaggerClientExports.MenuAction, rowData? : DataModelRow, options? : InvokeOptions) : void {
         var ActionString : string = "";
-        var UseNewTabWindow : boolean = false;
+        var UseNewTabWithName : string = "";
         var RESTClient = this;
         if (typeof actionString === "string") ActionString = actionString;
         if ( actionString instanceof _SwaggerClientExports.MenuAction ) {
@@ -2370,7 +2382,7 @@ export class sfRestClient {
                 }
                 ActionOptions = ActionOptions.replaceAll("xbia=1","xbia=2");
                 ActionString = `javascript:vPgPopup('v/LibView.aspx', '${ActionOptions}', 850, 950);`; // ... w,h
-                UseNewTabWindow = true
+                UseNewTabWithName = `LibView@${RESTClient.GetQueryParameterValueByName(ActionOptions,"set")}`;
             }
             else {
                 this.ModalDialog(ActionString, undefined, undefined, window);
@@ -2388,9 +2400,10 @@ export class sfRestClient {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::VPg(${match.groups!.vpgName}) ${match.groups.args} w${match.groups.width},h${match.groups.height}`);
                 var ActionArgs : string = this.ExpandActionMarkers(match.groups.args,rowData);
                 if (ActionArgs && ActionArgs.indexOf("&Project") < 0) ActionArgs += "&Project="+ this.GetPageProjectKey();
-                if (UseNewTabWindow) {
+                if (UseNewTabWithName) {
                     var url = `${RESTClient._SiteRootURL}/pvp.aspx?vpg=${match.groups!.vpgName}${ActionArgs}`;
-                    self.open(url,match.groups!.vpgName);
+
+                    self.open(url,UseNewTabWithName);
                 }
                 else
                 this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),match.groups.default);
