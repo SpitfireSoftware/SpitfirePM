@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.98";
+const ClientPackageVersion : string = "1.20.99";
 
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
@@ -2633,7 +2633,7 @@ export class sfRestClient {
                 pbArg = afterOpenArg[1];
                 afterOpenArg = afterOpenArg[0];
             }
-            innerScript = `PostbackRefresh('${afterOpenArg}','${pbArg}');`;
+            innerScript = `PostbackRefresh("${afterOpenArg}","${pbArg}");`;
         }
         else if (typeof afterOpenArg === "function") afterOpenArg(et)
         else console.log("OpenWindowsLinkHelper() - no post action", afterOpenArg);
