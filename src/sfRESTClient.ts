@@ -1490,6 +1490,16 @@ export class sfRestClient {
                     FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
                     resolve(FakeWCC);
                 }
+            }).catch(x=>{
+                console.log(`LoadUserSessionInfo(getWCC) catch`,x);
+                let FakeWCC =new WCCData();
+                FakeWCC.AdminLevel = 0;
+                FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
+                resolve(FakeWCC);
             });
         });
     }
@@ -4049,7 +4059,7 @@ export class sfRestClient {
             }
             if (this.IsPageOfType( this.PageTypeNames.Login ) ) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log("pingServer() Log in pending (ignored)");
-                sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for login ", 345);
+                sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for login ", 2345);
                 return;
             }
 
