@@ -157,7 +157,10 @@ if (!String.prototype.replaceAll) {
         return this.slice(0, testString.length).toLowerCase()  === testString.toLowerCase();
     };
 
-
+// we do not test if (!$.hasData) on purpose!
+ jQuery.fn.extend({hasData: function (this:JQuery<HTMLElement>, name:string):boolean {
+        return this.data(name) !== undefined;
+    }});
 
 var HTTPApplicationName = (typeof window !== "undefined" ? window.__HTTPApplicationName() : "sfPMS");
 var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");

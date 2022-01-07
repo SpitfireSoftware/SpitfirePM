@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.99";
+const ClientPackageVersion : string = "1.20.101";
 
 
 // original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
@@ -4383,9 +4383,9 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`sfClient#${this.ThisInstanceID} ${this.ClientVersion}; Window[${window.name}];  ${ThisIsGlobal ? "Global" : ""}`);
             if (ThisIsGlobal) {
                 var RESTClient = this;
-                if (!$.hasData) $.fn.extend({hasData: function (this:JQuery<HTMLElement>, name:string):boolean {
-                    return this.data(name) !== undefined;
-                }});
+                // if (!$.hasData) $.fn.extend({hasData: function (this:JQuery<HTMLElement>, name:string):boolean {
+                //     return this.data(name) !== undefined;
+                // }});
                 sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
                 if ($("title").text().length === 0 ) $("title").text("Spitfire PM");
             }
