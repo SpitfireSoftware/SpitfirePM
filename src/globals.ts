@@ -25,7 +25,8 @@ declare global {
     interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
     interface RefreshPartbyName {(partName: string, eventTarget?: string, eventArg?: string):void}
     interface RefreshPageParts {(eventTarget: string, eventArg:string):void}
-    interface CEPutSourceElementValue {(el: JQuery, newVal:string|number, pv: string|number):void}
+    //interface CEPutSourceElementValue {(el: JQuery, newVal:string|number, pv: string|number):void}
+    interface CEPStoreElementValue {(el: JQuery,$EDIT: JQuery, $FeedBack: JQuery,newVal:string|number, finalValue?:string, validateAK?:boolean):void}
     interface StringThenBooleanPromise { (stringValue:string): Promise<boolean>}
     interface SimpleBooleanPromise {(): Promise<boolean>}
     interface SimpleMethod {():void}
@@ -83,7 +84,8 @@ declare global {
         PostbackRefresh: RefreshPageParts;
         refreshPartbyName: RefreshPartbyName;
         refreshPageParts: RefreshPageParts;
-        sfPutEditUpdateSourceElement:CEPutSourceElementValue;
+        //sfPutEditUpdateSourceElement:CEPutSourceElementValue;
+        sfPutEditStoreValue: CEPStoreElementValue;
 
         // sf classic ^^^
 

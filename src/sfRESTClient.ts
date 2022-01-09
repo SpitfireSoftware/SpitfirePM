@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.102";
+const ClientPackageVersion : string = "1.20.103";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3843,8 +3843,10 @@ export class sfRestClient {
         return vv;
     }
 
-    /** Formats a value and places it into VAL() or TEXT() then cascades change events
+    /** Formats a value and places it into VAL() or TEXT() then cascades change events to self.sfPutEditStoreValue()
      * returns TRUE if value has changed
+     * This method is critical in cascading QTY*RATE=TOT and allowing any of the three to be changed
+     * @see self.sfPutEditStoreValue()
     */
     SetJQElementValue(el:JQuery, newValue:number, dp?:number):boolean {
         if (el.length == 0) return false;
@@ -3862,7 +3864,7 @@ export class sfRestClient {
             el.val(final);
         }
         else el.text(final);
-        if (self.sfPutEditUpdateSourceElement) self.sfPutEditUpdateSourceElement(el,newValue,pv);
+        if (self.sfPutEditStoreValue) self.sfPutEditStoreValue(el,$() ,$() ,newValue);
         //el.trigger("sfCE.AfterEdit",
         return true;
     }
