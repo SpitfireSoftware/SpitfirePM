@@ -10,10 +10,9 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.101";
+const ClientPackageVersion : string = "1.20.102";
 
-
-// original script created by Stan York and modified for typescript and linter requirements by Uladzislau Kumakou
+// originally modified for typescript and linter requirements by Uladzislau Kumakou
 
 export enum LoggingLevels {
     None,
@@ -3772,6 +3771,144 @@ export class sfRestClient {
     protected _AddDVValueToDataModel(thisPart: PartStorageData, dataModelBuildKey: string, index: number, dataField: string, suffix : string, newValue: string | boolean | null) {
         //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Row ${index}, setting ${dataField}${suffix} = ${newValue} `);
         thisPart.DataModels.get(dataModelBuildKey)![index][dataField + suffix] = newValue;
+    }
+
+    /** typically returns a period for North America */
+    private static ResolvedIntlFormat = {
+                DecimalPlaceSeparator:  "",
+                NumericGroupSeparator: ","
+            }
+    private static InitializeIntlFormats() {
+        try {
+            var formatter:any = Intl.NumberFormat(undefined); // Intl.NumberFormat   is missing formatToParts()
+            var fParts: any[] = formatter.formatToParts(1234.1); // Intl.NumberFormatPart[] is missing
+            sfRestClient.ResolvedIntlFormat.DecimalPlaceSeparator = fParts.find(function (v) { return v.type === "decimal" })!.value;
+            sfRestClient.ResolvedIntlFormat.NumericGroupSeparator = fParts.find(function (v) { return v.type === "group" })!.value;
+        }
+        catch (err) {
+            console.log('InitializeIntlFormats: Oops ', err);
+            sfRestClient.ResolvedIntlFormat.DecimalPlaceSeparator = ".";
+            sfRestClient.ResolvedIntlFormat.NumericGroupSeparator = ",";
+        }
+
+    }
+    /** Typically returns a period for North America */
+    public GetDecimalSeparator():string {
+        if (sfRestClient.ResolvedIntlFormat.DecimalPlaceSeparator.length === 0 ) sfRestClient.InitializeIntlFormats();
+        return sfRestClient.ResolvedIntlFormat.DecimalPlaceSeparator;
+    }
+    /** Typically returns a comma for North America */
+    public GetNumericGroupSeparator():string {
+        if (sfRestClient.ResolvedIntlFormat.DecimalPlaceSeparator.length === 0 )  sfRestClient.InitializeIntlFormats();
+        return sfRestClient.ResolvedIntlFormat.NumericGroupSeparator;
+    }
+
+    /** returns true if the passed value is a specific number */
+    public IsNumber(n: string | number ):boolean {
+        var nn : number = typeof n === "number" ? n : parseFloat(n);
+        return !isNaN(nn) && isFinite(nn);
+    }
+
+    /** Gets val or text from supplied jQuery element and returns its numeric value
+     *
+     * Removes formatting to convert string to value
+    */
+    public GetNumericValueFrom( el: JQuery) : number {
+        if (el.length === 0) return 0.0;
+        var vv: string | number;
+        var elInfo: string = "?";
+        if (el.is("input")) {
+            var v2 = el.val();
+            elInfo = (el.attr("name")) ? el.attr("name")! : "";
+            vv = `${v2}`;
+        }
+        else {
+            vv = $.trim(el.text());
+        }
+        if (el.hasData("is")) elInfo = el.data("is");
+        if (typeof vv === "string") {
+            vv = vv.replaceAll("$", "").replaceAll(this.GetNumericGroupSeparator(), "");
+            if (vv.startsWith("(")) vv = `-${vv.replaceAll("($)", "").replaceAll(")","")}`;
+            if (!this.IsNumber(vv)) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`GetValueFrom(${elInfo}) Is NaN [${vv}]; using 0 `);
+                return 0.0;
+            }
+            vv = parseFloat(vv);
+        }
+        if (!vv) {
+              if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`GetValueFrom(${elInfo}), using 0`);
+            return 0.0;
+        }
+          if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`GetValueFrom(${elInfo}) OK = ${vv}`);
+        return vv;
+    }
+
+    /** Formats a value and places it into VAL() or TEXT() then cascades change events
+     * returns TRUE if value has changed
+    */
+    SetJQElementValue(el:JQuery, newValue:number, dp?:number):boolean {
+        if (el.length == 0) return false;
+        var final;
+        var pv = this.GetNumericValueFrom(el);
+        if (typeof pv === typeof newValue && newValue === pv) return false;
+        if (typeof (dp) != 'undefined') {
+            var elDP = el.data("dp");
+            if (elDP) dp = parseInt(elDP);
+            final = this.RoundValue(newValue, dp)
+            final = this.FormatNumericValue(final, `F${dp}`);
+        }
+        else final = newValue;
+        if (el.is("input")) {
+            el.val(final);
+        }
+        else el.text(final);
+        if (self.sfPutEditUpdateSourceElement) self.sfPutEditUpdateSourceElement(el,newValue,pv);
+        //el.trigger("sfCE.AfterEdit",
+        return true;
+    }
+
+    public RoundValue(originalNumber:number, decimals?:number) : number {
+        if (typeof decimals !== "number") decimals = 2;
+        var result1 = originalNumber * Math.pow(10, decimals);
+        var result2 = Math.round(result1);
+        var result3 = result2 / Math.pow(10, decimals);
+
+        //in 2 decimal places
+        return +result3.toFixed(decimals);
+    }
+    /** Returns a number formatted as a string, support C0-C4, F0-F9, N0-N9, 000  */
+    public FormatNumericValue(newValue:number | string, intoFormat:string):string {
+        // supports C2 and F0 etc
+        if (!this.IsNumber(newValue)) return `${newValue}`; // only applies to numerics
+        if (!intoFormat) return `${newValue}`;
+        if (typeof newValue==="string") newValue = parseFloat(newValue);
+        var isCurrency = intoFormat.sfStartsWithCI("C") ;
+        var isFixed = (intoFormat.sfStartsWithCI("F") || intoFormat.sfStartsWithCI("N"));
+        var isZeroPad = (intoFormat.startsWith("0"));
+        var hasGrouping = (isZeroPad && intoFormat.indexOf(",") > 0);
+        var dp = 2;
+        intoFormat = intoFormat.substring(1);
+        if (intoFormat) dp = parseInt(intoFormat);
+        if (isNaN(dp)) dp = 0;
+        var result : string;
+        if (isCurrency  ) {
+            // !!! what about decimal places??
+            const CurrencyFormatter = new Intl.NumberFormat(undefined, {
+                style: 'currency',
+                currency: 'USD',
+            });
+            result = CurrencyFormatter.format(newValue);
+        }
+        else if (isZeroPad) {
+            const langs = (navigator.languages);
+            result = newValue.toLocaleString(<string[]>langs, { minimumIntegerDigits: intoFormat.length + 1, minimumFractionDigits: dp, useGrouping: hasGrouping  })
+        }
+        else if (isFixed) {
+            result = newValue.toFixed(dp);
+        }
+            else
+            result =    `${newValue}`;
+        return result;
     }
 
     /**
