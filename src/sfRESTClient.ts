@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.103";
+const ClientPackageVersion : string = "1.20.104";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1126,7 +1126,7 @@ export class sfRestClient {
     }
 
 
-    /** checks with server up to 5 times a second.  promise resolves when task has ended or callback returns true;
+    /** checks with server up to 3 times a second.  promise resolves when task has ended or callback returns true;
      * @param taskKey guid key for task
      * @param sessionClient optional existing SessionClient
      * @param progressCallback optional callback for when task status is not 200;  if this callback returns true, promise is resolved
@@ -1134,7 +1134,7 @@ export class sfRestClient {
     public async WaitForTask( taskKey: GUID,sessionClient? : SessionClient, progressCallback?: (state:_SwaggerClientExports.HttpResponseJsonContent) => boolean ) : Promise<_SwaggerClientExports.HttpResponseJsonContent> {
         if (!sessionClient) sessionClient = new SessionClient();
         var RESTClient = this;
-        if (sfRestClient._Options.TaskStatePollInterval < 200) sfRestClient._Options.TaskStatePollInterval = 200;
+        if (sfRestClient._Options.TaskStatePollInterval < 300) sfRestClient._Options.TaskStatePollInterval = 300;
         return new Promise<_SwaggerClientExports.HttpResponseJsonContent>(async result =>  {
             var taskResult : _SwaggerClientExports.HttpResponseJsonContent, waitResult : _SwaggerClientExports.HttpResponseJsonContent;
             taskResult = new _SwaggerClientExports.HttpResponseJsonContent( {ThisStatus: 202});
@@ -1152,7 +1152,7 @@ export class sfRestClient {
                         }
                     }
                     else if (taskResult.ThisReason) {
-                         RESTClient.DisplayUserNotification(taskResult.ThisReason);
+                         RESTClient.DisplayUserNotification(taskResult.ThisReason, 9876);
                     }
                 }
             }
