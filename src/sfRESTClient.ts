@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.104";
+const ClientPackageVersion : string = "1.20.105";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
