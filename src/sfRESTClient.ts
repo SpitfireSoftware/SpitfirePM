@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.105";
+const ClientPackageVersion : string = "1.20.106";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -284,7 +284,8 @@ export class sfRestClient {
         Document: 1024,
         Unknown: 8092,
         Login: 16384,
-        DiagUtilities: 32768
+        DiagUtilities: 32768,
+        UserAccountRecovery: 65536
     }
 
     /**
@@ -1458,6 +1459,18 @@ export class sfRestClient {
         var apiResult: Promise<WCCData | null> | null = null;
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
+            if (RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ){
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not yet logged in.");
+                let FakeWCC =new WCCData();
+                FakeWCC.AdminLevel = 0;
+                FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
+                FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
+                resolve(FakeWCC);
+                return;
+            }
             if (sfRestClient._SessionClientGetWCC) {
                 if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Reusing ongoing getWCC for HREF hash ${sfRestClient._SessionClientGetWCC.ForNavHash}`);
@@ -2129,7 +2142,9 @@ export class sfRestClient {
             case "dxutil":
                 result = this.PageTypeNames.DiagUtilities;
                 break;
-
+            case "SSPWR":
+                result = this.PageTypeNames.UserAccountRecovery;
+                break;
             default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;
@@ -3019,7 +3034,7 @@ export class sfRestClient {
                 var enableAF = !RESTClient.ValueHasWildcard(<string>$AC.val());
                 $AC.autocomplete("option", "autoFocus", enableAF);
                 //hint: do not use $.each to modify choices.content, must update directly
-                $AC.trigger("sfAutoCompleted.Response", choices); // yes is synchronous legacy name
+                //$AC.trigger("sfAutoCompleted.Response", choices); // yes is synchronous legacy name
                 $AC.trigger("sfAC.response", [choices]); // yes is synchronous , normalized (event is always passed)
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`sfAC autofocus ${enableAF}`);
             }
@@ -3034,7 +3049,7 @@ export class sfRestClient {
                             ib.css('color', 'white');
                             this.value = kv;
                         }
-                        ib.trigger("sfAutoCompletedKV", [kv]);  // legacy, pre 2019
+                        //ib.trigger("sfAutoCompletedKV", [kv]);  // legacy, pre 2019
                         ib.trigger("sfAC.KV", [kv]);            // normalized naming
                     }
                     ib.data("acChange", false).trigger("change");
@@ -3047,7 +3062,7 @@ export class sfRestClient {
                 if (kv) {
                     ib.data('acKey', kv)
                 }
-                ib.trigger("sfAC.AutoCompleteSelect", [ib]);  // legacy name, pre 2019
+                //ib.trigger("sfAC.AutoCompleteSelect", [ib]);  // legacy name, pre 2019
                 ib.trigger("sfAC.select", [ui,ib]);    // normalized event name
                 let ibValue = ib?.val() as string;
                 if (typeof ibValue ===  "string" && ibValue.length === 0) {
