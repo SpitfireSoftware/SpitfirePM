@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.106";
+const ClientPackageVersion : string = "1.20.107";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2408,7 +2408,12 @@ export class sfRestClient {
                 ActionString = `javascript:vPgPopup('v/LibView.aspx', '${ActionOptions}', 850, 950);`; // ... w,h
                 UseNewTabWithName = `LibView@${RESTClient.GetQueryParameterValueByName(ActionOptions,"set")}`;
             }
+            else if (ActionString.indexOf("cusysm.aspx") > 1 || ActionString.indexOf("cuManager.aspx") > 1) {
+                ActionString = ActionString.replaceAll("xbia=1","xbia=2");
+                UseNewTabWithName = ActionString.indexOf("cusysm.aspx") > 0 ? "SysAdmin" : "ManageTools";
+            }
             else {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction(modal): ",ActionString);
                 this.ModalDialog(ActionString, undefined, undefined, window);
                 return;
             }
@@ -2435,6 +2440,9 @@ export class sfRestClient {
             else {
                 console.warn("InvokeAction::VPg failed match",ActionString);
             }
+        }
+        else if (UseNewTabWithName) {
+            self.open(ActionString,UseNewTabWithName);
         }
         else if (ActionString.indexOf("top.location.reload(") >= 0) {
             top!.location.reload(); // per https://developer.mozilla.org/en-US/docs/Web/API/Location/reload including (true) or (false) is ignored.
@@ -3657,7 +3665,7 @@ export class sfRestClient {
 
     // this is called after a user resizes or moves the dialog
         var dg = forDialog
-        if (!$(window)) return;
+        if (!$(window) || !(dg) || (dg.length === 0)) return;
         var tdh = Math.floor(dg.dialog("option", "height"));
         var tdw = Math.floor(dg.dialog("option", "width"));
         var height = dg.height()!; // actual content area
