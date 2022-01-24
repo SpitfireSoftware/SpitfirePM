@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.107";
+const ClientPackageVersion : string = "1.20.108";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -375,6 +375,7 @@ export class sfRestClient {
       */
     BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: [{}] | {}): Promise<DataModelCollection> {
         if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
+        var RESTClient = this;
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
         if (!thisPart) {
             console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, context)));
@@ -384,7 +385,14 @@ export class sfRestClient {
         var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
             thisPart!.CFGLoader().then(() => {
                 var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData);
-                ViewModelPromise.then((r) => finalResolve(r));
+                ViewModelPromise.then((r) => {
+                    finalResolve(r);
+                    if (r && Array.isArray(r)) {
+                        RESTClient.GAViewModelEvent(partName,r.length);
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("BuildViewModelForContext GA");
+                    }
+                    else console.warn(`BuildViewModelForContext GA-skip ${partName} ${typeof r} isArray ${Array.isArray(r)}` ,r);
+                });
             });
         });
         return FinalViewModelPromise;
@@ -2962,6 +2970,10 @@ export class sfRestClient {
     /** Shortcut that calls GAEvent("dialog",action, dialogName,1) */
     GADialogEvent(action:string, dialogName:string) {
         this.GAEvent("Dialog", action, dialogName, 1);
+    }
+       /** Shortcut that calls GAEvent("dialog",action, viewName,rows) */
+    GAViewModelEvent(viewName:string, rows: number) {
+        this.GAEvent("ViewModel", "Open", viewName, rows);
     }
 
     private ValueHasWildcard(theVal:string) :boolean {
