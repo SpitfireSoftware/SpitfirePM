@@ -10,7 +10,7 @@ import * as localForage from "localforage";
 import { contains } from "jquery";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.108";
+const ClientPackageVersion : string = "1.20.109";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1849,8 +1849,12 @@ export class sfRestClient {
             if (key === "DVCacheLife" && typeof sfRestClient._Options.DVCacheLife === typeof options[key]) sfRestClient._Options.DVCacheLife = options[key]
             else if (key === "LogLevel" && typeof sfRestClient._Options.LogLevel === typeof options[key]) sfRestClient._Options.LogLevel = options[key]
             else if (key === "PopDocForceXBUI" && typeof sfRestClient._Options.PopDocForceXBUI === typeof options[key]) sfRestClient._Options.PopDocForceXBUI = options[key]
+            else if (key in sfRestClient._Options && typeof eval(`sfRestClient._Options.${key}`) === typeof options[key]) sfRestClient._Options[key] = options[key];
             else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) sfRestClient._Options[PropName] = options[key];
         });
+    }
+    public GetBooleanOption(optionName : string) : boolean {
+        return sfRestClient._Options[optionName];
     }
 
     protected static _Options : NVPair  = {
@@ -1878,7 +1882,10 @@ export class sfRestClient {
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
         ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}',
-
+        UseClassicCatalog: ((location.host.indexOf(".9") < 0) &&
+                             location.host.indexOf(".") > 0 &&
+                             location.host !== "scm.spitfirepm.com" &&
+                             location.host !== "try.spitfirepm.com"),
         TaskStatePollInterval: 357
     }
     /**
