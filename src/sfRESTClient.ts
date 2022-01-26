@@ -8,10 +8,10 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 //import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
 import * as localForage from "localforage";
 import { contains } from "jquery";
-import { APIClientBase } from "./APIClientBase";
+import  * as RESTClientBase from "./APIClientBase";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.110";
+const ClientPackageVersion : string = "1.20.111";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2914,7 +2914,8 @@ export class sfRestClient {
             dt: title,
         }
         sfRestClient.GALastPageHitSent = pageHash ;
-        return APIClientBase.GAMonitorSend(payload)
+
+        return RESTClientBase.APIClientBase.GAMonitorSend(payload)
                          .done(function (data, textStatus, jqXHR) {
                              console.log(`GAMonitor(pageview:${url}) ok`);
                          })
@@ -2929,7 +2930,7 @@ export class sfRestClient {
 
     GAMonitorEvent(  clientID:string, category:string, action:string, label:string, value:number) {
         this.GAMonitorPageHit(clientID);
-        return APIClientBase.GAMonitorEvent(clientID,category,action,label,value);
+        return RESTClientBase.APIClientBase.GAMonitorEvent(clientID,category,action,label,value);
     }
 
     /** Google Analytics Event */
