@@ -107,7 +107,19 @@ declare global {
     }
 }
 
-
+export type GoogleAnalyticPayload = { v: number,
+        /** event, pageview, etc */
+        t: string,
+        /** UA-xxxx */
+        tid: string,
+        cid: string,
+        ec?: string,
+        ea?: string,
+        el?: string,
+        dl?: string | undefined,
+        dt?: string | undefined,
+        ev?: number
+}
 
 
 export type GUID = string //& { isGuid: true };

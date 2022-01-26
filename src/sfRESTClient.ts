@@ -1,5 +1,5 @@
 //import { contains } from "jquery";
-import { GUID } from "./globals";
+import { GoogleAnalyticPayload, GUID } from "./globals";
 //import  { sfApplicationRootPath } from "./string.extensions";
 import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
@@ -8,9 +8,10 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 //import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
 import * as localForage from "localforage";
 import { contains } from "jquery";
+import { APIClientBase } from "./APIClientBase";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.109";
+const ClientPackageVersion : string = "1.20.110";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1545,6 +1546,7 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             $("body").trigger(eventName,[RESTClient,keyName,value]);
+            if (eventName === "sfClient.SetWCC_SiteID") this.GAMonitorEvent(  value ,"SPA", "Init", "WCC", 0);
         });
 
         return newWCC
@@ -2894,8 +2896,7 @@ export class sfRestClient {
     }
 
     private static GALastPageHitSent: number = 0; // !!! this needs work
-    static GAMonitorSendFailed: boolean = false;
-    private GAMonitorPageHit(propertyID:string, clientID:string, url?:string, title?:string) {
+    private GAMonitorPageHit( clientID:string, url?:string, title?:string) {
         var RESTClient = this;
         if (!url) {
             url = `${RESTClient._SiteURL}/${RESTClient.ResolvePageName()}`;
@@ -2904,64 +2905,31 @@ export class sfRestClient {
         if (sfRestClient.GALastPageHitSent === pageHash ) return;
 
         if (!title) title = $('title').text();
-        var payload = {
+        var payload : GoogleAnalyticPayload = {
             v: 1,
             t: "pageview",
-            tid: propertyID,
+            tid: '', // set by send
             cid: clientID,
             dl: url,
             dt: title,
         }
         sfRestClient.GALastPageHitSent = pageHash ;
-        return this.GAMonitorSend(payload)
+        return APIClientBase.GAMonitorSend(payload)
                          .done(function (data, textStatus, jqXHR) {
                              console.log(`GAMonitor(pageview:${url}) ok`);
                          })
                         .fail(function (jqXHR, textStatus) {
-                            sfRestClient.GAMonitorSendFailed = true;
+                            // GAMonitorSendFailed = true; set in APIClientBase
                             console.warn(`GAMonitor(pgvw:${url}) failed: ${jqXHR.responseText} ` );
                         });
     }
 
 
-    private GAMonitorSend(payload:string | JQuery.PlainObject):JQuery.Promise<any> {
-        //ref https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide#page
-        if ((typeof (sfRestClient.GAMonitorSendFailed) === "boolean") && (sfRestClient.GAMonitorSendFailed)) {
-            var darnSoon = $.Deferred();
-            var GASendDone = darnSoon.promise();
-            darnSoon.resolve("fake");  //makes GASendDone be ready
-            return GASendDone;
-        }
-        return $.ajax({
-            type: "POST",
-            url: "//www.google-analytics.com/collect",
-            async: true,
-            data: payload
-        });
-    }
 
-    GAMonitorEvent(propertyID:string, clientID:string, category:string, action:string, label:string, value:number) {
-        this.GAMonitorPageHit(propertyID, clientID);
 
-        var payload = {
-            v: 1,
-            t: "event",
-            tid: propertyID,
-            cid: clientID,
-            ec: category,
-            ea: action,
-            el: label,
-            ev: value
-        }
-
-        return this.GAMonitorSend(payload)
-                        .done(function (data, textStatus, jqXHR) {
-                            console.log(`GAMonitor(${category}:${action}) ${label} ok`);
-                        })
-                        .fail(function (jqXHR, textStatus) {
-                            console.warn(`GAMonitor(${category}:${action}) failed: ${jqXHR.responseText}`);
-                        });
-
+    GAMonitorEvent(  clientID:string, category:string, action:string, label:string, value:number) {
+        this.GAMonitorPageHit(clientID);
+        return APIClientBase.GAMonitorEvent(clientID,category,action,label,value);
     }
 
     /** Google Analytics Event */
@@ -2971,7 +2939,7 @@ export class sfRestClient {
             console.log(`GA opt out: ${category} + ${action} '${label}' = ${value} `);
             return;
         }
-        this.GAMonitorEvent('UA-6465434-4', sfRestClient._WCC.SiteID, category, action, label, value);
+        this.GAMonitorEvent(sfRestClient._WCC.SiteID, category, action, label, value);
     }
 
     /** Shortcut that calls GAEvent("dialog",action, dialogName,1) */
@@ -2980,7 +2948,7 @@ export class sfRestClient {
     }
        /** Shortcut that calls GAEvent("dialog",action, viewName,rows) */
     GAViewModelEvent(viewName:string, rows: number) {
-        this.GAEvent("ViewModel", "Open", viewName, rows);
+        this.GAEvent("ViewModel", "Get", viewName, rows);
     }
 
     private ValueHasWildcard(theVal:string) :boolean {
