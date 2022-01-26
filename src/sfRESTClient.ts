@@ -8,10 +8,10 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 //import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
 import * as localForage from "localforage";
 import { contains } from "jquery";
-import  * as RESTClientBase from "./APIClientBase";
+import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.111";
+const ClientPackageVersion : string = "1.20.112";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
