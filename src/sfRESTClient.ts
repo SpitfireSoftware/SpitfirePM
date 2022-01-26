@@ -9,9 +9,10 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 import * as localForage from "localforage";
 import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
+import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.112";
+const ClientPackageVersion : string = "1.20.113";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -787,6 +788,27 @@ export class sfRestClient {
         return FinalViewModelPromise;
   }
 
+    /** removes an exact match from the session DV cache */
+    ClearDV(displayName: string, keyValue: string,
+        /**
+         * either a string or string array (up to 4 elements)
+        */
+        dependsOn: string | string[] | undefined): boolean {
+            const requestData = this._getDVRequestString(displayName, keyValue, dependsOn);
+            const cacheKey: string = `GetDV:L${requestData.length}H${requestData.sfHashCode()}`;
+            try {
+                var result: string | null = sessionStorage.getItem(cacheKey);
+                if (typeof result === "string") {
+                    sessionStorage.removeItem(cacheKey);
+                    return true;
+                }
+            }
+            catch (err2:any        ) {
+                new Error("ClearDV() cache error: " + err2.message);
+            }
+
+            return false;
+        }
 
     /**
      * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
@@ -810,8 +832,8 @@ export class sfRestClient {
         if (!keyValue) return new Promise<string | null>((resolve) => resolve(""));
 
         var requestData = this._getDVRequestString(displayName, keyValue, dependsOn);
-        if (autoVary) requestData += "?{0}".sfFormat(this._getVaryByQValue());
-        var cacheKey: string = "GetDV:L{0}H{1}".sfFormat(requestData.length, requestData.sfHashCode());
+        if (autoVary) requestData += `?${this._getVaryByQValue()}`;
+        const cacheKey: string = `GetDV:L${requestData.length}H${requestData.sfHashCode()}`;
 
         try {
             var result: string | null = sessionStorage.getItem(cacheKey);
@@ -4124,6 +4146,14 @@ export class sfRestClient {
                 }
                 sfHub.server.sessionAlive();
             }
+
+            sfHub.client.onFlushClientDV = function (dvName: string, pValue: string, dependsOn: string[] | undefined) {
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.onFlushClientDV for [${dvName}] `);
+                var HubEvent = jQuery.Event("sfPMSHubSignal.onFlushClientDV");
+                $("body").trigger(HubEvent,  [dvName,pValue,dependsOn] );
+                if (HubEvent.isDefaultPrevented()) return;
+                top?.sfClient.ClearDV(dvName,pValue,dependsOn);
+            };
             sfHub.client.tickleSession = function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.tickleSession`);
                 sfHub.client.ReConnectDelay = 5000;

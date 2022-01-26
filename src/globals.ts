@@ -19,6 +19,7 @@ declare global {
 
     interface DMKMethod {(dmk:GUID):void}
     interface DocumentChangeBy { (loginSessionKey: GUID, otherUserName :string,   changeCount:number, nextEvent:string):void }
+    interface FlushClientDV { (dvName:string, pValue: string, dependsOn: string[] | undefined):void }
     interface HeartbeatMonitor { (dsk: string, rep: number):Promise<string>}
     interface NowViewingDocument {(targetWindowName: string, loginSessionKey: GUID, request: string):void}
     // sfClass interfaces
@@ -45,6 +46,7 @@ declare global {
             documentChangeBy: DocumentChangeBy;
             nowViewingDocument: NowViewingDocument;
             onApplicationStart: SimpleMethod;
+            onFlushClientDV: FlushClientDV;
             systemNotificationHasChanged: any;
             systemWideUserNotification: any;
             tickleSession:SimpleMethod;

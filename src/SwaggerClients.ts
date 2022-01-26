@@ -17,7 +17,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : this.getBaseUrl("http://stany2017/SFPMS");
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : this.getBaseUrl("http://spitfirepm/SFPMS");
     }
 
     /**
@@ -213,7 +213,7 @@ export class ActionItemsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("unusable credentials", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -221,7 +221,7 @@ export class ActionItemsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("internal failure", status, _responseText, _headers, result500);
 
         } else if (status === 404) {
@@ -229,7 +229,7 @@ export class ActionItemsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Requested route not found", status, _responseText, _headers, result404);
 
         } else if (status === 503) {
@@ -237,7 +237,7 @@ export class ActionItemsClient extends APIClientBase {
             let result503: any = null;
             let resultData503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result503 = resultData503 !== undefined ? resultData503 : <any>null;
-    
+
             return throwException("Try again after reauthentication", status, _responseText, _headers, result503);
 
         } else if (status === 200) {
@@ -318,7 +318,7 @@ export class ActionItemsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -391,7 +391,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -399,7 +399,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -480,7 +480,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -488,7 +488,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -567,7 +567,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -575,7 +575,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -661,7 +661,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -669,7 +669,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -677,7 +677,7 @@ export class ProjectDocListClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -762,7 +762,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 401) {
@@ -770,7 +770,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Lacks permission to see hidden team members", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -778,7 +778,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 200) {
@@ -857,7 +857,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -865,7 +865,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -873,7 +873,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -954,7 +954,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -962,7 +962,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -970,7 +970,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -978,7 +978,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -1050,7 +1050,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -1058,7 +1058,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -1066,7 +1066,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 400) {
@@ -1074,7 +1074,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Attempted to change read only data", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -1082,7 +1082,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -1158,7 +1158,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -1166,7 +1166,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -1174,7 +1174,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 400) {
@@ -1182,7 +1182,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Specified field invalid for team member", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -1190,7 +1190,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the patch", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -1265,7 +1265,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -1273,7 +1273,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -1281,7 +1281,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -1289,7 +1289,7 @@ export class ProjectTeamClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -1362,7 +1362,7 @@ export class ProjectKPIClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -1370,7 +1370,7 @@ export class ProjectKPIClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -1378,7 +1378,7 @@ export class ProjectKPIClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -1466,7 +1466,7 @@ export class ContactClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -1474,7 +1474,7 @@ export class ContactClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not allowed", status, _responseText, _headers, result403);
 
         } else if (status === 200) {
@@ -1550,7 +1550,7 @@ export class ContactClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -1558,7 +1558,7 @@ export class ContactClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not allowed", status, _responseText, _headers, result403);
 
         } else if (status === 200) {
@@ -1635,7 +1635,7 @@ export class ContactClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -1643,7 +1643,7 @@ export class ContactClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not allowed", status, _responseText, _headers, result403);
 
         } else if (status === 409) {
@@ -1651,7 +1651,7 @@ export class ContactClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Bad Request", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -1659,7 +1659,7 @@ export class ContactClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Failed", status, _responseText, _headers, result500);
 
         } else if (status === 200 || status === 206) {
@@ -1667,7 +1667,7 @@ export class ContactClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -1733,7 +1733,7 @@ export class ContactClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -1741,7 +1741,7 @@ export class ContactClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not allowed", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -1749,7 +1749,7 @@ export class ContactClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Failed", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -1825,7 +1825,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -1883,7 +1883,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -1941,7 +1941,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -2003,7 +2003,7 @@ export class SystemClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -2011,7 +2011,7 @@ export class SystemClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Admin Required", status, _responseText, _headers, result403);
 
         } else if (status === 200) {
@@ -2019,7 +2019,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -2085,7 +2085,7 @@ export class SystemClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -2093,7 +2093,7 @@ export class SystemClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Admin Required", status, _responseText, _headers, result403);
 
         } else if (status === 200) {
@@ -2101,7 +2101,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -2163,7 +2163,7 @@ export class SystemClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -2171,7 +2171,7 @@ export class SystemClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Admin Required", status, _responseText, _headers, result403);
 
         } else if (status === 200) {
@@ -2179,7 +2179,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -2250,7 +2250,7 @@ export class SystemClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -2258,7 +2258,7 @@ export class SystemClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Admin Required", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -2266,7 +2266,7 @@ export class SystemClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -2274,7 +2274,7 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -2342,7 +2342,7 @@ export class SystemClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 403) {
@@ -2350,7 +2350,7 @@ export class SystemClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Admin Required", status, _responseText, _headers, result403);
 
         } else if (status === 400) {
@@ -2358,7 +2358,7 @@ export class SystemClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Key too simple", status, _responseText, _headers, result400);
 
         } else if (status === 204) {
@@ -2366,7 +2366,7 @@ export class SystemClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 500) {
@@ -2374,7 +2374,7 @@ export class SystemClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
@@ -2521,7 +2521,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -2529,7 +2529,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -2537,7 +2537,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -2545,7 +2545,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -2612,7 +2612,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -2620,7 +2620,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -2628,7 +2628,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -2702,7 +2702,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -2710,7 +2710,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -2718,7 +2718,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -2726,7 +2726,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -2802,7 +2802,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -2810,7 +2810,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -2818,7 +2818,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 400) {
@@ -2826,7 +2826,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Specified field invalid for route", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -2834,7 +2834,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the patch", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -2970,7 +2970,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -2978,7 +2978,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -2986,7 +2986,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -2994,7 +2994,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -3061,7 +3061,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3069,7 +3069,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -3077,7 +3077,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -3151,7 +3151,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3159,7 +3159,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -3167,7 +3167,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -3175,7 +3175,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -3311,7 +3311,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3319,7 +3319,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -3327,7 +3327,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -3335,7 +3335,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -3402,7 +3402,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3410,7 +3410,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -3418,7 +3418,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -3492,7 +3492,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3500,7 +3500,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -3508,7 +3508,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -3516,7 +3516,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -3652,7 +3652,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3660,7 +3660,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -3668,7 +3668,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -3676,7 +3676,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -3743,7 +3743,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3751,7 +3751,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -3759,7 +3759,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -3833,7 +3833,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -3841,7 +3841,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -3849,7 +3849,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -3857,7 +3857,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -3993,7 +3993,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4001,7 +4001,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -4009,7 +4009,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -4017,7 +4017,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -4084,7 +4084,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4092,7 +4092,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -4100,7 +4100,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -4174,7 +4174,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4182,7 +4182,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -4190,7 +4190,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -4198,7 +4198,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -4334,7 +4334,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4342,7 +4342,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -4350,7 +4350,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -4358,7 +4358,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -4425,7 +4425,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4433,7 +4433,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -4441,7 +4441,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -4515,7 +4515,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4523,7 +4523,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -4531,7 +4531,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -4539,7 +4539,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -4674,7 +4674,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4682,7 +4682,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -4690,7 +4690,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -4764,7 +4764,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4772,7 +4772,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -4780,7 +4780,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -4788,7 +4788,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -4924,7 +4924,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -4932,7 +4932,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -4940,7 +4940,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -4948,7 +4948,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -5015,7 +5015,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -5023,7 +5023,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -5031,7 +5031,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -5105,7 +5105,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -5113,7 +5113,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -5121,7 +5121,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -5129,7 +5129,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -5917,7 +5917,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -5979,7 +5979,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -6045,7 +6045,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -6112,7 +6112,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found", status, _responseText, _headers, result404);
 
         } else if (status === 406) {
@@ -6120,7 +6120,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result406: any = null;
             let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result406 = resultData406 !== undefined ? resultData406 : <any>null;
-    
+
             return throwException("Request not acceptible (document status or state?  already used?)", status, _responseText, _headers, result406);
 
         } else if (status === 422) {
@@ -6128,7 +6128,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result422: any = null;
             let resultData422 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result422 = resultData422 !== undefined ? resultData422 : <any>null;
-    
+
             return throwException("Request not acceptible, number already used?)", status, _responseText, _headers, result422);
 
         } else if (status === 401) {
@@ -6136,7 +6136,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Permission required", status, _responseText, _headers, result401);
 
         } else if (status === 304) {
@@ -6144,7 +6144,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result304: any = null;
             let resultData304 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result304 = resultData304 !== undefined ? resultData304 : <any>null;
-    
+
             return throwException("The document already has the requested number", status, _responseText, _headers, result304);
 
         } else if (status === 409) {
@@ -6152,7 +6152,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Failed to persist the change", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -6160,7 +6160,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -6252,7 +6252,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6260,7 +6260,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -6268,7 +6268,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Options cannot be combined as specified", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -6276,7 +6276,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Failed to persist", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -6284,7 +6284,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -6360,7 +6360,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6368,7 +6368,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -6376,7 +6376,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -6445,7 +6445,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6453,7 +6453,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -6461,7 +6461,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status === 200 || status === 206) {
@@ -6469,7 +6469,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -6536,7 +6536,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6544,7 +6544,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 406) {
@@ -6552,7 +6552,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result406: any = null;
             let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result406 = resultData406 !== undefined ? resultData406 : <any>null;
-    
+
             return throwException("Document number cannot be changed by this method", status, _responseText, _headers, result406);
 
         } else if (status === 409) {
@@ -6560,7 +6560,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status === 200 || status === 206) {
@@ -6568,7 +6568,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -6634,7 +6634,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6642,7 +6642,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -6650,7 +6650,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -6719,7 +6719,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6727,7 +6727,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -6735,7 +6735,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Failed to persist", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -6743,7 +6743,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -6825,7 +6825,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6833,7 +6833,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -6841,7 +6841,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -6849,7 +6849,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -6916,7 +6916,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -6924,7 +6924,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -6932,7 +6932,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -7006,7 +7006,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7014,7 +7014,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7022,7 +7022,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -7030,7 +7030,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -7098,7 +7098,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7106,7 +7106,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7114,7 +7114,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -7122,7 +7122,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -7184,7 +7184,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7192,7 +7192,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -7200,7 +7200,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Failed to persist", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -7208,7 +7208,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -7290,7 +7290,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7298,7 +7298,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7306,7 +7306,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -7314,7 +7314,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -7381,7 +7381,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7389,7 +7389,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -7397,7 +7397,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -7471,7 +7471,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7479,7 +7479,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7487,7 +7487,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -7495,7 +7495,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -7571,7 +7571,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7579,7 +7579,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7587,7 +7587,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 400) {
@@ -7595,7 +7595,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Specified field invalid for route", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -7603,7 +7603,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the patch", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -7739,7 +7739,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7747,7 +7747,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7755,7 +7755,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -7763,7 +7763,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -7830,7 +7830,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7838,7 +7838,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 409) {
@@ -7846,7 +7846,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -7920,7 +7920,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -7928,7 +7928,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -7936,7 +7936,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status === 409) {
@@ -7944,7 +7944,7 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status !== 200 && status !== 204) {
@@ -8156,7 +8156,7 @@ export class UICFGClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -8231,7 +8231,7 @@ export class UICFGClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -8306,7 +8306,7 @@ export class UICFGClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -8388,7 +8388,7 @@ export class LookupClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -8396,7 +8396,7 @@ export class LookupClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Specified context not found", status, _responseText, _headers, result404);
 
         } else if (status === 200) {
@@ -9075,7 +9075,7 @@ export class LookupClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -9083,7 +9083,7 @@ export class LookupClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Requested context not found", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -9091,7 +9091,7 @@ export class LookupClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Malformed request", status, _responseText, _headers, result400);
 
         } else if (status === 500) {
@@ -9099,7 +9099,7 @@ export class LookupClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -9107,7 +9107,7 @@ export class LookupClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -9178,7 +9178,7 @@ export class LookupClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -9186,7 +9186,7 @@ export class LookupClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Requested context not found", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -9194,7 +9194,7 @@ export class LookupClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Malformed request", status, _responseText, _headers, result400);
 
         } else if (status === 500) {
@@ -9202,7 +9202,7 @@ export class LookupClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -9210,7 +9210,7 @@ export class LookupClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -9273,7 +9273,7 @@ export class LookupClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -9281,7 +9281,7 @@ export class LookupClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Requested context not found", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -9289,7 +9289,7 @@ export class LookupClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Malformed request", status, _responseText, _headers, result400);
 
         } else if (status === 500) {
@@ -9297,7 +9297,7 @@ export class LookupClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -9456,7 +9456,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -9464,7 +9464,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("id not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -9472,7 +9472,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -9546,7 +9546,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -9554,7 +9554,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("id not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -9562,7 +9562,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Malformed", status, _responseText, _headers, result400);
 
         } else if (status === 500) {
@@ -9570,7 +9570,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -9578,7 +9578,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -9646,7 +9646,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -9654,7 +9654,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("id not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -9662,7 +9662,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Malformed", status, _responseText, _headers, result400);
 
         } else if (status === 500) {
@@ -9670,7 +9670,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -9678,7 +9678,7 @@ export class ExcelToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -9821,7 +9821,7 @@ export class AlertsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("unusable credentials", status, _responseText, _headers, result401);
 
         } else if (status === 400) {
@@ -9829,7 +9829,7 @@ export class AlertsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("not allowed now", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -9837,7 +9837,7 @@ export class AlertsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("internal failure", status, _responseText, _headers, result409);
 
         } else if (status === 200) {
@@ -9845,7 +9845,7 @@ export class AlertsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -9908,7 +9908,7 @@ export class AlertsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("unusable credentials", status, _responseText, _headers, result401);
 
         } else if (status === 400) {
@@ -9916,7 +9916,7 @@ export class AlertsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("not allowed now", status, _responseText, _headers, result400);
 
         } else if (status === 406) {
@@ -9924,7 +9924,7 @@ export class AlertsClient extends APIClientBase {
             let result406: any = null;
             let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result406 = resultData406 !== undefined ? resultData406 : <any>null;
-    
+
             return throwException("key required", status, _responseText, _headers, result406);
 
         } else if (status === 200) {
@@ -9932,7 +9932,7 @@ export class AlertsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -9999,7 +9999,7 @@ export class AlertsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("unusable credentials", status, _responseText, _headers, result401);
 
         } else if (status === 400) {
@@ -10007,7 +10007,7 @@ export class AlertsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("not allowed now", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -10015,7 +10015,7 @@ export class AlertsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("internal failure", status, _responseText, _headers, result409);
 
         } else if (status === 404) {
@@ -10023,7 +10023,7 @@ export class AlertsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("key not found", status, _responseText, _headers, result404);
 
         } else if (status === 406) {
@@ -10031,7 +10031,7 @@ export class AlertsClient extends APIClientBase {
             let result406: any = null;
             let resultData406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result406 = resultData406 !== undefined ? resultData406 : <any>null;
-    
+
             return throwException("key required", status, _responseText, _headers, result406);
 
         } else if (status === 200) {
@@ -10039,7 +10039,7 @@ export class AlertsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -10112,7 +10112,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10120,7 +10120,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10128,7 +10128,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10136,7 +10136,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10205,7 +10205,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10213,7 +10213,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10221,7 +10221,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10229,7 +10229,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10325,7 +10325,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10333,7 +10333,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10341,7 +10341,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10349,7 +10349,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10445,7 +10445,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10453,7 +10453,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10461,7 +10461,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10469,7 +10469,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10477,7 +10477,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -10539,7 +10539,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10547,7 +10547,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10555,7 +10555,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10563,7 +10563,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10632,7 +10632,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10640,7 +10640,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10648,7 +10648,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10656,7 +10656,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10732,7 +10732,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10740,7 +10740,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10748,7 +10748,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10756,7 +10756,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10764,7 +10764,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -10830,7 +10830,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10838,7 +10838,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10846,7 +10846,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10854,7 +10854,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -10862,7 +10862,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -10924,7 +10924,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -10932,7 +10932,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -10940,7 +10940,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -10948,7 +10948,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -11051,7 +11051,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 404) {
@@ -11059,7 +11059,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Not found", status, _responseText, _headers, result404);
 
         } else if (status === 403) {
@@ -11067,7 +11067,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
@@ -11075,7 +11075,7 @@ export class ProjectToolsClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -11317,7 +11317,7 @@ export class ProjectsClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -11325,7 +11325,7 @@ export class ProjectsClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Project not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -11333,7 +11333,7 @@ export class ProjectsClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Specified field invalid ", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -11341,7 +11341,7 @@ export class ProjectsClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Could not persist the patch", status, _responseText, _headers, result409);
 
         } else if (status === 200 || status === 206) {
@@ -11349,7 +11349,7 @@ export class ProjectsClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -11500,7 +11500,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -11508,7 +11508,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -11516,7 +11516,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -11578,7 +11578,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 400) {
@@ -11586,7 +11586,7 @@ export class SessionClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Request malformed", status, _responseText, _headers, result400);
 
         } else if (status === 409) {
@@ -11594,7 +11594,7 @@ export class SessionClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Request inappropriate", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -11602,7 +11602,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -11610,7 +11610,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -11671,7 +11671,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 409) {
@@ -11679,7 +11679,7 @@ export class SessionClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Request inappropriate", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -11687,7 +11687,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -11756,7 +11756,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -11764,7 +11764,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -11829,7 +11829,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -12081,7 +12081,7 @@ export class SessionClient extends APIClientBase {
             let result304: any = null;
             let resultData304 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result304 = resultData304 !== undefined ? resultData304 : <any>null;
-    
+
             return throwException("This (fairly static) information matches the supplied eTag", status, _responseText, _headers, result304);
 
         } else if (status === 200 || status === 206) {
@@ -12089,7 +12089,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -12101,7 +12101,7 @@ export class SessionClient extends APIClientBase {
 
     /**
      * Returns WCC Session data
-     * @param context (optional) 
+     * @param context (optional)
      */
     getWCC(context?: string | null | undefined) {
         return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
@@ -12150,7 +12150,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12158,7 +12158,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -12235,7 +12235,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12243,7 +12243,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -12338,7 +12338,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12346,7 +12346,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 403) {
@@ -12354,7 +12354,7 @@ export class SessionClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 200 || status === 206) {
@@ -12362,7 +12362,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -12426,7 +12426,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12434,7 +12434,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 404) {
@@ -12442,7 +12442,7 @@ export class SessionClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Tab not found", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -12450,7 +12450,7 @@ export class SessionClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status !== 200 && status !== 204) {
@@ -12515,7 +12515,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12523,7 +12523,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -12593,7 +12593,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12601,7 +12601,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 404) {
@@ -12609,7 +12609,7 @@ export class SessionClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("not found", status, _responseText, _headers, result404);
 
         } else if (status === 204) {
@@ -12617,7 +12617,7 @@ export class SessionClient extends APIClientBase {
             let result204: any = null;
             let resultData204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result204 = resultData204 !== undefined ? resultData204 : <any>null;
-    
+
             return result204;
 
         } else if (status !== 200 && status !== 204) {
@@ -12680,7 +12680,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12688,7 +12688,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -12696,7 +12696,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -12767,7 +12767,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 409) {
@@ -12775,7 +12775,7 @@ export class SessionClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Request inappropriate", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
@@ -12783,7 +12783,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -12791,7 +12791,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -12849,7 +12849,7 @@ export class SessionClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Authentication required", status, _responseText, _headers, result401);
 
         } else if (status === 500) {
@@ -12857,7 +12857,7 @@ export class SessionClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Internal Error", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -12865,7 +12865,7 @@ export class SessionClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -12938,7 +12938,7 @@ export class AccountClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Unusable credentials", status, _responseText, _headers, result401);
 
         } else if (status === 302) {
@@ -12946,7 +12946,7 @@ export class AccountClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Unusable credentials with redirect to login ", status, _responseText, _headers, result302);
 
         } else if (status === 409) {
@@ -12954,7 +12954,7 @@ export class AccountClient extends APIClientBase {
             let result409: any = null;
             let resultData409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result409 = resultData409 !== undefined ? resultData409 : <any>null;
-    
+
             return throwException("Not allowed now (see message for issue) ", status, _responseText, _headers, result409);
 
         } else if (status === 400) {
@@ -12962,7 +12962,7 @@ export class AccountClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Not allowed now (already authenticated?)", status, _responseText, _headers, result400);
 
         } else if (status === 200) {
@@ -12970,7 +12970,7 @@ export class AccountClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -13028,7 +13028,7 @@ export class AccountClient extends APIClientBase {
             let result401: any = null;
             let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result401 = resultData401 !== undefined ? resultData401 : <any>null;
-    
+
             return throwException("Not currently authenticated", status, _responseText, _headers, result401);
 
         } else if (status === 200) {
@@ -13150,7 +13150,7 @@ export class AccountClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -13213,7 +13213,7 @@ export class AccountClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -13291,7 +13291,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13299,7 +13299,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13307,7 +13307,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -13379,7 +13379,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13387,7 +13387,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13395,7 +13395,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -13467,7 +13467,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13475,7 +13475,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13483,7 +13483,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -13557,7 +13557,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13565,7 +13565,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13573,7 +13573,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200 || status === 206) {
@@ -13581,7 +13581,7 @@ export class CatalogClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -13646,7 +13646,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13654,7 +13654,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13662,7 +13662,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200 || status === 206) {
@@ -13670,7 +13670,7 @@ export class CatalogClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -13732,7 +13732,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13740,7 +13740,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13748,7 +13748,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -13817,7 +13817,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13825,7 +13825,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13833,7 +13833,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -13909,7 +13909,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -13917,7 +13917,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -13925,7 +13925,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -14001,7 +14001,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14009,7 +14009,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -14017,7 +14017,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -14093,7 +14093,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14101,7 +14101,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 501) {
@@ -14109,7 +14109,7 @@ export class CatalogClient extends APIClientBase {
             let result501: any = null;
             let resultData501 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result501 = resultData501 !== undefined ? resultData501 : <any>null;
-    
+
             return throwException("Feature Not implimented", status, _responseText, _headers, result501);
 
         } else if (status === 500) {
@@ -14117,7 +14117,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -14190,7 +14190,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14198,7 +14198,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 501) {
@@ -14206,7 +14206,7 @@ export class CatalogClient extends APIClientBase {
             let result501: any = null;
             let resultData501 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result501 = resultData501 !== undefined ? resultData501 : <any>null;
-    
+
             return throwException("Feature Not implimented", status, _responseText, _headers, result501);
 
         } else if (status === 500) {
@@ -14214,7 +14214,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -14287,7 +14287,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14295,7 +14295,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 501) {
@@ -14303,7 +14303,7 @@ export class CatalogClient extends APIClientBase {
             let result501: any = null;
             let resultData501 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result501 = resultData501 !== undefined ? resultData501 : <any>null;
-    
+
             return throwException("Feature Not implimented", status, _responseText, _headers, result501);
 
         } else if (status === 500) {
@@ -14311,7 +14311,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -14387,7 +14387,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14395,7 +14395,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 501) {
@@ -14403,7 +14403,7 @@ export class CatalogClient extends APIClientBase {
             let result501: any = null;
             let resultData501 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result501 = resultData501 !== undefined ? resultData501 : <any>null;
-    
+
             return throwException("Feature Not implimented", status, _responseText, _headers, result501);
 
         } else if (status === 500) {
@@ -14411,7 +14411,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 200) {
@@ -14480,7 +14480,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14488,7 +14488,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -14496,7 +14496,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -14504,7 +14504,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200 || status === 206) {
@@ -14512,7 +14512,7 @@ export class CatalogClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -14575,7 +14575,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14583,7 +14583,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 400) {
@@ -14591,7 +14591,7 @@ export class CatalogClient extends APIClientBase {
             let result400: any = null;
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result400 = resultData400 !== undefined ? resultData400 : <any>null;
-    
+
             return throwException("Request Not consistant", status, _responseText, _headers, result400);
 
         } else if (status === 500) {
@@ -14599,7 +14599,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -14607,7 +14607,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200) {
@@ -14676,7 +14676,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14684,7 +14684,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -14692,7 +14692,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -14700,7 +14700,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200 || status === 206) {
@@ -14708,7 +14708,7 @@ export class CatalogClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -14770,7 +14770,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14778,7 +14778,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -14786,7 +14786,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -14794,7 +14794,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200) {
@@ -14873,7 +14873,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14881,7 +14881,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -14889,7 +14889,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -14897,7 +14897,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200) {
@@ -14981,7 +14981,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -14989,7 +14989,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -14997,7 +14997,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -15005,7 +15005,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200) {
@@ -15089,7 +15089,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -15097,7 +15097,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -15105,7 +15105,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -15113,7 +15113,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200) {
@@ -15121,7 +15121,7 @@ export class CatalogClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -15188,7 +15188,7 @@ export class CatalogClient extends APIClientBase {
             let result403: any = null;
             let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result403 = resultData403 !== undefined ? resultData403 : <any>null;
-    
+
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
@@ -15196,7 +15196,7 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result404 = resultData404 !== undefined ? resultData404 : <any>null;
-    
+
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
@@ -15204,7 +15204,7 @@ export class CatalogClient extends APIClientBase {
             let result500: any = null;
             let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result500 = resultData500 !== undefined ? resultData500 : <any>null;
-    
+
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status === 302) {
@@ -15212,7 +15212,7 @@ export class CatalogClient extends APIClientBase {
             let result302: any = null;
             let resultData302 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result302 = resultData302 !== undefined ? resultData302 : <any>null;
-    
+
             return throwException("Fetch!", status, _responseText, _headers, result302);
 
         } else if (status === 200 || status === 206) {
@@ -15220,7 +15220,7 @@ export class CatalogClient extends APIClientBase {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
                 result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+
             return result200;
 
         } else if (status !== 200 && status !== 204) {
@@ -25738,10 +25738,10 @@ export class FileInformation implements IFileInformation {
     /** Note when this object is attached to a document
              */
     AttachNote?: string | undefined;
-    /** Read only display value for DocTypeKey associated with this object  
+    /** Read only display value for DocTypeKey associated with this object
              */
     ProcessType?: string | undefined;
-    /** MD5 hash of binary content 
+    /** MD5 hash of binary content
              */
     MD5?: string | undefined;
     /** Lattitude  */
@@ -25949,10 +25949,10 @@ export interface IFileInformation {
     /** Note when this object is attached to a document
              */
     AttachNote?: string | undefined;
-    /** Read only display value for DocTypeKey associated with this object  
+    /** Read only display value for DocTypeKey associated with this object
              */
     ProcessType?: string | undefined;
-    /** MD5 hash of binary content 
+    /** MD5 hash of binary content
              */
     MD5?: string | undefined;
     /** Lattitude  */
