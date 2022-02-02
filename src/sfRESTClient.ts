@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.115";
+const ClientPackageVersion : string = "1.20.116";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1909,6 +1909,7 @@ export class sfRestClient {
         UseClassicCatalog: ((location.host.indexOf(".9") < 0) &&
                              location.host.indexOf(".") > 0 &&
                              location.host !== "scm.spitfirepm.com" &&
+                             location.host !== "portal.spitfirepm.com" &&
                              location.host !== "try.spitfirepm.com"),
         TaskStatePollInterval: 357
     }
