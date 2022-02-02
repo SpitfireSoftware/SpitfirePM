@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.116";
+const ClientPackageVersion : string = "1.20.118";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2663,6 +2663,7 @@ export class sfRestClient {
         tokeArgs.PageName = RESTClient.GetPageContextValue("PageName");
         tokeArgs.PartName = RESTClient.GetPageContextValue("PartName");
         tokeArgs.TZOffset = RESTClient.GetPageContextValue("TZOffset");
+        RESTClient.DisplayUserNotification("Working...",3333);
         api.createExchangeToken(tokeArgs).then((xToken)=>{
 
             if (xToken && xToken?.length > 3) {
@@ -2712,6 +2713,8 @@ export class sfRestClient {
 
         if (typeof innerScript === "string" && innerScript.length > 0) xscript = `setTimeout('${innerScript};', ${innerDelay});`   + xscript;
         try{
+            RESTClient.DisplayUserNotification("Opening...",2345);
+
             $.connection.sfPMSHub.server.activateExchangeToken(openURL).then( ok =>{
                 if (!ok) setTimeout(xscript, 211)
                 else {
