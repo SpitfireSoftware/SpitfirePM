@@ -6,7 +6,7 @@ export class BrowserExtensionChecker {
     DetectedName: string = "";
     // always returns false the first time
     public HasDotNetApplicationExtension(): boolean {
-        if (self !== top) return top.ClickOnceExtension.HasDotNetApplicationExtension();
+        if (top && self !== top) return top.ClickOnceExtension.HasDotNetApplicationExtension();
         if (!this._ClickOnceExtensionHasBeenChecked) {
             var result = sessionStorage.getItem(this._SessionStorageCacheKey);
             if (result === null) {
@@ -42,6 +42,7 @@ export class BrowserExtensionChecker {
     protected _CheckForWindowsRemixClickonceExtension() : boolean {
         var ExtName = "Windows Remix ClickOnce Helper"
         var ExtID = "dgpgholdldjjbcmpeckiephjigdpikan";
+        if (top?.CLICKONCE_EXTENSION_IS_INSTALLED) return this._ExtensionDetected(ExtID,ExtName,false);
         var s = document.createElement('script');
         return this._GenericExtensionDetector(ExtID, ExtName, s, "detect.js");
     }

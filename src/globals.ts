@@ -77,6 +77,7 @@ declare global {
         sfClient: sfRestClient;
         sfPMSHub: sfPMSHub;
         ClickOnceExtension: BrowserExtensionChecker;  // not the best name, needed by legacy UI
+        CLICKONCE_EXTENSION_IS_INSTALLED: boolean | undefined;
 
         WindowHasFocus: boolean;
 
