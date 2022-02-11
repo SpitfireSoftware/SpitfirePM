@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.121";
+const ClientPackageVersion : string = "1.20.122";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -578,20 +578,28 @@ export class sfRestClient {
                 return;
             }
 
-            if (!(sfRestClient._LoadedPermits.has("0"))) { // global permissions
-                var api = new SessionClient(this._SiteURL);
-                sfRestClient._LoadedPermits.set("0",new _SwaggerClientExports.UCPermitSet()); // this prevents repeat requests
-                var apiResult: Promise<UCPermitSet | null> = api.getProjectPermits("0");
-                if (apiResult) {
-                    apiResult.then((r) => {
-                        if (r) {
-                            console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Global Permits from server...`);
-                            sfRestClient._LoadedPermits.set("0", r);
-                        }
-                    });
-                    await apiResult;
+            if (!sfRestClient.GlobalPermitAPIPromise) {
+                if (!(sfRestClient._LoadedPermits.has("0"))) { // global permissions
+                    var api = new SessionClient(this._SiteURL);
+                    sfRestClient.GlobalPermitAPIPromise  = api.getProjectPermits("0");
+                    sfRestClient._LoadedPermits.set("0",new _SwaggerClientExports.UCPermitSet()); // this prevents repeat requests
+                    if (sfRestClient.GlobalPermitAPIPromise) {
+                        sfRestClient.GlobalPermitAPIPromise.then((r) => {
+                            if (r) {
+                                //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Received Global Permits from server...`);
+                                sfRestClient._LoadedPermits.set("0", r);
+                                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Global Permits from server...`);
+                            }
+                        });
+                    }
                 }
             }
+            if (sfRestClient.GlobalPermitAPIPromise) {
+                //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Waiting for Global Permits from server...`);
+                await sfRestClient.GlobalPermitAPIPromise;
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Global Permits ready() `,sfRestClient._LoadedPermits.get(optionalProject));
+            }
+
 
             if (!(sfRestClient._LoadedPermits.has(optionalProject))) {
                 var apiResult: Promise<UCPermitSet | null>;
@@ -606,7 +614,7 @@ export class sfRestClient {
                 if (apiResult) {
                     apiResult.then((r) => {
                         if (r) {
-                            console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Project ${optionalProject} Permits from server...`);
+                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Project ${optionalProject} Permits from server...`);
                             sfRestClient._LoadedPermits.set(optionalProject!, r);
                             ThisProjectPermitSet = r!;
                             PPSDeferredResult.resolve(r);
@@ -1504,7 +1512,7 @@ export class sfRestClient {
             }
             if (sfRestClient._SessionClientGetWCC) {
                 if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Reusing ongoing getWCC for HREF hash ${sfRestClient._SessionClientGetWCC.ForNavHash}`);
+                    //if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Reusing ongoing getWCC for HREF hash ${sfRestClient._SessionClientGetWCC.ForNavHash}`);
                     apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
                 } else sfRestClient._SessionClientGetWCC = null;
             }
@@ -2921,6 +2929,7 @@ export class sfRestClient {
 
     }
 
+    private static GlobalPermitAPIPromise: Promise<UCPermitSet | null>;
     private static GALastPageHitSent: number = 0; // !!! this needs work
     private GAMonitorPageHit( clientID:string, url?:string, title?:string) {
         var RESTClient = this;
@@ -3976,11 +3985,15 @@ export class sfRestClient {
      *
      * @param alsoClearSessionStorage set true to also clear session storage (appropriate for logoffs)
      */
-    public ClearCache(alsoClearSessionStorage? : boolean):void {
+    public async ClearCache(alsoClearSessionStorage? : boolean):Promise<void> {
         var InGlobalInstance = this.IsGlobalInstance();
         console.log(`sfRestClient.ClearCache(${this.ThisInstanceID}), ${alsoClearSessionStorage ? " w/sessionStorage" : ""}, ${InGlobalInstance ? " Global" : ""}, UPRC:${sfRestClient._UserPermitResultCache.size}`);
         PartStorageData._LoadedParts.clear();
-        try {$.connection.hub.stop(); } catch {}
+        try {
+            if (typeof top!.sfPMSHub.client.ReConnectDelay === "number")  top!.sfPMSHub.client.ReConnectDelay = 10000;
+            await $.connection.hub.stop();
+        } catch {// ignore any errors
+        }
         sfRestClient._UserPermitResultCache.clear();
         sfRestClient._LoadedPermits.clear();
         sfRestClient._LoadingPermitRequests.clear();
@@ -3989,7 +4002,7 @@ export class sfRestClient {
         sfRestClient._WCC.AdminLevel = 0;
         this._CachedDVRequests.clear();
         if (!InGlobalInstance)
-            window.sfClient.ClearCache(false);
+            await window.sfClient.ClearCache(false);
         // note: _UCPermitMap does not need to be cleared, it is the same for all users
         if (alsoClearSessionStorage)
             sessionStorage.clear();
