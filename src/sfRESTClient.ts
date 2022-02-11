@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.122";
+const ClientPackageVersion : string = "1.20.123";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -966,6 +966,27 @@ export class sfRestClient {
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataLookupFactory(this, lookupName);
         return thisPart.CFGLoader();
     }
+
+    GetFileURL( fileKey: GUID | _SwaggerClientExports.FileInformation, fn?: string, fileRev?: number,forDownload?: boolean) : string {
+        if (fileKey instanceof _SwaggerClientExports.FileInformation) {
+            fn = fileKey.value;
+            fileRev = fileKey.LatestRevision;
+            fileKey = fileKey.FileKey;
+        }
+        return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/${fn}?cd=${forDownload ? "1":"0"}${fileRev ? `&rv=${fileRev}`:""}`;
+    }
+
+    GetFilePreviewURL( fileKey: GUID | _SwaggerClientExports.FileInformation, width: number, height:number,
+                        fn?: string,
+                         fileRev?: number) : string {
+        if (fileKey instanceof _SwaggerClientExports.FileInformation) {
+            fileRev = fileKey.LatestRevision;
+            fn = fileKey.value;
+            fileKey = fileKey.FileKey;
+        }
+        return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/preview-${fn}?w=${width}&h=${height}${fileRev ? `&rv=${fileRev}`:""}`;
+    }
+
 
     /** Async get of a non-user specific setting (always the same for all users) */
     RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
