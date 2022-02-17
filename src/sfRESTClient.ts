@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.123";
+const ClientPackageVersion : string = "1.20.125";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -287,7 +287,8 @@ export class sfRestClient {
         Unknown: 8092,
         Login: 16384,
         DiagUtilities: 32768,
-        UserAccountRecovery: 65536
+        UserAccountRecovery: 65536,
+        PopupAdminTool: 131072
     }
 
     /**
@@ -2213,6 +2214,9 @@ export class sfRestClient {
                 break;
             case "SSPWR":
                 result = this.PageTypeNames.UserAccountRecovery;
+                break;
+            case "PLVP":
+                result = this.PageTypeNames.PopupAdminTool;
                 break;
             default:
                 console.warn("Unexpected page type: ", pageNameString);
