@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.125";
+const ClientPackageVersion : string = "1.20.126";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1932,7 +1932,7 @@ export class sfRestClient {
         PopupWindowLargeCWS: {top: -1, left: -1, width: 1000, height: 750},
         PopupWindowHelpMenuCWS: {top: -1, left: -1, width: 750, height: 700},
         PopupWindowUserSettingsCWS: {top: -1, left: -1, width: 830, height: 750},
-        PopupWindowViewUserVWS:{top: -1, left: -1, width: 1000, height: 605},
+        PopupWindowViewUserCWS:{top: -1, left: -1, width: 1000, height: 605},
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
         ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}',
@@ -3270,8 +3270,8 @@ export class sfRestClient {
 
             if (OpenUrl.indexOf("xbia=1") && top?.sfClient.IsPowerUXPage()) {
                 //ui-icon-script
-                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI","ui-icon-script").on("click",function() {
-                    top!.location.href = OpenUrl.replace("xbia=1","xbia=0");
+                top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI (new tab)","ui-icon-script").on("click",function() {
+                    window.open( OpenUrl.replace("xbia=1","xbia=0"));
                 });
             }
 
@@ -3286,11 +3286,12 @@ export class sfRestClient {
             var ApplySizeAndPosition:boolean = (sfRestClient._DialogCoordinateCache.has(ThisURLHash));
             var TargetSizeData: CoordinateWithSize | undefined;
             var $DialogDiv : JQuery<HTMLDivElement>;
+            let UserCachedSize: boolean = false;
             if (ApplySizeAndPosition) {
                 this.$LookupDialog!.data("RestoredSize",true );
                 this.$LookupDialog!.data("SizePending",true );
                 TargetSizeData = sfRestClient._DialogCoordinateCache.get(ThisURLHash)!;
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log('ModalDialog() Target size/loc',TargetSizeData);
+                UserCachedSize = true;
             }
             else {
                 if (url.indexOf("cuManager.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS
@@ -3298,12 +3299,13 @@ export class sfRestClient {
                 else if (url.indexOf("dxutil.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowViewUserCWS
                 else if (url.indexOf("vpg=HelpMenu") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowHelpMenuCWS
                 else if (url.indexOf("whoami.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowUserSettingsCWS
-                else if (url.indexOf("viewuser.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowViewUserCWS
+                else if (url.toLowerCase().indexOf("viewuser.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowViewUserCWS
                 else if (url.indexOf("users.aspx") > 0 ) TargetSizeData = sfRestClient._Options.PopupWindowLargeCWS;
 
-                if (TargetSizeData) ApplySizeAndPosition = true
+                if (typeof TargetSizeData !== "undefined") ApplySizeAndPosition = true;
                 else TargetSizeData = {top:0,left:0,width:0,height:0};
             }
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`ModalDialog() ${UserCachedSize ? "User" : "Option/Cfg"} Target size/loc; Apply:${ApplySizeAndPosition} ${!ApplySizeAndPosition ? `for ${url}`:"" }`,TargetSizeData);
             this.$LookupDialog.data("postbackEventId", eventId!);
             this.$LookupDialog.data("postbackEventArg", eventArg!);
             this.$LookupDialog.data("postback", (eventId != sfRestClient._Options.NonPostbackEventID));
