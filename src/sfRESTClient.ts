@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.20.126";
+const ClientPackageVersion : string = "1.21.127";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -28,7 +28,7 @@ type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
 type RRCacheEntry = { w: number, v: string | number | boolean };
 type CoordinateWithSize = {top:number,left:number,width:number,height:number};
-
+type UploadMode = "catalog"|"ContactPhoto"|"doc"|"SitePhoto"|"template";
 
 
 class _SessionClientGetWCCShare {
@@ -50,6 +50,28 @@ class _SessionClientGetWCCShare {
     }
     public Expired(): boolean {
         return (this.IsResolved && (Date.now() - this.AsOf) > 3210);
+    }
+}
+
+class FileUploadContext {
+    /** upload mode */
+    mode: UploadMode  ;
+    /** key for a document  */
+    DMK: GUID | undefined;
+    /** key, for an item on the document (requires DMK) */
+    itemKey: GUID| undefined;
+    /** key for a folder */
+    cfk: GUID| undefined;
+    /** key for a template (required for mode=template) */
+    fk: GUID| undefined;
+    /** key, such as for  a user/contact (required for mode=ContactPhoto) */
+    pk: GUID| undefined;
+    /** project */
+    project: string | undefined;
+    /** data cache key */
+    fromDS: string | undefined;
+    public constructor(mode: UploadMode) {
+        this.mode = mode;
     }
 }
 
@@ -1187,6 +1209,89 @@ export class sfRestClient {
         return $D;
     }
 
+    public GetFileUploadURL(uploadContext: FileUploadContext) : string {
+        return this._BuildFileUploadURL("upload",uploadContext);
+    }
+    public GetFileChunkUploadURL(uploadContext: FileUploadContext) : string {
+        return this._BuildFileUploadURL("stream/chunk",uploadContext);
+    }
+
+    private _BuildFileUploadURL(uploadType: "upload" | "stream/chunk",uploadContext: FileUploadContext) : string {
+        var urlOptions : string = "";
+        if (uploadContext.DMK) {
+            urlOptions = `${urlOptions}&dmk=${uploadContext.DMK}`;
+            if (uploadContext.itemKey) {
+                urlOptions = `${urlOptions}&itemKey=${uploadContext.itemKey}`;
+            }
+        }
+        if (uploadContext.cfk) {
+            urlOptions = `${urlOptions}&cfk=${uploadContext.cfk}`;
+        }
+        if (uploadContext.fk) {
+            urlOptions = `${urlOptions}&fk=${uploadContext.fk}`;
+        }
+        if (uploadContext.fromDS) {
+            urlOptions = `${urlOptions}&fromDS=${uploadContext.fromDS}`;
+        }
+        if (uploadContext.pk) {
+            urlOptions = `${urlOptions}&pk=${uploadContext.pk}`;
+        }
+        if (uploadContext.project) {
+            urlOptions = `${urlOptions}&proj=${uploadContext.project}`;
+        }
+
+        return `${this._SiteURL}/api/catalog/${uploadType}?xm=${uploadContext.mode}${urlOptions}`;
+
+    }
+
+    /** Uploads a file of up to 4 MB in a single request  */
+    public UploadFile(blobFile: File, uploadContext: FileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
+        var fd = new FormData();
+        var ff =  new _SwaggerClientExports.FileInformation();
+        var RESTClient = this;
+        ff.FileType = blobFile.type; // actually the mimeType
+        ff.value = blobFile.name;
+        ff.size = blobFile.size;
+        ff.Project = uploadContext.project;
+        ff.ReferenceDate = new Date(blobFile.lastModified);
+        (<any>ff).ETag = "na";
+
+        return new Promise<_SwaggerClientExports.XferFilesStatus >(async result =>  {
+            var taskResult : _SwaggerClientExports.XferFilesStatus  = new  _SwaggerClientExports.XferFilesStatus();
+
+            if (ff.size > 4096.0 * 1024.0) {
+                taskResult.error = "File too large for single upload";
+                taskResult.name = ff.value;
+                result(taskResult);
+                return;
+            }
+            //ff.MetaData = [{"UploadMode": uploadContext.mode}]; causes ETag error
+            fd.append("fileMeta", JSON.stringify(ff) );
+            fd.append("fileToUpload", blobFile);
+
+            $.ajax({
+               url: RESTClient.GetFileUploadURL(uploadContext),
+               type: "POST",
+               data: fd,
+               processData: false,
+               contentType: false,
+               success: function(response:_SwaggerClientExports.XferFilesStatus) {
+                   // if we do multi-chunk....do it here!!!
+                   console.log(response);
+                   result(response);
+               },
+               error: function(jqXHR, textStatus, errorMessage) {
+                   console.log(errorMessage); // Optional
+                   taskResult.error = errorMessage;
+                   taskResult.name = ff.value;
+                   result(taskResult);
+               }
+            });
+
+        });
+
+
+    }
 
     /** checks with server up to 3 times a second.  promise resolves when task has ended or callback returns true;
      * @param taskKey guid key for task
