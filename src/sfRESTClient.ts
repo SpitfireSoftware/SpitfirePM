@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.127";
+const ClientPackageVersion : string = "1.21.129";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1259,7 +1259,7 @@ export class sfRestClient {
         return new Promise<_SwaggerClientExports.XferFilesStatus >(async result =>  {
             var taskResult : _SwaggerClientExports.XferFilesStatus  = new  _SwaggerClientExports.XferFilesStatus();
 
-            if (ff.size > 4096.0 * 1024.0) {
+            if (ff.size > (5 * 4096.0 * 1024.0)) {
                 taskResult.error = "File too large for single upload";
                 taskResult.name = ff.value;
                 result(taskResult);
