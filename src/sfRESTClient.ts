@@ -990,6 +990,7 @@ export class sfRestClient {
         return thisPart.CFGLoader();
     }
 
+    /** Returns URL for a file */
     GetFileURL( fileKey: GUID | _SwaggerClientExports.FileInformation, fn?: string, fileRev?: number,forDownload?: boolean) : string {
         if (fileKey instanceof _SwaggerClientExports.FileInformation) {
             fn = fileKey.value;
@@ -999,6 +1000,7 @@ export class sfRestClient {
         return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/${fn}?cd=${forDownload ? "1":"0"}${fileRev ? `&rv=${fileRev}`:""}`;
     }
 
+    /** Returns URL for a file preview (given size) */
     GetFilePreviewURL( fileKey: GUID | _SwaggerClientExports.FileInformation, width: number, height:number,
                         fn?: string,
                          fileRev?: number) : string {
@@ -1010,6 +1012,21 @@ export class sfRestClient {
         return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/preview-${fn}?w=${width}&h=${height}${fileRev ? `&rv=${fileRev}`:""}`;
     }
 
+        /** Returns URL for the appropriate icon given a file type */
+    GetIconURL( fileType: string, iconSizeIgnored?: number) : string {
+
+        var iconURL : string | undefined;
+        let start = Date.now();
+        if (!iconSizeIgnored) iconSizeIgnored = 24;
+
+        while (!sfRestClient._IconMap && (start - Date.now()  < 5432)) console.log("YIKES!!!....waiting for icon map!");  //
+
+        if (!sfRestClient._IconMap?.has(fileType)) fileType = 'unknown';
+        iconURL = sfRestClient._IconMap?.get( (sfRestClient._IconMap?.has(fileType)) ?  fileType : 'default');
+        if (!iconURL) iconURL = `${this._SiteRootURL}/images/OtherFilesIcon.svg?ne=${fileType}`;
+
+        return iconURL
+        }
 
     /** Async get of a non-user specific setting (always the same for all users) */
     RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
@@ -1568,6 +1585,7 @@ export class sfRestClient {
                 console.log("Loaded Function Map from localStorage...");
                 sfRestClient._UCPermitMap = ls;
             }
+            this._LoadIconMap();
         }
 
         if ("WORK" in sfRestClient._UCPermitMap) {
@@ -1586,7 +1604,8 @@ export class sfRestClient {
         }
 
 
-        if (!sfRestClient._SessionClientGetUCFKMap) sfRestClient._SessionClientGetUCFKMap = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]);
+        if (!sfRestClient._SessionClientGetUCFKMap)            sfRestClient._SessionClientGetUCFKMap = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]);
+
         sfRestClient._SessionClientGetUCFKMap.done(function DoneGetPermitMapRequest(r) {
             if (sfRestClient._SessionClientGetUCFKMap!.status !== 304) {
                 if (typeof r === "object" && typeof r._etag === "object") {
@@ -1616,6 +1635,36 @@ export class sfRestClient {
 
         return permitCheck;
     }
+
+    protected _LoadIconMap(): void {
+        if (sfRestClient._IconMap) return;
+        let ls = localStorage.getItem(sfRestClient._z.lsKeys.api_icon_map);
+        if (ls) sfRestClient._IconMap = JSON.parse(ls);
+        let etag = sfRestClient._IconMap?.get("_etag");
+        let getIconMapXHR = this._GetAPIXHR(`catalog/icon/list?etag=${etag}`);
+        getIconMapXHR.done(function _doneGetIcomMap(imap) {
+            if (getIconMapXHR.status !== 304) {
+                if (typeof imap === "object" && typeof imap._etag === "string") {
+                    sfRestClient._IconMap = new Map<string,string>();
+                    Object.keys(imap).forEach((ftype:string) => {
+                        sfRestClient._IconMap?.set(ftype,imap[ftype]);
+                    });
+                    sfRestClient._IconMap?.set("_ts",  `${Date.now()}`);
+                    console.log(`Loaded ${sfRestClient._IconMap?.size} Icon Map entries from server...`);
+                    localStorage.setItem(sfRestClient._z.lsKeys.api_icon_map, JSON.stringify(sfRestClient._IconMap));
+                }
+                else {
+                    console.log("_LoadIconMap() could not load Function Map from server...", getIconMapXHR);
+                }
+            } else {
+                let AsOf = new Date(Number.parseInt(sfRestClient._IconMap?.get("_ts")!));
+                console.log(`_LoadIconMap(${AsOf.toISOString()}) resolved icon map as not modified...`);
+                sfRestClient._IconMap?.set("_ts", `${Date.now()}`);
+            }
+        });
+    }
+
+
     /**
      * Loads or Updates WCC session attributes (api/session/who)
     */
@@ -4629,6 +4678,7 @@ export class sfRestClient {
     protected static PermitMapLoaded() :boolean {
         return sfRestClient._UCPermitMap && "WORK" in sfRestClient._UCPermitMap;
     }
+    protected static _IconMap: Map<string,string> | null;
     protected static _UCPermitMap: any = {
         _etag: {
             empty: 0,
@@ -4662,7 +4712,8 @@ export class sfRestClient {
     }
     protected static _z: any = {
         lsKeys: {
-             api_session_permits_map: "sfUCFunctionNameMap"
+             api_session_permits_map: "sfUCFunctionNameMap",
+             api_icon_map: "sfIconMap"
         },
         WCCLoaded: false,
         XternalScriptsLoaded: false
