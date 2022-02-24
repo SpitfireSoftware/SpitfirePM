@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.129";
+const ClientPackageVersion : string = "1.21.132";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1644,9 +1644,10 @@ export class sfRestClient {
         let ls = localStorage.getItem(sfRestClient._z.lsKeys.api_icon_map);
         if (ls) sfRestClient._IconMap = JSON.parse(ls);
         if (typeof sfRestClient._IconMap !== "object") sfRestClient._IconMap = {};
+        if (typeof sfRestClient._IconMap!["_ts"] === "string") sfRestClient._IconMap!["_ts"] = new Date(sfRestClient._IconMap!["_ts"]);
         let etag : string = "undefined";
         let AsOf = <Date>sfRestClient._IconMap!["_ts"];
-        if (!AsOf) AsOf = new Date(0);
+        if (!AsOf || !(AsOf instanceof Date)) AsOf = new Date(0);
         if (sfRestClient._IconMap) etag = <string>sfRestClient._IconMap["_etag"];
         let getIconMapXHR = this._GetAPIXHR(`catalog/icon/list?etag=${etag}`);
         getIconMapXHR.done(function _doneGetIcomMap(imap) {
@@ -1658,7 +1659,7 @@ export class sfRestClient {
                     localStorage.setItem(sfRestClient._z.lsKeys.api_icon_map, JSON.stringify(sfRestClient._IconMap));
                 }
                 else {
-                    console.log("_LoadIconMap() could not load Function Map from server...", getIconMapXHR);
+                    console.warn("_LoadIconMap() could not load Function Map from server...", getIconMapXHR);
                 }
             } else if (getIconMapXHR.status === 304) {
                 console.log(`_LoadIconMap(${AsOf.toISOString()}) resolved icon map as not modified...`);
