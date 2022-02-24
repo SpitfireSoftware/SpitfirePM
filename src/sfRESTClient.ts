@@ -1012,20 +1012,22 @@ export class sfRestClient {
         return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/preview-${fn}?w=${width}&h=${height}${fileRev ? `&rv=${fileRev}`:""}`;
     }
 
-        /** Returns URL for the appropriate icon given a file type */
+        /** Returns URL for the appropriate icon given a file type
+         * @param fileType jpg, xml, docx, etc
+         * @returns site root relative URL, something like /sfPMS/images/iconname.png
+        */
     GetIconURL( fileType: string, iconSizeIgnored?: number) : string {
 
-        var iconURL : string | undefined;
+        var iconURL : string | Date | undefined;
         let start = Date.now();
         if (!iconSizeIgnored) iconSizeIgnored = 24;
 
-        while (!sfRestClient._IconMap && (start - Date.now()  < 5432)) console.log("YIKES!!!....waiting for icon map!");  //
+        while (!sfRestClient._IconMap && ((Date.now() - start)  < 5432)) console.log("YIKES!!!....waiting for icon map!");  //
 
-        if (!sfRestClient._IconMap?.has(fileType)) fileType = 'unknown';
-        iconURL = sfRestClient._IconMap?.get( (sfRestClient._IconMap?.has(fileType)) ?  fileType : 'default');
+        if (sfRestClient._IconMap) iconURL = sfRestClient._IconMap[ ( (fileType in sfRestClient._IconMap) ?  fileType : 'default')];
         if (!iconURL) iconURL = `${this._SiteRootURL}/images/OtherFilesIcon.svg?ne=${fileType}`;
 
-        return iconURL
+        return <string>iconURL;
         }
 
     /** Async get of a non-user specific setting (always the same for all users) */
@@ -1587,6 +1589,7 @@ export class sfRestClient {
             }
             this._LoadIconMap();
         }
+        else if (!sfRestClient._IconMap) this._LoadIconMap();
 
         if ("WORK" in sfRestClient._UCPermitMap) {
             // we have a map, lets see if we should use it as-is
@@ -1640,26 +1643,29 @@ export class sfRestClient {
         if (sfRestClient._IconMap) return;
         let ls = localStorage.getItem(sfRestClient._z.lsKeys.api_icon_map);
         if (ls) sfRestClient._IconMap = JSON.parse(ls);
-        let etag = sfRestClient._IconMap?.get("_etag");
+        if (typeof sfRestClient._IconMap !== "object") sfRestClient._IconMap = {};
+        let etag : string = "undefined";
+        let AsOf = <Date>sfRestClient._IconMap!["_ts"];
+        if (!AsOf) AsOf = new Date(0);
+        if (sfRestClient._IconMap) etag = <string>sfRestClient._IconMap["_etag"];
         let getIconMapXHR = this._GetAPIXHR(`catalog/icon/list?etag=${etag}`);
         getIconMapXHR.done(function _doneGetIcomMap(imap) {
-            if (getIconMapXHR.status !== 304) {
-                if (typeof imap === "object" && typeof imap._etag === "string") {
-                    sfRestClient._IconMap = new Map<string,string>();
-                    Object.keys(imap).forEach((ftype:string) => {
-                        sfRestClient._IconMap?.set(ftype,imap[ftype]);
-                    });
-                    sfRestClient._IconMap?.set("_ts",  `${Date.now()}`);
-                    console.log(`Loaded ${sfRestClient._IconMap?.size} Icon Map entries from server...`);
+            if (getIconMapXHR.status === 200) {
+                if (imap && typeof imap === "object" && typeof imap._etag === "string") {
+                    sfRestClient._IconMap = <{[key:string]: string | Date}>imap;
+                    sfRestClient._IconMap["_ts"] = new Date();
+                    console.log(`Loaded ${Object.keys(sfRestClient._IconMap).length} Icon Map entries from server...`);
                     localStorage.setItem(sfRestClient._z.lsKeys.api_icon_map, JSON.stringify(sfRestClient._IconMap));
                 }
                 else {
                     console.log("_LoadIconMap() could not load Function Map from server...", getIconMapXHR);
                 }
-            } else {
-                let AsOf = new Date(Number.parseInt(sfRestClient._IconMap?.get("_ts")!));
+            } else if (getIconMapXHR.status === 304) {
                 console.log(`_LoadIconMap(${AsOf.toISOString()}) resolved icon map as not modified...`);
-                sfRestClient._IconMap?.set("_ts", `${Date.now()}`);
+                //sfRestClient._IconMap!["_ts"] = new Date();
+            } else {
+                console.log(`_LoadIconMap(${AsOf.toISOString()}) using ${Object.keys(sfRestClient._IconMap!).length} old map data...`);
+                if (Object.keys(sfRestClient._IconMap!).length < 5) sfRestClient._IconMap = null;
             }
         });
     }
@@ -4678,7 +4684,7 @@ export class sfRestClient {
     protected static PermitMapLoaded() :boolean {
         return sfRestClient._UCPermitMap && "WORK" in sfRestClient._UCPermitMap;
     }
-    protected static _IconMap: Map<string,string> | null;
+    protected static _IconMap: {[key:string]: string | Date} | null;
     protected static _UCPermitMap: any = {
         _etag: {
             empty: 0,
