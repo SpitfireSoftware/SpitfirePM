@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.132";
+const ClientPackageVersion : string = "1.21.133";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -305,12 +305,14 @@ export class sfRestClient {
         AdminDashboard:16,
         ManageDashboard: 32,
         Contacts: 64,
+        Report: 128,
         Document: 1024,
         Unknown: 8092,
         Login: 16384,
         DiagUtilities: 32768,
         UserAccountRecovery: 65536,
         PopupAdminTool: 131072
+
     }
 
     /**
@@ -1367,7 +1369,7 @@ export class sfRestClient {
             RESTClient.sfAC($TemplateDocument, "TemplateList", TemplateTypeCode);
             $TemplateDocument.autocomplete("option", "minLength", 0).autocomplete("option", "delay", 200);
             $TemplateDocument.data("acPostbackKey", false); // prevent Auto complete from stuffing the key into our input field
-            $TemplateDocument.on("sfAutoCompletedKV sfLookup.Stored", function (e, kv) {
+            $TemplateDocument.on("sfAC.KV sfLookup.Stored", function (e, kv) {
                 console.log(`ExportGrid Template-on:${e.type} = ${kv}`);
                 $TemplateDocument.data("TemplateKey", kv);
                 PostBackArgs = kv;
@@ -1934,8 +1936,8 @@ export class sfRestClient {
                 }
                 else UseID = await this.NewGuid();
                 if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL;
-                url  =  url.sfFormat(thisRestClient._SiteURL, dtk,project,options) ;
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopNewDoc opening {0} DTK {1} using {2}".sfFormat(UseID, dtk,url));
+                url  =  url.sfFormat(thisRestClient._SiteURL, dtk,(dtk.toUpperCase() !== "EE06ED1B-0329-4154-81A7-756C281EBD93") ? project : "",options) ;
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`PopNewDoc opening ${UseID} DTK ${dtk} using ${url}`);
 
                 var TargetTab =  UseID.substring(UseID.lastIndexOf("-") + 1).toLowerCase();
                 //todo: determine if we need the "how many tabs" logic and dialog
@@ -2379,6 +2381,10 @@ export class sfRestClient {
             case "PLVP":
                 result = this.PageTypeNames.PopupAdminTool;
                 break;
+            case "sfReportViewer":
+                result = this.PageTypeNames.Report;
+                break;
+
             default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;

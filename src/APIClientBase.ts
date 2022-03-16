@@ -25,6 +25,7 @@ export class APIClientBase {
 
     protected GAAPIEvent(action:string, label: string) : JQuery.Promise<any> | undefined {
         if (!APIClientBase.GAClientID) return undefined;
+        if (action=="session" && label == "who") return undefined;
         return APIClientBase.GAMonitorEvent(APIClientBase.GAClientID,"npmREST",action,label, 1);
     }
 
