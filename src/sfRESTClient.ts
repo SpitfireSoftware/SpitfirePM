@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.133";
+const ClientPackageVersion : string = "1.21.134";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -496,6 +496,15 @@ export class sfRestClient {
             });
         });
         return FinalPromise;
+    }
+
+    /** Writes to console log
+     * @argument msg text to write
+     * @argument level msg is suppressed if logging level is less than specified, default is verbose
+     */
+    Log(msg: string, level: LoggingLevels = LoggingLevels.Verbose    ) : void {
+        if (sfRestClient._Options.LogLevel >= level) console.log(msg);
+
     }
 
     /**
@@ -4324,6 +4333,18 @@ export class sfRestClient {
                         }
 
                         else if ( RESTClient.IsSiteURL(request)) {
+                            if (RESTClient.IsPowerUXPage()) {
+                                if (request.indexOf("ProjectDetail.aspx?") > 0) {
+                                    const ProjectParse = /[\?\&]id=(?<id>.*)/gm;
+                                    const match = ProjectParse.exec(request); //
+                                    if (match) {
+                                        if ( match.groups && match.groups.id) {
+                                            RESTClient.OpenProject(match.groups.id);
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
                             top!.location.href = request;
                         }
                     }
