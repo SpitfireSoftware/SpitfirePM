@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.135";
+const ClientPackageVersion : string = "1.21.136";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1024,7 +1024,7 @@ export class sfRestClient {
     }
 
         /** Returns URL for the appropriate icon given a file type
-         * @param fileType jpg, xml, docx, etc
+         * @param fileType jpg, xml, docx, etc.  Do not include the leading period
          * @returns site root relative URL, something like /sfPMS/images/iconname.png
         */
     GetIconURL( fileType: string, iconSizeIgnored?: number) : string {
@@ -1032,6 +1032,7 @@ export class sfRestClient {
         var iconURL : string | Date | undefined;
         let start = Date.now();
         if (!iconSizeIgnored) iconSizeIgnored = 24;
+        fileType = fileType.toLocaleLowerCase();
 
         while (!sfRestClient._IconMap && ((Date.now() - start)  < 5432)) console.log("YIKES!!!....waiting for icon map!");  //
 
@@ -4391,15 +4392,23 @@ export class sfRestClient {
                     if (TopName.length! > 0 && target.sfStartsWithCI(TopName)) {
                         if (request.startsWith("javascript:")) {
                             request = request.substring(11);
-                            try {
-                                eval(request);
+                            const rxpopURL = /popURL\(['"](?<url>.*)['"]\)/g;
+                            const match = rxpopURL.exec(request); // vpgName, args, width, height
+                            if (match && match.groups && match.groups.url) {
+                                const useURL =match.groups.url;
+                                window.open(useURL,`pu${useURL.sfHashCode()}`);
                             }
-                            catch (ej:any) {
-                                if (ej.name === "ReferenceError") {
-                                    console.log(`sfPMSHub ignored js - ${ej.message}  `);
+                            else {
+                                try {
+                                    eval(request);
                                 }
-                                else {
-                                    console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+                                catch (ej:any) {
+                                    if (ej.name === "ReferenceError") {
+                                        console.log(`sfPMSHub ignored js - ${ej.message}  `);
+                                    }
+                                    else {
+                                        console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+                                    }
                                 }
                             }
                         }
