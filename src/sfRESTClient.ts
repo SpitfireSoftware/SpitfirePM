@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.134";
+const ClientPackageVersion : string = "1.21.135";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4079,16 +4079,16 @@ export class sfRestClient {
             vv = vv.replaceAll("$", "").replaceAll(this.GetNumericGroupSeparator(), "");
             if (vv.startsWith("(")) vv = `-${vv.replaceAll("($)", "").replaceAll(")","")}`;
             if (!this.IsNumber(vv)) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`GetValueFrom(${elInfo}) Is NaN [${vv}]; using 0 `);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`GetNumericValueFrom(${elInfo}) Is NaN [${vv}]; using 0 `);
                 return 0.0;
             }
             vv = parseFloat(vv);
         }
         if (!vv) {
-              if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`GetValueFrom(${elInfo}), using 0`);
+              if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`GetNumericValueFrom(${elInfo}), using 0`);
             return 0.0;
         }
-          if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`GetValueFrom(${elInfo}) OK = ${vv}`);
+          if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`GetNumericValueFrom(${elInfo}) OK = ${vv}`);
         return vv;
     }
 
@@ -4161,6 +4161,91 @@ export class sfRestClient {
             result =    `${newValue}`;
         return result;
     }
+
+    /**
+     * @argument sSource string in form name=value;otherKey=othervalue;...
+     * @argument sKey name of value to be replaced or added
+     */
+    public SetNameValuePairInString(sSource: string, sKey: string, sValue:string) : string
+    {
+        let npos: number = -1;
+        let sResult: string
+        if (!sKey.endsWith("=")) sKey += "=";
+        if (typeof sSource !== "string") sSource = "";
+        if (sSource && sSource.length > 0) {
+            npos = sSource.indexOf(sKey);
+            if (!sSource.endsWith(";")) sSource += ";";
+        }
+
+        if (npos > -1)
+        {
+            sResult = "";
+            sSource.split(";").forEach(element => {
+                if (element) {
+                    if (element.startsWith(sKey)) {
+                        sResult += `${sResult}${sKey}${sValue.trimEnd()};`
+                    }
+                    else {
+                        sResult += `${sResult}${element};`
+                    }
+                }
+            });
+        }
+        else
+            sResult = `${sSource}${sKey}${sValue.trimEnd()};`;
+
+        return sResult;
+    }
+
+      /**
+     * @argument sSource string in form name=value;otherKey=othervalue;...
+     * @argument sKey name of value to be returned
+     */
+       public GetNamedValueFromStringAsBoolean(sSource: string, sKey: string, defaultValue:boolean=false) : boolean
+       {
+           let npos: number = -1;
+           let result: boolean = defaultValue ;
+           if (!sKey.endsWith("=")) sKey += "=";
+           if (sSource && sSource.length > 0) npos = sSource.indexOf(sKey);
+
+           if (npos > -1)
+           {
+               sSource.split(";").forEach(element => {
+                   if (element) {
+                       if (element.startsWith(sKey)) {
+                           const sResult =  element.substring(sKey.length).toUpperCase();
+                           result =  sResult === "1" || sResult.startsWith("T") || sResult.startsWith("Y");
+                       }
+                   }
+               });
+           }
+
+           return result;
+       }
+     /**
+     * @argument sSource string in form name=value;otherKey=othervalue;...
+     * @argument sKey name of value to be returned
+     */
+      public GetNamedValueFromString(sSource: string, sKey: string, defaultValue?:string) : string
+      {
+          let npos: number = -1;
+          let sResult: string = defaultValue ? defaultValue : "";
+          if (!sKey.endsWith("=")) sKey += "=";
+          if (sSource && sSource.length > 0) npos = sSource.indexOf(sKey);
+
+          if (npos > -1)
+          {
+              sSource.split(";").forEach(element => {
+                  if (element) {
+                      if (element.startsWith(sKey)) {
+                          sResult =  element.substring(sKey.length);
+                      }
+                  }
+              });
+          }
+
+          return sResult;
+      }
 
     /**
      * Returns a refernce that can be used to create instances of specific API clients
