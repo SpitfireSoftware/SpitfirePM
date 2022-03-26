@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.136";
+const ClientPackageVersion : string = "1.21.138";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -100,11 +100,17 @@ class PartStorageData {
         else {
             thisPart = new PartStorageData(client, partName, forDocType, context);
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
-            thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType, context);
-            if (thisPart._InitializationResultPromise) {
-                thisPart._InitializationResultPromise.then((r) => {
-                    thisPart!.CFG = r;
-                });
+            try {
+                thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType, context);
+                if (thisPart._InitializationResultPromise) {
+                    thisPart._InitializationResultPromise.then((r) => {
+                        thisPart!.CFG = r;
+                    });
+                }
+            } catch (error) {
+                console.warn(error);
+                thisPart!.CFG = new UIDisplayPart();
+                throw error;
             }
         }
         return thisPart;
@@ -511,7 +517,7 @@ export class sfRestClient {
      *  Applies CFG data to raw Data Model, returns promise that resolves when View Model is ready
      */
     protected _ConstructViewModel(thisPart: PartStorageData, rawData: any): Promise<DataModelCollection> {
-        if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) new Error("Cannot construct this ViewModel");
+        if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) throw `Cannot construct this ViewModel`;
         var StartAtTicks: number = Date.now();
         var DataModelBuildKey: string = thisPart.GetDataModelBuildContextKey();
         var FailCount: number= 0;
@@ -846,7 +852,7 @@ export class sfRestClient {
                 }
             }
             catch (err2:any        ) {
-                new Error("ClearDV() cache error: " + err2.message);
+                throw `ClearDV() cache error: ${err2.message}`;
             }
 
             return false;
@@ -4184,10 +4190,10 @@ export class sfRestClient {
             sSource.split(";").forEach(element => {
                 if (element) {
                     if (element.startsWith(sKey)) {
-                        sResult += `${sResult}${sKey}${sValue.trimEnd()};`
+                        sResult += `${sKey}${sValue.trimEnd()};`
                     }
                     else {
-                        sResult += `${sResult}${element};`
+                        sResult += `${element};`
                     }
                 }
             });
