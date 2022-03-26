@@ -2379,7 +2379,7 @@ export class sfRestClient {
             case "cuManager":
                 result = this.PageTypeNames.ManageDashboard;
                 break;
-            case "login":
+            case "login": case "Logout":
                 result = this.PageTypeNames.Login;
                 break;
             case "dxutil":
