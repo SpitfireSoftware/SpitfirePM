@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.138";
+const ClientPackageVersion : string = "1.21.140";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1418,14 +1418,15 @@ export class sfRestClient {
                 api.getCobraExport(PostBackArgs,RESTClient.GetPageContextValue("dsCacheKey")).then( crt => {
                     RESTClient.WaitForTask(crt).then( (crtResult) => {
                         RESTClient.ClearPleaseWaitDialog();
-                        if (crtResult!.ThisReason!.indexOf("Failed!") >= 0) {
-                            RESTClient.DisplayUserNotification(crtResult!.ThisReason!);
+                        let thisReason = (crtResult!.ThisReason) ? crtResult!.ThisReason : "Failed! Contact Help Desk (see server logs)";
+                        if (thisReason.indexOf("Failed!") >= 0) {
+                            RESTClient.DisplayUserNotification(thisReason);
                         }
                         else {
-                            console.log(crtResult!.ThisReason);
+                            console.log(thisReason);
                             var fn = "CobraExport.xlsx";
-                            if (crtResult!.ThisReason?.startsWith("{")) {
-                                var result = JSON.parse(crtResult!.ThisReason);
+                            if (thisReason.startsWith("{")) {
+                                var result = JSON.parse(thisReason);
                                 if (result.fn) fn = result.fn;
                             }
                             RESTClient.DisplayUserNotification();
