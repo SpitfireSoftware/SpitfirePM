@@ -1,5 +1,13 @@
 export class BrowserExtensionChecker {
-    static browser: { [key: string]: boolean; } = {detected:false};
+    static browser: { [key: string]: boolean; } = {
+        detected:false,
+        isTouch : false,
+        sfAgent : false,
+        isEdge : false,
+            iPad : false,
+            isWindowsOS : false,
+            isMacOS : false
+    };
     static readonly ChromeWebstoreLink = "https://chrome.google.com/webstore/";
     static readonly WRemixWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}/detail/wremix-clickonce/dgpgholdldjjbcmpeckiephjigdpikan`;
     DetectedID: string = "";
