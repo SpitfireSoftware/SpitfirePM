@@ -2401,7 +2401,9 @@ export class sfRestClient {
             case "sfReportViewer":
                 result = this.PageTypeNames.Report;
                 break;
-
+            case 'ExecutiveInfo':
+                result = this.PageTypeNames.ExecutiveDashboard;
+                break;
             default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;
