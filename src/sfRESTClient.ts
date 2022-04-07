@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.141";
+const ClientPackageVersion : string = "1.21.142";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2667,7 +2667,7 @@ export class sfRestClient {
                 ActionString = `javascript:vPgPopup('v/LibView.aspx', '${ActionOptions}', 850, 950);`; // ... w,h
                 UseNewTabWithName = `LibView@${RESTClient.GetQueryParameterValueByName(ActionOptions,"set")}`;
             }
-            else if (ActionString.indexOf("cusysm.aspx") > 1 || ActionString.indexOf("cuManager.aspx") > 1) {
+            else if (/.*?(cusysm|cuManager|ExecutiveInfo).aspx/gmi.exec(ActionString)) {
                 ActionString = ActionString.replaceAll("xbia=1","xbia=2");
                 UseNewTabWithName = ActionString.indexOf("cusysm.aspx") > 0 ? "SysAdmin" : "ManageTools";
             }
