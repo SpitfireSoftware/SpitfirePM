@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.142";
+const ClientPackageVersion : string = "1.21.143";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4808,6 +4808,14 @@ export class sfRestClient {
         if (this.IsPowerUXPage()) setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);
     }
 
+    protected activateDynamicJS(RESTClient : sfRestClient,keyName: string, value: string) {
+        if (typeof sfRestClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`Activating Dynamics JS {value}`);
+            var djs: string[] = JSON.parse(sfRestClient._WCC._DynamicJS);
+            if (djs) RESTClient.LoadDynamicJS(djs);
+        }
+    }
+
     readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
     protected static _DialogCoordinateCache: Map<number, CoordinateWithSize> = new Map<number, CoordinateWithSize>();
@@ -4915,16 +4923,15 @@ export class sfRestClient {
                 if (!window.$) window.$ = $;
                 if (!top!.$) top!.$ = $;
                 var RESTClient = window.sfClient;
-                $("body").on("sfClient.SetWCC__DynamicJS",function activateDJS() {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Activating Dynamics JS")
-                    if (typeof sfRestClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
-                        var djs: string[] = JSON.parse(sfRestClient._WCC._DynamicJS);
-                        if (djs) RESTClient.LoadDynamicJS(djs);
-                    }
-                });
+
                 $(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
                     if (!RESTClient.IsDocumentPage() && top && !(top?.name)) top.name = "Dashboard";
+                    RESTClient.activateDynamicJS(RESTClient,"_DynamicJS", "On Ready");
+
+                    $("body").off("sfClient.SetWCC__DynamicJS").on("sfClient.SetWCC__DynamicJS", function dynamicJSEventHandler() {
+                        RESTClient.activateDynamicJS(RESTClient,"_DynamicJS", "event");
+                    });
                });
 
                sfRestClient.StartSignalRClientHub(); // for classic pages, XB pages are started after lazy load of SignalR
