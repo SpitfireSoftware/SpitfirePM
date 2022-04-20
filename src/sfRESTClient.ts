@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.143";
+const ClientPackageVersion : string = "1.21.144";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2121,7 +2121,11 @@ export class sfRestClient {
                              location.host !== "scm.spitfirepm.com" &&
                              location.host !== "portal.spitfirepm.com" &&
                              location.host !== "try.spitfirepm.com"),
-        TaskStatePollInterval: 357
+        TaskStatePollInterval: 357,
+        /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
+        WxEventTraceMode: 0,
+        /** matches are ignored, default is to ignore onMouseM* */
+        WxEventFilter: /on(?!MouseM|Destruct)([\w]+)$/gmi
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
@@ -4793,6 +4797,18 @@ export class sfRestClient {
 
     public DevMode() : boolean {
         return top?.sfClient.GetPageContextValue("DevMode",false);
+    }
+    /** returns true if the event name is not filtered out by Options.WxEventFilter
+     * and Options.WxEventTraceMode is 1 or the page is in DevMode and Options.WxEventTraceMode is 0
+     * @argument eventName the event name, for example onBeforeRender
+     */
+    public EventTrace(eventName: string) : boolean {
+        return  ( sfRestClient._Options.WxEventTraceMode === 1 ||
+                  ( sfRestClient._Options.WxEventTraceMode === 0 &&
+                    top?.sfClient.GetPageContextValue("DevMode",false)
+                   )
+                ) &&
+             !sfRestClient._Options.WxEventFilter.test(eventName);
     }
 
 
