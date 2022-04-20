@@ -4798,8 +4798,8 @@ export class sfRestClient {
     public DevMode() : boolean {
         return top?.sfClient.GetPageContextValue("DevMode",false);
     }
-    /** returns true if the event name is not filtered out by Options.WxEventFilter
-     * and Options.WxEventTraceMode is 1 or the page is in DevMode and Options.WxEventTraceMode is 0
+    /** returns true if Event Tracing is on (1), Dev Mode (0) AND the event name is not filtered out by Options.WxEventFilter
+     * 
      * @argument eventName the event name, for example onBeforeRender
      */
     public EventTrace(eventName: string) : boolean {
@@ -4808,7 +4808,7 @@ export class sfRestClient {
                     top?.sfClient.GetPageContextValue("DevMode",false)
                    )
                 ) &&
-             !sfRestClient._Options.WxEventFilter.test(eventName);
+                     sfRestClient._Options.WxEventFilter.test(eventName);
     }
 
 
