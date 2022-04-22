@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.146";
+const ClientPackageVersion : string = "1.21.148";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -283,7 +283,9 @@ export type Permits = number; // 0...31, see PermissionFlags
 export type PageTypeName = number; // see PageTypeNames
 export type PagePartList= {[key: string]: Permits};
 
-
+/** Spitfire PM Client
+ * @example top.sfClient.GetDV(...)
+ * @example Access shared properties from console: top.sfClient.exports.sfRestClient._IconMap */
 export class sfRestClient {
     ClientVersion: string = `${ClientPackageVersion}`;
     ServerVersion():string {
@@ -4799,7 +4801,7 @@ export class sfRestClient {
         return top?.sfClient.GetPageContextValue("DevMode",false);
     }
     /** returns true if Event Tracing is on (1), Dev Mode (0) AND the event name is not filtered out by Options.WxEventFilter
-     * 
+     *
      * @argument eventName the event name, for example onBeforeRender
      */
     public EventTrace(eventName: string) : boolean {
