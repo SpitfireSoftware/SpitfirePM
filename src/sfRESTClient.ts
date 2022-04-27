@@ -2071,10 +2071,10 @@ export class sfRestClient {
      *
      * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
     */
-    public SetOptions(options: NVPair): void {
+    public SetOptions(options: NVPair): NVPair {
         if (!options) {
-            console.warn("No options passed. Use JSON object");
-            return;
+            console.warn("No options passed. Use object");
+            return sfRestClient._Options;
         }
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfRestClient.SetOptions() ",options);
         Object.keys(options).forEach((key) => {
@@ -2088,6 +2088,7 @@ export class sfRestClient {
             else if (key in sfRestClient._Options && typeof eval(`sfRestClient._Options.${key}`) === typeof options[key]) sfRestClient._Options[key] = options[key];
             else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) sfRestClient._Options[PropName] = options[key];
         });
+        return sfRestClient._Options;
     }
     public GetBooleanOption(optionName : string) : boolean {
         return sfRestClient._Options[optionName];
