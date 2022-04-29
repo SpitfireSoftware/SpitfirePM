@@ -53,7 +53,7 @@ class _SessionClientGetWCCShare {
     }
 }
 
-class FileUploadContext {
+export class sfFileUploadContext {
     /** upload mode */
     mode: UploadMode  ;
     /** key for a document  */
@@ -1248,14 +1248,14 @@ export class sfRestClient {
         return $D;
     }
 
-    public GetFileUploadURL(uploadContext: FileUploadContext) : string {
+    public GetFileUploadURL(uploadContext: sfFileUploadContext) : string {
         return this._BuildFileUploadURL("upload",uploadContext);
     }
-    public GetFileChunkUploadURL(uploadContext: FileUploadContext) : string {
+    public GetFileChunkUploadURL(uploadContext: sfFileUploadContext) : string {
         return this._BuildFileUploadURL("stream/chunk",uploadContext);
     }
 
-    private _BuildFileUploadURL(uploadType: "upload" | "stream/chunk",uploadContext: FileUploadContext) : string {
+    private _BuildFileUploadURL(uploadType: "upload" | "stream/chunk",uploadContext: sfFileUploadContext) : string {
         var urlOptions : string = "";
         if (uploadContext.DMK) {
             urlOptions = `${urlOptions}&dmk=${uploadContext.DMK}`;
@@ -1284,7 +1284,7 @@ export class sfRestClient {
     }
 
     /** Uploads a file of up to 4 MB in a single request  */
-    public UploadFile(blobFile: File, uploadContext: FileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
+    public UploadFile(blobFile: File, uploadContext: sfFileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
         var fd = new FormData();
         var ff =  new _SwaggerClientExports.FileInformation();
         var RESTClient = this;
@@ -2067,13 +2067,13 @@ export class sfRestClient {
     /**
      * Sets sfRestClient Options
      *
-     * Example: SetOptions() { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000, PopDocForceXBUI: true, PopDocXBURL: "{0}#!/doc/home?id={1}"});
+     * @returns copy of current options
+     * @example SetOptions( { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000, PopDocForceXBUI: true, PopDocXBURL: "{0}#!/doc/home?id={1}"});
      *
      * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
     */
     public SetOptions(options: NVPair): NVPair {
         if (!options) {
-            console.warn("No options passed. Use object");
             return sfRestClient._Options;
         }
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfRestClient.SetOptions() ",options);
@@ -2088,7 +2088,7 @@ export class sfRestClient {
             else if (key in sfRestClient._Options && typeof eval(`sfRestClient._Options.${key}`) === typeof options[key]) sfRestClient._Options[key] = options[key];
             else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) sfRestClient._Options[PropName] = options[key];
         });
-        return sfRestClient._Options;
+        return  sfRestClient._Options;
     }
     public GetBooleanOption(optionName : string) : boolean {
         return sfRestClient._Options[optionName];
