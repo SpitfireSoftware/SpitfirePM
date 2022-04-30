@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.148";
+const ClientPackageVersion : string = "1.21.152";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -53,7 +53,7 @@ class _SessionClientGetWCCShare {
     }
 }
 
-export class sfFileUploadContext {
+export class SFFileUploadContext {
     /** upload mode */
     mode: UploadMode  ;
     /** key for a document  */
@@ -287,7 +287,7 @@ export type PagePartList= {[key: string]: Permits};
  * @example top.sfClient.GetDV(...)
  * @example Access shared properties from console: top.sfClient.exports.sfRestClient._IconMap */
 export class sfRestClient {
-    ClientVersion: string = `${ClientPackageVersion}`;
+    readonly ClientVersion: string = `${ClientPackageVersion}`;
     ServerVersion():string {
         var result ="2020.0.7919";
         if (sfRestClient._WCC.Version) result = sfRestClient._WCC.Version;
@@ -1248,14 +1248,14 @@ export class sfRestClient {
         return $D;
     }
 
-    public GetFileUploadURL(uploadContext: sfFileUploadContext) : string {
+    public GetFileUploadURL(uploadContext: SFFileUploadContext) : string {
         return this._BuildFileUploadURL("upload",uploadContext);
     }
-    public GetFileChunkUploadURL(uploadContext: sfFileUploadContext) : string {
+    public GetFileChunkUploadURL(uploadContext: SFFileUploadContext) : string {
         return this._BuildFileUploadURL("stream/chunk",uploadContext);
     }
 
-    private _BuildFileUploadURL(uploadType: "upload" | "stream/chunk",uploadContext: sfFileUploadContext) : string {
+    private _BuildFileUploadURL(uploadType: "upload" | "stream/chunk",uploadContext: SFFileUploadContext) : string {
         var urlOptions : string = "";
         if (uploadContext.DMK) {
             urlOptions = `${urlOptions}&dmk=${uploadContext.DMK}`;
@@ -1284,7 +1284,7 @@ export class sfRestClient {
     }
 
     /** Uploads a file of up to 4 MB in a single request  */
-    public UploadFile(blobFile: File, uploadContext: sfFileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
+    public UploadFile(blobFile: File, uploadContext: SFFileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
         var fd = new FormData();
         var ff =  new _SwaggerClientExports.FileInformation();
         var RESTClient = this;
@@ -2093,12 +2093,19 @@ export class sfRestClient {
     public GetBooleanOption(optionName : string) : boolean {
         return sfRestClient._Options[optionName];
     }
+    public GetStringOption(optionName : string) : string {
+        return sfRestClient._Options[optionName];
+    }
+
 
     protected static _Options : NVPair  = {
 
         BasicPingServerInterval: 33*1000,
         BlankPageURI: "about:blank",
-    /**
+
+        CatalogFolderRoot: '6F62DD86-91F1-4B73-98F5-34BDA6BDBA08',
+
+        /**
      * How long (in milliseconds) should a DV result be cached for reuse
     */
         DVCacheLife:  16 * 60000, // 16 minutes
