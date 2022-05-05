@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.21.152";
+const ClientPackageVersion : string = "1.30.153";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1283,7 +1283,10 @@ export class sfRestClient {
 
     }
 
-    /** Uploads a file of up to 4 MB in a single request  */
+    /** Uploads a file of up to 4 MB in a single request, then falls back to 1MB chunks
+     *
+     *  @returns promise that resolves on upload complete
+      */
     public UploadFile(blobFile: File, uploadContext: SFFileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
         var fd = new FormData();
         var ff =  new _SwaggerClientExports.FileInformation();
@@ -1297,35 +1300,101 @@ export class sfRestClient {
 
         return new Promise<_SwaggerClientExports.XferFilesStatus >(async result =>  {
             var taskResult : _SwaggerClientExports.XferFilesStatus  = new  _SwaggerClientExports.XferFilesStatus();
+            let UploadURL = '';
+            let FileUploadKey: string| null = '';
+            let UseChunkMode: boolean = false;
 
-            if (ff.size > (5 * 4096.0 * 1024.0)) {
-                taskResult.error = "File too large for single upload";
-                taskResult.name = ff.value;
-                result(taskResult);
-                return;
+            const SendToServer = async function UploadFileSendData(sendFD:FormData, headers?:{[key:string]:string} ): Promise<_SwaggerClientExports.XferFilesStatus[]> {
+                // sends the current contents of the FormData in the data:fd object
+                let uploadxhr = $.ajax({
+                    url: UploadURL,
+                    type: "POST",
+                    data: sendFD,
+                    processData: false,
+                    contentType: false,
+                    headers: headers,
+                    success: function(response:_SwaggerClientExports.XferFilesStatus[]) {
+                        response.forEach(fileResponse => {
+                            console.log(`${fileResponse.name} @ ${fileResponse.progress}`);
+                        });
+                    },
+                    error: function(jqXHR, textStatus, errorMessage) {
+                        console.log(errorMessage); // Optional
+                        taskResult.error = errorMessage;
+                        taskResult.name = ff.value;
+                        result(taskResult);
+                    }
+                 });
+                 uploadxhr.progress(function(e){
+                     console.log(`sfRestClient.UploadFile.xhr.progress`,e);  // never fires :-()
+                 });
+                 return uploadxhr;
             }
-            //ff.MetaData = [{"UploadMode": uploadContext.mode}]; causes ETag error
-            fd.append("fileMeta", JSON.stringify(ff) );
-            fd.append("fileToUpload", blobFile);
+            taskResult.name = ff.value;
+            if (ff.size > sfRestClient._Options.UploadDirectLimit) {
+                let CatAPI = new _SwaggerClientExports.CatalogClient();
+                UploadURL = RESTClient.GetFileChunkUploadURL(uploadContext);
+                UseChunkMode = true;
+                // taskResult.error = "File too large for single upload";
 
-            $.ajax({
-               url: RESTClient.GetFileUploadURL(uploadContext),
-               type: "POST",
-               data: fd,
-               processData: false,
-               contentType: false,
-               success: function(response:_SwaggerClientExports.XferFilesStatus) {
-                   // if we do multi-chunk....do it here!!!
-                   console.log(response);
-                   result(response);
-               },
-               error: function(jqXHR, textStatus, errorMessage) {
-                   console.log(errorMessage); // Optional
-                   taskResult.error = errorMessage;
-                   taskResult.name = ff.value;
-                   result(taskResult);
-               }
-            });
+                // result(taskResult);
+                CatAPI.beginUpload(ff).then((unusedUploadKey) =>{
+                    if (unusedUploadKey) FileUploadKey = unusedUploadKey['f'];
+                    const chunkSize = sfRestClient._Options.UploadChunkSize;
+                    const chunksQuantity = Math.ceil(ff.size / chunkSize);
+                    const chunkQueue:number[] =  Array.from(Array(chunksQuantity).keys()).reverse(); // Array.from({length: chunksQuantity}, (_, i) => i + 1);
+                    const SendNext = function SendNextChunk() {
+                          const chunkId = chunkQueue.pop()!;
+                          const begin = chunkId * chunkSize;
+                          const chunk = blobFile.slice(begin, begin + chunkSize, blobFile.type);
+                          (<any>chunk).name = blobFile.name;
+                          let UploadHeaders:{[key:string]:string} = {};
+                          UploadHeaders['Content-Disposition'] = `attachment; filename="${ff.value}"`;
+                          UploadHeaders['Content-Range'] = `bytes ${begin}-${(begin + chunk.size - 1)}/${ff.size}`
+                            fd.append("files[]",chunk,blobFile.name);
+                            let response: _SwaggerClientExports.XferFilesStatus;
+                            SendToServer(fd,UploadHeaders).then((chunkResponse:_SwaggerClientExports.XferFilesStatus[]) => {
+                                if (Array.isArray(chunkResponse) && chunkResponse.length > 0)  response =  chunkResponse[0];
+                            //     chunkResponse
+                            // if (chunkXHR.responseText){
+                            //     response = JSON.parse(chunkXHR.responseText);
+                            //     console.log(`UploadFile ${ff.value} Chunk ${chunkId}`,chunkXHR);
+                            // }
+                            // else {
+                            //     console.log('UploadFile Chunk Response Check ', chunkXHR);
+                            //     // response = taskResult;
+                            //     // response.error = `Upload File: No response from chunk ${chunkId}!`
+                            // }
+                            if (chunkQueue.length === 0) {
+                                console.log("All parts uploaded");
+                                result(response);
+                                return;
+                              };
+                              fd = new FormData();
+                              SendNext();
+                          }).catch((e) => {
+                            console.error('UploadFile() Chunk Error',e);
+                            response = taskResult;
+                            response.error = `Upload File: Error during chunk ${chunkId}!`;
+                            result(response);
+                          });
+                    }
+                    SendNext();
+                });
+
+            }
+            else {
+                UploadURL = RESTClient.GetFileUploadURL(uploadContext);
+                fd.append("fileMeta", JSON.stringify(ff) );
+                fd.append("fileToUpload", blobFile);
+                SendToServer(fd).then( finalResponse => {
+                    if (Array.isArray(finalResponse) && finalResponse.length > 0)                      result(finalResponse[0]);
+                });
+            }
+            console.log(`UploadFile ${ff.value} ${Math.round(ff.size/1024.0)}K ${UseChunkMode ? 'in chunks' : 'using a single request'}`)
+            //ff.MetaData = [{"UploadMode": uploadContext.mode}]; causes ETag error
+
+
 
         });
 
@@ -2132,6 +2201,9 @@ export class sfRestClient {
                              location.host !== "portal.spitfirepm.com" &&
                              location.host !== "try.spitfirepm.com"),
         TaskStatePollInterval: 357,
+        UploadChunkSize: 1048000, // about 1M
+        /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
+        UploadDirectLimit: 83880000, // about 8M (Box uses 20M);
         /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
         WxEventTraceMode: 0,
         /** matches are ignored, default is to ignore onMouseM* */
