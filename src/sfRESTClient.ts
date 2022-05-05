@@ -1354,32 +1354,36 @@ export class sfRestClient {
                           UploadHeaders['Content-Range'] = `bytes ${begin}-${(begin + chunk.size - 1)}/${ff.size}`
                             fd.append("files[]",chunk,blobFile.name);
                             let response: _SwaggerClientExports.XferFilesStatus;
-                            SendToServer(fd,UploadHeaders).then((chunkResponse:_SwaggerClientExports.XferFilesStatus[]) => {
+                            SendToServer(fd,UploadHeaders)
+                            .then((chunkResponse:_SwaggerClientExports.XferFilesStatus[]) => {
                                 if (Array.isArray(chunkResponse) && chunkResponse.length > 0)  response =  chunkResponse[0];
                                 else response = <any>chunkResponse;
-                            //     chunkResponse
-                            // if (chunkXHR.responseText){
-                            //     response = JSON.parse(chunkXHR.responseText);
-                            //     console.log(`UploadFile ${ff.value} Chunk ${chunkId}`,chunkXHR);
-                            // }
-                            // else {
-                            //     console.log('UploadFile Chunk Response Check ', chunkXHR);
-                            //     // response = taskResult;
-                            //     // response.error = `Upload File: No response from chunk ${chunkId}!`
-                            // }
-                            if (chunkQueue.length === 0) {
-                                console.log("All parts uploaded");
+                                //     chunkResponse
+                                // if (chunkXHR.responseText){
+                                //     response = JSON.parse(chunkXHR.responseText);
+                                //     console.log(`UploadFile ${ff.value} Chunk ${chunkId}`,chunkXHR);
+                                // }
+                                // else {
+                                //     console.log('UploadFile Chunk Response Check ', chunkXHR);
+                                //     // response = taskResult;
+                                //     // response.error = `Upload File: No response from chunk ${chunkId}!`
+                                // }
+                                if (chunkQueue.length === 0) {
+                                    console.log("All parts uploaded");
+                                    result(response);
+                                    return;
+                                }
+                                else {
+                                    if (progressCallback) progressCallback(response);
+                                }
+                                fd = new FormData();
+                                SendNext();
+                            }).catch((e) => {
+                                console.error('UploadFile() Chunk Error',e);
+                                response = taskResult;
+                                response.error = `Upload File: Error during chunk ${chunkId}!`;
                                 result(response);
-                                return;
-                              };
-                              fd = new FormData();
-                              SendNext();
-                          }).catch((e) => {
-                            console.error('UploadFile() Chunk Error',e);
-                            response = taskResult;
-                            response.error = `Upload File: Error during chunk ${chunkId}!`;
-                            result(response);
-                          });
+                            });
                     }
                     SendNext();
                 });
@@ -1389,8 +1393,10 @@ export class sfRestClient {
                 UploadURL = RESTClient.GetFileUploadURL(uploadContext);
                 fd.append("fileMeta", JSON.stringify(ff) );
                 fd.append("fileToUpload", blobFile);
-                SendToServer(fd).then( finalResponse => {
-                    if (Array.isArray(finalResponse) && finalResponse.length > 0)                      result(finalResponse[0]);
+                SendToServer(fd)
+                .then( finalResponse => {
+                    if (Array.isArray(finalResponse) && finalResponse.length > 0) result(finalResponse[0])
+                    else result(<_SwaggerClientExports.XferFilesStatus><unknown>finalResponse);
                 });
             }
             console.log(`UploadFile ${ff.value} ${Math.round(ff.size/1024.0)}K ${UseChunkMode ? 'in chunks' : 'using a single request'}`)
