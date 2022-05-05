@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.153";
+const ClientPackageVersion : string = "1.30.157";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1314,6 +1314,7 @@ export class sfRestClient {
                     contentType: false,
                     headers: headers,
                     success: function(response:_SwaggerClientExports.XferFilesStatus[]) {
+                        if (!Array.isArray(response)) response = [response];
                         response.forEach(fileResponse => {
                             console.log(`${fileResponse.name} @ ${fileResponse.progress}`);
                         });
@@ -1355,6 +1356,7 @@ export class sfRestClient {
                             let response: _SwaggerClientExports.XferFilesStatus;
                             SendToServer(fd,UploadHeaders).then((chunkResponse:_SwaggerClientExports.XferFilesStatus[]) => {
                                 if (Array.isArray(chunkResponse) && chunkResponse.length > 0)  response =  chunkResponse[0];
+                                else response = <any>chunkResponse;
                             //     chunkResponse
                             // if (chunkXHR.responseText){
                             //     response = JSON.parse(chunkXHR.responseText);
@@ -2203,7 +2205,7 @@ export class sfRestClient {
         TaskStatePollInterval: 357,
         UploadChunkSize: 1048000, // about 1M
         /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
-        UploadDirectLimit: 83880000, // about 8M (Box uses 20M);
+        UploadDirectLimit: 8388000, // about 8M (Box uses 20M);
         /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
         WxEventTraceMode: 0,
         /** matches are ignored, default is to ignore onMouseM* */
