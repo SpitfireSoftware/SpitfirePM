@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.158";
+const ClientPackageVersion : string = "1.30.159";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2213,7 +2213,7 @@ export class sfRestClient {
         /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
         UploadDirectLimit: 8388000, // about 8M (Box uses 20M);
         /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
-        WxEventTraceMode: 0,
+        WxEventTraceMode: -1,
         /** matches are ignored, default is to ignore onMouseM* */
         WxEventFilter: /on(?!MouseM|Destruct)([\w]+)$/gmi
     }
@@ -4550,6 +4550,14 @@ export class sfRestClient {
                         // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
                         console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
                         setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
+                    }
+                    else if (target === "CATALOG" && request.sfIsGuid()) {
+                        var HubEvent = jQuery.Event("sfPMSHubSignal.catalogChange");
+                        $("body").trigger(HubEvent,  [target,request] );
+                        if (HubEvent.isDefaultPrevented()) {
+                            console.log("sfPMSHub catalogChange handled...");  // in general .preventDefault() was called
+                            return;
+                        }
                     }
                     else console.log(`sfPMSHub ignoring ${request} to [${target}]`);
                 }
