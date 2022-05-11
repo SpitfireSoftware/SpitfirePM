@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.159";
+const ClientPackageVersion : string = "1.30.160";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -319,8 +319,8 @@ export class sfRestClient {
         Login: 16384,
         DiagUtilities: 32768,
         UserAccountRecovery: 65536,
-        PopupAdminTool: 131072
-
+        PopupAdminTool: 131072,
+        RichTextEdit: 262144
     }
 
     /**
@@ -2498,7 +2498,10 @@ export class sfRestClient {
             case 'ExecutiveInfo':
                 result = this.PageTypeNames.ExecutiveDashboard;
                 break;
-            default:
+                case "popTinymce5": case "popEdit":
+                    result = this.PageTypeNames.RichTextEdit;
+                    break;
+                default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;
                 break;
