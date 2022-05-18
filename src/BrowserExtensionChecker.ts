@@ -18,8 +18,10 @@ export class BrowserExtensionChecker {
         if (!this._ClickOnceExtensionHasBeenChecked) {
             var result = sessionStorage.getItem(this._SessionStorageCacheKey);
             if (result === null) {
-                if (BrowserExtensionChecker.browser.chrome) this._CheckForWindowsRemixClickonceExtension();
-                if (BrowserExtensionChecker.browser.chrome) this._CheckForMeta4ClickOnceLauncherExtension();
+                if (BrowserExtensionChecker.browser.isWindowsOS) {
+                    if (BrowserExtensionChecker.browser.chrome) this._CheckForWindowsRemixClickonceExtension();
+                    if (BrowserExtensionChecker.browser.chrome) this._CheckForMeta4ClickOnceLauncherExtension();
+                }
                 this._ClickOnceExtensionHasBeenChecked = true;
             }
             else {
