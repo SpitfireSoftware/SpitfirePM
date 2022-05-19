@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.160";
+const ClientPackageVersion : string = "1.30.161";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
