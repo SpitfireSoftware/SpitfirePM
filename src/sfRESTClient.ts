@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.164";
+const ClientPackageVersion : string = "1.30.165";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4896,8 +4896,17 @@ export class sfRestClient {
         return (d.getHours() * 60) + d.getMinutes();
     }
 
-    public DevMode() : boolean {
-        return top?.sfClient.GetPageContextValue("DevMode",false);
+    /**
+     * Indicates if the app is in dev mode (often used to control logging)
+     * @param minVerbosity one of the logging levels, the lower the value specified, the more likely this method will return true.
+     * @returns true if DevMode is enabled and the current logging level exceeds verbosityOver
+     */
+    public DevMode(minVerbosity?: LoggingLevels ) : boolean {
+        let result = top?.sfClient.GetPageContextValue("DevMode",false);
+        if (minVerbosity && result) {
+            result = (sfRestClient._Options.LogLevel >= minVerbosity)
+        }
+        return result;
     }
     /** returns true if Event Tracing is on (1), Dev Mode (0) AND the event name is not filtered out by Options.WxEventFilter
      *
