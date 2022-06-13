@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.165";
+const ClientPackageVersion : string = "1.30.166";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1824,6 +1824,12 @@ export class sfRestClient {
                 }
             }).catch(x=>{
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
+                if (x instanceof _SwaggerClientExports.HttpResponseJsonContent) {
+                    if (x.ThisStatus === 401 ) {
+                        setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
+
+                    }
+                }
                 let FakeWCC =new WCCData();
                 FakeWCC.AdminLevel = 0;
                 FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
