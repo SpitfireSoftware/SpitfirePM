@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.166";
+const ClientPackageVersion : string = "1.30.170";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1779,7 +1779,8 @@ export class sfRestClient {
         var apiResult: Promise<WCCData | null> | null = null;
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
-            if (RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ){
+            let ThisPageType =  this.ResolvePageTypeName();
+            if ((ThisPageType ===  RESTClient.PageTypeNames.UserAccountRecovery )  || (ThisPageType ===  RESTClient.PageTypeNames.Login)){
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not yet logged in.");
                 let FakeWCC =new WCCData();
                 FakeWCC.AdminLevel = 0;
@@ -1824,10 +1825,9 @@ export class sfRestClient {
                 }
             }).catch(x=>{
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
-                if (x instanceof _SwaggerClientExports.HttpResponseJsonContent) {
+                if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
                         setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
-
                     }
                 }
                 let FakeWCC =new WCCData();
@@ -2146,6 +2146,14 @@ export class sfRestClient {
     if (url.sfStartsWithCI(this._SiteRootURL)) return true;
     return false;
    }
+
+   public IsRESTErrorResponse(testObject: _SwaggerClientExports.HttpResponseJsonContent | any) : boolean {
+    if (!testObject) return false;
+    if (testObject instanceof _SwaggerClientExports.HttpResponseJsonContent) return true;
+    if (testObject.ThisStatus && testObject.ThisReason) return true;
+    return false;
+    }
+
 
     /**
      * Sets sfRestClient Options
@@ -4410,7 +4418,6 @@ export class sfRestClient {
     }
 
 
-
     /**
      * Called by the global instance to connect to SignalR
      */
@@ -4567,6 +4574,11 @@ export class sfRestClient {
                             console.log("sfPMSHub catalogChange handled...");  // in general .preventDefault() was called
                             return;
                         }
+                        if (typeof top.RefreshDocPart === "function") {
+                            top.RefreshDocPart("DocAIR",`CATALOG;${request}`);
+                            return;
+                        }
+                         console.log(`sfPMSHub does not know how to forward ${request} to [${target}]`);
                     }
                     else console.log(`sfPMSHub ignoring ${request} to [${target}]`);
                 }
@@ -4669,7 +4681,10 @@ export class sfRestClient {
             result = `${root}/spax.html#!/login?m=${mValue}`;
         }
         else {
-            result = `${root}/admin/SessionLost.aspx?m=${mValue}`;
+            if (mValue === 'LoadUserSessionInfo401') {
+                result = `${root}/admin/logout.aspx`
+            }
+            else result = `${root}/admin/SessionLost.aspx?m=${mValue}`;
         }
         return result;
     }

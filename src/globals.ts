@@ -24,6 +24,7 @@ declare global {
     interface NowViewingDocument {(targetWindowName: string, loginSessionKey: GUID, request: string):void}
     // sfClass interfaces
     interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
+    interface RefreshDocPart {(partName:string | "DocAIR" | "DocBody", arg?:string):void}
     interface RefreshPartbyName {(partName: string, eventTarget?: string, eventArg?: string):void}
     interface RefreshPageParts {(eventTarget: string, eventArg:string):void}
     //interface CEPutSourceElementValue {(el: JQuery, newVal:string|number, pv: string|number):void}
@@ -85,6 +86,7 @@ declare global {
         clearHomeTabCount: any;
         DocumentChangedByAnotherUser:DocumentChangedByAnotherUser;
         PostbackRefresh: RefreshPageParts;
+        RefreshDocPart: RefreshDocPart;
         refreshPartbyName: RefreshPartbyName;
         refreshPageParts: RefreshPageParts;
         //sfPutEditUpdateSourceElement:CEPutSourceElementValue;
