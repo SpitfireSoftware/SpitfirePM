@@ -1664,6 +1664,7 @@ export class sfRestClient {
     */
     MakeSiteRelativeURL(url:string):string {
         if (this.IsSiteURL(url)) return url;
+        if (url.startsWith("~")) url = url.substring(1);
         if (url.startsWith("../")) url = url.substring(3);
         url = `${this._SiteRootURL}/${url}`;
         return url;
