@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.172";
+const ClientPackageVersion : string = "1.30.173";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2936,6 +2936,16 @@ export class sfRestClient {
         }
     }
 
+    /** @returns true if this is a Windows OS device */
+    public IsWindowOS():  Boolean {
+        return !BrowserExtensionChecker.browser.isWindowsOS;
+    }
+
+        /** @returns true if this is browser can open .Application linkes  */
+    public HasDotNetApplicationExtension():  Boolean {
+        return top?.ClickOnceExtension.HasDotNetApplicationExtension()!;
+    }
+
     /** Creates an exchange token and calls OpenWindowsLinkHelper() */
     public FollowLinkViaSFLink(targetURL: string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
         var RESTClient = this;
@@ -4922,6 +4932,8 @@ export class sfRestClient {
      * Indicates if the app is in dev mode (often used to control logging)
      * @param minVerbosity one of the logging levels, the lower the value specified, the more likely this method will return true.
      * @returns true if DevMode is enabled and the current logging level exceeds verbosityOver
+     *
+     * @comment Turn DevMode on or off from console: top.sfClient.exports.sfRestClient._WCC.DevMode = false; (or true)
      */
     public DevMode(minVerbosity?: LoggingLevels ) : boolean {
         let result = top?.sfClient.GetPageContextValue("DevMode",false);
@@ -4930,9 +4942,11 @@ export class sfRestClient {
         }
         return result;
     }
-    /** returns true if Event Tracing is on (1), Dev Mode (0) AND the event name is not filtered out by Options.WxEventFilter
+    /** returns true if Event Tracing is on (1) or if Dev Mode (0) AND the event name is not filtered out by Options.WxEventFilter
      *
      * @argument eventName the event name, for example onBeforeRender
+     * @returns true if event tracing is on
+     * @comment When sfRestClient._Options.WxEventTraceMode === 0, always returns false
      */
     public EventTrace(eventName: string) : boolean {
         return  ( sfRestClient._Options.WxEventTraceMode === 1 ||
