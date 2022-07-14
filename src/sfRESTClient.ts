@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.179";
+const ClientPackageVersion : string = "1.30.180";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2452,6 +2452,17 @@ export class sfRestClient {
         }
         console.warn("GetPageContext() no value known for key",key);
         return defaultValue;
+    }
+
+      /**
+     * Returns named value from Web Context (WCC)
+     *
+     * Example: SetPageContext("UserKey");
+     *
+     * @param key name of a context property
+     */
+    public SetPageContextValue( key : string, newValue? : any) : void {
+            sfRestClient._WCC[key] = newValue;
     }
 
     public IsDocExclusiveToMe() : boolean {
