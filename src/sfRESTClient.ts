@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.182";
+const ClientPackageVersion : string = "1.30.183";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2978,7 +2978,7 @@ export class sfRestClient {
     }
 
     /** @returns true if this is a Microsoft Windows OS device */
-    public IsWindowsOS():  Boolean {
+    public IsWindowsOS(): boolean {
         return BrowserExtensionChecker.browser.isWindowsOS;
     }
 
