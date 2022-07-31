@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.184";
+const ClientPackageVersion : string = "1.40.185";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1895,7 +1895,7 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             $("body").trigger(eventName,[RESTClient,keyName,value]);
-            if (eventName === "sfClient.SetWCC_SiteID") this.GAMonitorEvent(  value ,"SPA", "Init", "WCC", 0);
+            if (eventName === "sfClient.SetWCC_SiteID") this.GAMonitorEvent(  value ,this.IsPowerUXPage() ?  "PowerUX" : "ClassicUI", "Init", "WCC", 0);
         });
 
         return newWCC

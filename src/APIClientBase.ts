@@ -70,7 +70,7 @@ export class APIClientBase {
     */
     public static GAMonitorSend(payload:GoogleAnalyticPayload ): JQuery.Promise<any> {
 
-        if ((typeof (APIClientBase.GAMonitorSendFailed) === "boolean") && (!APIClientBase.GAMonitorSendFailed)) {
+        if ((typeof (APIClientBase.GA4MonitorSendFailed) === "boolean") && (!APIClientBase.GA4MonitorSendFailed)) {
             return this.GA4MonitorSend(payload);
         }
         if ((typeof (APIClientBase.GAMonitorSendFailed) === "boolean") && (APIClientBase.GAMonitorSendFailed)) {
@@ -126,13 +126,18 @@ export class APIClientBase {
             "events":[{name:payload.ec!,
                         "params":{"items":[]
                           }}]};
-        if (payload.ea) G4Payload.events[0].params.action = payload.ea;
-        if (payload.el) G4Payload.events[0].params.label = payload.el;
+        if (payload.ec === "npmREST") {
+            if (payload.ea) G4Payload.events[0].params.controller = payload.ea;
+            if (payload.el) G4Payload.events[0].params.endpoint = payload.el;
+        }
+        else {
+            if (payload.ea) G4Payload.events[0].params.action = payload.ea;
+            if (payload.el) G4Payload.events[0].params.label = payload.el;
+        }
         if (payload.ev) G4Payload.events[0].params.value = payload.ev;
         if (payload.dl) G4Payload.events[0].params.url = payload.dl;
         if (payload.dt) G4Payload.events[0].params.title = payload.dt;
-        console.log(`GA4MonitorSend() : `,G4Payload);
-        //contentType: 'application/json',
+        //console.log(`GA4MonitorSend() : `,G4Payload);
 
         return $.ajax({
             type: "POST",
@@ -141,7 +146,7 @@ export class APIClientBase {
             data: JSON.stringify(G4Payload)
         }).fail(function (jqXHR, textStatus) {
             console.warn(`GA4MonitorSend() failed: ${jqXHR.responseText}`,G4Payload);
-            APIClientBase.GAMonitorSendFailed = true;
+           // APIClientBase.GA4MonitorSendFailed = true;
         });
     }
 
