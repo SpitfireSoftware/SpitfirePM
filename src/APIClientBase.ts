@@ -1,7 +1,8 @@
-import { GoogleAnalyticPayload } from "./globals";
+import { GoogleAnalyticPayload,GA4Payload } from "./globals";
 
 export class APIClientBase {
     static _SiteURL : string | null = null;
+    /** Spitfire Assigned Site ID  */
     private static  GAClientID : string | undefined = undefined;
     private static GAIgnoreActions = {account: true, session:true, suggestions: true, viewable: true};
     public getBaseUrl( baseURL : string) : string {
@@ -45,7 +46,7 @@ export class APIClientBase {
             ev: value
         }
 
-        return APIClientBase.GAMonitorSend(payload);
+        return APIClientBase.GA4MonitorSend(payload);
                         // .done(function (data, textStatus, jqXHR) {
                         //     console.log(`GAMonitor(${category}:${action}) ${label} ok`);
                         // })
@@ -56,6 +57,8 @@ export class APIClientBase {
 
     }
     static GAMonitorSendFailed: boolean = false;
+    static GA4MonitorSendFailed: boolean = false;
+
 
 
     /** POSTS supplied payload to Google Analytics
@@ -66,6 +69,10 @@ export class APIClientBase {
      *
     */
     public static GAMonitorSend(payload:GoogleAnalyticPayload ): JQuery.Promise<any> {
+
+        if ((typeof (APIClientBase.GAMonitorSendFailed) === "boolean") && (!APIClientBase.GAMonitorSendFailed)) {
+            return this.GA4MonitorSend(payload);
+        }
         if ((typeof (APIClientBase.GAMonitorSendFailed) === "boolean") && (APIClientBase.GAMonitorSendFailed)) {
             var darnSoon = $.Deferred();
             var GASendDone = darnSoon.promise();
@@ -81,6 +88,59 @@ export class APIClientBase {
             data: payload
         }).fail(function (jqXHR, textStatus) {
             console.warn(`GAMonitorSend() failed: ${jqXHR.responseText}`,payload);
+            APIClientBase.GAMonitorSendFailed = true;
+        });
+    }
+
+      /** converts and posts supplied payload to Google Analytics v4
+     *  @summary - Defaults property ID (tid) to sfPMS and version (v) to 1
+     *          - One failure disables all future tracking on this client instance
+     *  @async uses jQuery.ajax
+     *  @see  https://developers.google.com/analytics/devguides/collection/protocol/ga4
+     * Requests can have a maximum of 25 events.
+     * Events can have a maximum of 25 parameters.
+     * Events can have a maximum of 25 user properties.
+     * User property names must be 24 characters or fewer.
+     *       User property values must be 36 characters or fewer.
+     * Event names must be 40 characters or fewer, may only contain alpha-numeric characters and underscores, and must start with an alphabetic character.
+     * Parameter names (including item parameters) must be 40 characters or fewer, may only contain alpha-numeric characters and underscores, and must start with an alphabetic character.
+     * Parameter values (including item parameter values) must be 100 character or fewer.
+     * Item parameters can have a maximum of 10 custom parameters.
+     * The post body must be smaller than 130kB.
+     *
+    */
+       public static GA4MonitorSend(payload:GoogleAnalyticPayload ): JQuery.Promise<any> {
+        if ((typeof (APIClientBase.GA4MonitorSendFailed) === "boolean") && (APIClientBase.GA4MonitorSendFailed)) {
+            var darnSoon = $.Deferred();
+            var GASendDone = darnSoon.promise();
+            darnSoon.resolve("fake");  //makes GASendDone be ready
+            return GASendDone;
+        }
+        const measurement_id = 'G-9NW0XG0RRE';
+        const apiSecret = 'gCh1G03eRv2mIkT1uAiu0Q';
+        if (payload.t === "pageview") payload.ec = payload.t;
+        if (!payload.tid) delete payload.tid;
+        if (!payload.v) payload.v = 1;
+        let G4Payload : GA4Payload = {client_id:payload.cid!,
+            non_personalized_ads:true,
+            "events":[{name:payload.ec!,
+                        "params":{"items":[]
+                          }}]};
+        if (payload.ea) G4Payload.events[0].params.action = payload.ea;
+        if (payload.el) G4Payload.events[0].params.label = payload.el;
+        if (payload.ev) G4Payload.events[0].params.value = payload.ev;
+        if (payload.dl) G4Payload.events[0].params.url = payload.dl;
+        if (payload.dt) G4Payload.events[0].params.title = payload.dt;
+        console.log(`GA4MonitorSend() : `,G4Payload);
+        //contentType: 'application/json',
+
+        return $.ajax({
+            type: "POST",
+            url: `https://www.google-analytics.com/mp/collect?api_secret=${apiSecret}&measurement_id=${measurement_id}`,
+            async: true,
+            data: JSON.stringify(G4Payload)
+        }).fail(function (jqXHR, textStatus) {
+            console.warn(`GA4MonitorSend() failed: ${jqXHR.responseText}`,G4Payload);
             APIClientBase.GAMonitorSendFailed = true;
         });
     }

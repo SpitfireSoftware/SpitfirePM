@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.30.183";
+const ClientPackageVersion : string = "1.30.184";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -84,6 +84,7 @@ class PartStorageData {
     protected _InitializationResultPromise: Promise<UIDisplayPart | null> | null;
     protected _ReferenceKey: PartContextKey;
     protected _ForPartName:string;
+    /** Use sfApplicationRootPath instead of _SiteURL */
     protected static _SiteURL: string;
     protected static _DMCount: number = 0;
 
@@ -3308,7 +3309,7 @@ export class sfRestClient {
     private GAMonitorPageHit( clientID:string, url?:string, title?:string) {
         var RESTClient = this;
         if (!url) {
-            url = `${RESTClient._SiteURL}/${RESTClient.ResolvePageName()}`;
+            url = RESTClient.ResolvePageName();
         }
         var pageHash : number = url.sfHashCode();
         if (sfRestClient.GALastPageHitSent === pageHash ) return;
@@ -3336,7 +3337,11 @@ export class sfRestClient {
 
 
 
-
+    /** Monitors an event
+     * @argument clientID site id
+     * @argument category Event Name, such as login, search, or view_search_results
+     * @argument action
+     */
     GAMonitorEvent(  clientID:string, category:string, action:string, label:string, value:number) {
         this.GAMonitorPageHit(clientID);
         return RESTClientBase.APIClientBase.GAMonitorEvent(clientID,category,action,label,value);

@@ -115,9 +115,10 @@ declare global {
 export type GoogleAnalyticPayload = { v: number,
         /** event, pageview, etc */
         t: string,
-        /** UA-xxxx */
-        tid: string,
-        cid: string,
+        /** Property ID UA-xxxx or G-9NW0XG0RRE */
+        tid?: string,
+        /** Client id (usually spitfire site id) */
+        cid?: string,
         ec?: string,
         ea?: string,
         el?: string,
@@ -125,6 +126,23 @@ export type GoogleAnalyticPayload = { v: number,
         dt?: string | undefined,
         ev?: number
 }
+
+export type G4Events  = [
+    {
+      name : string,
+      params : {
+         items? : {[key:string]: any},
+         [key:string]: any
+      }
+    }
+  ]
+
+export type GA4Payload = {
+    client_id: string,
+    non_personalized_ads?: boolean,
+    events: G4Events
+}
+
 
 
 export type GUID = string //& { isGuid: true };
