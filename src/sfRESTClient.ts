@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.185";
+const ClientPackageVersion : string = "1.40.189";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -294,6 +294,7 @@ export class sfRestClient {
         if (sfRestClient._WCC.Version) result = sfRestClient._WCC.Version;
         return result;
     }
+
     /**
      * Helps decode Permit flags
      */
@@ -559,6 +560,10 @@ export class sfRestClient {
         });
         return ViewModelPromise;
 
+    }
+
+    async WaitForSessionLoaded(): Promise<void> {
+        if (!sfRestClient._z.WCCLoaded) try { await this.LoadUserSessionInfo();} catch (ex:any) {console.warn('IsSessionLoaded()',ex);}
     }
 
     /**
@@ -1877,7 +1882,7 @@ export class sfRestClient {
     protected static _SessionClientGetWCC : _SessionClientGetWCCShare | null;
     protected static _SessionClientGetUCFKMap : JQueryXHR | null;
 
-
+    /** applies changes to connection properties */
     UpdateWCCData( newWCC: WCCData ) : WCCData {
         var RESTClient: sfRestClient = this;
         var ChangeList: Map<string, any> = new Map<string,any>();
@@ -2510,7 +2515,11 @@ export class sfRestClient {
     }
 
     public ResolvePageTypeName() : PageTypeName {
-        return this.ResolveStringPageNametoPageTypeName(this.ResolvePageName());
+        const locationHash = location.href.sfHashCode();
+        if (locationHash === sfRestClient.ResolvePageInfo.ValidHash) return sfRestClient.ResolvePageInfo.LastResolvedPageTypeName;
+        const result = this.ResolveStringPageNametoPageTypeName(this.ResolvePageName());
+        sfRestClient.ResolvePageInfo.LastResolvedPageTypeName = result;
+        return result;
     }
 
     protected ResolveStringPageNametoPageTypeName( pageNameString: string): PageTypeName {
@@ -2567,6 +2576,8 @@ export class sfRestClient {
     }
 
     protected ResolvePageName() : string {
+        const locationHash = location.href.sfHashCode();
+        if (locationHash === sfRestClient.ResolvePageInfo.ValidHash) return sfRestClient.ResolvePageInfo.LastResolvedPageName;
         var pgname : string = location.pathname;
         var pgHash : string = location.hash;
         if (pgHash.length > 0) pgname = pgHash; // for xb style
@@ -2574,7 +2585,21 @@ export class sfRestClient {
         if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
+        sfRestClient.ResolvePageInfo.LastResolvedPageName = pgname;
+        sfRestClient.ResolvePageInfo.ValidHash = locationHash;
+        if (this.DevMode(LoggingLevels.Verbose)) console.log(`ResolvePageName(${location.pathname},${location.hash} ) --> ${pgname}`);
         return pgname;
+    }
+
+
+
+    /** asserts a new url to resolve the new page type.  Stays in effect until the location hash next changes */
+    public urlChange(newURL:string) {
+        // do not set validHash - but reset the pagetype and pagename
+        sfRestClient.ResolvePageInfo.LastResolvedPageName = newURL;
+        sfRestClient.ResolvePageInfo.LastResolvedPageTypeName = this.ResolveStringPageNametoPageTypeName(newURL);
+        sfRestClient.ResolvePageInfo.ValidHash = location.href.sfHashCode();
+        if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvePageInfo.LastResolvedPageTypeName}`);
     }
 
     protected XBVariantOfPageName( classicPageName : PageTypeName ) : string {
@@ -3281,7 +3306,7 @@ export class sfRestClient {
      */
     public VModalPage( vpg: string, opts: string, w:number, h:number, defaultResponse: string | undefined ): void{
         if (!this.IsGlobalInstance()) {
-            return top?.sfClient.VModalPage(vpg,opts,w,h,defaultResponse);
+            return top?.sfClient?.VModalPage(vpg,opts,w,h,defaultResponse);
         }
         if (!defaultResponse ) defaultResponse = "";
         var context : Window = window;
@@ -3297,8 +3322,8 @@ export class sfRestClient {
 
             if (!this.$LookupDialog!.data("RestoredSize")) {
                 if (w === 440) w = Math.round($(window).width()! * 0.5);
-                if (w != null) top?.sfClient.sfLookupWidthChangeTo(this.$LookupDialog!, w);
-                if (h != null) top?.sfClient.sfLookupHeightChangeTo( this.$LookupDialog!,h + this._LookupViewPortAdjustments.outsidExtraH);
+                if (w != null) top?.sfClient?.sfLookupWidthChangeTo(this.$LookupDialog!, w);
+                if (h != null) top?.sfClient?.sfLookupHeightChangeTo( this.$LookupDialog!,h + this._LookupViewPortAdjustments.outsidExtraH);
             }
         });
 
@@ -3556,7 +3581,7 @@ export class sfRestClient {
         var newValue;
         var formName = "0";
         if (!this.IsGlobalInstance()) {
-            return top?.sfClient.ModalDialog(url,eventId,eventArg,eventContext);
+            return top?.sfClient?.ModalDialog(url,eventId,eventArg,eventContext);
         }
 
         if (!eventId) eventId = 'mDialog';
@@ -4982,7 +5007,7 @@ export class sfRestClient {
      * @comment Turn DevMode on or off from console: top.sfClient.exports.sfRestClient._WCC.DevMode = false; (or true)
      */
     public DevMode(minVerbosity?: LoggingLevels ) : boolean {
-        let result = top?.sfClient.GetPageContextValue("DevMode",false);
+        let result = top?.sfClient?.GetPageContextValue("DevMode",false);
         if (minVerbosity && result) {
             result = (sfRestClient._Options.LogLevel >= minVerbosity)
         }
@@ -5080,6 +5105,12 @@ export class sfRestClient {
      protected static _LoadedPermits: Map<string, UCPermitSet> = new Map<string, UCPermitSet>();
      private static _LoadingPermitRequests: Map<string, Promise<UCPermitSet | null> > = new Map<string, Promise<UCPermitSet | null> >();
      private static InstanceSerialNumberSource: number=0;
+
+     private static ResolvePageInfo = {
+        LastResolvedPageName: "tbd",
+        LastResolvedPageTypeName: <PageTypeName> 0,
+        ValidHash: 0,
+     };
      private ThisInstanceID: number;
 
 
