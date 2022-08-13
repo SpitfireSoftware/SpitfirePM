@@ -4,7 +4,7 @@ export class APIClientBase {
     static _SiteURL : string | null = null;
     /** Spitfire Assigned Site ID  */
     private static  GAClientID : string | undefined = undefined;
-    private static GAIgnoreActions = {account: true, session:true, suggestions: true, viewable: true};
+    private static GAIgnoreActions = {account: true, session:true, suggestions: true, uicfg:true, viewable: true};
     public getBaseUrl( baseURL : string) : string {
         if (APIClientBase._SiteURL === null) {
             var ApplicationPath = window.location.pathname;
@@ -24,10 +24,19 @@ export class APIClientBase {
         return processor(response);
     }
 
-    protected GAAPIEvent(action:string, label: string) : JQuery.Promise<any> | undefined {
+    protected GAAPIEvent(controllerAction:string, endpointLabel: string) : JQuery.Promise<any> | undefined {
         if (!APIClientBase.GAClientID) return undefined;
-        if (action=="session" && label == "who") return undefined;
-        return APIClientBase.GAMonitorEvent(APIClientBase.GAClientID,"npmREST",action,label, 1);
+        if (controllerAction=="session" && endpointLabel == "who") return undefined;
+        if (!APIClientBase.GAClientID) return undefined;
+
+        let G4Payload : GA4Payload = {client_id:APIClientBase.GAClientID!,
+            non_personalized_ads:true,
+            "events":[{name:controllerAction,
+                        "params":{"items":[],
+                        "endpoint": endpointLabel
+                          }}]};
+
+        return APIClientBase.GA4MonitorSend(G4Payload);
     }
 
     public static GAMonitorEvent(  clientID:string , category:string, action:string, label:string, value:number) : JQuery.Promise<any> | undefined {
@@ -66,7 +75,7 @@ export class APIClientBase {
      *          - One failure disables all future tracking on this client instance
      *  @async uses jQuery.ajax
      *  @see  https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide#page
-     *
+     *  @obsolete Use GA4MonitorSend
     */
     public static GAMonitorSend(payload:GoogleAnalyticPayload ): JQuery.Promise<any> {
 
@@ -109,7 +118,7 @@ export class APIClientBase {
      * The post body must be smaller than 130kB.
      *
     */
-       public static GA4MonitorSend(payload:GoogleAnalyticPayload ): JQuery.Promise<any> {
+       public static GA4MonitorSend(payload:GoogleAnalyticPayload | GA4Payload): JQuery.Promise<any> {
         if ((typeof (APIClientBase.GA4MonitorSendFailed) === "boolean") && (APIClientBase.GA4MonitorSendFailed)) {
             var darnSoon = $.Deferred();
             var GASendDone = darnSoon.promise();
@@ -118,25 +127,30 @@ export class APIClientBase {
         }
         const measurement_id = 'G-9NW0XG0RRE';
         const apiSecret = 'gCh1G03eRv2mIkT1uAiu0Q';
-        if (payload.t === "pageview") payload.ec = payload.t;
-        if (!payload.tid) delete payload.tid;
-        if (!payload.v) payload.v = 1;
-        let G4Payload : GA4Payload = {client_id:payload.cid!,
-            non_personalized_ads:true,
-            "events":[{name:payload.ec!,
-                        "params":{"items":[]
-                          }}]};
-        if (payload.ec === "npmREST") {
-            if (payload.ea) G4Payload.events[0].params.controller = payload.ea;
-            if (payload.el) G4Payload.events[0].params.endpoint = payload.el;
+        let G4Payload : GA4Payload;
+        if ( "t" in payload) {
+            if (payload.t === "pageview") payload.ec = payload.t;
+            if (!payload.tid) delete payload.tid;
+            if (!payload.v) payload.v = 1;
+            G4Payload = {client_id:payload.cid!,
+                non_personalized_ads:true,
+                "events":[{name:payload.ec!,
+                            "params":{"items":[]
+                              }}]};
+            if (payload.ec === "npmREST") {
+                if (payload.ea) G4Payload.events[0].params.controller = payload.ea;
+                if (payload.el) G4Payload.events[0].params.endpoint = payload.el;
+            }
+            else {
+                if (payload.ea) G4Payload.events[0].params.action = payload.ea;
+                if (payload.el) G4Payload.events[0].params.label = payload.el;
+            }
+            if (payload.ev) G4Payload.events[0].params.value = payload.ev;
+            if (payload.dl) G4Payload.events[0].params.url = payload.dl;
+            if (payload.dt) G4Payload.events[0].params.title = payload.dt;
         }
-        else {
-            if (payload.ea) G4Payload.events[0].params.action = payload.ea;
-            if (payload.el) G4Payload.events[0].params.label = payload.el;
-        }
-        if (payload.ev) G4Payload.events[0].params.value = payload.ev;
-        if (payload.dl) G4Payload.events[0].params.url = payload.dl;
-        if (payload.dt) G4Payload.events[0].params.title = payload.dt;
+        else G4Payload = payload;
+
         //console.log(`GA4MonitorSend() : `,G4Payload);
 
         return $.ajax({

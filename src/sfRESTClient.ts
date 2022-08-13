@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.189";
+const ClientPackageVersion : string = "1.40.190";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -458,7 +458,7 @@ export class sfRestClient {
      * @param partName ProjTeam or ProjectPublicInfo
      * @param rawData ViewModel containing raw row data
      */
-    ToggleRowVisibility( partName: string, rawData: DataModelRow) : Promise<boolean> {
+    ToggleRowVisibility( partName: "ProjTeam" | "ProjectPublicInfo", rawData: DataModelRow) : Promise<boolean> {
 
         var DataField : string = "TeamList";
         var api : ProjectTeamClient | ProjectsClient;
