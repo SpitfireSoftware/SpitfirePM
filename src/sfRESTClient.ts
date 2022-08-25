@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.192";
+const ClientPackageVersion : string = "1.40.193";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1330,7 +1330,7 @@ export class sfRestClient {
         ff.FileType = blobFile.type; // actually the mimeType
         ff.value = blobFile.name;
         ff.size = blobFile.size;
-        ff.Project = uploadContext.project;
+        if (uploadContext.project) ff.Project = uploadContext.project;
         ff.ReferenceDate = new Date(blobFile.lastModified);
         (<any>ff).ETag = "na";
 
