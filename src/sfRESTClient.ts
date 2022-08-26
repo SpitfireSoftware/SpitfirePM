@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.194";
+const ClientPackageVersion : string = "1.40.196";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -810,6 +810,11 @@ export class sfRestClient {
             return apiResultPromise;
     }
 
+    private static  RecentDocumentList :_SwaggerClientExports.MenuAction[];
+    /** Returns list of recent documents from server as updated by PopDoc() calls */
+    GetRecentDocuments() : _SwaggerClientExports.MenuAction[] {
+        return sfRestClient.RecentDocumentList;
+    }
     /**
      * Returns a View Model constructured for the result rows matching specified lookup context and filters
      * @param lookupName
@@ -1841,6 +1846,20 @@ export class sfRestClient {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Creating getWCC request for HREF hash ${ForPageHash}`);
                 apiResult = <Promise<WCCData | null>> api.getWCC(RESTClient.GetPageQueryContent());
                 sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
+                sfRestClient.RecentDocumentList = [ new _SwaggerClientExports.MenuAction()];
+                sfRestClient.RecentDocumentList[0].Enabled=false;
+                sfRestClient.RecentDocumentList[0].ItemText=' (still loading...)';
+                api.getRecentDocs()
+                .then((recentList)=>{
+                    if (recentList) sfRestClient.RecentDocumentList = recentList
+                    else sfRestClient.RecentDocumentList[0].ItemText='Documents will appear here as you open them';
+
+                })
+                .catch((reason)=>{
+                    console.warn('LoadUserSessionInfo().getRecentDocs()',reason);
+                    sfRestClient.RecentDocumentList[0].ItemText='None available';
+
+                });
             }
             if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
             apiResult.then((r: WCCData | null) => {
@@ -2094,6 +2113,7 @@ export class sfRestClient {
   /**
      * Opens a new tab with location specified based on Document Key and UI version
      * @param id the guid DocMasterKey for the document to be opened
+     * @comment Adds document to the Recent Document List
      */
    PopDoc(id : GUID) : Promise<Window | null>
    {
@@ -2113,6 +2133,29 @@ export class sfRestClient {
                    resolve(null);
                    return;
                }
+               RESTClient.GetDV("DocTitleLong",id,undefined)
+               .then((title)=>{
+                    if (title) {
+                        if (!sfRestClient.RecentDocumentList.find(ma=>{return ma.CommandArgument === id;}) ) {
+                            const MostRecent =new _SwaggerClientExports.MenuAction();
+                            MostRecent.CommandArgument = id;
+                            MostRecent.ItemText = title;
+                            MostRecent.HrefTarget="_blank";
+                            MostRecent.HRef = `javascript:top.sfClient.PopDoc('${id}');`;
+                            MostRecent.Enabled = true;
+                            sfRestClient.RecentDocumentList.unshift(MostRecent);
+                            if (sfRestClient.RecentDocumentList.length === 10) sfRestClient.RecentDocumentList.pop();
+                            else if (sfRestClient.RecentDocumentList.length === 2 && !sfRestClient.RecentDocumentList[1].Enabled) sfRestClient.RecentDocumentList.pop();
+                        }
+                    }
+                    else {
+                        console.warn(`PopDoc(${id}).GetTitle - unexpected false result`);
+                    }
+               })
+               .catch((reason)=>{
+                    console.warn(`PopDoc(${id}).GetTitle`,reason);
+               });
+
                //todo: determine if we should use the new or old UI based on the document type of this document
                var url : string =  sfRestClient._Options.PopDocLegacyURL;
                if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopDocXBURL
@@ -3282,6 +3325,7 @@ export class sfRestClient {
     ClearNotificationMsgTimeoutHandle() : void {
         this.notificationMsgTimeoutHandle = undefined;
     }
+    /** Use DisplayUserNotification()  This method displays a message from the server */
     DisplaySysNotification(responseText: string | number, timeOutMS?:number) : Promise<JQuery<HTMLElement>>{
         if (typeof responseText === "number") responseText = responseText.toString();
         if (responseText.startsWith("SysNotification")) responseText = responseText.substring(16);
@@ -4504,6 +4548,7 @@ export class sfRestClient {
      * Called by the global instance to connect to SignalR
      */
     protected static StartSignalRClientHub():void {
+
         if (self !== top) return;
         if (!$.connection || !$.connection.sfPMSHub) {
             setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
@@ -4718,6 +4763,14 @@ export class sfRestClient {
                 $("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
             });
 
+            const stateConversion:string[] = [ 'connecting', 'connected', 'reconnecting', 'disconnected'];
+
+            $.connection.hub.stateChanged(function (state: {oldState:number, newState:number}) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`${new Date().toSFLogTimeString()} sfPMSHub: state change.  Type ${sfHub.connection?.transport?.name}; was ${stateConversion[state.oldState]}, now ${stateConversion[state.newState]} `);
+                let connectionType: string | undefined;
+                if (sfHub && sfHub.connection && sfHub.connection.transport) connectionType =sfHub.connection.transport.name;
+                if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`Signal connection using ${connectionType}; you may occassionally be disconnected.`) : undefined;
+            });
             $.connection.hub.disconnected(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms;  Reconnect:${!sfHub.client.SkipAutoReconnect}`);
                 if ($.connection.hub.lastError) {
@@ -4811,7 +4864,7 @@ export class sfRestClient {
                         var d = new Date();
                         var hourNow = d.getHours();
                         if (((sfRestClient.PageNotificationCount > 33) && (hourNow < 2)) || (((sfRestClient.PageNotificationCount * retryInterval) > MaxIdleTime))) {
-                            RESTClient.DisplaySysNotification("This window has been idle and will logoff in 1 minute.  ", 60000);
+                            RESTClient.DisplayUserNotification("This window has been idle and will logoff in 1 minute.  ", 60000);
                             setTimeout(`location="${sfRestClient.LogoutPageURL('idle')}";` , 66000);
                             retryInterval = 99000;
                         }
@@ -4898,7 +4951,7 @@ export class sfRestClient {
         catch (exx:any) {
             if (exx.message) {
                 console.warn(`pingServer(${id}) - ${exx.message}`);
-                this.DisplaySysNotification(`The server could not be contacted : ${exx.message}`,99999);
+                this.DisplayUserNotification(`The server could not be contacted : ${exx.message}`,99999);
                 // how to recover??
             }
             else  console.warn(`pingServer(${id}) - catch  ${typeof exx}`,exx);
