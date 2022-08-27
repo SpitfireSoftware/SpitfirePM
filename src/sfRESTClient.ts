@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.196";
+const ClientPackageVersion : string = "1.40.197";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3305,11 +3305,11 @@ export class sfRestClient {
             }
 
             // snhc is included for legacy use cases
-            $MsgDiv.data('snhc', notificationText).data('notification', notificationText).data("snhash", notificationText.sfHashCode()).load(this.MakeSiteRelativeURL(templateURL), function (loadedHtml) {
+            $MsgDiv.data('snhc', notificationText.sfHashCode()).data('notification', notificationText).data("snhash", notificationText.sfHashCode()).load(this.MakeSiteRelativeURL(templateURL), function (loadedHtml) {
                 var $BTN = $MsgDiv.find("BUTTON.sfNotificationDismiss");
                 msgDisplayResolved( $MsgDiv );
                 $BTN.on("click",function () {
-                    RESTClient.MarkNotificationAsShown($MsgDiv.data("snhc"));
+                    RESTClient.MarkNotificationAsShown($MsgDiv.data("notification"));
                     $MsgDiv.remove();
                 });
             }).appendTo('BODY').first().on("click",function () { $(this).remove(); });
@@ -3325,12 +3325,33 @@ export class sfRestClient {
     ClearNotificationMsgTimeoutHandle() : void {
         this.notificationMsgTimeoutHandle = undefined;
     }
-    /** Use DisplayUserNotification()  This method displays a message from the server */
-    DisplaySysNotification(responseText: string | number, timeOutMS?:number) : Promise<JQuery<HTMLElement>>{
-        if (typeof responseText === "number") responseText = responseText.toString();
-        if (responseText.startsWith("SysNotification")) responseText = responseText.substring(16);
-        return this.DisplayThisNotification("ajhx/sysnotification.html", responseText, timeOutMS);
+    /** Use DisplayUserNotification()  This method displays a message from the server!!!
+     * @param hashCode help with getting freshest
+    */
+    DisplaySysNotification(hashCode: string | number, timeOutMS?:number) : Promise<JQuery<HTMLElement>>{
+        if (typeof hashCode === "undefined") hashCode = "";
+        if (typeof hashCode === "number") hashCode = hashCode.toString();
+        if (hashCode.startsWith("SysNotification")) hashCode = hashCode.substring(16);
+        return this.DisplayThisNotification("ajhx/sysnotification.html", hashCode, timeOutMS);
     }
+    /** Checks backend for a new system notification and displays it */
+    CheckForSystemNotification() {
+        const SystemAPI = new _SwaggerClientExports.SystemClient();
+        const thisRestClient = this;
+        if ( (Date.now() - sfRestClient.lastNotificationCheck) < 34567) return;
+        SystemAPI.getSystemNotification("")
+        .then((theNotification)=>{
+            if (theNotification) thisRestClient.DisplaySysNotification(theNotification.sfHashCode().toString())
+            else thisRestClient.DisplaySysNotification("");
+        })
+        .catch((reason) => {
+            console.warn('CheckForSystemNotification() failed', reason);
+        })
+        .finally(()=>{
+            sfRestClient.lastNotificationCheck = Date.now();
+        });
+    }
+    private static lastNotificationCheck = 0
 
     /** Displays a simple user notification, with "dismiss" session memory
      * @param notificationText The message.  Message is skipped if the same exact message has already been dismissed.
@@ -4567,6 +4588,8 @@ export class sfRestClient {
                 top?.sfClient.DisplayUserNotification(msgText);
             };
             sfHub.client.systemNotificationHasChanged = function (sysNoticeHC:string) {
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.systemNotificationHasChanged ${sysNoticeHC} `);
+                if (!sysNoticeHC) sysNoticeHC = ""; // code=0 means erase
                 top?.sfClient.DisplaySysNotification(sysNoticeHC);
             };
 
@@ -4763,10 +4786,11 @@ export class sfRestClient {
                 $("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
             });
 
-            const stateConversion:string[] = [ 'connecting', 'connected', 'reconnecting', 'disconnected'];
+            const stateConversion:string[] = [ 'connecting', 'connected', 'reconnecting', '3','disconnected'];
 
             $.connection.hub.stateChanged(function (state: {oldState:number, newState:number}) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`${new Date().toSFLogTimeString()} sfPMSHub: state change.  Type ${sfHub.connection?.transport?.name}; was ${stateConversion[state.oldState]}, now ${stateConversion[state.newState]} `);
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)
+                    console.log(`${new Date().toSFLogTimeString()} sfPMSHub: state change from ${stateConversion[state.oldState]} to ${stateConversion[state.newState]} using ${sfHub.connection?.transport?.name} `);
                 let connectionType: string | undefined;
                 if (sfHub && sfHub.connection && sfHub.connection.transport) connectionType =sfHub.connection.transport.name;
                 if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`Signal connection using ${connectionType}; you may occassionally be disconnected.`) : undefined;
@@ -4835,6 +4859,7 @@ export class sfRestClient {
             }
             if (this.IsPageOfType( this.PageTypeNames.Login ) ) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log("pingServer() Log in pending (ignored)");
+                this.CheckForSystemNotification();
                 sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for login ", 2345);
                 return;
             }
@@ -4944,7 +4969,7 @@ export class sfRestClient {
                 }
                 }).catch(function (failMessage) {
                     var retryNow = RESTClient.PageServerPingBackFailed("dasho", id, failMessage, retryInterval / 2,"pingServer");
-                if (retryNow) setTimeout('pingServer("' + id + '"); // weak connection retry', retryInterval);
+                if (retryNow) setTimeout(`top.sfClient.pingServer("${id}"); // weak connection retry`, retryInterval);
             });
 
         }
