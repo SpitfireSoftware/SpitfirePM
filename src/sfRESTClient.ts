@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.197";
+const ClientPackageVersion : string = "1.40.198";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -318,9 +318,11 @@ export class sfRestClient {
         Report: 128,
         Document: 1024,
         Unknown: 8092,
-        Login: 16384,
+        Unauthenticated: 16384,
+        Login: 16385,
+        RouteWizard: 16386,
+        UserAccountRecovery: 16387,
         DiagUtilities: 32768,
-        UserAccountRecovery: 65536,
         PopupAdminTool: 131072,
         RichTextEdit: 262144
     }
@@ -1822,8 +1824,8 @@ export class sfRestClient {
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
             let ThisPageType =  this.ResolvePageTypeName();
-            if ((ThisPageType ===  RESTClient.PageTypeNames.UserAccountRecovery )  || (ThisPageType ===  RESTClient.PageTypeNames.Login)){
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not yet logged in.");
+            if ((ThisPageType &&  RESTClient.PageTypeNames.Unauthenticated ) ===  RESTClient.PageTypeNames.Unauthenticated  ){
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not logged in.");
                 let FakeWCC =new WCCData();
                 FakeWCC.AdminLevel = 0;
                 FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
@@ -2592,6 +2594,9 @@ export class sfRestClient {
             case "login": case "Logout":
                 result = this.PageTypeNames.Login;
                 break;
+            case "arr":
+                result = this.PageTypeNames.RouteWizard;
+                break;
             case "dxutil":
                 result = this.PageTypeNames.DiagUtilities;
                 break;
@@ -2607,10 +2612,10 @@ export class sfRestClient {
             case 'ExecutiveInfo':
                 result = this.PageTypeNames.ExecutiveDashboard;
                 break;
-                case "popTinymce5": case "popEdit":
+            case "popTinymce5": case "popEdit":
                     result = this.PageTypeNames.RichTextEdit;
                     break;
-                default:
+            default:
                 console.warn("Unexpected page type: ", pageNameString);
                 result = this.PageTypeNames.Unknown;
                 break;
@@ -2625,6 +2630,7 @@ export class sfRestClient {
         var pgHash : string = location.hash;
         if (pgHash.length > 0) pgname = pgHash; // for xb style
         if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
+        if (pgname.toLowerCase().includes("arr.aspx",)) pgname = "arr";
         if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
