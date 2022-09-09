@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.198";
+const ClientPackageVersion : string = "1.40.200";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1097,7 +1097,7 @@ export class sfRestClient {
     RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
         var apiResultPromise: Promise<string | number | boolean | null>
         var cacheKey: string = `GetRR:${ruleName}T${testValue.sfHashCode()}F${filterValue?.sfHashCode()}`;
-
+        this.heartbeat();
         try {
             var result: string | null = sessionStorage.getItem(cacheKey);
             if (!result) {
@@ -1331,6 +1331,8 @@ export class sfRestClient {
      *  @returns promise that resolves on upload complete
       */
     public UploadFile(blobFile: File, uploadContext: SFFileUploadContext,progressCallback?: (state:_SwaggerClientExports.XferFilesStatus) => boolean) : Promise<_SwaggerClientExports.XferFilesStatus | _SwaggerClientExports.HttpResponseJsonContent> {
+        this.heartbeat();
+
         var fd = new FormData();
         var ff =  new _SwaggerClientExports.FileInformation();
         var RESTClient = this;
@@ -1824,7 +1826,7 @@ export class sfRestClient {
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
             let ThisPageType =  this.ResolvePageTypeName();
-            if ((ThisPageType &&  RESTClient.PageTypeNames.Unauthenticated ) ===  RESTClient.PageTypeNames.Unauthenticated  ){
+            if ((ThisPageType &  RESTClient.PageTypeNames.Unauthenticated ) ===  RESTClient.PageTypeNames.Unauthenticated  ){
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not logged in.");
                 let FakeWCC =new WCCData();
                 FakeWCC.AdminLevel = 0;
@@ -2079,6 +2081,8 @@ export class sfRestClient {
         if (!options) options = "";
         if (!project) project = this.GetPageProjectKey();
         if (options.length > 0 && !options.startsWith("&")) console.warn("PopNewDoc() options should start with &...");
+        this.heartbeat();
+
         return new Promise<Window | null>((resolve) => {
             this.GetDV("DocType",dtk,undefined).then(async (thisDocTypeSiteName) => {
                 var thisRestClient = this;
@@ -2120,6 +2124,7 @@ export class sfRestClient {
    PopDoc(id : GUID) : Promise<Window | null>
    {
        var RESTClient = this;
+       RESTClient.heartbeat();
        return new Promise<Window | null>((resolve) => {
            if (!id.sfIsGuid()) {
                 console.warn("PopDoc(): Document id expected; received",id);
@@ -2188,6 +2193,7 @@ export class sfRestClient {
    OpenProject(id : string) : Promise<Window | null>
    {
        var RESTClient = this;
+       RESTClient.heartbeat();
        if (this.IsDocumentPage()) {
             $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
             return new Promise<null>((resolve)=> resolve(null));
@@ -2465,6 +2471,8 @@ export class sfRestClient {
      * @returns true if successful usually sychronously
      */
     public  async SharePageContext( contextData: NVPair) : Promise<boolean> {
+        this.heartbeat();
+
         if (!sfRestClient._z.WCCLoaded) await this.LoadUserSessionInfo();
         if (!sfRestClient._WCC ) {
             console.warn("SharePageContext() _WCC missing?");
@@ -2644,6 +2652,8 @@ export class sfRestClient {
 
     /** asserts a new url to resolve the new page type.  Stays in effect until the location hash next changes */
     public urlChange(newURL:string) {
+        this.heartbeat();
+
         // do not set validHash - but reset the pagetype and pagename
         sfRestClient.ResolvePageInfo.LastResolvedPageName = newURL;
         sfRestClient.ResolvePageInfo.LastResolvedPageTypeName = this.ResolveStringPageNametoPageTypeName(newURL);
@@ -2745,6 +2755,8 @@ export class sfRestClient {
 
     /** display support panel */
     public InvokeSupportPanel() : void {
+        this.heartbeat();
+
         var RESTClient = this;
         if (!top) this.DisplayUserNotification("Missing Window Context...");
         var $DVI : JQuery<HTMLDivElement> = top!.$("<div class='sfUIShowDevInfo'  style='font-size:0.9em'/>");
@@ -2833,6 +2845,7 @@ export class sfRestClient {
     }
 
     SetClipboard(text:string) {
+        this.heartbeat();
 
         var textArea = document.createElement("textarea");
         var result = false;
@@ -2869,6 +2882,8 @@ export class sfRestClient {
      * - Nav To (dcmodules and admin tools)
      */
     public InvokeAction(actionString: string | _SwaggerClientExports.MenuAction, rowData? : DataModelRow, options? : InvokeOptions) : void {
+        this.heartbeat();
+
         var ActionString : string = "";
         var UseNewTabWithName : string = "";
         var RESTClient = this;
@@ -3064,6 +3079,8 @@ export class sfRestClient {
 
     /** Creates an exchange token and calls OpenWindowsLinkHelper() */
     public FollowLinkViaSFLink(targetURL: string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
+        this.heartbeat();
+
         var RESTClient = this;
         if (targetURL.endsWith("&Project=")) targetURL += RESTClient.GetPageProjectKey();
         console.log(`sfLink(${targetURL})`);
@@ -4854,6 +4871,11 @@ export class sfRestClient {
         return result;
     }
 
+    /** updates the time of last user activity */
+    public heartbeat():void {
+        sfRestClient.LastActivityAt = Date.now();
+    }
+
     protected static _NextPingTimerID :number | undefined= undefined;
     public async  pingServer(): Promise<void> {
         var id:string = "TBD";
@@ -4894,7 +4916,8 @@ export class sfRestClient {
                         sfRestClient.PageNotificationCount ++;
                         var d = new Date();
                         var hourNow = d.getHours();
-                        if (((sfRestClient.PageNotificationCount > 33) && (hourNow < 2)) || (((sfRestClient.PageNotificationCount * retryInterval) > MaxIdleTime))) {
+                        var TimeSinceLastActivity = Date.now() - sfRestClient.LastActivityAt;
+                        if (((TimeSinceLastActivity > 525600) && (hourNow < 2)) || ((TimeSinceLastActivity > MaxIdleTime))) {
                             RESTClient.DisplayUserNotification("This window has been idle and will logoff in 1 minute.  ", 60000);
                             setTimeout(`location="${sfRestClient.LogoutPageURL('idle')}";` , 66000);
                             retryInterval = 99000;
@@ -4996,6 +5019,7 @@ export class sfRestClient {
     static PageServerPingFailThreshold = 6
     static PageServerPingUserNotificationShown = false;
     static PageNotificationCount = 0;
+    static LastActivityAt = 0;
 
 
     protected PageServerPingBackAlert(msgText: string | boolean, actionAfterAlert:string) {
