@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.200";
+const ClientPackageVersion : string = "1.40.201";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4691,6 +4691,7 @@ export class sfRestClient {
                                 window.open(useURL,`pu${useURL.sfHashCode()}`);
                             }
                             else {
+                                if (request.startsWith("PopDoc") && typeof top?.sfClient.PopDoc === "function") request = `top.sfClient.${request}`;
                                 try {
                                     eval(request);
                                 }
