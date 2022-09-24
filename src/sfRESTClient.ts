@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.201";
+const ClientPackageVersion : string = "1.40.202";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1063,7 +1063,7 @@ export class sfRestClient {
         return <string>iconURL;
         }
 
-        /** Returns information about a document process */
+    /** Returns information about a document process */
     GetDocProcessTypeInfo(forDocType: GUID): Promise<_SwaggerClientExports.ProcessDocumentType | undefined> {
         let systemClient = new _SwaggerClientExports.SystemClient();
         const findProcess = function FindRequestedProcessInList(pl:_SwaggerClientExports.ProcessDocumentType[], forDocType:GUID):_SwaggerClientExports.ProcessDocumentType | undefined {
@@ -5020,7 +5020,7 @@ export class sfRestClient {
     static PageServerPingFailThreshold = 6
     static PageServerPingUserNotificationShown = false;
     static PageNotificationCount = 0;
-    static LastActivityAt = 0;
+    static LastActivityAt = Date.now();
 
 
     protected PageServerPingBackAlert(msgText: string | boolean, actionAfterAlert:string) {
