@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.203";
+const ClientPackageVersion : string = "1.40.204";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2950,7 +2950,7 @@ export class sfRestClient {
             top!.location.reload(); // per https://developer.mozilla.org/en-US/docs/Web/API/Location/reload including (true) or (false) is ignored.
         }
         else if (ActionString.indexOf("PopDoc(") >= 0) {
-            var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
+            var rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             var match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
@@ -2961,7 +2961,7 @@ export class sfRestClient {
             }
         }
         else if (ActionString.indexOf("PopNewDoc(") >= 0) {
-            var rxPopDoc = /javascript:PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
+            var rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             var match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
