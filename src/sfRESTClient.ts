@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.204";
+const ClientPackageVersion : string = "1.40.205";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2143,7 +2143,8 @@ export class sfRestClient {
                RESTClient.GetDV("DocTitleLong",id,undefined)
                .then((title)=>{
                     if (title) {
-                        if (!sfRestClient.RecentDocumentList.find(ma=>{return ma.CommandArgument === id;}) ) {
+                        let recent = sfRestClient.RecentDocumentList.find(ma=>{return ma.CommandArgument === id;});
+                        if (!recent) {
                             const MostRecent =new _SwaggerClientExports.MenuAction();
                             MostRecent.CommandArgument = id;
                             MostRecent.ItemText = title;
@@ -2153,6 +2154,10 @@ export class sfRestClient {
                             sfRestClient.RecentDocumentList.unshift(MostRecent);
                             if (sfRestClient.RecentDocumentList.length === 10) sfRestClient.RecentDocumentList.pop();
                             else if (sfRestClient.RecentDocumentList.length === 2 && !sfRestClient.RecentDocumentList[1].Enabled) sfRestClient.RecentDocumentList.pop();
+                        }
+                        else {
+                            sfRestClient.RecentDocumentList.splice(sfRestClient.RecentDocumentList.indexOf(recent),1);
+                            sfRestClient.RecentDocumentList.unshift(recent);
                         }
                     }
                     else {
