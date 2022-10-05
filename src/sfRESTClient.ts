@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.205";
+const ClientPackageVersion : string = "1.40.206";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1975,10 +1975,11 @@ export class sfRestClient {
                 if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
                 this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
-                if ($("LINK[rel='stylesheet'][href*='{0}']".sfFormat("fontawesome.com")).length===0)
-                    $("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
+                if ($("LINK[rel='stylesheet'][href*='fontawesome.com']").length + $("SCRIPT[src*='fontawesome.com']").length ===0)
+                   //$("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
+                   $("head").prepend('<script src="https://kit.fontawesome.com/5709acfc1e.js" crossorigin="anonymous"></script>');
 
-                    this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.2.min.js`,true).then((likelyTrue) => {
+                    this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.3.min.js`,true).then((likelyTrue) => {
                         this.AddCachedScript(`${this._SiteURL}/signalR/hubs`,true).then((likelyTrue)=>{
                             sfRestClient.StartSignalRClientHub();
                         });
