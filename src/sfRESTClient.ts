@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.206";
+const ClientPackageVersion : string = "1.40.207";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -278,6 +278,7 @@ export class WCCData { [key: string]: any; }
 export class DataModelRow { [key: string]: any; };
 export class InvokeOptions { ByTask: boolean | undefined; ByAcct: boolean | undefined };
 export class DataModelCollection { [key: string]: any; } [];
+export type TableAndFieldInfo = {table:string, field:string, dbf:string, isRO:boolean, isValid:boolean};
 export type PartContextKey = string // PartName[context]::dtk
 export type Permits = number; // 0...31, see PermissionFlags
 /** See sfRestClient.PageTypeNames */
@@ -5128,6 +5129,28 @@ export class sfRestClient {
         }
         return result;
     }
+
+    /** Returns an object for working with a database field */
+    public DBF2TableandTblField(source : string | JQuery<HTMLElement>) :TableAndFieldInfo {
+        var result : TableAndFieldInfo = { isValid: false, table: "", field: "", dbf: "", isRO: false };
+        let dbf = "";
+        if (typeof source === "object" && typeof source.data === "function" && source.hasData("dbf")) dbf = source.data("dbf");
+        if (typeof source === "string") dbf = source;
+
+        if (!dbf) return result;
+        var DBFParts = dbf.split(".");
+        result.dbf = dbf
+        if (DBFParts.length === 2) {
+            result.isValid = true;
+            result.table = DBFParts[0];
+            result.field = DBFParts[1];
+            if (result.table.sfStartsWithCI("SPR")) result.isRO = true;
+            if (result.field.sfStartsWithCI("cmp")) result.isRO = true;
+        };
+        return result;
+    }
+
+
     /** returns true if Event Tracing is on (1) or if Dev Mode (0) AND the event name is not filtered out by Options.WxEventFilter
      *
      * @argument eventName the event name, for example onBeforeRender
