@@ -4824,7 +4824,7 @@ export class sfRestClient {
                     console.log(`${new Date().toSFLogTimeString()} sfPMSHub: state change from ${stateConversion[state.oldState]} to ${stateConversion[state.newState]} using ${sfHub.connection?.transport?.name} `);
                 let connectionType: string | undefined;
                 if (sfHub && sfHub.connection && sfHub.connection.transport) connectionType =sfHub.connection.transport.name;
-                if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`<small>FYI: Your <a href='https://support.spitfirepm.com/kba-01835/' style='color:brown;' title='Click for details'><i class="fa-duotone fa-signal-stream"></i> signal connection</a>is using '${connectionType}'; you may occassionally be disconnected.</small>`) : undefined;
+                if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`FYI: Your <a href='https://support.spitfirepm.com/kba-01835/' target='_blank' title='Click for details'><i class="fa-duotone fa-signal-stream" style='text-decoration:underline;'></i>&nbsp;connection</a> is using '${connectionType}'; you may occassionally be disconnected.`) : undefined;
             });
             $.connection.hub.disconnected(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms;  Reconnect:${!sfHub.client.SkipAutoReconnect}`);
