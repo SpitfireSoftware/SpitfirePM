@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.207";
+const ClientPackageVersion : string = "1.40.208";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4824,7 +4824,7 @@ export class sfRestClient {
                     console.log(`${new Date().toSFLogTimeString()} sfPMSHub: state change from ${stateConversion[state.oldState]} to ${stateConversion[state.newState]} using ${sfHub.connection?.transport?.name} `);
                 let connectionType: string | undefined;
                 if (sfHub && sfHub.connection && sfHub.connection.transport) connectionType =sfHub.connection.transport.name;
-                if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`Signal connection using ${connectionType}; you may occassionally be disconnected.`) : undefined;
+                if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`<small>FYI: Your <a href='https://support.spitfirepm.com/kba-01835/' style='color:brown;' title='Click for details'><i class="fa-duotone fa-signal-stream"></i> signal connection</a>is using '${connectionType}'; you may occassionally be disconnected.</small>`) : undefined;
             });
             $.connection.hub.disconnected(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms;  Reconnect:${!sfHub.client.SkipAutoReconnect}`);
