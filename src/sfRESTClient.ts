@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.208";
+const ClientPackageVersion : string = "1.40.209";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3308,7 +3308,7 @@ export class sfRestClient {
      * @returns the DIV containing the message, .data("alreadyshown") = true if already shown.
      */
     DisplayThisNotification(templateURL : string, notificationText? : string, timeOutMS? : number) : Promise<JQuery<HTMLElement>>{
-        $("DIV#SNotificationContainerHolder").remove();
+        $("DIV#SNotificationContainerHolder, DIV.sNotificationTarget").remove();
 
         var RESTClient = this;
         var msgReady : Promise<JQuery<HTMLElement>> = new Promise<JQuery<HTMLElement>>( (msgDisplayResolved) => {
@@ -3316,7 +3316,7 @@ export class sfRestClient {
                 clearTimeout(RESTClient.notificationMsgTimeoutHandle);
                 RESTClient.notificationMsgTimeoutHandle = undefined;
             }
-            var $MsgDiv = $('<div />');
+            var $MsgDiv = $('<div class="sNotificationTarget" />');
             if ((!notificationText) || (RESTClient.WasNotificationShown(notificationText))) {
                 if (notificationText) console.log("Notification Already Shown: {0}".sfFormat(notificationText));
                 $MsgDiv.data("alreadyshown",true);
