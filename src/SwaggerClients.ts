@@ -593,6 +593,101 @@ export class ExcelToolsClient extends APIClientBase {
         }
         return null;
     }
+
+    /**
+     * Returns a background task ID
+     * @param fileKey Catalog File Key
+     */
+    postContactImport(fileKey: string) {
+        return new Promise<string>((resolve, reject) => {
+            this.postContactImportWithCallbacks(fileKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private postContactImportWithCallbacks(fileKey: string, onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/excel/import/contacts?";
+        if (fileKey === undefined || fileKey === null)
+            throw new Error("The parameter 'fileKey' must be defined and cannot be null.");
+        else
+            url_ += "fileKey=" + encodeURIComponent("" + fileKey) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPostContactImportWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPostContactImportWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPostContactImportWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPostContactImport(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPostContactImport(xhr: any): string | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result403 = resultData403 !== undefined ? resultData403 : <any>null;
+    
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result404 = resultData404 !== undefined ? resultData404 : <any>null;
+    
+            return throwException("id not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result400 = resultData400 !== undefined ? resultData400 : <any>null;
+    
+            return throwException("Malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result500 = resultData500 !== undefined ? resultData500 : <any>null;
+    
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
 }
 
 export class DocumentToolsClient extends APIClientBase {
@@ -29205,6 +29300,7 @@ export interface IWarningHeaderValue {
 
 export class XferFilesStatus implements IXferFilesStatus {
     name?: string | undefined;
+    key?: string | undefined;
     size!: number;
     progress?: string | undefined;
     error?: string | undefined;
@@ -29221,6 +29317,7 @@ export class XferFilesStatus implements IXferFilesStatus {
     init(_data?: any) {
         if (_data) {
             this.name = _data["name"];
+            this.key = _data["key"];
             this.size = _data["size"];
             this.progress = _data["progress"];
             this.error = _data["error"];
@@ -29237,6 +29334,7 @@ export class XferFilesStatus implements IXferFilesStatus {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["name"] = this.name;
+        data["key"] = this.key;
         data["size"] = this.size;
         data["progress"] = this.progress;
         data["error"] = this.error;
@@ -29253,6 +29351,7 @@ export class XferFilesStatus implements IXferFilesStatus {
 
 export interface IXferFilesStatus {
     name?: string | undefined;
+    key?: string | undefined;
     size: number;
     progress?: string | undefined;
     error?: string | undefined;
