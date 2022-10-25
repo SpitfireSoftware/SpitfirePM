@@ -18,6 +18,7 @@ declare global {
     interface DashboardRefreshPartByName {(partName: string):void}
 
     interface DMKMethod {(dmk:GUID):void}
+    interface RecentDocumentEntry { (dmk: GUID, title: string):void}
     interface DocumentChangeBy { (loginSessionKey: GUID, otherUserName :string,   changeCount:number, nextEvent:string):void }
     interface FlushClientDV { (dvName:string, pValue: string, dependsOn: string[] | undefined):void }
     interface HeartbeatMonitor { (dsk: string, rep: number):Promise<string>}
@@ -40,7 +41,7 @@ declare global {
             ReConnectDelay: number;
             ForWindowRX : RegExp //= /^javascript.+-(?<WindowName>[a-z0-9]{12})'\);/
             SkipAutoReconnect: boolean;
-
+            addRecentDocument: RecentDocumentEntry
             afterDocumentSaved: AfterDocumentSaved;
             dashboardOpenLink: DashboardOpenLink;
             dashboardRefreshPartByName: DashboardRefreshPartByName;

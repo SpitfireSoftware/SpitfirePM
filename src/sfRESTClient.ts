@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.210";
+const ClientPackageVersion : string = "1.40.211";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2130,44 +2130,23 @@ export class sfRestClient {
        return new Promise<Window | null>((resolve) => {
            if (!id.sfIsGuid()) {
                 console.warn("PopDoc(): Document id expected; received",id);
-                this.DisplayUserNotification("Document key expected",9876);
+                RESTClient.DisplayUserNotification("Document key expected",9876);
                 resolve(null);
                 return;
            }
            RESTClient.GetDV("DocMasterType",id,undefined).then(async (thisDocType) => {
-               var thisRestClient = this;
                if (!thisDocType) {
                    console.warn("PopDoc(): Document not found"); //hmmm maybe a popup?
-                   this.DisplayUserNotification("Document not found",9876);
+                   RESTClient.DisplayUserNotification("Document not found",9876);
                    resolve(null);
                    return;
                }
                RESTClient.GetDV("DocTitleLong",id,undefined)
                .then((title)=>{
-                    if (title) {
-                        let recent = sfRestClient.RecentDocumentList.find(ma=>{return ma.CommandArgument === id;});
-                        if (!recent) {
-                            const MostRecent =new _SwaggerClientExports.MenuAction();
-                            MostRecent.CommandArgument = id;
-                            MostRecent.ItemText = title;
-                            MostRecent.HrefTarget="_blank";
-                            MostRecent.HRef = `javascript:top.sfClient.PopDoc('${id}');`;
-                            MostRecent.Enabled = true;
-                            sfRestClient.RecentDocumentList.unshift(MostRecent);
-                            if (sfRestClient.RecentDocumentList.length === 10) sfRestClient.RecentDocumentList.pop();
-                            else if (sfRestClient.RecentDocumentList.length === 2 && !sfRestClient.RecentDocumentList[1].Enabled) sfRestClient.RecentDocumentList.pop();
-                        }
-                        else {
-                            sfRestClient.RecentDocumentList.splice(sfRestClient.RecentDocumentList.indexOf(recent),1);
-                            sfRestClient.RecentDocumentList.unshift(recent);
-                        }
-                    }
-                    else {
-                        console.warn(`PopDoc(${id}).GetTitle - unexpected false result`);
-                    }
+                    RESTClient.UpdateRecentDocumentList(id,title);
                })
                .catch((reason)=>{
-                    console.warn(`PopDoc(${id}).GetTitle`,reason);
+                    console.warn(`PopDoc(${id}).DocTitleLong`,reason);
                });
 
                //todo: determine if we should use the new or old UI based on the document type of this document
@@ -2177,7 +2156,7 @@ export class sfRestClient {
                    if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",thisDocType,false)) url =  sfRestClient._Options.PopDocXBURL;
                }
 
-               url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
+               url  =  url.sfFormat(RESTClient._SiteURL, id) ;
                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
                var TargetTab =  url.substring(url.lastIndexOf("-") + 1).toLowerCase();
@@ -2191,6 +2170,34 @@ export class sfRestClient {
                resolve(PW);
            });
        });
+   }
+
+   /** Adds (or relocates) the specified document to the top of the recent document list
+    * @param dmk guid of the document
+    * @param title text to show in menu, typically result of DocTitleLong
+    */
+   public UpdateRecentDocumentList(dmk: GUID, title: string | null ): void {
+    if (title) {
+        let recent = sfRestClient.RecentDocumentList.find(ma=>{return ma.CommandArgument === dmk;});
+        if (!recent) {
+            const MostRecent =new _SwaggerClientExports.MenuAction();
+            MostRecent.CommandArgument = dmk;
+            MostRecent.ItemText = title;
+            MostRecent.HrefTarget="_blank";
+            MostRecent.HRef = `javascript:top.sfClient.UpdateRecentDocumentList('${dmk}');`;
+            MostRecent.Enabled = true;
+            sfRestClient.RecentDocumentList.unshift(MostRecent);
+            if (sfRestClient.RecentDocumentList.length === 10) sfRestClient.RecentDocumentList.pop();
+            else if (sfRestClient.RecentDocumentList.length === 2 && !sfRestClient.RecentDocumentList[1].Enabled) sfRestClient.RecentDocumentList.pop();
+        }
+        else {
+            sfRestClient.RecentDocumentList.splice(sfRestClient.RecentDocumentList.indexOf(recent),1);
+            sfRestClient.RecentDocumentList.unshift(recent);
+        }
+    }
+    else {
+        console.warn(`PopDoc(${dmk}).UpdateRecentDocumentList - requires title`);
+    }
    }
 
   /**
@@ -4652,6 +4659,10 @@ export class sfRestClient {
                     }
                 }
             }
+            sfHub.client.addRecentDocument = function (dmk: GUID, title: string) {
+                // this event updates the recent Document list
+                top?.sfClient.UpdateRecentDocumentList(dmk,title);
+            };
 
             sfHub.client.nowViewingDocument = function (target, loginSessionKey, request) {
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
