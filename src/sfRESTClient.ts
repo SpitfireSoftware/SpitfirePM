@@ -2185,7 +2185,7 @@ export class sfRestClient {
             MostRecent.CommandArgument = dmk;
             MostRecent.ItemText = title;
             MostRecent.HrefTarget="_blank";
-            MostRecent.HRef = `javascript:top.sfClient.UpdateRecentDocumentList('${dmk}');`;
+            MostRecent.HRef = `javascript:top.sfClient.PopDoc('${dmk}');`;
             MostRecent.Enabled = true;
             sfRestClient.RecentDocumentList.unshift(MostRecent);
             if (sfRestClient.RecentDocumentList.length === 10) sfRestClient.RecentDocumentList.pop();
@@ -2197,7 +2197,7 @@ export class sfRestClient {
         }
     }
     else {
-        console.warn(`PopDoc(${dmk}).UpdateRecentDocumentList - requires title`);
+        console.warn(`UpdateRecentDocumentList(${dmk}) - requires title`);
     }
    }
 
