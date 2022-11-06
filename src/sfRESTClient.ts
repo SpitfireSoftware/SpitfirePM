@@ -317,6 +317,7 @@ export class sfRestClient {
         ManageDashboard: 32,
         Contacts: 64,
         Report: 128,
+        PivotTool: 128,
         Document: 1024,
         Unknown: 8092,
         Unauthenticated: 16384,
@@ -2618,7 +2619,8 @@ export class sfRestClient {
                 result = this.PageTypeNames.Login;
                 break;
             case "arr":
-                result = this.PageTypeNames.RouteWizard;
+            case "sscontent":
+                    result = this.PageTypeNames.RouteWizard;
                 break;
             case "dxutil":
                 result = this.PageTypeNames.DiagUtilities;
@@ -2635,7 +2637,10 @@ export class sfRestClient {
             case 'ExecutiveInfo':
                 result = this.PageTypeNames.ExecutiveDashboard;
                 break;
-            case "popTinymce5": case "popEdit":
+            case 'pivot':
+                    result = this.PageTypeNames.PivotTool;
+                   break;
+           case "popTinymce5": case "popEdit":
                     result = this.PageTypeNames.RichTextEdit;
                     break;
             default:
@@ -2653,7 +2658,8 @@ export class sfRestClient {
         var pgHash : string = location.hash;
         if (pgHash.length > 0) pgname = pgHash; // for xb style
         if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
-        if (pgname.toLowerCase().includes("arr.aspx",)) pgname = "arr";
+        if (pgname.toLowerCase().includes("arr.aspx",)) pgname = "arr";// maps to RouteWizard
+        if (pgname.toLowerCase().includes("sscontent.aspx",)) pgname = "sscontent"; // maps to RouteWizard
         if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
