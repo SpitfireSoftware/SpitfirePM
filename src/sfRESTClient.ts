@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.212";
+const ClientPackageVersion : string = "1.40.216";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -154,6 +154,7 @@ class PartStorageData {
 
         if (!PartStorageData._SiteURL) {
             var ApplicationPath = window.__HTTPApplicationName();
+            if (ApplicationPath.toLocaleLowerCase() === "powerux") ApplicationPath = 'sfPMS';
             PartStorageData._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
         }
     }
@@ -5275,6 +5276,7 @@ export class sfRestClient {
 
 
             var ApplicationPath = window.__HTTPApplicationName();
+            if (ApplicationPath.toLocaleLowerCase() === "powerux") ApplicationPath = 'sfPMS';
             this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
             this._SiteRootURL = `/${ApplicationPath || 'sfPMS'}`;
 

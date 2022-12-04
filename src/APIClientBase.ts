@@ -7,9 +7,16 @@ export class APIClientBase {
     private static GAIgnoreActions = {account: true, session:true, suggestions: true, uicfg:true, viewable: true};
     public getBaseUrl( baseURL : string) : string {
         if (APIClientBase._SiteURL === null) {
-            var ApplicationPath = window.location.pathname;
-            ApplicationPath = ApplicationPath.substring(1, ApplicationPath.length === 1 && ApplicationPath === "/" ? 1 : ApplicationPath.substring(1).indexOf("/") + 1);
-            APIClientBase._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
+            if (window.location.origin === "http://localhost" && window.location.pathname === "/powerux/") {
+                console.log('APIClientBase.getBaseUrl(${baseURL})....detected DEV path');
+                APIClientBase._SiteURL = `http://localhost/sfpms`;
+            }
+            else {
+                var ApplicationPath = window.location.pathname;
+                ApplicationPath = ApplicationPath.substring(1, ApplicationPath.length === 1 && ApplicationPath === "/" ? 1 : ApplicationPath.substring(1).indexOf("/") + 1);
+                APIClientBase._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
+            }
+            console.log('APIClientBase.getBaseUrl(${baseURL})....${APIClientBase._SiteURL}');
         }
         return APIClientBase._SiteURL;
     }

@@ -166,6 +166,7 @@ if (!String.prototype.replaceAll) {
     }});
 
 var HTTPApplicationName = (typeof window !== "undefined" ? window.__HTTPApplicationName() : "sfPMS");
+if (HTTPApplicationName.toLocaleLowerCase() === "powerux") HTTPApplicationName = 'sfPMS';
 var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");
 export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
 export const sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
