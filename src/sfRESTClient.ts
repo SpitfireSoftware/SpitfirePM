@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.216";
+const ClientPackageVersion : string = "1.40.217";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -429,11 +429,13 @@ export class sfRestClient {
                 var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData);
                 ViewModelPromise.then((r) => {
                     finalResolve(r);
-                    if (r && Array.isArray(r)) {
-                        RESTClient.GAViewModelEvent(partName,r.length);
-                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("BuildViewModelForContext GA");
+                    const RawResultIsArray = (r && Array.isArray(r));
+                    let rowCount = 1;
+                    if (!RawResultIsArray) {
+                        console.warn(`BuildViewModelForContext GA ${partName} ${typeof r} isArray ${Array.isArray(r)} - single row` ,r);
                     }
-                    else console.warn(`BuildViewModelForContext GA-skip ${partName} ${typeof r} isArray ${Array.isArray(r)}` ,r);
+                    else rowCount = r.length;
+                    RESTClient.GAViewModelEvent(partName,rowCount);
                 });
             });
         });
