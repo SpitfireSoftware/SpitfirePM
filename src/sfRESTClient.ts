@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.218";
+const ClientPackageVersion : string = "1.40.219";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4173,7 +4173,7 @@ export class sfRestClient {
         if (!ld) return;
         if (typeof newValue === "undefined") newValue = 890;
         if (typeof newValue === "string") newValue = Number.parseInt(newValue);
-        if (newValue === NaN) newValue = 789;
+        if (Number.isNaN(newValue)) newValue = 789;
         if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
       //  if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
         var PositionNow = ld.closest("DIV.ui-dialog").position();
