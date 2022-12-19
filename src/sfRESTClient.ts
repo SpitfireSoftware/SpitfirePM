@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.221";
+const ClientPackageVersion : string = "1.40.222";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -783,7 +783,7 @@ export class sfRestClient {
      * @param lookupName
      * @param seedValue 0 or more characters which will limit the suggestions
      * @param dependsOn 0 to 4 values required by the lookup for context; see sfRestClient.GatherDependsOnValues() to process string
-     * @param limit a reasonable number of suggestions to be returned
+     * @param limit a reasonable number of suggestions to be returned; zero or negative replaced with option.SuggestionLimit
      * @returns
      */
     GetLookupSuggestions(lookupName : string, seedValue: string,
@@ -799,7 +799,7 @@ export class sfRestClient {
             var api: LookupClient = new LookupClient(this._SiteURL);
             var DependsOnSet: string[] = ["", "", "", "",""];
 
-            if (limit <= 0) limit = 10; // !!!
+            if (limit <= 0) sfRestClient._Options.SuggestionLimit;
             if (Array.isArray(dependsOn)) {
                 $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
             }
@@ -2292,6 +2292,10 @@ export class sfRestClient {
     public GetBooleanOption(optionName : string) : boolean {
         return sfRestClient._Options[optionName];
     }
+    public GetNumericOption(optionName : string) : number {
+        return sfRestClient._Options[optionName];
+    }
+
     public GetStringOption(optionName : string) : string {
         return sfRestClient._Options[optionName];
     }
@@ -2330,6 +2334,7 @@ export class sfRestClient {
                              location.host !== "scm.spitfirepm.com" &&
                              location.host !== "portal.spitfirepm.com" &&
                              location.host !== "try.spitfirepm.com"),
+        SuggestionLimit: 11,
         TaskStatePollInterval: 357,
         UploadChunkSize: 1048000, // about 1M
         /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
