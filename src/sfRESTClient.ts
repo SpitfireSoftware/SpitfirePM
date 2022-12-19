@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.220";
+const ClientPackageVersion : string = "1.40.221";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -792,13 +792,14 @@ export class sfRestClient {
          * @see sfRestClient.GatherDependsOnValues
         */
            dependsOn: string | string[] | undefined,
-          limit: number) : Promise<Suggestion[] | null> {
+          limit: number = -1) : Promise<Suggestion[] | null> {
 
             var apiResultPromise: Promise<Suggestion[] | null>
             var RESTClient: sfRestClient = this;
             var api: LookupClient = new LookupClient(this._SiteURL);
             var DependsOnSet: string[] = ["", "", "", "",""];
 
+            if (limit <= 0) limit = 10; // !!!
             if (Array.isArray(dependsOn)) {
                 $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
             }
