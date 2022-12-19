@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.217";
+const ClientPackageVersion : string = "1.40.218";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1928,7 +1928,7 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             $("body").trigger(eventName,[RESTClient,keyName,value]);
-            if (eventName === "sfClient.SetWCC_SiteID") this.GAMonitorEvent(  value ,this.IsPowerUXPage() ?  "PowerUX" : "ClassicUI", "Init", "WCC", 0);
+            if (eventName === "sfClient.SetWCC_SiteID") this.GAMonitorEvent(  value ,sfRestClient.IsPowerUXPage() ?  "PowerUX" : "ClassicUI", "Init", "WCC", 0);
         });
 
         return newWCC
@@ -2228,7 +2228,7 @@ export class sfRestClient {
                    return;
                }
                var url : string =  sfRestClient._Options.ProjectLegacyURL;
-               if (RESTClient.IsPowerUXPage()) {
+               if (sfRestClient.IsPowerUXPage()) {
                     url = sfRestClient._Options.ProjectXBURL;
                }
                url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
@@ -2406,10 +2406,24 @@ export class sfRestClient {
     /**
      * For example: http://server.domain.com/sfPMS  (does not include ending slash)
      */
-    protected _SiteURL: string;
-    protected _SiteRootURL: string;
+    protected readonly _SiteURL: string;
+    /** for example: /sfPMS */
+    protected readonly _SiteRootURL: string;
 
+    /** copied to instance vars above */
+    private static __SiteURL: string;
+    private static __SiteRootURL: string;
 
+    /** returns something like /sfPMS */
+    protected static ResolveSiteRootURLs():string {
+        if (!sfRestClient.__SiteRootURL)  {
+            var ApplicationPath = window.__HTTPApplicationName();
+            if (ApplicationPath.toLocaleLowerCase() === "powerux") ApplicationPath = 'sfPMS';
+            sfRestClient.__SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
+            sfRestClient.__SiteRootURL = `/${ApplicationPath || 'sfPMS'}`;
+        }
+        return sfRestClient.__SiteRootURL;
+    }
 
     /**
      *  Returns value from object that matches the field/property name
@@ -2547,7 +2561,7 @@ export class sfRestClient {
         return ((!this.IsDocumentPage()) || (sfRestClient._WCC.DataLockFlag >= "2"));
     }
 
-    public IsPowerUXPage() : boolean {
+    public static IsPowerUXPage() : boolean {
         return location.hash.startsWith("#!")
     }
 
@@ -2770,7 +2784,7 @@ export class sfRestClient {
             Context = sfRestClient._WCC.Project;
         }
         else {
-            Context = this.GetPageQueryParameterByName(this.IsPowerUXPage() ? "project" : "id");
+            Context = this.GetPageQueryParameterByName(sfRestClient.IsPowerUXPage() ? "project" : "id");
             var PageTypeName : string = this.ResolvePageName();
             if (!Context && !this.IsHomeDashboardPage()) console.warn("GetPageProjectKey() could not resolve project key for page ",PageTypeName);
         }
@@ -2924,7 +2938,7 @@ export class sfRestClient {
 
             //if (ActionString.indexOf("?") === -1 &&  ActionString.indexOf(".aspx&set") > 0 )  ActionString = ActionString.replaceAll("&set","?set");// kludge to fix ?set being &set
             if (ActionString.indexOf("?") < 0 && ActionString.indexOf("#") < 0) ActionString += "?fq=1"; //fake query parameter
-            if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0 && this.IsPowerUXPage()) ActionString += "&xbia=1";
+            if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0 && sfRestClient.IsPowerUXPage()) ActionString += "&xbia=1";
             if (ActionString.indexOf("libview.aspx") > 1) {
                 var ActionOptions : string = "";
                 if (ActionString.indexOf("?") > 0) {
@@ -3759,7 +3773,7 @@ export class sfRestClient {
             var  OpenUrl = url;
             if (!RESTClient.IsSiteURL(OpenUrl)) OpenUrl = `${RESTClient._SiteRootURL}/${url}`;
 
-            if (OpenUrl.indexOf("xbia=1") && top?.sfClient.IsPowerUXPage()) {
+            if (OpenUrl.indexOf("xbia=1") && sfRestClient.IsPowerUXPage()) {
                 //ui-icon-script
                 top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI (new tab)","ui-icon-script").on("click",function() {
                     window.open( OpenUrl.replace("xbia=1","xbia=0"));
@@ -4622,7 +4636,7 @@ export class sfRestClient {
             setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
             return;
         }
-        if (top.sfClient.IsPowerUXPage() && !top.sfClient.IsPageOfType(top.sfClient.PageTypeNames.Document)) {
+        if (sfRestClient.IsPowerUXPage() && !top.sfClient.IsPageOfType(top.sfClient.PageTypeNames.Document)) {
             if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout("top.sfClient.pingServer();",234);
         }
         if ($.connection) {
@@ -4659,7 +4673,7 @@ export class sfRestClient {
                     return;
                 }
 
-                if (!top?.sfClient.IsPowerUXPage()) {
+                if (!sfRestClient.IsPowerUXPage()) {
                     if (top?.sfClient.IsProjectPage()) {
                         top?.refreshPartbyName('ProjDocSummary', 'refresh', 'afterDocumentSaved');
                         top?.refreshPartbyName('ProjTypedDocList', 'SlctDocType', dtk);
@@ -4748,7 +4762,7 @@ export class sfRestClient {
                         }
 
                         else if ( RESTClient.IsSiteURL(request)) {
-                            if (RESTClient.IsPowerUXPage()) {
+                            if (sfRestClient.IsPowerUXPage()) {
                                 if (request.indexOf("ProjectDetail.aspx?") > 0) {
                                     const ProjectParse = /[\?\&]id=(?<id>.*)/gm;
                                     const match = ProjectParse.exec(request); //
@@ -4878,15 +4892,15 @@ export class sfRestClient {
         var result = "admin/Logout.aspx";
         if (top) {
             var RESTClient = top.sfClient;
-            var isPowerUX =RESTClient.IsPowerUXPage();
+            var isPowerUX = sfRestClient.IsPowerUXPage();
             isPowerUX = false;
             result = `${RESTClient._SiteRootURL}/${isPowerUX ? "spax.html#!/login" : "admin/Logout.aspx"}?m=${mValue}`;
         }
         return result;
     }
     protected static LoginPageURL(mValue: string) : string {
-        var isPowerUX = top?.sfClient.IsPowerUXPage();
-        var root = top?.sfClient._SiteRootURL;
+        var isPowerUX = sfRestClient.IsPowerUXPage();
+        var root = sfRestClient.ResolveSiteRootURLs();
         var result : string;
         if (isPowerUX) {
             result = `${root}/spax.html#!/login?m=${mValue}`;
@@ -4995,7 +5009,7 @@ export class sfRestClient {
                             var ldata = JSON.parse(responseText);
                             sfRestClient.PageNotificationCount ++
                             responseText = `OK w/${ldata.length} New Documents`;
-                            if (!RESTClient.IsPowerUXPage() && RESTClient.IsHomeDashboardPage()) {
+                            if (!sfRestClient.IsPowerUXPage() && RESTClient.IsHomeDashboardPage()) {
                                 setTimeout("if (typeof top.refreshPartbyName === 'function') top.refreshPartbyName('actionitems'); // pingServer::dasho", 222);
                             }
                             // deprecated: used to put a number on the classic home tab
@@ -5197,11 +5211,11 @@ export class sfRestClient {
         sessionStorage.clear();
         localStorage.clear()
         indexedDB.deleteDatabase("spitfireApp");
-        if (this.IsPowerUXPage()) setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);
+        if (sfRestClient.IsPowerUXPage()) setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);
     }
 
     protected activateDynamicJS(RESTClient : sfRestClient,keyName: string, value: string) {
-        if (typeof sfRestClient._WCC._DynamicJS === "string" && RESTClient.IsPowerUXPage()) {
+        if (typeof sfRestClient._WCC._DynamicJS === "string" && sfRestClient.IsPowerUXPage()) {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`Activating Dynamics JS {value}`);
             var djs: string[] = JSON.parse(sfRestClient._WCC._DynamicJS);
             if (djs) RESTClient.LoadDynamicJS(djs);
@@ -5276,11 +5290,9 @@ export class sfRestClient {
     constructor() {
         this.ThisInstanceID = sfRestClient.InstanceSerialNumberSource++;
 
-
-            var ApplicationPath = window.__HTTPApplicationName();
-            if (ApplicationPath.toLocaleLowerCase() === "powerux") ApplicationPath = 'sfPMS';
-            this._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
-            this._SiteRootURL = `/${ApplicationPath || 'sfPMS'}`;
+            sfRestClient.ResolveSiteRootURLs();
+            this._SiteURL = sfRestClient.__SiteURL;
+            this._SiteRootURL = sfRestClient.__SiteRootURL;
 
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
