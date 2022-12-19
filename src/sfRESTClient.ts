@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.219";
+const ClientPackageVersion : string = "1.40.220";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2562,7 +2562,7 @@ export class sfRestClient {
     }
 
     public static IsPowerUXPage() : boolean {
-        return location.hash.startsWith("#!")
+        return location.hash.startsWith("#!") || location.pathname === "/powerux/";
     }
 
     public IsHomeDashboardPage() : boolean {
@@ -2623,7 +2623,7 @@ export class sfRestClient {
             case "users":
                 result = this.PageTypeNames.Contacts;
                 break;
-            case "libview": case "LibView":
+            case "libview": case "LibView": case "catalog":
                 result = this.PageTypeNames.Catalog;
                 break;
             case "cusysm":
