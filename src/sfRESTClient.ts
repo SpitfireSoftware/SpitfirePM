@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.222";
+const ClientPackageVersion : string = "1.40.223";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -528,7 +528,10 @@ export class sfRestClient {
      *  Applies CFG data to raw Data Model, returns promise that resolves when View Model is ready
      */
     protected _ConstructViewModel(thisPart: PartStorageData, rawData: any): Promise<DataModelCollection> {
-        if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) throw `Cannot construct this ViewModel`;
+        if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) {
+            console.error('_ConstructViewModel requires CFG and UI', thisPart);
+            throw `Cannot construct requested ViewModel`;
+        }
         var StartAtTicks: number = Date.now();
         var DataModelBuildKey: string = thisPart.GetDataModelBuildContextKey();
         var FailCount: number= 0;
@@ -2645,7 +2648,7 @@ export class sfRestClient {
             case "sscontent":
                     result = this.PageTypeNames.RouteWizard;
                 break;
-            case "dxutil":
+            case "dxutil": case "diagnostic-tools":
                 result = this.PageTypeNames.DiagUtilities;
                 break;
             case "SSPWR":
@@ -3898,7 +3901,7 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient ResolveLookupFrame() called without current Dialog, returning undefined");
             return undefined;
         }
-        return $(forDialog.children("iframe").get(0)) as  JQuery<HTMLIFrameElement>;
+        return $(forDialog.children("iframe").get(0)!) as unknown as  JQuery<HTMLIFrameElement>;
 
     }
 
@@ -4232,7 +4235,8 @@ export class sfRestClient {
         var height = dg.height()!; // actual content area
         var width = Math.round(dg.width()! + 1);  // actual content area
         var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
-        var $DFrame = $(dg.children("iframe").get(0));
+        var $DFrame: JQuery<HTMLIFrameElement> = <any> $( dg.children("iframe").get(0)! as unknown as JQuery<HTMLIFrameElement> ) as JQuery<HTMLIFrameElement>;
+
         $DFrame.css('height', fh); // also iframe
         $DFrame.css('width', '100%'); // also iframe
 
