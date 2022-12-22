@@ -2635,7 +2635,7 @@ export class sfRestClient {
             case "libview": case "LibView": case "catalog":
                 result = this.PageTypeNames.Catalog;
                 break;
-            case "cusysm":
+            case "cusysm": case "system-admin":
                 result = this.PageTypeNames.AdminDashboard;
                 break;
             case "cuManager":
