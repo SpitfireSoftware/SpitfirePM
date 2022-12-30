@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.225";
+const ClientPackageVersion : string = "1.40.226";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -288,11 +288,11 @@ export type PagePartList= {[key: string]: Permits};
 
 /** Spitfire PM Client
  * @example top.sfClient.GetDV(...)
- * @example Access shared properties from console: top.sfClient.exports.sfRestClient._IconMap */
+ * @example Access static methods or shared properties from console: top.staticBase._IconMap */
 export class sfRestClient {
     readonly ClientVersion: string = `${ClientPackageVersion}`;
     ServerVersion():string {
-        var result ="2020.0.7919";
+        var result ="2021.0.8400";
         if (sfRestClient._WCC.Version) result = sfRestClient._WCC.Version;
         return result;
     }
@@ -4013,6 +4013,7 @@ export class sfRestClient {
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`onLoad::resizeDialogInFrame(${frameID}) frame:${fh} set to=${RunHeight}`);
     }
 
+    /** Sends the specified message to the server log file using REST API */
     LogMessageOnServer(msgText: string) : void {
         var api = new SessionClient(this._SiteURL);
         api.postToWebAppLog(new _SwaggerClientExports.APIData( {Data: msgText, IsURIEncoded: false}));
@@ -4592,6 +4593,11 @@ export class sfRestClient {
      * @returns object with exported resources constructorts
      */
     readonly exports : NVPair;
+/**
+     * Returns a refernce that can be used to invoke static methods on this class
+     * @returns sfRestClient static class
+     */
+    readonly staticBase : sfRestClient;
 
     /**
      * Creates an instance of the requested API controller with baseURL set appropriately
@@ -5305,10 +5311,12 @@ export class sfRestClient {
             this._SiteURL = sfRestClient.__SiteURL;
             this._SiteRootURL = sfRestClient.__SiteRootURL;
 
+        this.staticBase = sfRestClient as any;
         this.exports = _SwaggerClientExports;
         this.exports.$ = $;
         this.exports.sfRestClient = sfRestClient;
         this.exports.LoggingLevels = LoggingLevels;
+
         var MyHostName = window.location.host;
         if ((MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) && sfRestClient._Options.LogLevel < 2 ) this.SetOptions({ LogLevel: 2 }); // verbose
 
