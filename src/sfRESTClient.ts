@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.223";
+const ClientPackageVersion : string = "1.40.225";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2678,10 +2678,11 @@ export class sfRestClient {
     }
 
     protected ResolvePageName() : string {
-        const locationHash = location.href.sfHashCode();
+        const topLocation = top!.location;
+        const locationHash = topLocation.href.sfHashCode();
         if (locationHash === sfRestClient.ResolvePageInfo.ValidHash) return sfRestClient.ResolvePageInfo.LastResolvedPageName;
-        var pgname : string = location.pathname;
-        var pgHash : string = location.hash;
+        var pgname : string = topLocation.pathname;
+        var pgHash : string = topLocation.hash;
         if (pgHash.length > 0) pgname = pgHash; // for xb style
         if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
         if (pgname.toLowerCase().includes("arr.aspx",)) pgname = "arr";// maps to RouteWizard
@@ -2691,7 +2692,7 @@ export class sfRestClient {
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
         sfRestClient.ResolvePageInfo.LastResolvedPageName = pgname;
         sfRestClient.ResolvePageInfo.ValidHash = locationHash;
-        if (this.DevMode(LoggingLevels.Verbose)) console.log(`ResolvePageName(${location.pathname},${location.hash} ) --> ${pgname}`);
+        if (this.DevMode(LoggingLevels.Verbose)) console.log(`ResolvePageName(${topLocation.pathname},${topLocation.hash} ) --> ${pgname}`);
         return pgname;
     }
 
