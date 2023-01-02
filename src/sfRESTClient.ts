@@ -12,7 +12,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.226";
+const ClientPackageVersion : string = "1.40.227";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2629,7 +2629,7 @@ export class sfRestClient {
             case "Dashboard": case "home":
                 result = this.PageTypeNames.HomeDashboard;
                 break;
-            case "users":
+            case "users": case "contacts":
                 result = this.PageTypeNames.Contacts;
                 break;
             case "libview": case "LibView": case "catalog":
