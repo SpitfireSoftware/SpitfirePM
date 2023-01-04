@@ -1,7 +1,7 @@
 //import { contains } from "jquery";
 import { GoogleAnalyticPayload, GUID } from "./globals";
 //import  { sfApplicationRootPath } from "./string.extensions";
-import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import {  IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
@@ -9,10 +9,9 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 import * as localForage from "localforage";
 import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
-import { getDriver } from "localforage";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.228";
+const ClientPackageVersion : string = "1.40.229";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2218,6 +2217,7 @@ export class sfRestClient {
        var RESTClient = this;
        RESTClient.heartbeat();
        if (this.IsDocumentPage()) {
+            window.open("","Dashboard"); // switches tab in Chrome 2023 ... next line navigates to the project
             $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
             return new Promise<null>((resolve)=> resolve(null));
        }
@@ -2661,6 +2661,7 @@ export class sfRestClient {
                 result = this.PageTypeNames.Report;
                 break;
             case 'ExecutiveInfo':
+                case 'project-summary':
                 result = this.PageTypeNames.ExecutiveDashboard;
                 break;
             case 'pivot':
