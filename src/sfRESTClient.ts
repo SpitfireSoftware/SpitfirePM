@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.230";
+const ClientPackageVersion : string = "1.40.232";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -431,7 +431,7 @@ export class sfRestClient {
                     const RawResultIsArray = (r && Array.isArray(r));
                     let rowCount = 1;
                     if (!RawResultIsArray) {
-                        console.warn(`BuildViewModelForContext GA ${partName} ${typeof r} isArray ${Array.isArray(r)} - single row` ,r);
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug)  console.log(`BuildViewModelForContext GA ${partName} ${typeof r} isArray ${Array.isArray(r)} - single row` ,r);
                     }
                     else rowCount = r.length;
                     RESTClient.GAViewModelEvent(partName,rowCount);
