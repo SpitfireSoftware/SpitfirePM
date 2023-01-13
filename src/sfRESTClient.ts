@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.232";
+const ClientPackageVersion : string = "1.40.233";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2660,7 +2660,7 @@ export class sfRestClient {
             case "sfReportViewer":
                 result = this.PageTypeNames.Report;
                 break;
-            case 'ExecutiveInfo':                 case 'project-summary':                    case 'projects-summary':
+            case 'ExecutiveInfo':      case 'Executive':           case 'project-summary':                    case 'projects-summary':
                 result = this.PageTypeNames.ExecutiveDashboard;
                 break;
             case 'pivot':
