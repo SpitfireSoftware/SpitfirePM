@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.240";
+const ClientPackageVersion : string = "1.41.241";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1582,6 +1582,8 @@ export class sfRestClient {
         //return false; // do not return false, IE anchor href issue
 
     }
+
+
 
     static $CurrentPleaseWaitDialog : JQuery<HTMLDivElement> | null;
     HeyPleaseWait() {
