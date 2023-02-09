@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.40.235";
+const ClientPackageVersion : string = "1.41.240";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
