@@ -111,7 +111,7 @@ export class BrowserExtensionChecker {
 
             //proprietary sf
             //FYI: $ likely not defined
-            BrowserExtensionChecker.browser.isTouch = ('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0);
+            BrowserExtensionChecker.browser.isTouch = ('ontouchstart' in window) || ((navigator as any).msMaxTouchPoints > 0);
             BrowserExtensionChecker.browser.sfAgent = false;
             BrowserExtensionChecker.browser.isEdge = navigator.userAgent.match(/Edg/i) !== null || navigator.userAgent.match(/Edge/i) !== null;
             BrowserExtensionChecker.browser.iPad = navigator.userAgent.match(/iPad/i) !== null;
