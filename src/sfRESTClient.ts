@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.244";
+const ClientPackageVersion : string = "1.41.245";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -760,7 +760,7 @@ export class sfRestClient {
             }
             else if (forPageName === this.PageTypeNames.ExecutiveDashboard) {
                 PartNameList = ["ProjectRES"];
-                if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
+                //if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
                 // special case for project dashboards: ProjDocMenu
                 PageParts["ProjDocMenu"] = 1;
             }
