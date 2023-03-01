@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.246";
+const ClientPackageVersion : string = "1.41.247";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4512,14 +4512,21 @@ export class sfRestClient {
         return result;
     }
 
-    /**
+    /** 
      * @argument sSource string in form name=value;otherKey=othervalue;...
      * @argument sKey name of value to be replaced or added
+     * @argument sValue string or DateRange.  String should not contain a semicolon!
+     * @returns sSource updated with sKey=sValue;
      */
-    public SetNameValuePairInString(sSource: string, sKey: string, sValue:string) : string
+    public SetNameValuePairInString(sSource: string, sKey: string, sValue:string | _SwaggerClientExports.DateRange) : string
     {
         let npos: number = -1;
-        let sResult: string
+        let sResult: string;
+        let useValue: string;
+        if (sValue instanceof _SwaggerClientExports.DateRange) {
+            useValue = `{"FromDate":"${(sValue.FromDate) ? new Date(sValue.FromDate).toISOString() : ''}", "ThruDate":"${(sValue.ThruDate) ? new Date(sValue.ThruDate).toISOString() : ''}`;
+        }
+        else useValue = sValue;
         if (!sKey.endsWith("=")) sKey += "=";
         if (typeof sSource !== "string") sSource = "";
         if (sSource && sSource.length > 0) {
@@ -4533,7 +4540,7 @@ export class sfRestClient {
             sSource.split(";").forEach(element => {
                 if (element) {
                     if (element.startsWith(sKey)) {
-                        sResult += `${sKey}${sValue.trimEnd()};`
+                        sResult += `${sKey}${useValue.trimEnd()};`
                     }
                     else {
                         sResult += `${element};`
@@ -4542,7 +4549,7 @@ export class sfRestClient {
             });
         }
         else
-            sResult = `${sSource}${sKey}${sValue.trimEnd()};`;
+            sResult = `${sSource}${sKey}${useValue.trimEnd()};`;
 
         return sResult;
     }
