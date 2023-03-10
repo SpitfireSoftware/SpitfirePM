@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.247";
+const ClientPackageVersion : string = "1.41.249";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -807,7 +807,7 @@ export class sfRestClient {
             var api: LookupClient = new LookupClient(this._SiteURL);
             var DependsOnSet: string[] = ["", "", "", "",""];
 
-            if (limit <= 0) sfRestClient._Options.SuggestionLimit;
+            if (limit <= 0) limit = sfRestClient._Options.SuggestionLimit;
             if (Array.isArray(dependsOn)) {
                 $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
             }
@@ -2225,7 +2225,8 @@ export class sfRestClient {
        var RESTClient = this;
        RESTClient.heartbeat();
        if (this.IsDocumentPage()) {
-            window.open("","Dashboard"); // switches tab in Chrome 2023 ... next line navigates to the project
+            //window.open("","Dashboard"); // opens empty tab  
+            //... next line navigates to the project
             $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
             return new Promise<null>((resolve)=> resolve(null));
        }
@@ -4515,18 +4516,25 @@ export class sfRestClient {
     /** 
      * @argument sSource string in form name=value;otherKey=othervalue;...
      * @argument sKey name of value to be replaced or added
-     * @argument sValue string or DateRange.  String should not contain a semicolon!
+     * @argument sValue string or number or DateRange.  String should not contain a semicolon!
      * @returns sSource updated with sKey=sValue;
      */
-    public SetNameValuePairInString(sSource: string, sKey: string, sValue:string | _SwaggerClientExports.DateRange) : string
+    public SetNameValuePairInString(sSource: string, sKey: string, sValue:string | _SwaggerClientExports.DateRange | {start: Date, end: Date} | number) : string
     {
         let npos: number = -1;
         let sResult: string;
         let useValue: string;
         if (sValue instanceof _SwaggerClientExports.DateRange) {
+            // MAR 23 DateRange does not support JSON.stringify() 
             useValue = `{"FromDate":"${(sValue.FromDate) ? new Date(sValue.FromDate).toISOString() : ''}", "ThruDate":"${(sValue.ThruDate) ? new Date(sValue.ThruDate).toISOString() : ''}`;
         }
-        else useValue = sValue;
+        else  if (typeof sValue !== "string" && typeof sValue !== "number" && typeof sValue.start === "object" && typeof sValue.end === "object") {
+            let rValue : {start: Date, end: Date} = sValue;
+            useValue = `{"FromDate":"${(rValue.start) ? new Date(rValue.start).toISOString() : ''}", "ThruDate":"${(rValue.end) ? new Date(rValue.end).toISOString() : ''}`;
+        }
+
+        else if (typeof sValue==="string") useValue = sValue;
+        else useValue= `${sValue}`;
         if (!sKey.endsWith("=")) sKey += "=";
         if (typeof sSource !== "string") sSource = "";
         if (sSource && sSource.length > 0) {
