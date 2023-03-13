@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.249";
+const ClientPackageVersion : string = "1.41.251";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1831,6 +1831,16 @@ export class sfRestClient {
         });
     }
 
+    /** Simple test for an authenticated session
+     *  - Use await or .then()
+     */
+    async IsLoggedIn() : Promise<boolean> {
+        await this.WaitForSessionLoaded();
+        return new Promise<boolean>( (resolve)  =>{
+            if (!sfRestClient._z.WCCLoaded) resolve(false);
+            resolve( (typeof sfRestClient._WCC.SessionID === "string"));
+        });
+    }
 
     /**
      * Loads or Updates WCC session attributes (api/session/who)
@@ -1844,14 +1854,7 @@ export class sfRestClient {
             let ThisPageType =  this.ResolvePageTypeName();
             if ((ThisPageType &  RESTClient.PageTypeNames.Unauthenticated ) ===  RESTClient.PageTypeNames.Unauthenticated  ){
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not logged in.");
-                let FakeWCC =new WCCData();
-                FakeWCC.AdminLevel = 0;
-                FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
-                resolve(FakeWCC);
+                resolve(sfRestClient._MakeFakeWCC());
                 return;
             }
             if (sfRestClient._SessionClientGetWCC) {
@@ -1890,36 +1893,39 @@ export class sfRestClient {
                 else {
                     //console.warn("SessionClient.getWCC() did not return data!");
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`SessionClient.getWCC() did not return data`);
-                    let FakeWCC =new WCCData();
-                    FakeWCC.AdminLevel = 0;
-                    FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
-                    FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
-                    FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
-                    FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
-                    FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
-                    resolve(FakeWCC);
+                    resolve(sfRestClient._MakeFakeWCC());
                 }
             }).catch(x=>{
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
                 if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
-                        setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
+                        if (top?.name==="Dashboard" || this.IsHomeDashboardPage()) { // do we need more here?  
+                            // goal is to not redirect document pages, etc
+                            if (sfRestClient._Options.LogLevel >= LoggingLevels.None) console.log(`SessionClient.getWCC() redirecting to login`);
+                            setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
+                        }
                     }
                 }
-                let FakeWCC =new WCCData();
-                FakeWCC.AdminLevel = 0;
-                FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
-                FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
-                resolve(FakeWCC);
+                resolve(sfRestClient._MakeFakeWCC());
             });
         });
     }
 
     protected static _SessionClientGetWCC : _SessionClientGetWCCShare | null;
     protected static _SessionClientGetUCFKMap : JQueryXHR | null;
+
+    private static _MakeFakeWCC() : WCCData {
+        let FakeWCC =new WCCData();
+        FakeWCC.AdminLevel = 0;
+        FakeWCC.DataPK= "00000000-0000-0000-0000-000000000000";
+        FakeWCC.DocRevKey= "00000000-0000-0000-0000-000000000000";
+        FakeWCC.DocSessionKey= "00000000-0000-0000-0000-000000000000";
+        FakeWCC.DocTypeKey= "00000000-0000-0000-0000-000000000000";
+        FakeWCC.LoginSessionKey = undefined;
+        FakeWCC.SessionID = undefined;
+        FakeWCC.UserKey = "00000000-0000-0000-0000-000000000000";
+        return FakeWCC;
+    }
 
     /** applies changes to connection properties */
     UpdateWCCData( newWCC: WCCData ) : WCCData {
@@ -2650,7 +2656,7 @@ export class sfRestClient {
             case "cuManager":
                 result = this.PageTypeNames.ManageDashboard;
                 break;
-            case "login": case "Logout":
+            case "login": case "Logout": case "loginRequired":
                 result = this.PageTypeNames.Login;
                 break;
             case "arr":
