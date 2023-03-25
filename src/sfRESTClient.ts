@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.254";
+const ClientPackageVersion : string = "1.41.257";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -899,7 +899,7 @@ export class sfRestClient {
         /**
          * either a string or string array (up to 4 elements)
         */
-        dependsOn: string | string[] | undefined,
+        dependsOn?: string | string[] | undefined,
         /**
          * when true, a unique value is added to defeat cache
         */
@@ -2945,7 +2945,7 @@ export class sfRestClient {
      * - PopTXHistory(...) and PopBFAHistory()
      * - Nav To (dcmodules and admin tools)
      */
-    public InvokeAction(actionString: string | _SwaggerClientExports.MenuAction, rowData? : DataModelRow, options? : InvokeOptions) : void {
+    public InvokeAction(actionString: string | _SwaggerClientExports.MenuAction, rowData? : DataModelRow, options? : InvokeOptions ) : void {
         this.heartbeat();
 
         var ActionString : string = "";
@@ -2985,23 +2985,26 @@ export class sfRestClient {
             }
 
         }
-        var match : RegExpExecArray | null = null;;
+        let matchVPgName : RegExpExecArray | null = null;
+        let matchPopWhat : RegExpExecArray | null = null;
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction: ",ActionString);
 
         var rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
-        match = rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
-        if (match) {
-            if ( match.groups) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::VPg(${match.groups!.vpgName}) ${match.groups.args} w${match.groups.width},h${match.groups.height}`);
-                var ActionArgs : string = this.ExpandActionMarkers(match.groups.args,rowData);
+        var rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)/gm);
+        matchVPgName = rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
+        if (!matchVPgName) matchPopWhat =  rxPopWhat.exec(ActionString);
+        if (matchVPgName) {
+            if ( matchVPgName.groups) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::VPg(${matchVPgName.groups!.vpgName}) ${matchVPgName.groups.args} w${matchVPgName.groups.width},h${matchVPgName.groups.height}`);
+                var ActionArgs : string = this.ExpandActionMarkers(matchVPgName.groups.args,rowData);
                 if (ActionArgs && ActionArgs.indexOf("&Project") < 0) ActionArgs += "&Project="+ this.GetPageProjectKey();
                 if (UseNewTabWithName) {
-                    var url = `${RESTClient._SiteRootURL}/pvp.aspx?vpg=${match.groups!.vpgName}${ActionArgs}`;
+                    var url = `${RESTClient._SiteRootURL}/pvp.aspx?vpg=${matchVPgName.groups!.vpgName}${ActionArgs}`;
 
                     self.open(url,UseNewTabWithName);
                 }
                 else
-                this.VModalPage(match.groups!.vpgName,ActionArgs,parseInt(match.groups.width),parseInt(match.groups.height),match.groups.default);
+                this.VModalPage(matchVPgName.groups!.vpgName,ActionArgs,parseInt(matchVPgName.groups.width),parseInt(matchVPgName.groups.height),matchVPgName.groups.default);
             }
             else {
                 console.warn("InvokeAction::VPg failed match",ActionString);
@@ -3015,7 +3018,7 @@ export class sfRestClient {
         }
         else if (ActionString.indexOf("PopDoc(") >= 0) {
             var rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
-            var match = rxPopDoc.exec(ActionString);
+            let match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
                 this.PopDoc( match.groups.idguid );
@@ -3026,7 +3029,7 @@ export class sfRestClient {
         }
         else if (ActionString.indexOf("PopNewDoc(") >= 0) {
             var rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
-            var match = rxPopDoc.exec(ActionString);
+            let match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
                 var Project = this.GetPageProjectKey();
@@ -3036,35 +3039,40 @@ export class sfRestClient {
                 console.warn("InvokeAction::PopNewDoc failed match",actionString);
             }
         }
-        else if (ActionString.indexOf("PopTXHistory(") + ActionString.indexOf("PopBFAHistory(") >= 0) {
-            console.warn("InvokeAction::TXH not really done",ActionString);
+        else if (matchPopWhat && matchPopWhat.groups) {
+            //console.warn("InvokeAction::TXH not really done",ActionString);
             var rx : RegExp;
-            var vpgName : string
+            var vpgName : string;
+            let popWhat = matchPopWhat.groups.popWhat;
             var Project = this.GetPageProjectKey();
             var Task:string = "%",Acct : string = "%", Period:string="%";
             var BFAMode : boolean = false;
             var mode : string = "";
             var PageDSK : string = "";
             if (!options) options = {ByTask: true, ByAcct: true};
-            if (ActionString.indexOf("PopBFAHistory(") >= 0) {
+            if ( popWhat === "PopBFAHistory")   {
                 rx = /PopBFAHistory\(['"](?<PGDSK>.*?)['"],\s*?(?<project>.*?),\s*?(?<task>.*?),\s*?(?<acct>.*?),['"](?<mode>.*?)['"]\s*?\)/gm;
                 vpgName = "BFANotes";
                 BFAMode = true;
             }
             else {
                 // this rx does not remove quotes from period
-                rx = /PopTXHistory\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));/gm;
-                vpgName = "TranHistory";
+                let rxString = `${popWhat}\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));`
+                rx = new RegExp(rxString,"gm"); 
+                //rx =  /PopTXHistory\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));/gm;
+                vpgName = popWhat === "PopCommitDetail" ? "CommitDetail" :  "TranHistory";
             }
-            var match = rx.exec(ActionString);
-            if (match && match.groups) {
+            let matchCall = rx.exec(ActionString);
+            if (matchCall && matchCall.groups) {
                 // we ignore the task and account in the invoice action string - see InvokeOptions
-                if (match.groups.project) Project = match.groups.project;
-                if (match.groups.mode) mode = match.groups.mode;
-                if (match.groups.PGDSK) PageDSK = match.groups.PGDSK;
-                if (match.groups.period) Period = match.groups.period;
+                if (matchCall.groups.project) Project = matchCall.groups.project;
+                if (matchCall.groups.mode) mode = matchCall.groups.mode;
+                if (matchCall.groups.PGDSK) PageDSK = matchCall.groups.PGDSK;
+                if (matchCall.groups.period) Period = matchCall.groups.period;
             }
             var ModalOptions : string;
+            if (options && options.ByTask && rowData && rowData["task"]) Task = rowData["task"];
+            if (options && options.ByAcct && rowData && rowData["acct"]) Acct = rowData["acct"];
             if (BFAMode) {
                 ModalOptions = `&project=${Project}&ds=1&task=${Task}&acct=${Acct}&period=${Period}`
             }
@@ -3074,9 +3082,8 @@ export class sfRestClient {
             // sample action: javascript:PopTXHistory(\"TranHistory\", ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" );
             // sample javascript:PopBFAHistory('$$PDSID$$',row.Project, ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" ,'PA');
             // sample http://stany2017/SFPMS/pvp.aspx?vpg=TranHistory&project=GC003&ds=1f573cce-ddd8-4463-a6a6-40c641357f47_ProjectCA_dsData&task=01000&acct=%25&period=%
-            if (options && options.ByTask && rowData && rowData["task"]) Task = rowData["task"];
-            if (options && options.ByAcct && rowData && rowData["acct"]) Acct = rowData["acct"];
-            if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction: VModalPage(${vpgName})`,ModalOptions);
+           
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Normal) console.log(`InvokeAction: VModalPage(${vpgName})`,ModalOptions);
             this.VModalPage(vpgName,ModalOptions,999,444,undefined);
         }
         else if (   ActionString.indexOf("PopXLTool(") >= 0 ||
@@ -3086,17 +3093,17 @@ export class sfRestClient {
                 var targetURL = "";
                 if (ActionString.indexOf("PopFVC(") >= 0) {
                     var rx = /javascript:PopFVC\(['"`](?<URL>.*)[`'"],['"`](?<fileKey>.*)[`'"],['"`](?<idname>.*)[`'"],['"`](?<command>.*)[`'"]/gm;
-                    var match = rx.exec(ActionString);
-                    if (match && match.groups) {
-                        targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${match.groups.fileKey}&id=${match.groups.idname}&cmd=${match.groups.command}`;
+                    let matchFVC = rx.exec(ActionString);
+                    if (matchFVC && matchFVC.groups) {
+                        targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${matchFVC.groups.fileKey}&id=${matchFVC.groups.idname}&cmd=${matchFVC.groups.command}`;
                     }
                     else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
                     }
                 else {
                         var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
-                        var match = rx.exec(ActionString);
-                        if (match && match.groups) {
-                            targetURL = this.ExpandActionMarkers(match.groups.URL,rowData);
+                        var matchMSLinkTool = rx.exec(ActionString);
+                        if (matchMSLinkTool && matchMSLinkTool.groups) {
+                            targetURL = this.ExpandActionMarkers(matchMSLinkTool.groups.URL,rowData);
                         }
                         else console.warn("InvokeAction() could not parse",actionString);
                     }
