@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.258";
+const ClientPackageVersion : string = "1.41.261";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1645,16 +1645,24 @@ export class sfRestClient {
      * @param dotNetFormat something like d or m/d/yyyy
      * See https://support.spitfirepm.com/kba-01132/ and https://docs.webix.com/helpers__date_formatting_methods.html
      *
-     * test: ["MMM d, yyyy","MM d, yy","M dd, yyyy","MMM d, yyyy HH:mm:ss","d/m/yyyy","H:mm:ss","h:mm:ss tt"].forEach(test=> console.log(test.padEnd(25),"\t",sfClient.ConvertDotNetDateTimeFormatToWebix(test)))
+     * test: ["d","t","d t","MMM d, yyyy","MM d, yy","M dd, yyyy","MMM d, yyyy HH:mm:ss","d/m/yyyy","H:mm:ss","h:mm:ss tt"].forEach(test=> console.log(test.padEnd(25),"\t",sfClient.ConvertDotNetDateTimeFormatToWebix(test)))
      */
     public ConvertDotNetDateTimeFormatToWebix( dotNetFormat : string ): string {
         var result : string | null;
         var DefaultCulture : string = navigator.language;
-        if (!dotNetFormat || dotNetFormat === "d") {
-            if (DefaultCulture.length < 4) dotNetFormat = "d MMM yyyy";
-            else if (DefaultCulture = "en-US") dotNetFormat = "M/d/yyyy";
-            else dotNetFormat = "d MMM yyyy";
+        let addShortTime: boolean = false;
+        let usCulture: boolean = false;
+        if (DefaultCulture) usCulture = (DefaultCulture === "en-US");
+
+        // special handling for d and/or t on their own
+        if (!dotNetFormat || dotNetFormat === "d" || dotNetFormat === "d t") {
+            if (dotNetFormat?.endsWith("t")) addShortTime = true;
+            dotNetFormat = (usCulture) ?  "M/d/yyyy" : "d MMM yyyy";
         }
+        if (addShortTime || dotNetFormat === "t") {
+            dotNetFormat =  ((dotNetFormat === "t") ? "" : dotNetFormat + " ") + ((usCulture) ?  "H:mm tt" : "HH:mm");
+        }
+
         var cacheKey : string = "ZDFMT2WX:" + dotNetFormat;
         result = sessionStorage.getItem(cacheKey)
         if (result) return result;
