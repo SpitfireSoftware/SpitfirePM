@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.263";
+const ClientPackageVersion : string = "1.41.264";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2363,7 +2363,7 @@ export class sfRestClient {
                              location.host !== "portal.spitfirepm.com" &&
                              location.host !== "try.spitfirepm.com"),
         SuggestionLimit: 11,
-        TaskStatePollInterval: 357,
+        TaskStatePollInterval: 999,
         UploadChunkSize: 1048000, // about 1M
         /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
         UploadDirectLimit: 8388000, // about 8M (Box uses 20M);
