@@ -11,9 +11,10 @@ declare global {
 
     interface Date {
         addDays(this: Date, d: number): Date;
-        diffDays(this: Date, firstDate: Date | string, secondDate: Date | String): number;
+        diffDays(this: Date, firstDate: Date | string, secondDate: Date | string): number;
         isDate(this:Date, d?: Date | string ): boolean;
         isMidnight(this: Date): boolean;
+        isSameDay(this:Date, d:Date): boolean;
         oneDay(this: Date): number;
         /** returns hh:mm:ss.tt */
         toSFLogTimeString(this: Date): string;
@@ -30,7 +31,7 @@ declare global {
 }
 
 export interface String { };
-export interface Date {};
+ 
 
 if (!Date.prototype.addDays) {
     Date.prototype.addDays = function (d) {
@@ -63,6 +64,12 @@ if (!Date.prototype.isMidnight) {
         return this.getHours() === 0 && this.getMinutes() === 0 && this.getSeconds() === 0;
     };
 }
+if (!Date.prototype.isSameDay) {
+    Date.prototype.isSameDay = function (d: Date)  : boolean {
+        return this.getDate() === d.getDate() && this.getFullYear() === d.getFullYear() && this.getMonth() === d.getMonth();
+    };
+}
+
 if (!Date.prototype.isDate) {
     Date.prototype.isDate = function (d? : string | Date) {
         var result = false;
