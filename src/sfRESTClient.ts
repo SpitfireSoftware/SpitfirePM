@@ -11,7 +11,7 @@ import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.261";
+const ClientPackageVersion : string = "1.41.263";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1655,12 +1655,14 @@ export class sfRestClient {
         if (DefaultCulture) usCulture = (DefaultCulture === "en-US");
 
         // special handling for d and/or t on their own
-        if (!dotNetFormat || dotNetFormat === "d" || dotNetFormat === "d t") {
-            if (dotNetFormat?.endsWith("t")) addShortTime = true;
+        if (!dotNetFormat) dotNetFormat = "d";
+        if (dotNetFormat?.endsWith(" t")) addShortTime = true;
+        if (dotNetFormat === "d" || dotNetFormat === "d t") {
             dotNetFormat = (usCulture) ?  "M/d/yyyy" : "d MMM yyyy";
         }
         if (addShortTime || dotNetFormat === "t") {
-            dotNetFormat =  ((dotNetFormat === "t") ? "" : dotNetFormat + " ") + ((usCulture) ?  "H:mm tt" : "HH:mm");
+            if (dotNetFormat.endsWith(" t")) dotNetFormat = dotNetFormat.substring(0,dotNetFormat.length - 2);
+            dotNetFormat =  ((dotNetFormat === "t") ? "" : dotNetFormat + " ") + ((usCulture) ?  "h:mm tt" : "HH:mm");
         }
 
         var cacheKey : string = "ZDFMT2WX:" + dotNetFormat;
