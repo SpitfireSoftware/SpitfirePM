@@ -1,6 +1,5 @@
 //import { contains } from "jquery";
 import { GoogleAnalyticPayload, GUID } from "./globals";
-//import  { sfApplicationRootPath } from "./string.extensions";
 import {  IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import * as $ from 'jquery';
@@ -9,9 +8,10 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 import * as localForage from "localforage";
 import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
+import { sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.265";
+const ClientPackageVersion : string = "1.41.266";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2133,7 +2133,7 @@ export class sfRestClient {
                 }
                 else UseID = await this.NewGuid();
                 if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL;
-                url  =  url.sfFormat(thisRestClient._SiteURL, dtk,(dtk.toUpperCase() !== "EE06ED1B-0329-4154-81A7-756C281EBD93") ? project : "",options) ;
+                url  =  url.sfFormat(thisRestClient._SiteURL, dtk,(dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup ) ? project : "",options) ;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`PopNewDoc opening ${UseID} DTK ${dtk} using ${url}`);
 
                 var TargetTab =  UseID.substring(UseID.lastIndexOf("-") + 1).toLowerCase();

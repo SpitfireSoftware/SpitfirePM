@@ -1,6 +1,6 @@
 import { GoogleAnalyticPayload,GA4Payload } from "./globals";
 
-export class APIClientBase {
+export  class APIClientBase {
     static _SiteURL : string | null = null;
     /** Spitfire Assigned Site ID  */
     private static  GAClientID : string | undefined = undefined;
