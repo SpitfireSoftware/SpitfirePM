@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.266";
+const ClientPackageVersion : string = "1.41.268";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3000,7 +3000,8 @@ export class sfRestClient {
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction: ",ActionString);
 
         var rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
-        var rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)/gm);
+        var rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)\(/gm);
+        
         matchVPgName = rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
         if (!matchVPgName) matchPopWhat =  rxPopWhat.exec(ActionString);
         if (matchVPgName) {
