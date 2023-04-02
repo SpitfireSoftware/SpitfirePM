@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.268";
+const ClientPackageVersion : string = "1.41.269";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5364,6 +5364,16 @@ export class sfRestClient {
         this.exports.$ = $;
         this.exports.sfRestClient = sfRestClient;
         this.exports.LoggingLevels = LoggingLevels;
+
+        const SavedLoggingLevel = localStorage.getItem("SavedLoggingLevel");
+        if (!SavedLoggingLevel && location.protocol !== "https:") console.log("DEV: Set default logging level using localStorage.setItem('SavedLoggingLevel',9);");
+        else {
+            const defaultLoggingLevel = (SavedLoggingLevel) ?parseInt(SavedLoggingLevel) : NaN;
+            if (!Number.isNaN(defaultLoggingLevel)) {
+                this.SetOptions({LogLevel: defaultLoggingLevel});
+                console.log(`DEV: Set logging level based on localStorage.setItem('SavedLoggingLevel',${defaultLoggingLevel} );`);
+            }
+        }
 
         var MyHostName = window.location.host;
         if ((MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) && sfRestClient._Options.LogLevel < 2 ) this.SetOptions({ LogLevel: 2 }); // verbose
