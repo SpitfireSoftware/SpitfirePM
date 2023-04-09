@@ -8,10 +8,10 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 import * as localForage from "localforage";
 import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
-import { sfProcessDTKMap } from "./string.extensions";
+import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.269";
+const ClientPackageVersion : string = "1.41.271";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2241,10 +2241,19 @@ export class sfRestClient {
        var RESTClient = this;
        RESTClient.heartbeat();
        if (this.IsDocumentPage()) {
-            //window.open("","Dashboard"); // opens empty tab  
             //... next line navigates to the project
             $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
-            return new Promise<null>((resolve)=> resolve(null));
+            return new Promise<Window | null>((resolve)=>{
+            //window.open("","Dashboard"); // switches tabs or opens empty tab :-(
+                const DashboardWindow = window.open("","Dashboard");
+                if (DashboardWindow) {
+                    console.log(`OpenProject ${DashboardWindow.name} at ${DashboardWindow.location.href}`, DashboardWindow);
+                    if (DashboardWindow.location.href === 'about:blank') {
+                        DashboardWindow.location.href = sfApplicationRootPath;
+                    }
+                } 
+            resolve(DashboardWindow);
+            });
        }
        return new Promise<Window | null>((resolve) => {
 

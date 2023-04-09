@@ -175,8 +175,6 @@ if (!String.prototype.replaceAll) {
 var HTTPApplicationName = (typeof window !== "undefined" ? window.__HTTPApplicationName() : "sfPMS");
 if (HTTPApplicationName.toLocaleLowerCase() === "powerux") HTTPApplicationName = 'sfPMS';
 var HTTPOrigin = (typeof window !== "undefined" ?window.location.origin : "");
-export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
-export const sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
 export const sfProcessDTKMap = {
     ARInvoice: '2e4b7fc1-1a3c-4835-948b-edfbf45035c5',
     ARPayments: 'f62e246c-a55e-4d05-9016-ac9fce26f4e4',
@@ -253,3 +251,6 @@ export const sfProcessDTKMap = {
     WorkOrder: '3b49567a-62bc-4546-ba71-de6c0f8aa36b',
     WorkPosted: 'e18f4f17-377b-499e-bd12-bfbc4764de6c',
     }
+
+export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
+export const sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
