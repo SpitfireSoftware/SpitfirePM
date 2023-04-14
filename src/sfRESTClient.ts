@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.274";
+const ClientPackageVersion : string = "1.41.275";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -27,7 +27,7 @@ type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
 type RRCacheEntry = { w: number, v: string | number | boolean };
 type CoordinateWithSize = {top:number,left:number,width:number,height:number};
-type UploadMode = "catalog"|"ContactPhoto"|"doc"|"SitePhoto"|"template";
+type UploadMode = "catalog"|"ContactData"|"ContactPhoto"|"doc"|"SitePhoto"|"template";
 
 
 class _SessionClientGetWCCShare {
@@ -5285,7 +5285,10 @@ export class sfRestClient {
         sessionStorage.clear();
         localStorage.clear()
         indexedDB.deleteDatabase("spitfireApp");
-        if (sfRestClient.IsPowerUXPage()) setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);
+        if (sfRestClient.IsPowerUXPage()) {
+            setTimeout("top.location.reload();",234);
+            //setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);  << bad on doc page
+        } 
     }
 
     protected activateDynamicJS(RESTClient : sfRestClient,keyName: string, value: string) {
