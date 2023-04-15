@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.275";
+const ClientPackageVersion : string = "1.41.277";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2305,10 +2305,11 @@ export class sfRestClient {
      *
      * @returns copy of current options
      * @example SetOptions( { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000, PopDocForceXBUI: true, PopDocXBURL: "{0}#!/doc/home?id={1}"});
+     * @example SetOptions().LogLevel =  LoggingLevel.Verbose;
      *
      * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
     */
-    public SetOptions(options: NVPair): NVPair {
+    public SetOptions(options?: NVPair): NVPair {
         if (!options) {
             return sfRestClient._Options;
         }
@@ -2337,7 +2338,10 @@ export class sfRestClient {
         return sfRestClient._Options[optionName];
     }
 
-
+/** Predefined Default Options
+ * This object is static and shared by all instances of sfRESTClient
+ * 
+ */
     protected static _Options : NVPair  = {
 
         BasicPingServerInterval: 33*1000,
@@ -2347,8 +2351,12 @@ export class sfRestClient {
 
         /**
      * How long (in milliseconds) should a DV result be cached for reuse
+     * @default 16 minutes
     */
         DVCacheLife:  16 * 60000, // 16 minutes
+        /** Adjusts logging; 2 is verbose, 9 is lots
+         * @default None (0)
+         */
         LogLevel:  LoggingLevels.None,
         NonPostbackEventID: "DNPB",
         /**
@@ -2379,7 +2387,11 @@ export class sfRestClient {
         /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
         WxEventTraceMode: -1,
         /** matches are ignored, default is to ignore onMouseM* */
-        WxEventFilter: /on(?!MouseM|Destruct)([\w]+)$/gmi
+        WxEventFilter: /on(?!MouseM|Destruct)([\w]+)$/gmi,
+        /** When TRUE, Grids on Home (Action Items, Alerts), and Project Dashboard render using original XB logic 
+         * @default TRUE for now....  set with top.sfClient.SetOptions().WxUseXBGrid = false
+        */
+        WxUseXBGrid: true
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
@@ -3469,6 +3481,7 @@ export class sfRestClient {
 
     /** Displays a simple user notification, with "dismiss" session memory
      * @param notificationText The message.  Message is skipped if the same exact message has already been dismissed.
+     * @param timeOutMS if specified, message auto-clears in this many milliseconds.  Which does not count as dismissed.
      */
     DisplayUserNotification(notificationText? : string, timeOutMS?: number): Promise<JQuery<HTMLElement>> {
         return this.DisplayThisNotification("ajhx/UsrNotification.html", notificationText, timeOutMS);
@@ -5277,14 +5290,17 @@ export class sfRestClient {
 
 
     /**
-     * Not intended for production use: Clears cross-session storage
+     * Not intended for production use: Clears localStorage, sessionStorage and indexedDB
+     * This method does *not* reset current SetOptions(); this method does preserve 
      */
     public QAClearEnvironment( ):void {
         var InGlobalInstance = this.IsGlobalInstance();
         console.warn("sfRestClient.QAClearEnvironment()",  InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
+        let currentLoggingLevel  = this.SetOptions().LoggingLevel;
         sessionStorage.clear();
         localStorage.clear()
         indexedDB.deleteDatabase("spitfireApp");
+        localStorage.setItem('SavedLoggingLevel',currentLoggingLevel);
         if (sfRestClient.IsPowerUXPage()) {
             setTimeout("top.location.reload();",234);
             //setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);  << bad on doc page
@@ -5383,7 +5399,7 @@ export class sfRestClient {
             const defaultLoggingLevel = (SavedLoggingLevel) ?parseInt(SavedLoggingLevel) : NaN;
             if (!Number.isNaN(defaultLoggingLevel)) {
                 this.SetOptions({LogLevel: defaultLoggingLevel});
-                console.log(`DEV: Set logging level based on localStorage.setItem('SavedLoggingLevel',${defaultLoggingLevel} );`);
+                console.log(`DEV: logging level set from localStorage.setItem('SavedLoggingLevel',${defaultLoggingLevel} );`);
             }
         }
 
