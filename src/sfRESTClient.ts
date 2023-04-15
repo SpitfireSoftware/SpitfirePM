@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.278";
+const ClientPackageVersion : string = "1.41.279";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5336,20 +5336,30 @@ export class sfRestClient {
 
     /**
      * Not intended for production use: Clears localStorage, sessionStorage and indexedDB
-     * This method does *not* reset current SetOptions(); this method does preserve 
+     * This method preserves SetOptions, including log level 
      */
     public QAClearEnvironment( ):void {
         var InGlobalInstance = this.IsGlobalInstance();
         console.warn("sfRestClient.QAClearEnvironment()",  InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
-        let currentLoggingLevel  = this.SetOptions().LogLevel;
+        let currentOptions = this.SetOptions();
+        let currentLoggingLevel  = currentOptions.LogLevel;
         sessionStorage.clear();
         localStorage.clear()
         indexedDB.deleteDatabase("spitfireApp");
         localStorage.setItem('SavedLoggingLevel',`${currentLoggingLevel}`);
+        this.SaveOptions(currentOptions);
         if (sfRestClient.IsPowerUXPage()) {
             setTimeout("top.location.reload();",234);
             //setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);  << bad on doc page
         } 
+    }
+
+    /** Stashes options in sessionStorage (perhaps for a page reload) 
+     * @param currentOptions if specified, stored, otherwise current options
+    */
+    public SaveOptions(currentOptions?: SFRESTClientOptions):void {
+        if (!currentOptions) currentOptions = this.SetOptions();
+        sessionStorage.setItem('SFRestClientOptions',JSON.stringify(currentOptions));       
     }
 
     protected activateDynamicJS(RESTClient : sfRestClient,keyName: string, value: string) {
@@ -5437,7 +5447,16 @@ export class sfRestClient {
         this.exports.$ = $;
         this.exports.sfRestClient = sfRestClient;
         this.exports.LoggingLevels = LoggingLevels;
+        const SavedOptions = sessionStorage.getItem('SFRestClientOptions');
+        if (SavedOptions) {
+            try {
+                this.SetOptions(JSON.parse(SavedOptions));
+                console.log("DEV: options restored from sessionStorage('SFRestClientOptions');");
+            } catch (error) {
+                console.warn("DEV: options NOT restored from sessionStorage('SFRestClientOptions');",error);              
+            }
 
+        }
         const SavedLoggingLevel = localStorage.getItem("SavedLoggingLevel");
         if (!SavedLoggingLevel && location.protocol !== "https:") console.log("DEV: Set default logging level using localStorage.setItem('SavedLoggingLevel',9);");
         else {
