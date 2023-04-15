@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.277";
+const ClientPackageVersion : string = "1.41.278";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -26,8 +26,69 @@ export enum LoggingLevels {
 type PartStorageList = Map<PartContextKey, PartStorageData>;
 type DVCacheEntry = { w: number, v: string };
 type RRCacheEntry = { w: number, v: string | number | boolean };
-type CoordinateWithSize = {top:number,left:number,width:number,height:number};
-type UploadMode = "catalog"|"ContactData"|"ContactPhoto"|"doc"|"SitePhoto"|"template";
+export type CoordinateWithSize = {top:number,left:number,width:number,height:number};
+
+export type UploadMode = "catalog"|"ContactData"|"ContactPhoto"|"doc"|"SitePhoto"|"template";
+export type SFRESTClientOptions = {
+    /** @default  33000 (about 33 seconds) */
+    BasicPingServerInterval: number,
+    /** @default "about:blank" */
+    BlankPageURI: string,
+    CatalogFolderRoot: GUID,
+     /**
+     * How long (in milliseconds) should a DV result be cached for reuse
+     * @default 16 minutes
+    */
+    DVCacheLife:  number,
+    /** Adjusts logging; 2 is verbose, 9 is lots
+     * @default None (0)
+     */
+    LogLevel:  LoggingLevels.None,
+    NonPostbackEventID: string,
+    /**
+     * When true PopDoc() will always use new UI
+     */
+    PopDocForceXBUI :  boolean,
+    /** @default '{0}/DocDetail.aspx?id={1}', */
+    PopDocLegacyURL:   string, 
+    /** 
+     * @abstract  PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
+     * @default "{0}/spax.html#!/document?id={1}" */
+    PopDocXBURL:  string ,
+    /** @default  '{0}/DocDetail.aspx?add={1}&project={2}{3}' */
+    PopNewDocLegacyURL:  string,
+    /** @default "{0}/spax.html#!/document?add={1}&project={2}{3}"  */
+    PopNewDocXBURL:  string ,
+    PopupWindowLargeCWS: CoordinateWithSize,
+    PopupWindowHelpMenuCWS: CoordinateWithSize,
+    PopupWindowUserSettingsCWS: CoordinateWithSize,
+    PopupWindowViewUserCWS: CoordinateWithSize,
+        PopupWindowTop: number,
+        /** @default '{0}/ProjectDetail.aspx?id={1}' */
+    ProjectLegacyURL: string ,
+    /** @default '{0}/spax.html#!/main/projectDashboard?project={1}' */
+    ProjectXBURL: string ,
+    UseClassicCatalog: boolean  ,
+    SuggestionLimit: number,
+    /** @default 999, // about 1 second */
+    TaskStatePollInterval: number,
+    /** @default 1048000, // about 1 minute */
+    UploadChunkSize: number,
+    /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
+    UploadDirectLimit: number,
+    /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
+    WxEventTraceMode: -1 | 1 | 0,
+    /** matches are ignored, default is to ignore onMouseM* 
+     * @default /on(?!MouseM|Destruct)([\w]+)$/gmi,
+    */
+    WxEventFilter:  RegExp, 
+    /** When TRUE, Grids on Home (Action Items, Alerts), and Project Dashboard render using original XB logic 
+     * @default TRUE for now....  set with top.sfClient.SetOptions().WxUseXBGrid = false
+    */
+    WxUseXBGrid: boolean,
+
+    [key: string]:  string | number | RegExp | boolean | CoordinateWithSize | LoggingLevels | NVPair
+}
 
 
 class _SessionClientGetWCCShare {
@@ -2306,10 +2367,12 @@ export class sfRestClient {
      * @returns copy of current options
      * @example SetOptions( { LogLevel: LoggingLevel.Verbose, DVCacheLife: 22*60000, PopDocForceXBUI: true, PopDocXBURL: "{0}#!/doc/home?id={1}"});
      * @example SetOptions().LogLevel =  LoggingLevel.Verbose;
+     * 
+     * @see GetStringOption @see GetBooleanOption @see  GetNumericOption
      *
-     * PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
+     * 
     */
-    public SetOptions(options?: NVPair): NVPair {
+    public SetOptions(options?: NVPair): SFRESTClientOptions {
         if (!options) {
             return sfRestClient._Options;
         }
@@ -2328,40 +2391,28 @@ export class sfRestClient {
         return  sfRestClient._Options;
     }
     public GetBooleanOption(optionName : string) : boolean {
-        return sfRestClient._Options[optionName];
+        return sfRestClient._Options[optionName] as boolean;
     }
     public GetNumericOption(optionName : string) : number {
-        return sfRestClient._Options[optionName];
+        return sfRestClient._Options[optionName] as number;
     }
 
     public GetStringOption(optionName : string) : string {
-        return sfRestClient._Options[optionName];
+        return sfRestClient._Options[optionName] as string;
     }
 
 /** Predefined Default Options
  * This object is static and shared by all instances of sfRESTClient
  * 
  */
-    protected static _Options : NVPair  = {
+    protected static _Options : SFRESTClientOptions  = {
 
         BasicPingServerInterval: 33*1000,
         BlankPageURI: "about:blank",
-
         CatalogFolderRoot: '6F62DD86-91F1-4B73-98F5-34BDA6BDBA08',
-
-        /**
-     * How long (in milliseconds) should a DV result be cached for reuse
-     * @default 16 minutes
-    */
         DVCacheLife:  16 * 60000, // 16 minutes
-        /** Adjusts logging; 2 is verbose, 9 is lots
-         * @default None (0)
-         */
         LogLevel:  LoggingLevels.None,
         NonPostbackEventID: "DNPB",
-        /**
-         * When true PopDoc() will always use new UI
-         */
         PopDocForceXBUI :  false,
         PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
         PopDocXBURL:  "{0}/spax.html#!/document?id={1}",
@@ -2382,15 +2433,9 @@ export class sfRestClient {
         SuggestionLimit: 11,
         TaskStatePollInterval: 999,
         UploadChunkSize: 1048000, // about 1M
-        /** in Bytes.  Default is about 8MB (Box.com uses 20)  Files smaller than this are uploaded in a single request */
         UploadDirectLimit: 8388000, // about 8M (Box uses 20M);
-        /** Use -1 to disable, 1 to enable and 0 (default) to defer to DevMode */
         WxEventTraceMode: -1,
-        /** matches are ignored, default is to ignore onMouseM* */
         WxEventFilter: /on(?!MouseM|Destruct)([\w]+)$/gmi,
-        /** When TRUE, Grids on Home (Action Items, Alerts), and Project Dashboard render using original XB logic 
-         * @default TRUE for now....  set with top.sfClient.SetOptions().WxUseXBGrid = false
-        */
         WxUseXBGrid: true
     }
     /**
@@ -5296,11 +5341,11 @@ export class sfRestClient {
     public QAClearEnvironment( ):void {
         var InGlobalInstance = this.IsGlobalInstance();
         console.warn("sfRestClient.QAClearEnvironment()",  InGlobalInstance ? " Global" : "",", UPRC:",sfRestClient._UserPermitResultCache.size);
-        let currentLoggingLevel  = this.SetOptions().LoggingLevel;
+        let currentLoggingLevel  = this.SetOptions().LogLevel;
         sessionStorage.clear();
         localStorage.clear()
         indexedDB.deleteDatabase("spitfireApp");
-        localStorage.setItem('SavedLoggingLevel',currentLoggingLevel);
+        localStorage.setItem('SavedLoggingLevel',`${currentLoggingLevel}`);
         if (sfRestClient.IsPowerUXPage()) {
             setTimeout("top.location.reload();",234);
             //setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);  << bad on doc page
