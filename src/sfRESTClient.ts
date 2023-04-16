@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.279";
+const ClientPackageVersion : string = "1.41.280";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -83,7 +83,7 @@ export type SFRESTClientOptions = {
     */
     WxEventFilter:  RegExp, 
     /** When TRUE, Grids on Home (Action Items, Alerts), and Project Dashboard render using original XB logic 
-     * @default TRUE for now....  set with top.sfClient.SetOptions().WxUseXBGrid = false
+     * @default false ....  set with top.sfClient.SetOptions().WxUseXBGrid = true
     */
     WxUseXBGrid: boolean,
 
@@ -2436,7 +2436,7 @@ export class sfRestClient {
         UploadDirectLimit: 8388000, // about 8M (Box uses 20M);
         WxEventTraceMode: -1,
         WxEventFilter: /on(?!MouseM|Destruct)([\w]+)$/gmi,
-        WxUseXBGrid: true
+        WxUseXBGrid: false
     }
     /**
      * Builds a query friendly string, also great for hashing or cache keys
