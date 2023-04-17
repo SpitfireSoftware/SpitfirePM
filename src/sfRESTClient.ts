@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.281";
+const ClientPackageVersion : string = "1.41.282";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1167,6 +1167,22 @@ export class sfRestClient {
         return processPromise;
     }
     private static LocalProcessTypeInfo: _SwaggerClientExports.ProcessDocumentType[];
+
+    /**
+     * Displayable size
+     * @param size integer size in bytes
+     * @returns size scaled to KB, MB or GB
+     */
+    public BytesToSizeString(size : number) :string {
+        let result = '';
+        if (size <= 0)              result = '';
+        else if (size < 1024)       result = "< 1KB";
+        else if (size < 1048576)    result = `${(size/1024).toFixed(0)}KB`;
+        else if (size < 1073741824) result = `${(size/1048576).toFixed(1)}MB` ;
+        else                        result = `${(size/1073741824).toFixed(2)}MB` ;  
+        return result;
+    }
+
 
     /** Async get of a non-user specific setting (always the same for all users) */
     RuleResult(ruleName : string, testValue : string, filterValue : string | undefined, defaultValue: string | number | boolean) : Promise<string | number | boolean | null> {
