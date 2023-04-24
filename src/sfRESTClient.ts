@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "1.41.283";
+const ClientPackageVersion : string = "23.8510.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -53,11 +53,11 @@ export type SFRESTClientOptions = {
     PopDocLegacyURL:   string, 
     /** 
      * @abstract  PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
-     * @default "{0}/spax.html#!/document?id={1}" */
+     * @default "{0}/wx/#!/document?id={1}" */
     PopDocXBURL:  string ,
     /** @default  '{0}/DocDetail.aspx?add={1}&project={2}{3}' */
     PopNewDocLegacyURL:  string,
-    /** @default "{0}/spax.html#!/document?add={1}&project={2}{3}"  */
+    /** @default "{0}/wx/#!/document?add={1}&project={2}{3}"  */
     PopNewDocXBURL:  string ,
     PopupWindowLargeCWS: CoordinateWithSize,
     PopupWindowHelpMenuCWS: CoordinateWithSize,
@@ -66,7 +66,7 @@ export type SFRESTClientOptions = {
         PopupWindowTop: number,
         /** @default '{0}/ProjectDetail.aspx?id={1}' */
     ProjectLegacyURL: string ,
-    /** @default '{0}/spax.html#!/main/projectDashboard?project={1}' */
+    /** @default '{0}/wx/#!/main/projectDashboard?project={1}' */
     ProjectXBURL: string ,
     UseClassicCatalog: boolean  ,
     SuggestionLimit: number,
@@ -2431,16 +2431,16 @@ export class sfRestClient {
         NonPostbackEventID: "DNPB",
         PopDocForceXBUI :  false,
         PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
-        PopDocXBURL:  "{0}/spax.html#!/document?id={1}",
+        PopDocXBURL:  "{0}/wx/#!/document?id={1}",
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
-        PopNewDocXBURL:  "{0}/spax.html#!/document?add={1}&project={2}{3}",
+        PopNewDocXBURL:  "{0}/wx/#!/document?add={1}&project={2}{3}",
         PopupWindowLargeCWS: {top: -1, left: -1, width: 1000, height: 750},
         PopupWindowHelpMenuCWS: {top: -1, left: -1, width: 750, height: 700},
         PopupWindowUserSettingsCWS: {top: -1, left: -1, width: 830, height: 750},
         PopupWindowViewUserCWS:{top: -1, left: -1, width: 1000, height: 605},
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
-        ProjectXBURL: '{0}/spax.html#!/main/projectDashboard?project={1}',
+        ProjectXBURL: '{0}/wx/#!/main/projectDashboard?project={1}',
         UseClassicCatalog: ((location.host.indexOf(".9") < 0) &&
                              location.host.indexOf(".") > 0 &&
                              location.host !== "scm.spitfirepm.com" &&
@@ -5042,7 +5042,7 @@ export class sfRestClient {
             var RESTClient = top.sfClient;
             var isPowerUX = sfRestClient.IsPowerUXPage();
             isPowerUX = false;
-            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "spax.html#!/login" : "admin/Logout.aspx"}?m=${mValue}`;
+            result = `${RESTClient._SiteRootURL}/${isPowerUX ? "wx/#!/login" : "admin/Logout.aspx"}?m=${mValue}`;
         }
         return result;
     }
@@ -5051,7 +5051,7 @@ export class sfRestClient {
         var root = sfRestClient.ResolveSiteRootURLs();
         var result : string;
         if (isPowerUX) {
-            result = `${root}/spax.html#!/login?m=${mValue}`;
+            result = `${root}/wx/#!/login?m=${mValue}`;
         }
         else {
             if (mValue === 'LoadUserSessionInfo401') {
@@ -5366,7 +5366,7 @@ export class sfRestClient {
         this.SaveOptions(currentOptions);
         if (sfRestClient.IsPowerUXPage()) {
             setTimeout("top.location.reload();",234);
-            //setTimeout(`top.location.href = '${this._SiteURL}/spax.html#!/main/home';`,234);  << bad on doc page
+            //setTimeout(`top.location.href = '${this._SiteURL}/wx/.html#!/main/home';`,234);  << bad on doc page
         } 
     }
 
