@@ -1,6 +1,6 @@
 {
   "name": "spitfirepm",
-  "version": "23.8510.1",
+  "version": "23.8510.3",
   "description": "Client API Tools for Spitfire Project Management",
   "main": "",
   "keywords": [
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "postbuild": "d:/spitfiredev/CopyNPMOutputsToWebApp.cmd"
+    "xpostbuild": "d:/spitfiredev/CopyNPMOutputsToWebApp.cmd"
   },
   "repository": {
     "type": "git",

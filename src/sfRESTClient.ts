@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8510.1";
+const ClientPackageVersion : string = "23.8510.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5363,7 +5363,7 @@ export class sfRestClient {
         localStorage.clear()
         indexedDB.deleteDatabase("spitfireApp");
         localStorage.setItem('SavedLoggingLevel',`${currentLoggingLevel}`);
-        this.SaveOptions(currentOptions);
+        if (this.DevMode()) this.SaveOptions(currentOptions);
         if (sfRestClient.IsPowerUXPage()) {
             setTimeout("top.location.reload();",234);
             //setTimeout(`top.location.href = '${this._SiteURL}/wx/.html#!/main/home';`,234);  << bad on doc page
@@ -5467,7 +5467,7 @@ export class sfRestClient {
         if (SavedOptions) {
             try {
                 this.SetOptions(JSON.parse(SavedOptions));
-                console.log("DEV: options restored from sessionStorage('SFRestClientOptions');");
+                console.log("DEV: options restored from sessionStorage('SFRestClientOptions');  To reset, use sessionStorage.clear() and then CTRL+F5");
             } catch (error) {
                 console.warn("DEV: options NOT restored from sessionStorage('SFRestClientOptions');",error);              
             }
