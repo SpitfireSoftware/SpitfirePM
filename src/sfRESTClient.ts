@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8510.3";
+const ClientPackageVersion : string = "23.8518.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2521,6 +2521,7 @@ export class sfRestClient {
 
     /**
      * For example: http://server.domain.com/sfPMS  (does not include ending slash)
+     * @description consumers of this class should use sfApplicationRootPath
      */
     protected readonly _SiteURL: string;
     /** for example: /sfPMS */
@@ -3000,30 +3001,13 @@ export class sfRestClient {
         });
     }
 
-    SetClipboard(text:string) {
+    /** sets the OS clipboard */
+    SetClipboard(text:string): boolean {
         this.heartbeat();
 
-        var textArea = document.createElement("textarea");
-        var result = false;
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+        document.execCommand("copy", false, text);  // navigator.clipboard is gone
 
-        try {
-            var successful = document.execCommand('copy');
-            result = successful;
-            if (result) {
-                if (text.length > 20) text = text.substring(0, 16) + "...";
-                this.DisplayUserNotification(`FYI: Clipboard [${text}]`, 3456);
-            }
-        } catch (err) {
-            console.error('Fallback: Oops, unable to copy', err);
-        }
-
-        document.body.removeChild(textArea);
-
-        return result;
+        return true;
     }
 
     /**
@@ -3090,7 +3074,11 @@ export class sfRestClient {
             if ( matchVPgName.groups) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::VPg(${matchVPgName.groups!.vpgName}) ${matchVPgName.groups.args} w${matchVPgName.groups.width},h${matchVPgName.groups.height}`);
                 var ActionArgs : string = this.ExpandActionMarkers(matchVPgName.groups.args,rowData);
-                if (ActionArgs && ActionArgs.indexOf("&Project") < 0) ActionArgs += "&Project="+ this.GetPageProjectKey();
+                if (ActionArgs) {
+                    if (!ActionArgs.includes("&Project")) ActionArgs += "&Project="+ this.GetPageProjectKey();
+                    if (ActionArgs.includes("&ds=PDSID") ) ActionArgs = ActionArgs.replaceAll("&ds=PDSID",`&ds=${this.GetPageContextValue("dsCacheKey")}`);
+                }
+                
                 if (UseNewTabWithName) {
                     var url = `${RESTClient._SiteRootURL}/pvp.aspx?vpg=${matchVPgName.groups!.vpgName}${ActionArgs}`;
 
@@ -3148,6 +3136,31 @@ export class sfRestClient {
                 vpgName = "BFANotes";
                 BFAMode = true;
             }
+            else if (   ActionString.indexOf("PopXLTool(") >= 0 ||
+                    ActionString.indexOf("PopFVC(") >= 0 ||
+                    ActionString.indexOf("PopMSWindowTool(") >= 0 ||
+                    ActionString.indexOf("PopAuditTool(") >= 0) {
+                var targetURL = "";
+                if (ActionString.indexOf("PopFVC(") >= 0) {
+                    var rx = /javascript:PopFVC\(['"`](?<URL>.*)[`'"],['"`](?<fileKey>.*)[`'"],['"`](?<idname>.*)[`'"],['"`](?<command>.*)[`'"]/gm;
+                    let matchFVC = rx.exec(ActionString);
+                    if (matchFVC && matchFVC.groups) {
+                        targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${matchFVC.groups.fileKey}&id=${matchFVC.groups.idname}&cmd=${matchFVC.groups.command}`;
+                    }
+                    else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
+                    }
+                else {
+                        var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
+                        var matchMSLinkTool = rx.exec(ActionString);
+                        if (matchMSLinkTool && matchMSLinkTool.groups) {
+                            targetURL = this.ExpandActionMarkers(matchMSLinkTool.groups.URL,rowData);
+                        }
+                        else console.warn("InvokeAction() could not parse",actionString);
+                    }
+
+                    this.FollowLinkViaSFLink(targetURL,false);
+                    return;
+                }
             else {
                 // this rx does not remove quotes from period
                 let rxString = `${popWhat}\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));`
@@ -3179,35 +3192,11 @@ export class sfRestClient {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Normal) console.log(`InvokeAction: VModalPage(${vpgName})`,ModalOptions);
             this.VModalPage(vpgName,ModalOptions,999,444,undefined);
         }
-        else if (   ActionString.indexOf("PopXLTool(") >= 0 ||
-                    ActionString.indexOf("PopFVC(") >= 0 ||
-                    ActionString.indexOf("PopMSWindowTool(") >= 0 ||
-                    ActionString.indexOf("PopAuditTool(") >= 0) {
-                var targetURL = "";
-                if (ActionString.indexOf("PopFVC(") >= 0) {
-                    var rx = /javascript:PopFVC\(['"`](?<URL>.*)[`'"],['"`](?<fileKey>.*)[`'"],['"`](?<idname>.*)[`'"],['"`](?<command>.*)[`'"]/gm;
-                    let matchFVC = rx.exec(ActionString);
-                    if (matchFVC && matchFVC.groups) {
-                        targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${matchFVC.groups.fileKey}&id=${matchFVC.groups.idname}&cmd=${matchFVC.groups.command}`;
-                    }
-                    else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
-                    }
-                else {
-                        var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
-                        var matchMSLinkTool = rx.exec(ActionString);
-                        if (matchMSLinkTool && matchMSLinkTool.groups) {
-                            targetURL = this.ExpandActionMarkers(matchMSLinkTool.groups.URL,rowData);
-                        }
-                        else console.warn("InvokeAction() could not parse",actionString);
-                    }
-
-                    this.FollowLinkViaSFLink(targetURL,false);
-                }
-
-            else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
+        else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
             console.warn("InvokeAction::tools not really done",ActionString);
             top!.location.href = ActionString;
         }
+       
         else if (ActionString.startsWith("javascript:sfExportCompetitiveBidData")) {
             this.ExportCompetitiveBidData();
         }
