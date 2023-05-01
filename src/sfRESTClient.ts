@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8518.6";
+const ClientPackageVersion : string = "23.8518.8";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3001,13 +3001,45 @@ export class sfRestClient {
         });
     }
 
-    /** sets the OS clipboard */
-    SetClipboard(text:string): boolean {
+    /** sets the OS clipboard 
+     * @description navigator.clipboard only works for https and localhost
+    */
+    async SetClipboard(text:string): Promise<boolean> {
         this.heartbeat();
 
-        document.execCommand("copy", false, text);  // navigator.clipboard is gone
-
-        return true;
+        const clipPromise = new Promise<boolean>(resolved=>{
+            if (navigator.clipboard) {
+                const nativePromise =  navigator.clipboard.writeText(text);
+                nativePromise
+                    .then(()=>{
+                        resolved(true);
+                    })
+                    .catch(()=>{
+                        resolved(false);
+                    });
+            }
+            else {
+                var textArea = document.createElement("textarea");
+                var result = false;
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+        
+                try {
+                    var successful = document.execCommand('copy');
+                    result = successful;
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+        
+                document.body.removeChild(textArea);
+        
+                resolved(result);   
+            }
+    
+        });
+        return clipPromise;
     }
 
     /**
