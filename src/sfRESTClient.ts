@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8518.8";
+const ClientPackageVersion : string = "23.8522.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2654,8 +2654,10 @@ export class sfRestClient {
      * Example: GetPageContext("UserKey");
      *
      * @param key name of a context property
+     * @param defaultValue returned if the requested value is not available
+     * @param silentDefault when true, suppresses console warning about use of default value
      */
-    public GetPageContextValue( key : string, defaultValue? : any) : any {
+    public GetPageContextValue( key : string, defaultValue? : any, silentDefault?: boolean) : any {
         if (key in sfRestClient._WCC) {
             return sfRestClient._WCC[key];
         }
@@ -3095,21 +3097,33 @@ export class sfRestClient {
         }
         let matchVPgName : RegExpExecArray | null = null;
         let matchPopWhat : RegExpExecArray | null = null;
+        let matchPopOffice : RegExpExecArray | null = null;
+        let matchPopWhatURL : RegExpExecArray | null = null;
+        let matchPopWindowName : RegExpExecArray | null = null;
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction: ",ActionString);
 
-        var rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
-        var rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)\(/gm);
+        matchVPgName = this.rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
+        if (!matchVPgName) {
+            matchPopOffice =  this.rxOfficeLink.exec(ActionString);
+            matchPopWhat =  this.rxPopWhat.exec(ActionString);
+            matchPopWhatURL = this.rxPopWhatURL.exec(ActionString);
+            if (matchPopWhatURL) {
+                matchPopWindowName = this.rxPopWindowName.exec(ActionString);
+                if (matchPopWindowName && matchPopWindowName.groups){
+                    UseNewTabWithName = matchPopWindowName.groups.WindowName;
+                    ActionString = matchPopWindowName.groups.URL;
+                }
+            }
+        }
         
-        matchVPgName = rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
-        if (!matchVPgName) matchPopWhat =  rxPopWhat.exec(ActionString);
         if (matchVPgName) {
             if ( matchVPgName.groups) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::VPg(${matchVPgName.groups!.vpgName}) ${matchVPgName.groups.args} w${matchVPgName.groups.width},h${matchVPgName.groups.height}`);
                 var ActionArgs : string = this.ExpandActionMarkers(matchVPgName.groups.args,rowData);
                 if (ActionArgs) {
                     if (!ActionArgs.includes("&Project")) ActionArgs += "&Project="+ this.GetPageProjectKey();
-                    if (ActionArgs.includes("&ds=PDSID") ) ActionArgs = ActionArgs.replaceAll("&ds=PDSID",`&ds=${this.GetPageContextValue("dsCacheKey")}`);
-                }
+                    if (ActionArgs.includes("&ds=PDSID") ) ActionArgs = ActionArgs.replaceAll("&ds=PDSID",`&ds=${this.GetActionMarkerReplacement("Pdskey")}`);
+                }  
                 
                 if (UseNewTabWithName) {
                     var url = `${RESTClient._SiteRootURL}/pvp.aspx?vpg=${matchVPgName.groups!.vpgName}${ActionArgs}`;
@@ -3122,6 +3136,34 @@ export class sfRestClient {
             else {
                 console.warn("InvokeAction::VPg failed match",ActionString);
             }
+        }
+        else if (matchPopOffice && matchPopOffice.groups) {
+            // Office and OS Links
+            // ??? do we need autocloseDoc or afterOpenArg
+            let popWhat = matchPopOffice.groups.popWhat;
+            let targetURL = ActionString;
+            if (popWhat === "PopFVC(") {
+                var rx = /javascript:PopFVC\(['"`](?<URL>.*)[`'"],['"`](?<fileKey>.*)[`'"],['"`](?<idname>.*)[`'"],['"`](?<command>.*)[`'"]/gm;
+                let matchFVC = rx.exec(ActionString);
+                if (matchFVC && matchFVC.groups) {
+                    targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${matchFVC.groups.fileKey}&id=${matchFVC.groups.idname}&cmd=${matchFVC.groups.command}`;
+                }
+                else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
+                }
+            else if (popWhat === "OfficeLink.application") {
+
+                }
+            else {
+                    var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
+                    var matchMSLinkTool = rx.exec(ActionString);
+                    if (matchMSLinkTool && matchMSLinkTool.groups) {
+                        targetURL = this.ExpandActionMarkers(matchMSLinkTool.groups.URL,rowData);
+                    }
+                    else console.warn("InvokeAction() could not parse",actionString);
+                }
+
+            this.FollowLinkViaSFLink(targetURL,false);
+            return;
         }
         else if (UseNewTabWithName) {
             self.open(ActionString,UseNewTabWithName);
@@ -3141,12 +3183,12 @@ export class sfRestClient {
             }
         }
         else if (ActionString.indexOf("PopNewDoc(") >= 0) {
-            var rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
-            let match = rxPopDoc.exec(ActionString);
-            if (match && match.groups) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(match.groups!.idguid ));
+            //let rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
+            //let match = this.rxPopWhatURL.exec(ActionString);
+            if (matchPopWhatURL && matchPopWhatURL.groups) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(matchPopWhatURL.groups!.idguid ));
                 var Project = this.GetPageProjectKey();
-                this.PopNewDoc( match.groups.idguid ,Project);
+                this.PopNewDoc( matchPopWhatURL.groups.idguid ,Project);
             }
             else {
                 console.warn("InvokeAction::PopNewDoc failed match",actionString);
@@ -3168,31 +3210,7 @@ export class sfRestClient {
                 vpgName = "BFANotes";
                 BFAMode = true;
             }
-            else if (   ActionString.indexOf("PopXLTool(") >= 0 ||
-                    ActionString.indexOf("PopFVC(") >= 0 ||
-                    ActionString.indexOf("PopMSWindowTool(") >= 0 ||
-                    ActionString.indexOf("PopAuditTool(") >= 0) {
-                var targetURL = "";
-                if (ActionString.indexOf("PopFVC(") >= 0) {
-                    var rx = /javascript:PopFVC\(['"`](?<URL>.*)[`'"],['"`](?<fileKey>.*)[`'"],['"`](?<idname>.*)[`'"],['"`](?<command>.*)[`'"]/gm;
-                    let matchFVC = rx.exec(ActionString);
-                    if (matchFVC && matchFVC.groups) {
-                        targetURL = `${this._SiteRootURL}/cabs/FileVersion.application?key=${matchFVC.groups.fileKey}&id=${matchFVC.groups.idname}&cmd=${matchFVC.groups.command}`;
-                    }
-                    else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
-                    }
-                else {
-                        var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
-                        var matchMSLinkTool = rx.exec(ActionString);
-                        if (matchMSLinkTool && matchMSLinkTool.groups) {
-                            targetURL = this.ExpandActionMarkers(matchMSLinkTool.groups.URL,rowData);
-                        }
-                        else console.warn("InvokeAction() could not parse",actionString);
-                    }
-
-                    this.FollowLinkViaSFLink(targetURL,false);
-                    return;
-                }
+           
             else {
                 // this rx does not remove quotes from period
                 let rxString = `${popWhat}\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));`
@@ -3251,6 +3269,12 @@ export class sfRestClient {
             console.warn("InvokeAction() could not handle ",actionString);
         }
     }
+
+    private rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
+    private rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)\(/gm);
+    private rxPopWhatURL = new RegExp(/javascript:(?<popWhat>PopMSWindowTool|PopXLTool|PopAuditTool|popWin)\(['"`](?<URL>.+?)[`'"](,|\))/gmi);
+    private rxPopWindowName = new RegExp(/javascript:(?<popWhat>popWin)\(['"`](?<URL>.+?)[`'"],\s?['"`](?<WindowName>.+?)[`'"],.*\)/gmi);
+    private rxOfficeLink = new RegExp(/(?<popWhat>OfficeLink.application|(PopXLTool|PopFVC|PopMSWindowTool|PopAuditTool)\()/gmi);
 
     /** @returns true if this is a Microsoft Windows OS device */
     public IsWindowsOS(): boolean {
@@ -3314,14 +3338,14 @@ export class sfRestClient {
         tokeArgs.Args = targetURL;
         tokeArgs.UserKey = RESTClient.GetPageContextValue("UserKey");
         tokeArgs.LoginSessionKey = RESTClient.GetPageContextValue("LoginSessionKey");
-        tokeArgs.DataLockFlag = RESTClient.GetPageContextValue("DataLockFlag");
+        tokeArgs.DataLockFlag = RESTClient.GetPageContextValue("DataLockFlag",undefined,true);
         tokeArgs.DataPK = RESTClient.GetPageContextValue("DataPK");
         tokeArgs.DocSessionKey = RESTClient.GetPageContextValue("DocSessionKey");
         tokeArgs.dsCacheKey = RESTClient.GetPageContextValue("dsCacheKey");
         tokeArgs.SiteID = RESTClient.GetPageContextValue("SiteID");
         tokeArgs.PageName = RESTClient.GetPageContextValue("PageName");
-        tokeArgs.PartName = RESTClient.GetPageContextValue("PartName");
-        tokeArgs.TZOffset = RESTClient.GetPageContextValue("TZOffset");
+        tokeArgs.PartName = RESTClient.GetPageContextValue("PartName",undefined,true);
+        tokeArgs.TZOffset = RESTClient.GetPageContextValue("TZOffset",undefined,true);
         RESTClient.DisplayUserNotification("Working...",3333);
         api.createExchangeToken(tokeArgs).then((xToken)=>{
 
@@ -3398,10 +3422,10 @@ export class sfRestClient {
      * Markers are case sensative
      */
     protected ExpandActionMarkers(rawAction: string, rowData? : DataModelRow) : string {
-        if (rawAction.indexOf("$$PROJECT") >= 0) {
+        if (rawAction.includes("$$PROJECT") ) {
             rawAction = rawAction.replaceAll("$$PROJECT",this.GetActionMarkerReplacement("$$PROJECT",rowData));
         }
-        if (rawAction.indexOf("$$PDSKEY") >= 0) {
+        if (rawAction.includes("$$PDSKEY") ) {
             rawAction = rawAction.replaceAll("$$PDSKEY",this.GetActionMarkerReplacement("$$PDSKEY",rowData));
         }
         // general case: regex??
@@ -4880,10 +4904,10 @@ export class sfRestClient {
                 }
             }
 
-            sfHub.client.dashboardOpenLink = function (target, request) {
+            sfHub.client.dashboardOpenLink = function (target:string, request:string) {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.dashboardOpenLink to [${target}]:${request} `);
 
-                var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
+                let RequestForWindowMatches:RegExpMatchArray | null = request.match(sfHub.client.ForWindowRX);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardOpenLink");
                 $("body").trigger(HubEvent,  [target,request,RequestForWindowMatches] );
                 if (HubEvent.isDefaultPrevented()) return;
