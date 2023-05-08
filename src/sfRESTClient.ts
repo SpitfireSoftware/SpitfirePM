@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8522.6";
+const ClientPackageVersion : string = "23.8522.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -21,6 +21,19 @@ export enum LoggingLevels {
     Verbose,
     Debug=9,
     VerboseDebug=93
+}
+export enum ValidationMode {
+    none='0',
+    numeric="2",
+    positive= "5",
+    integer="6",
+    positiveinteger= "7",
+    date= "3",
+    futuredate="4",
+    /** sort of like past date */
+    untildate= "8",
+    required="16",
+    filename="32"
 }
 
 type PartStorageList = Map<PartContextKey, PartStorageData>;
