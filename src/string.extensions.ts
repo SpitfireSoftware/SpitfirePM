@@ -7,6 +7,7 @@ declare global {
         sfHashCode(this: string): number;
         sfIsGuid(this: string): boolean;
         sfStartsWithCI(this:string,testString: string) : boolean;
+        sfIsNumeric(this:string):boolean;
     }
 
     interface Date {
@@ -162,6 +163,13 @@ if (!String.prototype.replaceAll) {
         return this.split(pattern).join(replacement);
     }
 }
+
+if (!String.prototype.sfIsNumeric) {
+    String.prototype.sfIsNumeric = function sfIsNumeric(this: string): boolean {
+        return !isNaN(this as unknown as number);
+    }
+}
+
 
  String.prototype.sfStartsWithCI = function (testString) {
         return this.slice(0, testString.length).toLowerCase()  === testString.toLowerCase();

@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8522.7";
+const ClientPackageVersion : string = "23.8528.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2201,6 +2201,7 @@ export class sfRestClient {
      * @param options might include &UseID= to specify a key for the new document or &mode=np
      */
     PopNewDoc(dtk : GUID, project: string, options? : string) : Promise<Window | null> {
+        var RESTClient = this;
         if (!options) options = "";
         if (!project) project = this.GetPageProjectKey();
         if (options.length > 0 && !options.startsWith("&")) console.warn("PopNewDoc() options should start with &...");
@@ -2217,12 +2218,15 @@ export class sfRestClient {
                 //todo: determine if we should use the new or old UI based on the document type of this document
                 //todo: generate a GUID if one was not provided
                 var UseID : string;
-                var url : string =  sfRestClient._Options.PopNewDocLegacyURL;
+                var url : string =  sfRestClient._Options.PopDocLegacyURL;
+                if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL
+                else {
+                    if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) url =  sfRestClient._Options.PopNewDocXBURL;
+                }
                 if (options?.indexOf("&UseID")) {
                     UseID = options.substring(options?.indexOf("&UseID")+7,36);
                 }
                 else UseID = await this.NewGuid();
-                if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL;
                 url  =  url.sfFormat(thisRestClient._SiteURL, dtk,(dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup ) ? project : "",options) ;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`PopNewDoc opening ${UseID} DTK ${dtk} using ${url}`);
 
@@ -2807,7 +2811,7 @@ export class sfRestClient {
         if (locationHash === sfRestClient.ResolvePageInfo.ValidHash) return sfRestClient.ResolvePageInfo.LastResolvedPageName;
         var pgname : string = topLocation.pathname;
         var pgHash : string = topLocation.hash;
-        if (pgHash.length > 0) pgname = pgHash; // for xb style
+        if (pgHash.length > 0)             pgname = pgHash; // for xb style
         if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
         if (pgname.toLowerCase().includes("arr.aspx",)) pgname = "arr";// maps to RouteWizard
         if (pgname.toLowerCase().includes("sscontent.aspx",)) pgname = "sscontent"; // maps to RouteWizard
