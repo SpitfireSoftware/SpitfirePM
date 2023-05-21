@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8530.3";
+const ClientPackageVersion : string = "23.8539.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2924,7 +2924,7 @@ export class sfRestClient {
         else {
             Context = this.GetPageQueryParameterByName(sfRestClient.IsPowerUXPage() ? "project" : "id");
             var PageTypeName : string = this.ResolvePageName();
-            if (!Context && !this.IsHomeDashboardPage()) console.warn("GetPageProjectKey() could not resolve project key for page ",PageTypeName);
+            if (!Context && this.DevMode() && (!this.IsHomeDashboardPage && PageTypeName !== "Catalog")) console.log("GetPageProjectKey() could not resolve project key for page ",PageTypeName);
         }
         return Context;
     }
