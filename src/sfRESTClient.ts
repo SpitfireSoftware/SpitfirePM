@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8539.3";
+const ClientPackageVersion : string = "23.8539.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2218,7 +2218,7 @@ export class sfRestClient {
                 //todo: determine if we should use the new or old UI based on the document type of this document
                 //todo: generate a GUID if one was not provided
                 var UseID : string;
-                var url : string =  sfRestClient._Options.PopDocLegacyURL;
+                var url : string =  sfRestClient._Options.PopNewDocLegacyURL;
                 if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL
                 else {
                     if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) url =  sfRestClient._Options.PopNewDocXBURL;
