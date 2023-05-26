@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8539.4";
+const ClientPackageVersion : string = "23.8545.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -83,6 +83,7 @@ export type SFRESTClientOptions = {
     ProjectXBURL: string ,
     UseClassicCatalog: boolean  ,
     SuggestionLimit: number,
+    SuggestionCacheLifespanMs: number,
     /** @default 999, // about 1 second */
     TaskStatePollInterval: number,
     /** @default 1048000, // about 1 minute */
@@ -866,7 +867,7 @@ export class sfRestClient {
      * @param seedValue 0 or more characters which will limit the suggestions
      * @param dependsOn 0 to 4 values required by the lookup for context; see sfRestClient.GatherDependsOnValues() to process string
      * @param limit a reasonable number of suggestions to be returned; zero or negative replaced with option.SuggestionLimit
-     * @returns
+     * @returns promise of suggestions.  reuses a matching promise from withing about 4 minutes
      */
     GetLookupSuggestions(lookupName : string, seedValue: string,
           /**
@@ -874,9 +875,9 @@ export class sfRestClient {
          * @see sfRestClient.GatherDependsOnValues
         */
            dependsOn: string | string[] | undefined,
-          limit: number = -1) : Promise<Suggestion[] | null> {
+          limit: number = -1) : Promise<Suggestion[] | null>  {
 
-            var apiResultPromise: Promise<Suggestion[] | null>
+            var apiResultPromise: Promise<Suggestion[] | null> | undefined ;
             var RESTClient: sfRestClient = this;
             var api: LookupClient = new LookupClient(this._SiteURL);
             var DependsOnSet: string[] = ["", "", "", "",""];
@@ -889,17 +890,39 @@ export class sfRestClient {
                 DependsOnSet[0] = dependsOn;
             }
 
+            const suggestionGroupKey = `${lookupName}[${seedValue.sfHashCode()}]@${DependsOnSet[0].sfHashCode()}x${DependsOnSet[1].sfHashCode()}x${DependsOnSet[2].sfHashCode()}x${DependsOnSet[3].sfHashCode()}x`
+            const TimeNow = Date.now();
+            
+            if (sfRestClient.RecentSuggestionAsOf.has(suggestionGroupKey)) {
+                if (sfRestClient.RecentSuggestionAsOf.get(suggestionGroupKey)! < TimeNow) {
+                    // expired
+                    sfRestClient.RecentSuggestionAsOf.delete(suggestionGroupKey);
+                }
+                else {
+                    if (sfRestClient.RecentSuggestionResultMap.has(suggestionGroupKey)) {
+                        apiResultPromise = sfRestClient.RecentSuggestionResultMap.get(suggestionGroupKey);
+                        if (apiResultPromise ) return apiResultPromise;
+                    }
+                }
+            }
 
             //var apiResultPromise: Promise<Suggestion[] | null> = api.getSuggestions4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],seedValue,limit);
             var SuggestionContext = new _SwaggerClientExports.QueryFilters();
             SuggestionContext.DependsOn = DependsOnSet;
             SuggestionContext.MatchingSeed = seedValue;
             SuggestionContext.ResultLimit = limit;
-            var apiResultPromise : Promise<Suggestion[] | null> = api.getSuggestionsWithContext(lookupName,RESTClient.GetPageContextValue("dsCacheKey"),SuggestionContext)
+            apiResultPromise = api.getSuggestionsWithContext(lookupName,RESTClient.GetPageContextValue("dsCacheKey"),SuggestionContext)
+            sfRestClient.RecentSuggestionAsOf.set(suggestionGroupKey,TimeNow + sfRestClient.suggestionCacheLifespan );
+            sfRestClient.RecentSuggestionResultMap.set(suggestionGroupKey,apiResultPromise);
 
             return apiResultPromise;
     }
 
+    static readonly suggestionCacheLifespan =  246800; // about 4.11 minutes in ms
+    /** maps Suggestion Group key to when expires */
+    private static  RecentSuggestionAsOf:  Map<string,number> = new Map();;
+    /** maps Suggestion Group key to promise result */
+    private static  RecentSuggestionResultMap:   Map<string,Promise<Suggestion[] | null>> = new Map();
     private static  RecentDocumentList :_SwaggerClientExports.MenuAction[];
     /** Returns list of recent documents from server as updated by PopDoc() calls */
     GetRecentDocuments() : _SwaggerClientExports.MenuAction[] {
@@ -2464,6 +2487,7 @@ export class sfRestClient {
                              location.host !== "portal.spitfirepm.com" &&
                              location.host !== "try.spitfirepm.com"),
         SuggestionLimit: 11,
+        SuggestionCacheLifespanMs: 246800, // about 4.11 minutes
         TaskStatePollInterval: 999,
         UploadChunkSize: 1048000, // about 1M
         UploadDirectLimit: 8388000, // about 8M (Box uses 20M);
