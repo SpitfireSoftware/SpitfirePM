@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8555.1";
+const ClientPackageVersion : string = "23.8555.9";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2689,6 +2689,98 @@ export class sfRestClient {
 
     }
 
+/** returns an INPUT element 
+ *  @param tableDotField something like DocMasterDetail.ContractType (case sensetive)
+ * 
+*/
+    public GetDBFInputElement(tableDotField: string): JQuery<HTMLInputElement>  {
+        const isPowerUX = sfRestClient.IsPowerUXPage();
+        let $I: JQuery<HTMLInputElement> | undefined = this.GetDBFElement(tableDotField);
+        if (isPowerUX) {
+             $I = $I.find("INPUT") as JQuery<HTMLInputElement>;
+        }
+        return $I;
+    }
+    
+/** returns the  element  with the data-dbf attribute
+ *  @param tableDotField something like DocMasterDetail.ContractType (case sensetive)
+ * 
+*/
+public GetDBFElement(tableDotField: string): JQuery<HTMLInputElement>  {
+    const isPowerUX = sfRestClient.IsPowerUXPage();
+    let $I: JQuery<HTMLInputElement> | undefined;
+    if (isPowerUX) {
+         $I = $("DIV[data-dbf='{0}'] ".sfFormat(tableDotField));
+    }
+    else  $I = $("INPUT[data-dbf='{0}'], SELECT[data-dbf='{0}'], DIV[data-dbf='{0}'] TABLE.sfUIMiniIgWe INPUT[type='hidden'][name$='_t_a'], DIV[data-dbf='{0}'] ".sfFormat(tableDotField));
+    return $I;
+}
+
+/** returns an INPUT element 
+ *  @param tableDotField something like DocMasterDetail.ContractType (case sensetive)
+ * 
+*/
+public GetInputValue(inputView:  any): string | number | undefined {
+    let result : string | number | undefined = undefined;
+    let what: string = 'UNK';
+    if (inputView.config) {
+        const inputConfig = inputView.config;
+        if (inputConfig.dbf) what = inputConfig.dbf;
+        if (inputConfig.customGetValue) result = inputConfig.customGetValue()
+        else if (inputView.getValue) result = inputView.getValue()
+        else {
+            console.log(`GetInputValue(${what}) - could not find value `,inputView);
+        }
+
+    }
+    return result;
+}
+
+public SetInputValue(inputView:  any, newValue: string | number | DataModelRow | undefined) {
+    let what: string = 'UNK';
+    if (inputView.config) {
+        const inputConfig = inputView.config;
+        if (inputConfig.dbf) what = inputConfig.dbf;
+        if (inputConfig.customSetValue)  inputConfig.customSetValue(newValue)
+        else if (inputView.getValue) inputView.setValue(newValue)
+        else {
+            console.log(`SetInputValue(${what}) - could not set value `,inputView);
+        }
+
+    }
+}
+
+/**
+ * 
+ * @param withClass "fa-fighter-jet czUIMyBtn" (automatically includes clsEnabledImgBtn and fas)
+ * @param withTip tool tip
+ * @param $AppendTo default to status cell; use $(0) or false to prevent DOM insertion
+ * @param withSRC when specified, use just the image name (delete.gif); when string is passed an <IMG> tag is used instead of <i> and the image them/path is resolved 
+ * @returns 
+ */
+public CreateButtonElement(withClass: undefined | string, withTip:string|undefined, $AppendTo:JQuery<HTMLInputElement>, withSRC?:string): JQuery<HTMLElement> {
+    
+    var BtnType = !withSRC ? "i" : "img";
+    if (typeof withClass === "undefined") {
+        withClass = "";
+        if (!withSRC) withClass = "fa-fighter-jet";
+    }
+    if (withClass.startsWith("fa")) withClass = "fas " + withClass;
+    if (typeof withTip === "undefined") withTip = "";
+    if (typeof $AppendTo === "undefined") $AppendTo = this.GetDBFInputElement("DocMasterDetail.status").closest("TD");
+    var ButtonTemplate = `<${BtnType} class='${withClass} clsEnabledImgBtn clsDynamicBtn' title='${withTip}'></${BtnType}>`;
+    let $BTN = $(ButtonTemplate);
+    if (withSRC) {
+        console.warn("CreateButtonElement does not yet support IMG src")
+        // ResolveThemeIconImgSrc(withSRC).done(function IMGSrcReady(r) {
+        //     $BTN.attr("src", r);
+        // });
+    }
+
+    if ($AppendTo) $AppendTo.append($BTN);
+    return $BTN;
+}
+
     /**
      * Returns named value from Web Context (WCC)
      *
@@ -4821,13 +4913,14 @@ export class sfRestClient {
      * @param ofTypeName eg ActionItemsClient, DocumentToolsClient, LookupClient
      * @returns instance
      */
-    public NewAPIClient( ofTypeName : string ) : any {
-        var newController : any;
+    public NewAPIClient( ofTypeName : 'ActionItemsClient' | 'CatalogClient' | 'DocumentToolsClient' | 'ExcelToolsClient' | 'LookupClient' | 
+                                    'ProjectsClient' | 'ProjectToolsClient' | 'ProjectKPIClient' | 'SessionClient' | 'UICFGClient'  ) :  any {
+        var newController :  any;
         if (ofTypeName in this.exports) {
             newController = new this.exports[ofTypeName](this._SiteURL);
         }
         else console.warn("NewAPIClient() does not recognized ",ofTypeName);
-        return newController;
+        return newController  ;
     }
 
     /**
@@ -5467,6 +5560,7 @@ export class sfRestClient {
     protected activateDynamicJS(RESTClient : sfRestClient,keyName: string, value: string) {
         if (typeof sfRestClient._WCC._DynamicJS === "string" && sfRestClient.IsPowerUXPage()) {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`Activating Dynamics JS {value}`);
+            if ((!top! as any).exports) (top! as any).exports = {};
             var djs: string[] = JSON.parse(sfRestClient._WCC._DynamicJS);
             if (djs) RESTClient.LoadDynamicJS(djs);
         }
