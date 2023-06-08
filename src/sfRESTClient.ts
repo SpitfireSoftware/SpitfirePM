@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8555.9";
+const ClientPackageVersion : string = "23.8558.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5560,7 +5560,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     protected activateDynamicJS(RESTClient : sfRestClient,keyName: string, value: string) {
         if (typeof sfRestClient._WCC._DynamicJS === "string" && sfRestClient.IsPowerUXPage()) {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`Activating Dynamics JS {value}`);
-            if ((!top! as any).exports) (top! as any).exports = {};
+            if (!(top as any).exports) (top as any).exports = {};
             var djs: string[] = JSON.parse(sfRestClient._WCC._DynamicJS);
             if (djs) RESTClient.LoadDynamicJS(djs);
         }
