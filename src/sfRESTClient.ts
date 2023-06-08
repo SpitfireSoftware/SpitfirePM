@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8558.1";
+const ClientPackageVersion : string = "23.8558.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -168,15 +168,17 @@ class PartStorageData {
     }
 
     static _LoadedParts: PartStorageList = new Map<PartContextKey, PartStorageData>();
-    public static PartStorageDataFactory(client: sfRestClient, partName: string, forDocType: GUID | undefined, context: string | undefined): PartStorageData {
-        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, context);
+    public static PartStorageDataFactory(client: sfRestClient, partName: string, 
+                                        forDocType: GUID | undefined, forProject: GUID | undefined, 
+                                        context: string | undefined): PartStorageData {
+        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
         var thisPart: PartStorageData;
         if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
         else {
-            thisPart = new PartStorageData(client, partName, forDocType, context);
+            thisPart = new PartStorageData(client, partName, forDocType, forProject, context);
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
             try {
-                thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType, context);
+                thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType,forProject, context);
                 if (thisPart._InitializationResultPromise) {
                     thisPart._InitializationResultPromise.then((r) => {
                         thisPart!.CFG = r;
@@ -191,11 +193,11 @@ class PartStorageData {
         return thisPart;
     }
     public static PartStorageDataLookupFactory(client: sfRestClient, lookupName: string): PartStorageData {
-        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(lookupName,  "lookup", "lookup");
+        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(lookupName, "lookup", "lookup", "lookup");
         var thisPart: PartStorageData;
         if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
         else {
-            thisPart = new PartStorageData(client, lookupName, "lookup", "lookup");
+            thisPart = new PartStorageData(client, lookupName, "lookup","lookup", "lookup");
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
             thisPart._InitializationResultPromise = api.getLookupDisplay(lookupName );
             if (thisPart._InitializationResultPromise) {
@@ -207,8 +209,8 @@ class PartStorageData {
         return thisPart;
     }
 
-    public static GetPartContextKey(partName: string, forDocType: GUID | undefined, context: string | undefined): PartContextKey {
-        return `${partName}[${context}]::${forDocType}`; //   "{0}[{2}]::{1}".sfFormat(partName, forDocType, context);
+    public static GetPartContextKey(partName: string, forDocType: GUID | undefined, forProject: GUID | undefined, context: string | undefined): PartContextKey {
+        return `${partName}[${context}]::${forDocType}#${forProject}`; //   "{0}[{2}]::{1}".sfFormat(partName, forDocType, context);
     }
 
     public GetDataModelBuildContextKey(): string {
@@ -216,12 +218,12 @@ class PartStorageData {
         return `DVM-${this._ForPartName}#${PartStorageData._DMCount}`;
     }
 
-    protected constructor(client: sfRestClient, partName: string, forDocType: GUID | undefined, context: string | undefined) {
+    protected constructor(client: sfRestClient, partName: string, forDocType: GUID | undefined, forProject: GUID | undefined, context: string | undefined) {
         this.CFG = null;
         this.DataModels = new Map<string, any[]>();
         this.RestClient = client;
         this._PromiseList = null;
-        this._ReferenceKey = PartStorageData.GetPartContextKey(partName, forDocType, context);
+        this._ReferenceKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
         this._ForPartName = partName;
         PartStorageData._LoadedParts.set(this._ReferenceKey, this);
         this._InitializationResultPromise = null;
@@ -492,9 +494,9 @@ export class sfRestClient {
     BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: [{}] | {}): Promise<DataModelCollection> {
         if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
         var RESTClient = this;
-        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
+        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, "",context);
         if (!thisPart) {
-            console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, context)));
+            console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, "",context)));
             var EmptyPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => resolve(rawData));
             return EmptyPromise;
         }
@@ -516,23 +518,23 @@ export class sfRestClient {
         return FinalViewModelPromise;
     }
 
-    /**
-     *  Legacy version of BuildViewModelForContext  - use .done()
-     *  @deprecated use BuildViewModelForContext()
-     */
-    BuildViewModel(partName: string, context: string, rawData: any, unusedCfgData: undefined, forDocType: GUID | undefined): JQueryPromise<any> {
-        if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
-        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, context);
-        var darnSoon = $.Deferred();
-        var ResultReady = darnSoon.promise();
-        // what purpose would this serve?? if (cfg) thisPart.CFGLoader = cfg;
-        thisPart.CFGLoader().then(() => {
-            this._ConstructViewModel(thisPart!, rawData)
-                .then((r) => darnSoon.resolve(r))
-        }
-        );
-        return ResultReady;
-    }
+    // /**
+    //  *  Legacy version of BuildViewModelForContext  - use .done()
+    //  *  @deprecated use BuildViewModelForContext()
+    //  */
+    // BuildViewModel(partName: string, context: string, rawData: any, unusedCfgData: undefined, forDocType: GUID | undefined): JQueryPromise<any> {
+    //     if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
+    //     var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, "",context);
+    //     var darnSoon = $.Deferred();
+    //     var ResultReady = darnSoon.promise();
+    //     // what purpose would this serve?? if (cfg) thisPart.CFGLoader = cfg;
+    //     thisPart.CFGLoader().then(() => {
+    //         this._ConstructViewModel(thisPart!, rawData)
+    //             .then((r) => darnSoon.resolve(r))
+    //     }
+    //     );
+    //     return ResultReady;
+    // }
 
     /**
      * Updates row visibility on the server and updates the in-memory flags for display of this row
@@ -865,17 +867,14 @@ export class sfRestClient {
      * Returns set of choices for an auto-complete based on the seed value
      * @param lookupName
      * @param seedValue 0 or more characters which will limit the suggestions
-     * @param dependsOn 0 to 4 values required by the lookup for context; see sfRestClient.GatherDependsOnValues() to process string
+     * @param dependsOn 0 to 4 values required by the lookup for context;  @see sfRestClient.GatherDependsOnValues to process string
      * @param limit a reasonable number of suggestions to be returned; zero or negative replaced with option.SuggestionLimit
      * @returns promise of suggestions.  reuses a matching promise from withing about 4 minutes
+     * @description context is provided from GetPageContextValue("dsCacheKey")
      */
     GetLookupSuggestions(lookupName : string, seedValue: string,
-          /**
-         * either a string or string array (up to 4 elements);
-         * @see sfRestClient.GatherDependsOnValues
-        */
-           dependsOn: string | string[] | undefined,
-          limit: number = -1) : Promise<Suggestion[] | null>  {
+                         dependsOn: string | string[] | undefined,
+                         limit: number = -1) : Promise<Suggestion[] | null>  {
 
             var apiResultPromise: Promise<Suggestion[] | null> | undefined ;
             var RESTClient: sfRestClient = this;
@@ -1118,8 +1117,8 @@ export class sfRestClient {
     /**
      * Async Get Part Configuration Data given part name, doc type and context
     */
-    GetPartCFG(partName: string, forDocType?: GUID, partContext?: string): Promise<UIDisplayPart | null> {
-        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, partContext);
+    GetPartCFG(partName: string, forDocType?: GUID, forProject?:string, partContext?: string): Promise<UIDisplayPart | null> {
+        var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType,forProject, partContext);
         return thisPart.CFGLoader();
     }
 
