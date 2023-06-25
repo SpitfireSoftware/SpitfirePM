@@ -3028,6 +3028,15 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return QPSource;
     }
 
+    public GetPagePK(): string {
+        let result = "";
+        if (this.IsDocumentPage()) 
+            result = sfRestClient._WCC.DataPK;
+        else if (this.IsProjectPage()) 
+            result = sfRestClient._WCC.Project;
+        if (!result) console.warn(`GetPagePK could not resolve key for ${this.ResolvePageName()}`);
+        return result;
+    }
 
     public GetPageProjectKey(pageTypeName?: PageTypeName) :string {
         var Context = location.href;
