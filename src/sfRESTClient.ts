@@ -3028,6 +3028,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return QPSource;
     }
 
+    /** returns the primary key for this page  */
     public GetPagePK(): string {
         let result = "";
         if (this.IsDocumentPage()) 
