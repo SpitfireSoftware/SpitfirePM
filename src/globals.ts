@@ -73,8 +73,41 @@ declare global {
 
     }
 
+    export interface iWebixObjectSkeleton {
+        config: object | {():object};
+        $scope: any;
+    }
+    export interface iWebixSpinner {
+        show: {():void};
+    }
+
+
+    export interface iPowerUXDocumentUI {
+        ReallyReady: Promise<boolean>;
+        app: object;
+        docDesc: string;
+        documentId: GUID;
+        documentModel: iDocumentModelBase;
+        spinner: iWebixSpinner;
+        $scope: any;
+
+    }
+
+    export interface iDocumentModelBase {
+        
+        DMK: {():GUID}; 
+        DocumentTypeKey: {():GUID }; 
+        Project: {():string};  
+        isCurrentRoutee: {(): boolean};
+        isUIEnabled: {(): boolean};
+        // and much more!
+        [key:string]: any;
+    }
+
+
     interface Window {
         $: JQueryStatic;
+        $$: {(t:string|object):iWebixObjectSkeleton};
         jQuery: JQueryStatic;
         sfClient: sfRestClient;
         sfPMSHub: sfPMSHub;

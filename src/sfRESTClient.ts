@@ -361,6 +361,12 @@ export type Permits = number; // 0...31, see PermissionFlags
 /** See sfRestClient.PageTypeNames */
 export type PageTypeName = number; // see PageTypeNames
 export type PagePartList= {[key: string]: Permits};
+export interface iDocumentModel extends    iDocumentModelBase { 
+    DocHeaderData: _SwaggerClientExports.DocMasterDetail;
+    CurrentRouteRow: _SwaggerClientExports.DocRoute;
+    // and much more!
+    [key:string]: any;
+}
 
 /** Spitfire PM Client
  * @example top.sfClient.GetDV(...)
@@ -1845,13 +1851,90 @@ export class sfRestClient {
  /**
      * Make sure the URL starts with application root path
     */
-    MakeSiteRelativeURL(url:string):string {
+ public MakeSiteRelativeURL(url:string):string {
         if (this.IsSiteURL(url)) return url;
         if (url.startsWith("~")) url = url.substring(1);
         if (url.startsWith("../")) url = url.substring(3);
         url = `${this._SiteRootURL}/${url}`;
         return url;
     }
+
+    /** scans for IMG tags with class sfUIMakeSrcSiteRelative  */
+    public makeResourceURIsSiteRelative($DOM: JQuery<HTMLElement>):void {
+        let thisClient:sfRestClient = this;
+        var $Targets;
+        if (!$DOM) $Targets = $("img.sfUIMakeSrcSiteRelative");
+        else $Targets = $DOM.find("img.sfUIMakeSrcSiteRelative");
+        $.each($Targets, function (i, img) {
+            thisClient.setImgSrc($(img)  as JQuery<HTMLImageElement> ) ;
+        });
+    }
+
+    /** resolves full path (for current theme) and sets sfImg flag */
+    protected setImgSrc($T: JQuery<HTMLImageElement>): JQuery.jqXHR<any> |JQuery.Promise<string>  {
+        if ($T.data('sfimg')) {
+            let darnSoon = $.Deferred();
+            let ImgReady = darnSoon.promise();
+            darnSoon.resolve($T.attr("src"));  //makes ImgReady be ready
+            return ImgReady;
+        }
+        var imgName = $T.attr("src");
+        if ((!imgName) || (imgName.length === 0)) {
+            imgName = $T.data("src");
+        }
+        else $T.attr("src", ""); // avoid 404
+        if (!imgName) {
+            let darnSoon = $.Deferred();
+            let ImgReady = darnSoon.promise();
+            darnSoon.resolve("");  //makes ImgReady be ready
+            return ImgReady;
+        }
+        var arq = this.requestImgPath(imgName);
+        arq.done(function (dvResponse:string, txtStatus:string, _XHR : any) {
+            if (dvResponse.length > 260) {
+                console.log("setImgSrc() done: response too long");
+                return arq;
+            }
+            $T.attr("src", dvResponse).data("src", "").data('sfimg', true);
+        }).fail(function () {
+            console.warn("setImgSrc() failed for " + imgName);
+        });
+    
+        return arq;
+    }
+
+    protected requestImgPath(imgName:string): JQuery.jqXHR<any> | JQuery.Promise<string> {
+        var imgRequest = this.SessionStorageKeyForImageName(imgName );
+        var cacheResult = this.SessionStoragePathForImageName(imgRequest); 
+        if (cacheResult) imgName = cacheResult;
+        if (imgName.startsWith('/')) {
+            var darnSoon = $.Deferred();
+            var ImgReady = darnSoon.promise();
+            darnSoon.resolve(imgName);  //makes ImgReady be ready
+            return ImgReady  ;
+        }
+        var url = this.MakeSiteRelativeURL(`px.ashx/${imgRequest}`);  // classic getPXURL
+        return $.ajax({ url: url, dataType: 'html' }).done(function (imgPath) {
+            if ((typeof imgPath === "string") && (imgPath.startsWith("/"))) {
+                    sessionStorage.setItem(imgRequest, imgPath);
+                }
+        });
+    }
+
+    
+    protected SessionStorageKeyForImageName( imgName:string ):string {
+    return `img/${imgName}?zv=${sfRestClient._WCC.uiVaryBy}`; 
+}
+protected SessionStoragePathForImageName( imgStorageKey:string ):string | false {
+    if (typeof sessionStorage !== "object") return false;
+    let cacheResult:string | false | null = sessionStorage.getItem(imgStorageKey); 
+    if (typeof cacheResult !== "string" || !cacheResult.startsWith("/")) {
+       cacheResult = false;
+    }
+    return cacheResult;
+}
+
+
 
     /**
      * Loads UC Function Keys and corresponding Module/System Names
@@ -2807,6 +2890,20 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     public SetPageContextValue( key : string, newValue? : any) : void {
             sfRestClient._WCC[key] = newValue;
     }
+
+    /** returns a references to the page document model, including the data and state */
+    public GetPageDocumentModel() : iDocumentModel | undefined {
+        let UI = this.GetPowerUXDocumentUI();
+        if (!UI) return  undefined;
+        return UI.documentModel as iDocumentModel;
+    }
+        /** returns a references to the page document UI, including header */
+    public GetPowerUXDocumentUI() : iPowerUXDocumentUI | undefined {
+            if (typeof self.$$ !== "function") return undefined;
+            let header = self.$$("spitfireDocumentHeader") as iWebixObjectSkeleton;
+            if (!header || !header.$scope) return undefined;
+            return header.$scope  as iPowerUXDocumentUI;
+        }
 
     public IsDocExclusiveToMe() : boolean {
         return ((!this.IsDocumentPage()) || (sfRestClient._WCC.DataLockFlag >= "2"));
