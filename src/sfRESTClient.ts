@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8582.11";
+const ClientPackageVersion : string = "23.8582.12";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -918,11 +918,18 @@ export class sfRestClient {
             SuggestionContext.DependsOn = DependsOnSet;
             SuggestionContext.MatchingSeed = seedValue;
             SuggestionContext.ResultLimit = limit;
-            apiResultPromise = api.getSuggestionsWithContext(lookupName,RESTClient.GetPageContextValue("dsCacheKey"),SuggestionContext)
+            apiResultPromise = api.getSuggestionsWithContext(lookupName,RESTClient.GetPageDataContext(),SuggestionContext)
             sfRestClient.RecentSuggestionAsOf.set(suggestionGroupKey,TimeNow + sfRestClient.suggestionCacheLifespan );
             sfRestClient.RecentSuggestionResultMap.set(suggestionGroupKey,apiResultPromise);
 
             return apiResultPromise;
+    }
+
+    /** returns GetPageContextValue("dsCacheKey") */
+    public GetPageDataContext():string{
+        let result = this.GetPageContextValue("dsCacheKey");
+
+        return result;
     }
 
     static readonly suggestionCacheLifespan =  246800; // about 4.11 minutes in ms
@@ -954,7 +961,7 @@ export class sfRestClient {
 
 
           var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
-            apiResultPromise  = api.getLookupResultAll(lookupName, RESTClient.GetPageContextValue("dsCacheKey"),  filterValues);
+            apiResultPromise  = api.getLookupResultAll(lookupName, RESTClient.GetPageDataContext() ,  filterValues);
 
             apiResultPromise.then((lookupResultData) => {
                   var thisPart : PartStorageData = PartStorageData.PartStorageDataLookupFactory(this,lookupName);
@@ -1114,7 +1121,7 @@ export class sfRestClient {
                 this._DVThrottledResolvers.set(dvRequest.RequestID,resolvedTo);
             });
         }
-        else DVResultPromise = api.getDisplayableValue(dvRequest.DVName,dvRequest );
+        else DVResultPromise = api.getDisplayableValue(dvRequest.DVName,dvRequest ,RESTClient.GetPageDataContext());
         return DVResultPromise;
     }
     private _DVRequestQueue : _SwaggerClientExports.DVRequest[] = [];
@@ -1673,7 +1680,7 @@ export class sfRestClient {
                 $Dialog.dialog("close");
                 RESTClient.HeyPleaseWait();
                 var api = new _SwaggerClientExports.ExcelToolsClient();
-                api.getCobraExport(PostBackArgs,RESTClient.GetPageContextValue("dsCacheKey")).then( crt => {
+                api.getCobraExport(PostBackArgs,RESTClient.GetPageDataContext()).then( crt => {
                     RESTClient.WaitForTask(crt).then( (crtResult) => {
                         RESTClient.ClearPleaseWaitDialog();
                         let thisReason = (crtResult!.ThisReason) ? crtResult!.ThisReason : "Failed! Contact Help Desk (see server logs)";
@@ -3691,7 +3698,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 result = this.GetPageProjectKey();
             }
             if (markerName === "Pdskey") {
-                result = this.GetPageContextValue("dsCacheKey");
+                result = this.GetPageDataContext() ;
             }
         }
         return result;
@@ -3989,7 +3996,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     sfAC($AC: string | JQuery<HTMLInputElement>, lookupName:string, depends1:string|string[], dep2?:string, dep3?:string, dep4?:string) {
         if (typeof $AC === "string") $AC = $("#" + $AC);
         var RESTClient = this;
-        var SourceURL = `${RESTClient._SiteRootURL}/api/suggestions/${lookupName}/${this.GetPageContextValue("dsCacheKey")}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
+        var SourceURL = `${RESTClient._SiteRootURL}/api/suggestions/${lookupName}/${this.GetPageDataContext()}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
         $AC.data("sourceurl",SourceURL).autocomplete({
             source: SourceURL
             , minLength: 3
@@ -5422,7 +5429,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     if (DocModel.CurrentAttachments) WatchedFileKeys = DocModel.CurrentAttachments.map((el:_SwaggerClientExports.DocAttachment) => el.DocKey) ;
             
                     self.sfPMSHub.server.documentWindowOpen(id, RESTClient.GetPageContextValue("DocSessionKey") , 
-                                    RESTClient.GetPageContextValue("dsCacheKey"), sfRestClient.PageNotificationCount, 
+                                    RESTClient.GetPageDataContext(), sfRestClient.PageNotificationCount, 
                                     DocModel.getExclusivityMode(), WatchedFileKeys)
                     .then( (responseText)=>{
                         let msgText = "";
