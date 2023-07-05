@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8578.3";
+const ClientPackageVersion : string = "23.8582.11";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -364,6 +364,8 @@ export type PagePartList= {[key: string]: Permits};
 export interface iDocumentModel extends    iDocumentModelBase { 
     DocHeaderData: _SwaggerClientExports.DocMasterDetail;
     CurrentRouteRow: _SwaggerClientExports.DocRoute;
+    CurrentAttachments: _SwaggerClientExports.DocAttachment[];
+    getExclusivityMode: {():number};
     // and much more!
     [key:string]: any;
 }
@@ -3130,6 +3132,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         let result = "";
         if (this.IsDocumentPage()) 
             result = sfRestClient._WCC.DataPK;
+            if (result === this.EmptyKey) result = this.GetPageDocumentModel()?._DMK;
         else if (this.IsProjectPage()) 
             result = sfRestClient._WCC.Project;
         if (!result) console.warn(`GetPagePK could not resolve key for ${this.ResolvePageName()}`);
@@ -5058,6 +5061,34 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sessionStorage.clear();
     }
 
+    /**
+     * detects Global function call that is now handled by this client
+     * @param request can start with javascript:
+     * @returns updated request 
+     */
+    public HandleEvalRequest( request: string ):string {
+        let RESTClient = this;
+        if (request.startsWith("javascript:")) request = request.substring(11);
+
+        if (request.includes("(")) {
+            const token:string = request.substring(0,request.indexOf("("));
+            if ( typeof (RESTClient as any)[token] === "function") request = `RESTClient.${request}`;
+        }
+
+        try {
+            eval(request);
+        }
+        catch (ej:any) {
+            if (ej.name === "ReferenceError") {
+                console.log(`sfPMSHub ignored js - ${ej.message}  `);
+            }
+            else {
+                console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
+            }
+        }
+
+        return request;
+    }
 
     /**
      * Called by the global instance to connect to SignalR
@@ -5065,12 +5096,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     protected static StartSignalRClientHub():void {
 
         if (self !== top) return;
-        if (!$.connection || !$.connection.sfPMSHub) {
+        if (!$.connection || !$.connection.sfPMSHub || !top.sfClient)  {
             setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
             return;
         }
-        if (sfRestClient.IsPowerUXPage() && !top.sfClient.IsPageOfType(top.sfClient.PageTypeNames.Document)) {
-            if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout("top.sfClient.pingServer();",234);
+        let RESTClient = top.sfClient;
+        if (sfRestClient.IsPowerUXPage() ) {
+            if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout(() =>{RESTClient.pingServer();},234);
         }
         if ($.connection) {
             var sfHub = $.connection.sfPMSHub;
@@ -5128,19 +5160,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     var HubEvent = jQuery.Event("sfPMSHubSignal.nowViewingDocument");
                     $("body").trigger(HubEvent,  [target,loginSessionKey,request] );
                     if (HubEvent.isDefaultPrevented()) return;
-
-                    request = request.substring(11);
-                    try {
-                        eval(request);
-                    }
-                    catch (ej:any) {
-                        if (ej.name === "ReferenceError") {
-                            console.log(`sfPMSHub ignored js - ${ej.message}  `);
-                        }
-                        else {
-                            console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
-                        }
-                    }
+                    RESTClient.HandleEvalRequest(request);
+ 
+                   
                 }
             }
 
@@ -5153,7 +5175,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (HubEvent.isDefaultPrevented()) return;
 
                 if (top) {
-                    var RESTClient = top.sfClient;
+                    //var RESTClient = top.sfClient;
                     var TopName = top.name!;
                     if (TopName && TopName === 'v/LibView.aspx') TopName = "Dashboard"
                     if (TopName.length! > 0 && target.sfStartsWithCI(TopName)) {
@@ -5166,18 +5188,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 window.open(useURL,`pu${useURL.sfHashCode()}`);
                             }
                             else {
-                                if (request.startsWith("PopDoc") && typeof top?.sfClient.PopDoc === "function") request = `top.sfClient.${request}`;
-                                try {
-                                    eval(request);
-                                }
-                                catch (ej:any) {
-                                    if (ej.name === "ReferenceError") {
-                                        console.log(`sfPMSHub ignored js - ${ej.message}  `);
-                                    }
-                                    else {
-                                        console.warn(`sfPMSHub js ${request} failed: ${ej}  `);
-                                    }
-                                }
+                                RESTClient.HandleEvalRequest(request);
                             }
                         }
                         else if (request.sfStartsWithCI("refresh")) {
@@ -5210,10 +5221,16 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             top!.location.href = request;
                         }
                     }
-                    else if (TopName.length! > 0 && RESTClient.GetPageContextValue("DataPK").endsWith(TopName)
+                    else if (TopName.length! > 0 && RESTClient.GetPagePK().endsWith(TopName)
                         && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === TopName) {
                         // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
                         console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
+                        var HubEvent = jQuery.Event("sfPMSHubSignal.RefreshAttachments");
+                        $("body").trigger(HubEvent,  [target,request] );
+                        if (HubEvent.isDefaultPrevented()) {
+                            console.log("sfPMSHub RefreshAttachments handled...");  // in general .preventDefault() was called
+                            return;
+                        }
                         setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
                     }
                     else if (target === "CATALOG" && request.sfIsGuid()) {
@@ -5303,8 +5320,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     setTimeout(function () {
                         $.connection.hub.start().done(function hubReStart() {
                             console.log(`${new Date().toLocaleTimeString()} sfPMSHub Hub has been re-started...`);
-                            if (top?.sfClient.IsDocumentPage()) {
-                                sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
+                            if (RESTClient.IsDocumentPage()) {
+                                const DMK = RESTClient.GetPagePK();
+                                sfHub.server.subscribeToDocument(DMK);
                             }
                         });
                     }, sfHub.client.ReConnectDelay); // Restart connection after 5 seconds.
@@ -5314,8 +5332,20 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             $.connection.hub.start().done(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: started...`);
                 //if (typeof top.sfPMSHub === "undefined") top.sfPMSHub = $.connection.sfPMSHub; // $.connection.hub.proxies.sfpmshub;
-                if (top?.sfClient.IsDocumentPage()) {
-                    sfHub.server.subscribeToDocument(top.sfClient.GetPageContextValue("DataPK"));
+                if (RESTClient.IsDocumentPage()) {
+
+                const WaitAndSubscribe = () => {
+                        const DMK = RESTClient.GetPagePK();
+                        if (DMK === RESTClient.EmptyKey)  {
+                            setTimeout(() => {WaitAndSubscribe()},222);
+                            console.log(`${new Date().toSFLogTimeString()} sfPMSHub: waiting for DMK to resolve...`);
+                            return;
+                        }
+                        sfHub.server.subscribeToDocument(DMK);
+                        console.log(`${new Date().toSFLogTimeString()} sfPMSHub: subscribedToDocument...`);
+                    }
+                      
+                    setTimeout(() => {WaitAndSubscribe()},222);
                 }
             });
         }
@@ -5358,18 +5388,19 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         try {
             var RESTClient = this;
             if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== $.signalR.connectionState.connected) {
-                sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for hub ", 123);
+                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for hub */}, 123);
                 return;
             }
             if (this.IsPageOfType( this.PageTypeNames.Login ) ) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log("pingServer() Log in pending (ignored)");
                 this.CheckForSystemNotification();
-                sfRestClient._NextPingTimerID = setTimeout("top.sfClient.pingServer(); // wait for login ", 2345);
+                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for login */}, 2345);
+                //sfRestClient._NextPingTimerID = setTimeout("RESTClient.pingServer(); // wait for login ", 2345);
                 return;
             }
 
             var retryInterval = (sfRestClient._Options.BasicPingServerInterval * (1.1 + Math.random()));
-            var $ALERT;
+            var $ALERT: JQuery<HTMLDivElement>;
             var ActionAfterAlert = "";
             var MaxIdleTime = RESTClient.GetPageContextValue("IdleForce",33) * 59000;
             var id:string = RESTClient.GetPageContextValue("DocSessionKey","");
@@ -5377,8 +5408,170 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfRestClient.PageServerPingAttempts ++;
             top.sfPMSHub.server.sessionAlive();
 
-            top.sfPMSHub.server.dashboardHeartbeat(id,sfRestClient.PageNotificationCount)
-                .then(async function (responseText) {
+            if (RESTClient.IsDocumentPage()) {
+
+                try {
+                    let $DocUI = RESTClient.GetPowerUXDocumentUI();
+                    let DocModel:iDocumentModel = RESTClient.GetPageDocumentModel()!;
+                    
+                    // var $DocBar = top.$("DIV.clsPartRowRight");
+                    // var $DocBarSignal = $DocBar.find(".clsSignalR");
+                    // if ($DocBarSignal.length === 0 && $DocBar.find("img").length > 0) $DocBarSignal = $DocBar.prepend('<i class="fa-duotone fa-signal-stream-slash clsSignalR"  ></i>').find(".clsSignalR");
+                    
+                    let WatchedFileKeys:string[] = [];
+                    if (DocModel.CurrentAttachments) WatchedFileKeys = DocModel.CurrentAttachments.map((el:_SwaggerClientExports.DocAttachment) => el.DocKey) ;
+            
+                    self.sfPMSHub.server.documentWindowOpen(id, RESTClient.GetPageContextValue("DocSessionKey") , 
+                                    RESTClient.GetPageContextValue("dsCacheKey"), sfRestClient.PageNotificationCount, 
+                                    DocModel.getExclusivityMode(), WatchedFileKeys)
+                    .then( (responseText)=>{
+                        let msgText = "";
+                        try {
+                            if (responseText) { 
+                                var isOK = (responseText.startsWith("OK"));
+                                $("SPAN#spnIdleTime.sfPingHealthTip").detach();
+        
+                                //$(jqSelector).html(responseText);
+                                //$sfModalDialog.dialog('option', 'width', 'auto');
+                                var RecentIdleMS =  Date.now() - sfRestClient.LastActivityAt ;
+                                var CanAutoSave = isOK;
+                                if (isOK) {
+                               
+                                
+                                 
+                                var d = new Date();
+                                var hourNow = d.getHours();
+                                if (((sfRestClient.PageNotificationCount > 33) && (hourNow < 2)) || (((sfRestClient.PageNotificationCount * retryInterval) > MaxIdleTime))) {
+                                    
+                                    $ALERT = RESTClient.jqAlert("This window has been idle and will close in 1 minute.  Close this dialog to keep working!");
+                                    var autoClose = setTimeout('top.ResetUnsavedChangesAndCloseThisWindow();', 66000);
+        
+                                    $ALERT.on('dialogclose', function (event) {
+                                        clearTimeout(autoClose);
+                                        //top.SaveThisDoc("IDLE");
+                                    });
+                                    retryInterval = 99000;
+                                }
+                            }
+
+                            else {
+                                
+                                if (responseText == "NAK: Not Authenticated") {
+                                    msgText = "You are no longer logged into this server.  This window will close when you click OK";
+                                    retryInterval = -1;
+                                    ActionAfterAlert = "Close"
+                                    //darnSoon.resolve();  //makes msgReady be ready
+                                }
+                                else if (responseText.startsWith("NAK:")) {
+                                    msgText = responseText.substring(5).trim();
+                                    retryInterval = -1;
+                                    ActionAfterAlert = "Reload"
+                                    self.sfPMSHub.server.writeToServerLog(`SendDocWindowOpenNotification(${id}) - auto-reload ${msgText}`);
+                                    self.location.reload();
+                                }
+                                else if (responseText.startsWith("FAIL:")) {
+                                    msgText = responseText.substring(5).trim();
+                                    retryInterval = -1;
+                                    ActionAfterAlert = "Close"
+                                }
+                                // else if ((responseText.startsWith('[{"FileDocKey":')) &&
+                                //     ((typeof $sfModalDialog != "object") || ($sfModalDialog.length != "number") || (!$sfModalDialog.is(":visible")))) {
+                                //     var ldata = $.parseJSON(responseText);
+                                //     var AIRContext = FrameContext($AIRFrame);
+                                //     $.each(ldata, function (index, watchedFile) {
+                                //         var tform = "";
+                                //         var dform = "";
+                                //         var fkey = watchedFile.FileDocKey;
+                                //         var $FVC = AIRContext.$('IMG[DATA-fk="{0}"]'.format(fkey));
+                                //         if ($FVC.length > 0) {
+                                //             var newIconSrc = $FVC.attr('src');
+                                //             // warning: fragile
+                                //             newIconSrc = newIconSrc.substring(0, newIconSrc.lastIndexOf("/") + 1);
+                                //             if (watchedFile.Status == "locked") newIconSrc = newIconSrc + "fileLocked.gif"
+                                //             else if (watchedFile.Status == "unlocked" || watchedFile.Status == "checked in") newIconSrc = newIconSrc + "fileUnLocked.gif"
+                                //             else if (watchedFile.Status == "checked out") newIconSrc = newIconSrc + "fileOut.gif"
+                                //             $FVC.attr("src", newIconSrc);
+                                //         }
+                                //     });
+        
+                                //     msgText = "FYI: "  // was The file share status has changed for 
+                                //     if (ldata.length == 1) {
+                                //         var $FVC = AIRContext.$('IMG[DATA-fk="{0}"]'.format(ldata[0].FileDocKey));
+                                //         msgText = msgText + $FVC.closest('TR').find('span[id$="lblFileTitle"]').text();
+                                //         msgText = `${msgText} was ${ldata[0].Status} by ${ldata[0].UserName}`; 
+                                //     }
+        
+                                //     else {
+                                //         msgText = msgText + "{0} files have been modified by other user(s)".format(ldata.length);
+                                //     }
+                                //     ActionAfterAlert = "";
+                                //     if ($("DIV.sfUIjqPDL, SPAN.sfUICrtMsgTarget").length > 0) {
+                                //         // we have found a PDF viewer or "Processing" dialog open...
+                                //         // future: we could perhaps just ignore our own template files changing status
+                                //         console.log(msgText);
+                                //         msgText = "";
+                                //     }
+        
+                                //     if (msgText) DisplayUserNotification(msgText,9876);
+                                //     console.log(msgText);
+                                //     msgText = "";
+                                    
+                                //     //darnSoon.resolve();  //makes msgReady be ready
+                                // }
+                               // changed by another now via SignalR
+                               // SysNotification are now via SignalR
+                            
+                                else if (responseText === "[]") {
+                                    console.log("DWO: Empty response.")
+                                }
+                                else {
+                                    msgText = responseText;
+                                    retryInterval = -1;
+                                    //darnSoon.resolve();  //makes msgReady be ready
+                                }
+                                if (msgText) {
+                                    $ALERT = RESTClient.jqAlert(msgText);
+                                    //if (DialogButtons) $ALERT.dialog('option', 'buttons', DialogButtons);
+                                }
+                                if (ActionAfterAlert.length > 0) {
+                                    retryInterval = -1;
+                                    $ALERT.on('dialogclose', function (event) {
+                                        //if (ActionAfterAlert === "Close") self.ResetUnsavedChangesAndCloseThisWindow();
+                                        if (ActionAfterAlert === "Reload") self.location.reload();
+                                        //if (ActionAfterAlert) DotNetPostBack(ActionAfterAlert);
+                                    });
+                                }
+                            }
+        
+                        }
+                        } catch (rxx : any) {
+                            console.warn('SendDocWindowOpenNotification(' + id + ') - ', rxx)
+                            self.sfPMSHub.server.writeToServerLog(`SendDocWindowOpenNotification(${id}) - ${rxx}`);
+                            RESTClient.jqAlert('Problem processing heartbeat response; cause: ' + rxx.message);
+                            self.location.reload();
+                        }
+                    })
+                    .catch((rxx)=>{
+                        console.warn('documentWindowOpen failed!',rxx);
+                        var retryNow = RESTClient.PageServerPingBackFailed("dwo", id, "DWO Failed", retryInterval / 2, "SendDocWindowOpenNotification");
+                        //if (retryNow) NextDWOEventID = setTimeout('SendDocWindowOpenNotification("' + id + '"); // dwo retry', retryInterval);
+            
+                    });
+
+
+                } catch (error:any) {
+                    if (error && (error as any).message) {
+                        console.log('SendDocWindowOpenNotification(' + id + ') - ' + error.message)
+                        RESTClient.jqAlert('The server could not be contacted to reserve the resources for this document window: ' + error.message);
+                    }
+                    // how to recover??
+                }
+
+              
+            }
+
+            self.sfPMSHub.server.dashboardHeartbeat(id,sfRestClient.PageNotificationCount)
+                .then(async (responseText) => {
                 if (responseText > "") {
                     var isOK = (responseText.startsWith("OK"));
 
@@ -5395,7 +5588,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         var TimeSinceLastActivity = Date.now() - sfRestClient.LastActivityAt;
                         if (((TimeSinceLastActivity > 525600) && (hourNow < 2)) || ((TimeSinceLastActivity > MaxIdleTime))) {
                             RESTClient.DisplayUserNotification("This window has been idle and will logoff in 1 minute.  ", 60000);
-                            setTimeout(`location="${sfRestClient.LogoutPageURL('idle')}";` , 66000);
+                            setTimeout(`top.location="${sfRestClient.LogoutPageURL('idle')}";` , 66000);
                             retryInterval = 99000;
                         }
                     }

@@ -16,6 +16,8 @@ declare global {
     interface AfterDocumentSaved {(dtk:string, project: string):void}
     interface DashboardOpenLink {(targetWindowName: string, request: string):void}
     interface DashboardRefreshPartByName {(partName: string):void}
+    interface DocumentWindowOpen {(id:string, DocSessionKey:string, dsCacheKey:string, DWONotificationCount:number, DataLockFlag:number, WatchedFileKeys:string[]):Promise<string> }
+    interface DocumentWindowClose {(id:string, DocSessionKey:string, dsCacheKey:string):Promise<string> }
 
     interface DMKMethod {(dmk:GUID):void}
     interface RecentDocumentEntry { (dmk: GUID, title: string):void}
@@ -66,9 +68,12 @@ declare global {
             activateExchangeToken: StringThenBooleanPromise;
             dashboardHeartbeat: HeartbeatMonitor;
             dashboardOpenLink: DashboardOpenLink;
+            documentWindowOpen: DocumentWindowOpen;    
+            onDocumentWindowClose: DocumentWindowClose;    
+            
             sessionAlive: SimpleBooleanPromise;
             subscribeToDocument:  DMKMethod;
-
+            writeToServerLog: {(msg:string):void};
         }
 
     }
