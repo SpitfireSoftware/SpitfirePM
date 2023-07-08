@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8585.1";
+const ClientPackageVersion : string = "23.8587.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -168,6 +168,7 @@ class PartStorageData {
     }
 
     static _LoadedParts: PartStorageList = new Map<PartContextKey, PartStorageData>();
+    public static ClearCache() { this._LoadedParts = new Map<PartContextKey, PartStorageData>(); }
     public static PartStorageDataFactory(client: sfRestClient, partName: string, 
                                         forDocType: GUID | undefined, forProject: GUID | undefined, 
                                         context: string | undefined): PartStorageData {
@@ -5285,6 +5286,30 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (HubEvent.isDefaultPrevented()) return;
                 top?.sfClient.ClearDV(dvName,pValue,dependsOn);
             };
+            sfHub.client.onFlushClientResource = function (resourceType: string, project: string, extra: string | undefined) {
+                //server wants us to flush something other than a DV
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.onFlushClientResource for [${resourceType},${project}] `);
+                var HubEvent = jQuery.Event("sfPMSHubSignal.onFlushClientResource");
+                $("body").trigger(HubEvent,  [resourceType,project,extra] );
+                if (HubEvent.isDefaultPrevented()) return;  // not recommended unless they handle all our stuff too!
+                if (resourceType === "project") {
+                    //Dim sCacheKey As String = DataSupport.Logic.CacheKeyForProjectKPI(forProject)
+                    //sCacheKey = DataSupport.Logic.CacheKeyForProjectData(forProject, Logic.ProjectCacheTypes.Model)
+                    //sCacheKey = DataSupport.Logic.CacheKeyForProjectCA(forProject)
+                    //DataSupport.Logic.Cache.Remove(DataSupport.Logic.CacheKeyForProjectTeam(forProject))
+                    
+                    RESTClient.ClearDV("ContractValue4ImportOnly", project, undefined)
+                    //RESTClient.ClearDV("ProjectBRInfo", Nothing) // depends on DTK, so does this clear all doc types?
+                    //RESTClient.ClearDV("WBSETC", New String() {project}) ' est to complete
+                    RESTClient.ClearDV("ProjectSCBudgetMode", project, undefined)
+                }
+                else if (resourceType === "*") {
+                    // mostly for webix  LV tables
+                    sessionStorage.clear();  // this also flushes all DV's
+                    localStorage.clear();
+                    PartStorageData.ClearCache();
+                }
+            };
             sfHub.client.tickleSession = function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.tickleSession`);
                 sfHub.client.ReConnectDelay = 5000;
@@ -5846,6 +5871,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         let currentLoggingLevel  = currentOptions.LogLevel;
         sessionStorage.clear();
         localStorage.clear()
+        PartStorageData.ClearCache();
         indexedDB.deleteDatabase("spitfireApp");
         localStorage.setItem('SavedLoggingLevel',`${currentLoggingLevel}`);
         if (this.DevMode()) this.SaveOptions(currentOptions);
