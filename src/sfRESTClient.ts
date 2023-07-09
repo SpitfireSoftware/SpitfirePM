@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8587.2";
+const ClientPackageVersion : string = "23.8587.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5368,13 +5368,15 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
                 const WaitAndSubscribe = () => {
                         const DMK = RESTClient.GetPagePK();
-                        if (DMK === RESTClient.EmptyKey)  {
+                        if (!DMK || DMK === RESTClient.EmptyKey)  {
                             setTimeout(() => {WaitAndSubscribe()},222);
                             console.log(`${new Date().toSFLogTimeString()} sfPMSHub: waiting for DMK to resolve...`);
                             return;
                         }
-                        sfHub.server.subscribeToDocument(DMK);
-                        console.log(`${new Date().toSFLogTimeString()} sfPMSHub: subscribedToDocument...`);
+                        if (DMK) {
+                            sfHub.server.subscribeToDocument(DMK);
+                            console.log(`${new Date().toSFLogTimeString()} sfPMSHub: subscribedToDocument...`);
+                        }
                     }
                       
                     setTimeout(() => {WaitAndSubscribe()},222);
@@ -5412,6 +5414,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     /** updates the time of last user activity */
     public heartbeat():void {
         sfRestClient.LastActivityAt = Date.now();
+    }
+
+    public ResetUnsavedChangesAndCloseThisWindow(): void {
+        self.location.href = 'about:blank';
+        self.close();
     }
 
     protected static _NextPingTimerID :number | undefined= undefined;
@@ -5476,10 +5483,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 if (((sfRestClient.PageNotificationCount > 33) && (hourNow < 2)) || (((sfRestClient.PageNotificationCount * retryInterval) > MaxIdleTime))) {
                                     
                                     $ALERT = RESTClient.jqAlert("This window has been idle and will close in 1 minute.  Close this dialog to keep working!");
-                                    var autoClose = setTimeout('top.ResetUnsavedChangesAndCloseThisWindow();', 66000);
+                                    var autoClose = setTimeout(() => {RESTClient.ResetUnsavedChangesAndCloseThisWindow();}, 66000);
         
                                     $ALERT.on('dialogclose', function (event) {
                                         clearTimeout(autoClose);
+                                        RESTClient.heartbeat();
                                         //top.SaveThisDoc("IDLE");
                                     });
                                     retryInterval = 99000;
@@ -5568,7 +5576,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 if (ActionAfterAlert.length > 0) {
                                     retryInterval = -1;
                                     $ALERT.on('dialogclose', function (event) {
-                                        //if (ActionAfterAlert === "Close") self.ResetUnsavedChangesAndCloseThisWindow();
+                                        if (ActionAfterAlert === "Close") autoClose = setTimeout(() => {RESTClient.ResetUnsavedChangesAndCloseThisWindow();}, 333);
                                         if (ActionAfterAlert === "Reload") self.location.reload();
                                         //if (ActionAfterAlert) DotNetPostBack(ActionAfterAlert);
                                     });
@@ -5676,8 +5684,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         }
                         else if (responseText.sfStartsWithCI('{"link":')) {
                             var ldata = JSON.parse(responseText);
+                            console.warn(`pingServer() requested link `,responseText);
                             if ((location.pathname.toUpperCase() + location.search.toUpperCase()) == ldata.link.toUpperCase()) {
-                                top?.__doPostBack("refresh", "dasho");  // this makes the pending window.close irrelavent....
+                                self.__doPostBack("refresh", "dasho");  // this makes the pending window.close irrelavent....
                             }
                             else {
                                 msgText = ldata.text;
