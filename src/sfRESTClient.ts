@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8587.4";
+const ClientPackageVersion : string = "23.8587.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5365,21 +5365,27 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: started...`);
                 //if (typeof top.sfPMSHub === "undefined") top.sfPMSHub = $.connection.sfPMSHub; // $.connection.hub.proxies.sfpmshub;
                 if (RESTClient.IsDocumentPage()) {
-
-                const WaitAndSubscribe = () => {
-                        const DMK = RESTClient.GetPagePK();
-                        if (!DMK || DMK === RESTClient.EmptyKey)  {
-                            setTimeout(() => {WaitAndSubscribe()},222);
-                            console.log(`${new Date().toSFLogTimeString()} sfPMSHub: waiting for DMK to resolve...`);
+                    let delayMS = 222;
+                    const WaitAndSubscribe = () => {
+                            const DMK = RESTClient.GetPagePK();
+                            if (!DMK || DMK === RESTClient.EmptyKey)  {
+                                if (RESTClient.GetPageQueryParameterByName("add")) {
+                                    console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Doc Page in ADD mode...`);
+                                    return;
+                                }
+                                delayMS += 222;
+                                setTimeout(() => {WaitAndSubscribe()},delayMS);
+                                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: waiting ${delayMS}ms for DMK to resolve...`);
+                                return;
+                            }
+                            if (DMK) {
+                                sfHub.server.subscribeToDocument(DMK);
+                                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: subscribedToDocument...`);
+                            }
                             return;
                         }
-                        if (DMK) {
-                            sfHub.server.subscribeToDocument(DMK);
-                            console.log(`${new Date().toSFLogTimeString()} sfPMSHub: subscribedToDocument...`);
-                        }
-                    }
                       
-                    setTimeout(() => {WaitAndSubscribe()},222);
+                    setTimeout(() => {WaitAndSubscribe()},delayMS);
                 }
             });
         }
