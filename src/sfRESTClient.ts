@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8587.7";
+const ClientPackageVersion : string = "23.8592.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5371,6 +5371,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             if (!DMK || DMK === RESTClient.EmptyKey)  {
                                 if (RESTClient.GetPageQueryParameterByName("add")) {
                                     console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Doc Page in ADD mode...`);
+                                    clearTimeout(sfRestClient._NextPingTimerID );
+                                    sfRestClient._NextPingTimerID = undefined;
                                     return;
                                 }
                                 delayMS += 222;
