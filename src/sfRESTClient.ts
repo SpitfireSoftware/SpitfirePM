@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8600.5";
+const ClientPackageVersion : string = "23.8602.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3064,7 +3064,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         sfRestClient.ResolvePageInfo.ValidHash = newLocationHash;
         if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvePageInfo.LastResolvedPageTypeName}`);
         // too soon to do a fresh this.LoadUserSessionInfo(true); (URL context is still wrong)
-        this.LoadUserSessionInfo(true, newHref);
+        setTimeout(()=>{ this.LoadUserSessionInfo(true, newHref);},333); // hopefully self.location will catch up to new URL by then!
     }
 
     protected XBVariantOfPageName( classicPageName : PageTypeName ) : string {
