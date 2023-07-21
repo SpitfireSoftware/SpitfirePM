@@ -21,6 +21,8 @@ apiResult.then(function (a) {
 
 ### Change Log
 
+23.8592.1 - Updates swagger
+23.8510.2 - First release for sfPMS v2023
 1.40.206 - SignalR 2.4.3 and FontAwesome 6
 1.40.205 - Improved RecentDocList management
 1.40.208 - Improved poor Signal message and TableAndFieldInfo type

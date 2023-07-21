@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8592.1";
+const ClientPackageVersion : string = "23.8600.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2059,13 +2059,18 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
     /**
      * Loads or Updates WCC session attributes (api/session/who)
+     * @param bypassCache 
+     * @param locationHash when omitted, location.toString is used
     */
-    LoadUserSessionInfo(bypassCache?:boolean): Promise<WCCData> {
+    LoadUserSessionInfo(bypassCache?:boolean, newHref?:string): Promise<WCCData> {
         var RESTClient: sfRestClient = this;
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
+            if (!newHref) newHref = location.toString();
+            let locationHash = newHref.sfHashCode();
+             
             let ThisPageType =  this.ResolvePageTypeName();
             if ((ThisPageType &  RESTClient.PageTypeNames.Unauthenticated ) ===  RESTClient.PageTypeNames.Unauthenticated  ){
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("LoadUserSessionInfo() FYI: Not logged in.");
@@ -2073,16 +2078,16 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 return;
             }
             if (sfRestClient._SessionClientGetWCC) {
-                if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(location.toString().sfHashCode())) {
+                if (!bypassCache && sfRestClient._SessionClientGetWCC.AppliesFor(locationHash)) {
                     //if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Reusing ongoing getWCC for HREF hash ${sfRestClient._SessionClientGetWCC.ForNavHash}`);
                     apiResult = (<Promise<WCCData>> sfRestClient._SessionClientGetWCC.APIResult!);
                 } else sfRestClient._SessionClientGetWCC = null;
             }
             if (!apiResult) {
-                var ForPageHash =location.toString().sfHashCode();
+                let ForPageHash = locationHash;
                 api = new SessionClient(this._SiteURL);
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Creating getWCC request for HREF hash ${ForPageHash}`);
-                apiResult = <Promise<WCCData | null>> api.getWCC(RESTClient.GetPageQueryContent());
+                apiResult = <Promise<WCCData | null>> api.getWCC(RESTClient.GetPageQueryContent(newHref));
                 sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
                 sfRestClient.RecentDocumentList = [ new _SwaggerClientExports.MenuAction()];
                 sfRestClient.RecentDocumentList[0].Enabled=false;
@@ -3049,14 +3054,17 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
 
     /** asserts a new url to resolve the new page type.  Stays in effect until the location hash next changes */
-    public urlChange(newURL:string) {
+    public urlChange(newURL:string,newHref:string) {
         this.heartbeat();
 
         // do not set validHash - but reset the pagetype and pagename
         sfRestClient.ResolvePageInfo.LastResolvedPageName = newURL;
         sfRestClient.ResolvePageInfo.LastResolvedPageTypeName = this.ResolveStringPageNametoPageTypeName(newURL);
-        sfRestClient.ResolvePageInfo.ValidHash = location.href.sfHashCode();
+        let newLocationHash = newHref.sfHashCode();
+        sfRestClient.ResolvePageInfo.ValidHash = newLocationHash;
         if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvePageInfo.LastResolvedPageTypeName}`);
+        // too soon to do a fresh this.LoadUserSessionInfo(true); (URL context is still wrong)
+        this.LoadUserSessionInfo(true, newHref);
     }
 
     protected XBVariantOfPageName( classicPageName : PageTypeName ) : string {
@@ -3129,9 +3137,17 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     /** Returns the search or hash portion of the page location */
-    public GetPageQueryContent():string {
-        var QPSource = location.search;
-        if (!QPSource) QPSource = location.hash;
+    public GetPageQueryContent(fromHref?:string):string {
+        var QPSource = "";
+        if (!fromHref) {
+            QPSource = location.search;
+            if (!QPSource) QPSource = location.hash;
+        } 
+        else {
+            QPSource = fromHref.substring(location.href.indexOf("#"));
+            if (!QPSource && fromHref.includes("?")) QPSource = fromHref.substring(location.href.indexOf("?"));
+        }
+        
         return QPSource;
     }
 
