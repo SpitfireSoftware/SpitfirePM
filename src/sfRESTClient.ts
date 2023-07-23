@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8602.1";
+const ClientPackageVersion : string = "23.8602.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5125,7 +5125,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             return;
         }
         let RESTClient = top.sfClient;
-        if (sfRestClient.IsPowerUXPage() ) {
+        if (sfRestClient.IsPowerUXPage() && !RESTClient.IsDocumentPage() ) {
             if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout(() =>{RESTClient.pingServer();},234);
         }
         if ($.connection) {
@@ -5399,6 +5399,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             if (DMK) {
                                 sfHub.server.subscribeToDocument(DMK);
                                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: subscribedToDocument...`);
+                                if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout(() =>{RESTClient.pingServer();},234);
                             }
                             return;
                         }
@@ -5447,9 +5448,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     protected static _NextPingTimerID :number | undefined= undefined;
     public async  pingServer(): Promise<void> {
-        var id:string = "TBD";
+        let pdsKey = "TBD";
         try {
-            var RESTClient = this;
+            const RESTClient = this;
+            pdsKey = RESTClient.GetPageDataContext();
             if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== $.signalR.connectionState.connected) {
                 sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for hub */}, 123);
                 return;
@@ -5461,12 +5463,25 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 //sfRestClient._NextPingTimerID = setTimeout("RESTClient.pingServer(); // wait for login ", 2345);
                 return;
             }
+            const isDocumentPage = RESTClient.IsDocumentPage();
+            const docSessionkey = RESTClient.GetPageContextValue("DocSessionKey");
+            const docKey:string = RESTClient.GetPagePK();  
+            const hasDocSessionkey = (docSessionkey && docSessionkey !== RESTClient.EmptyKey);
+            const hasDocKey = (docKey && docKey !== RESTClient.EmptyKey);
+            const hasPDSKey = (pdsKey && pdsKey !== 'TBD');
+
+            if ( isDocumentPage && (!hasDocSessionkey || !hasPDSKey || !hasDocKey) ) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  
+                    console.log(`pingServer()  ${!hasDocKey ? 'DMK':''} ${!hasDocSessionkey ? 'DSK':''} ${!hasPDSKey ? 'PDS':''}  still pending (requed)`);
+                this.CheckForSystemNotification();
+                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for doc context */}, 345);
+                return;
+            }
 
             var retryInterval = (sfRestClient._Options.BasicPingServerInterval * (1.1 + Math.random()));
             var $ALERT: JQuery<HTMLDivElement>;
             var ActionAfterAlert = "";
             var MaxIdleTime = RESTClient.GetPageContextValue("IdleForce",33) * 59000;
-            var id:string = RESTClient.GetPageContextValue("DocSessionKey","");
             if ($("DIV.ui-dialog-content.sfStopPingServer").length > 0) return;
             sfRestClient.PageServerPingAttempts ++;
             top.sfPMSHub.server.sessionAlive();
@@ -5484,8 +5499,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     let WatchedFileKeys:string[] = [];
                     if (DocModel.CurrentAttachments) WatchedFileKeys = DocModel.CurrentAttachments.map((el:_SwaggerClientExports.DocAttachment) => el.DocKey) ;
             
-                    self.sfPMSHub.server.documentWindowOpen(id, RESTClient.GetPageContextValue("DocSessionKey") , 
-                                    RESTClient.GetPageDataContext(), sfRestClient.PageNotificationCount, 
+                    self.sfPMSHub.server.documentWindowOpen(docKey, docSessionkey , pdsKey,sfRestClient.PageNotificationCount, 
                                     DocModel.getExclusivityMode(), WatchedFileKeys)
                     .then( (responseText)=>{
                         let msgText = "";
@@ -5530,7 +5544,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                     msgText = responseText.substring(5).trim();
                                     retryInterval = -1;
                                     ActionAfterAlert = "Reload"
-                                    self.sfPMSHub.server.writeToServerLog(`SendDocWindowOpenNotification(${id}) - auto-reload ${msgText}`);
+                                    self.sfPMSHub.server.writeToServerLog(`SendDocWindowOpenNotification(${docKey}) - auto-reload ${msgText}`);
                                     self.location.reload();
                                 }
                                 else if (responseText.startsWith("FAIL:")) {
@@ -5609,23 +5623,23 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         
                         }
                         } catch (rxx : any) {
-                            console.warn('SendDocWindowOpenNotification(' + id + ') - ', rxx)
-                            self.sfPMSHub.server.writeToServerLog(`SendDocWindowOpenNotification(${id}) - ${rxx}`);
+                            console.warn(`SendDocWindowOpenNotification(${docKey}) - `, rxx)
+                            self.sfPMSHub.server.writeToServerLog(`SendDocWindowOpenNotification(${docKey}) - ${rxx}`);
                             RESTClient.jqAlert('Problem processing heartbeat response; cause: ' + rxx.message);
                             self.location.reload();
                         }
                     })
                     .catch((rxx)=>{
                         console.warn('documentWindowOpen failed!',rxx);
-                        var retryNow = RESTClient.PageServerPingBackFailed("dwo", id, "DWO Failed", retryInterval / 2, "SendDocWindowOpenNotification");
-                        //if (retryNow) NextDWOEventID = setTimeout('SendDocWindowOpenNotification("' + id + '"); // dwo retry', retryInterval);
+                        var retryNow = RESTClient.PageServerPingBackFailed("dwo", docKey, "DWO Failed", retryInterval / 2, "SendDocWindowOpenNotification");
+                        //if (retryNow) NextDWOEventID = setTimeout('SendDocWindowOpenNotification("' + docKey + '"); // dwo retry', retryInterval);
             
                     });
 
 
                 } catch (error:any) {
                     if (error && (error as any).message) {
-                        console.log('SendDocWindowOpenNotification(' + id + ') - ' + error.message)
+                        console.log('SendDocWindowOpenNotification(' + docKey + ') - ' + error.message)
                         RESTClient.jqAlert('The server could not be contacted to reserve the resources for this document window: ' + error.message);
                     }
                     // how to recover??
@@ -5634,7 +5648,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
               
             }
 
-            self.sfPMSHub.server.dashboardHeartbeat(id,sfRestClient.PageNotificationCount)
+            self.sfPMSHub.server.dashboardHeartbeat(pdsKey,sfRestClient.PageNotificationCount)
                 .then(async (responseText) => {
                 if (responseText > "") {
                     var isOK = (responseText.startsWith("OK"));
@@ -5727,22 +5741,22 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     }
 
                     retryInterval = Math.round(retryInterval);
-                    RESTClient.PageServerPingBackOk("dasho", id, responseText, retryInterval);
-                    if (retryInterval > 0) sfRestClient._NextPingTimerID = setTimeout(`top.sfClient.pingServer("${id}");`, retryInterval);
+                    RESTClient.PageServerPingBackOk("dasho", pdsKey, responseText, retryInterval);
+                    if (retryInterval > 0) sfRestClient._NextPingTimerID = setTimeout(`top.sfClient.pingServer("${pdsKey}");`, retryInterval);
                 }
                 }).catch(function (failMessage) {
-                    var retryNow = RESTClient.PageServerPingBackFailed("dasho", id, failMessage, retryInterval / 2,"pingServer");
-                if (retryNow) setTimeout(`top.sfClient.pingServer("${id}"); // weak connection retry`, retryInterval);
+                    var retryNow = RESTClient.PageServerPingBackFailed("dasho", pdsKey, failMessage, retryInterval / 2,"pingServer");
+                if (retryNow) setTimeout(`top.sfClient.pingServer("${pdsKey}"); // weak connection retry`, retryInterval);
             });
 
         }
         catch (exx:any) {
             if (exx.message) {
-                console.warn(`pingServer(${id}) - ${exx.message}`);
+                console.warn(`pingServer(${pdsKey}) - ${exx.message}`);
                 this.DisplayUserNotification(`The server could not be contacted : ${exx.message}`,99999);
                 // how to recover??
             }
-            else  console.warn(`pingServer(${id}) - catch  ${typeof exx}`,exx);
+            else  console.warn(`pingServer(${pdsKey}) - catch  ${typeof exx}`,exx);
 
         }
     }
