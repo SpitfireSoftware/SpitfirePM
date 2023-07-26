@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8602.5";
+const ClientPackageVersion : string = "23.8606.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3154,11 +3154,16 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     /** returns the primary key for this page  */
     public GetPagePK(): string {
         let result = "";
+        let noResultOK = false;
         if (this.IsDocumentPage()) 
             result = sfRestClient._WCC.DataPK;
             if (result === this.EmptyKey) result = this.GetPageDocumentModel()?._DMK;
         else if (this.IsProjectPage()) 
             result = sfRestClient._WCC.Project;
+            else {
+                const pageName = this.ResolvePageName();
+                if (pageName === "executiveDashboard") noResultOK = true;
+            }
         if (!result) console.warn(`GetPagePK could not resolve key for ${this.ResolvePageName()}`);
         return result;
     }
@@ -5224,8 +5229,19 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             else if (HasRefreshPageParts && RESTClient.IsHomeDashboardPage()) {
                                 top.refreshPartbyName('actionitems', 'refresh', 'signalR');
                             }
-                            else if (typeof top?.refreshPageParts === "function") {
-                                top.refreshPageParts(request, 'signalR');
+                            else if (typeof top?.refreshPageParts === "function" && request !== "RefreshAttachments") {
+                                const OK = top.refreshPageParts(request, 'signalR') as unknown as boolean;
+                                if (!OK ) console.log(`refreshPageParts did not refresh ${request}`);
+                            }
+                            else if ( request === "RefreshAttachments" ) {
+                                var HubEvent = jQuery.Event(`sfPMSHubSignal.${request}`);
+                                $("body").trigger(HubEvent,  [target,request] );
+                                if (HubEvent.isDefaultPrevented()) {
+                                    console.log("sfPMSHub RefreshAttachments handled...");  // in general .preventDefault() was called
+                                    return;
+                                }
+                                console.log("sfPMSHub queing request ${request} in 1 second");
+                                setTimeout(`top.sfDocDetailPostBack('${request}','sfLink'); // signalr`, 876);
                             }
                         }
 
@@ -5248,6 +5264,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     else if (TopName.length! > 0 && RESTClient.GetPagePK().endsWith(TopName)
                         && (RequestForWindowMatches) && typeof RequestForWindowMatches.groups === "object" && RequestForWindowMatches.groups.WindowName === TopName) {
                         // hey wait, this is about me!  Lets schedule a refresh that might get stomped by re-nav (which is ok)
+                        // how is this different than above
                         console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
                         var HubEvent = jQuery.Event("sfPMSHubSignal.RefreshAttachments");
                         $("body").trigger(HubEvent,  [target,request] );
@@ -5486,7 +5503,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfRestClient.PageServerPingAttempts ++;
             top.sfPMSHub.server.sessionAlive();
 
-            if (RESTClient.IsDocumentPage()) {
+            if (RESTClient.IsDocumentPage() && sfRestClient.IsPowerUXPage()) {
 
                 try {
                     let $DocUI = RESTClient.GetPowerUXDocumentUI();
