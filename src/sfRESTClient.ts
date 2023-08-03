@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8606.5";
+const ClientPackageVersion : string = "23.8611.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3162,9 +3162,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             result = sfRestClient._WCC.Project;
             else {
                 const pageName = this.ResolvePageName();
-                if (pageName === "executiveDashboard") noResultOK = true;
+                if (["executiveDashboard","home","catalog"].find(el=>el=== pageName) ) noResultOK = true;
             }
-        if (!result) console.warn(`GetPagePK could not resolve key for ${this.ResolvePageName()}`);
+        if (!result) console.warn(`GetPagePK could not resolve key for [${this.ResolvePageName()}]`);
         return result;
     }
 
