@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8637.1";
+const ClientPackageVersion : string = "23.8637.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -24,6 +24,8 @@ export enum LoggingLevels {
 }
 export enum ValidationMode {
     none='0',
+    /** 1,T*,Y* are true, empty, 0,F*,N* are false */
+    boolean="1",
     numeric="2",
     positive= "5",
     integer="6",
@@ -32,6 +34,7 @@ export enum ValidationMode {
     futuredate="4",
     /** sort of like past date */
     untildate= "8",
+    /** non empty, can be combined with other validations */
     required="16",
     filename="32"
 }
