@@ -3158,12 +3158,17 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     public GetPagePK(): string {
         let result = "";
         let noResultOK = false;
-        if (this.IsDocumentPage()) 
+        if (this.IsDocumentPage()) {
             result = sfRestClient._WCC.DataPK;
             if (result === this.EmptyKey) result = this.GetPageDocumentModel()?._DMK;
+        }
+        else if (this.IsHomeDashboardPage()) {
+            result = this.GetPageQueryParameterByName("u");
+            if (!result) result = sfRestClient._WCC.UserKey;
+        }
         else if (this.IsProjectPage()) 
             result = sfRestClient._WCC.Project;
-            else {
+        else {
                 const pageName = this.ResolvePageName();
                 if (["executiveDashboard","catalog","home","pivot","diagnostic-tools"].find(el=>el=== pageName) ) noResultOK = true;
             }
