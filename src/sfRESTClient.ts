@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8637.3";
+const ClientPackageVersion : string = "23.8637.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2968,9 +2968,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public ResolvePageTypeName() : PageTypeName {
         const locationHash = location.href.sfHashCode();
-        if (locationHash === sfRestClient.ResolvePageInfo.ValidHash) return sfRestClient.ResolvePageInfo.LastResolvedPageTypeName;
-        const result = this.ResolveStringPageNametoPageTypeName(this.ResolvePageName());
-        sfRestClient.ResolvePageInfo.LastResolvedPageTypeName = result;
+        if (sfRestClient.ResolvePageInfo.isHashMatch(locationHash)) return sfRestClient.ResolvePageInfo.LastResolvedPageTypeName;
+        const pgName = this.ResolvePageName();
+        const result = this.ResolveStringPageNametoPageTypeName(pgName);
+        sfRestClient.ResolvePageInfo.setInfo(locationHash,pgName,result);
         return result;
     }
 
@@ -3046,7 +3047,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     */
     protected ResolvePageNameFromURL(fromHref: string) : string {
         const locationHash = fromHref.sfHashCode();
-        if (locationHash === sfRestClient.ResolvePageInfo.ValidHash) return sfRestClient.ResolvePageInfo.LastResolvedPageName;
+        if (sfRestClient.ResolvePageInfo.isHashMatch(locationHash)) return sfRestClient.ResolvePageInfo.LastResolvedPageName;
         const prefixLength = sfRestClient.__SiteRootURL.length + self.location.hostname.length + 1
         const hashPos  =  fromHref.indexOf("#");
 
@@ -3058,9 +3059,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (pgname.toLowerCase().includes("sscontent.aspx",)) pgname = "sscontent"; // maps to RouteWizard
         if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
-        if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") )
-        sfRestClient.ResolvePageInfo.LastResolvedPageName = pgname;
-        sfRestClient.ResolvePageInfo.ValidHash = locationHash;
+        if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") );
+
+        sfRestClient.ResolvePageInfo.setInfo(locationHash,pgname, this.ResolveStringPageNametoPageTypeName(pgname));
         if (this.DevMode(LoggingLevels.Verbose)) console.log(`ResolvePageName(${fromHref},${locationHash} ) --> ${pgname}`);
         return pgname;
     }
@@ -3073,10 +3074,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         this.heartbeat();
         const newPageName = this.ResolvePageNameFromURL(newURL);
         // do not set validHash - but reset the pagetype and pagename
-        sfRestClient.ResolvePageInfo.LastResolvedPageName = newURL;
-        sfRestClient.ResolvePageInfo.LastResolvedPageTypeName =  this.ResolveStringPageNametoPageTypeName(newPageName);
+        sfRestClient.ResolvePageInfo.setInfo(0,newPageName,this.ResolveStringPageNametoPageTypeName(newPageName));
         let newLocationHash = newHref.sfHashCode();
-        sfRestClient.ResolvePageInfo.ValidHash = newLocationHash;
         if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvePageInfo.LastResolvedPageTypeName}`);
         // too soon to do a fresh this.LoadUserSessionInfo(true); (URL context is still wrong)
         setTimeout(()=>{ this.LoadUserSessionInfo(true, newHref);},333); // hopefully self.location will catch up to new URL by then!
@@ -6040,9 +6039,33 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      private static InstanceSerialNumberSource: number=0;
 
      private static ResolvePageInfo = {
-        LastResolvedPageName: "tbd",
-        LastResolvedPageTypeName: <PageTypeName> 0,
-        ValidHash: 0,
+         _PageName: "tbd",
+         _typeID: <PageTypeName> 0,
+         _ValidHash: 0,
+         get LastResolvedPageName() {
+            return this._PageName;
+        },
+        get LastResolvedPageTypeName() {
+            return this._typeID;
+        } ,
+        isHashMatch(test:number) : boolean { 
+            return test === this._ValidHash;
+        },
+        setInfo(newHash: number, newPageName:string, newTypeID: PageTypeName ) {
+            if (newHash) {
+                if (self.sfClient?.DevMode()) console.log(`PageInfo.set ${newPageName} `);
+                this._ValidHash = newHash; 
+            }
+            else {
+                // special case...
+                console.log(`PageInfo.replace ${this.LastResolvedPageName} with ${newPageName} #${this._ValidHash}`);
+            }
+            if (self.sfClient?.DevMode()) console.log(`PageInfo.set ${newPageName} `);
+            if (newHash) this._ValidHash = newHash; // special case...
+            this._PageName = newPageName;
+            this._typeID = newTypeID;
+        }
+
      };
      private ThisInstanceID: number;
 
