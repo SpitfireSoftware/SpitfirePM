@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8637.5";
+const ClientPackageVersion : string = "23.8637.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -676,7 +676,13 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         //was $.Deferred();
         var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit,rejectThisPermit) => {
-            if (!sfRestClient._z.WCCLoaded) try { await RESTClient.LoadUserSessionInfo();} catch (ex:any) {rejectThisPermit(ex.message);}
+            if (!sfRestClient._z.WCCLoaded) 
+            while (!sfRestClient._z.WCCLoaded)  try { 
+                const usePageName = (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated ? "#Home":undefined;
+                await RESTClient.LoadUserSessionInfo(false,usePageName); 
+            } catch (ex:any) {
+                rejectThisPermit(ex.message);
+            }
             if (typeof optionalDTK !== "string") optionalDTK = "";
             if (typeof optionalReference !== "string") optionalReference = "";
             if (typeof optionalProject !== "string" || !optionalProject) optionalProject = "0";
@@ -2968,10 +2974,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public ResolvePageTypeName() : PageTypeName {
         const locationHash = location.href.sfHashCode();
-        if (sfRestClient.ResolvePageInfo.isHashMatch(locationHash)) return sfRestClient.ResolvePageInfo.LastResolvedPageTypeName;
+        if (sfRestClient.ResolvedPageInfo.isHashMatch(locationHash)) return sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName;
         const pgName = this.ResolvePageName();
         const result = this.ResolveStringPageNametoPageTypeName(pgName);
-        sfRestClient.ResolvePageInfo.setInfo(locationHash,pgName,result);
+        sfRestClient.ResolvedPageInfo.setInfo(locationHash,pgName,result);
         return result;
     }
 
@@ -3047,7 +3053,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     */
     protected ResolvePageNameFromURL(fromHref: string) : string {
         const locationHash = fromHref.sfHashCode();
-        if (sfRestClient.ResolvePageInfo.isHashMatch(locationHash)) return sfRestClient.ResolvePageInfo.LastResolvedPageName;
+        if (sfRestClient.ResolvedPageInfo.isHashMatch(locationHash)) return sfRestClient.ResolvedPageInfo.LastResolvedPageName;
         const prefixLength = sfRestClient.__SiteRootURL.length + self.location.hostname.length + 1
         const hashPos  =  fromHref.indexOf("#");
 
@@ -3061,7 +3067,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") );
 
-        sfRestClient.ResolvePageInfo.setInfo(locationHash,pgname, this.ResolveStringPageNametoPageTypeName(pgname));
+        sfRestClient.ResolvedPageInfo.setInfo(locationHash,pgname, this.ResolveStringPageNametoPageTypeName(pgname));
         if (this.DevMode(LoggingLevels.Verbose)) console.log(`ResolvePageName(${fromHref},${locationHash} ) --> ${pgname}`);
         return pgname;
     }
@@ -3074,9 +3080,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         this.heartbeat();
         const newPageName = this.ResolvePageNameFromURL(newURL);
         // do not set validHash - but reset the pagetype and pagename
-        sfRestClient.ResolvePageInfo.setInfo(0,newPageName,this.ResolveStringPageNametoPageTypeName(newPageName));
+        sfRestClient.ResolvedPageInfo.setInfo(0,newPageName,this.ResolveStringPageNametoPageTypeName(newPageName));
         let newLocationHash = newHref.sfHashCode();
-        if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvePageInfo.LastResolvedPageTypeName}`);
+        if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName}`);
         // too soon to do a fresh this.LoadUserSessionInfo(true); (URL context is still wrong)
         setTimeout(()=>{ this.LoadUserSessionInfo(true, newHref);},333); // hopefully self.location will catch up to new URL by then!
     }
@@ -6038,7 +6044,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      private static _LoadingPermitRequests: Map<string, Promise<UCPermitSet | null> > = new Map<string, Promise<UCPermitSet | null> >();
      private static InstanceSerialNumberSource: number=0;
 
-     private static ResolvePageInfo = {
+     private static ResolvedPageInfo = {
          _PageName: "tbd",
          _typeID: <PageTypeName> 0,
          _ValidHash: 0,
