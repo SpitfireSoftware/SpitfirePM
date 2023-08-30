@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8639.1";
+const ClientPackageVersion : string = "23.8641.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -676,12 +676,17 @@ export class sfRestClient {
         var RESTClient: sfRestClient = this;
         //was $.Deferred();
         var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit,rejectThisPermit) => {
-            if (!sfRestClient._z.WCCLoaded) 
-            while (!sfRestClient._z.WCCLoaded)  try { 
-                const usePageName = (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated ? "#Home":undefined;
-                await RESTClient.LoadUserSessionInfo(false,usePageName); 
-            } catch (ex:any) {
-                rejectThisPermit(ex.message);
+            if (!sfRestClient._z.WCCLoaded)  {
+                let retryCount = 0;
+                while (!sfRestClient._z.WCCLoaded)  try { 
+                    const usePageName = ((retryCount++ < 3) && 
+                                        (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated) 
+                                        ? `${sfApplicationRootPath}/wx/#!/main/home` : undefined;
+                    await RESTClient.LoadUserSessionInfo(false,usePageName); 
+                } catch (ex:any) {
+                    rejectThisPermit(ex.message);
+                    return;
+                }
             }
             if (typeof optionalDTK !== "string") optionalDTK = "";
             if (typeof optionalReference !== "string") optionalReference = "";
