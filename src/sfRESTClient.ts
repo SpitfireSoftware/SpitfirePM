@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8641.1";
+const ClientPackageVersion : string = "23.8641.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -678,7 +678,7 @@ export class sfRestClient {
         var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit,rejectThisPermit) => {
             if (!sfRestClient._z.WCCLoaded)  {
                 let retryCount = 0;
-                while (!sfRestClient._z.WCCLoaded)  try { 
+                while (!sfRestClient._z.WCCLoaded && retryCount < 9)  try { 
                     const usePageName = ((retryCount++ < 3) && 
                                         (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated) 
                                         ? `${sfApplicationRootPath}/wx/#!/main/home` : undefined;
@@ -2301,12 +2301,13 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     }
 
     /** Returns a guid/uuid
+     * @param [fetchCount=3] number of keys to request
      *  @returns something in the form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
      * */
-    async NewGuid() : Promise<GUID> {
-        if (sfRestClient._NewGuidList.length == 0) {
+    async NewGuid(fetchCount = 3) : Promise<GUID> {
+        if (sfRestClient._NewGuidList.length < fetchCount) {
             var api = new SessionClient(this._SiteURL);
-            await api.getNewGuid(3).then(r => {
+            await api.getNewGuid(fetchCount).then(r => {
                 if (!r || r == null) {
                     console.warn("API failed to return GUIDs!!");
                     sfRestClient._NewGuidList.push(
