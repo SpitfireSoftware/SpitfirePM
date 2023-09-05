@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8642.5";
+const ClientPackageVersion : string = "23.8642.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2030,6 +2030,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
     protected _LoadIconMap(): void {
         if (sfRestClient._IconMap) return;
+        const RESTClient = this;
         let ls = localStorage.getItem(sfRestClient._z.lsKeys.api_icon_map);
         if (ls) sfRestClient._IconMap = JSON.parse(ls);
         if (typeof sfRestClient._IconMap !== "object") sfRestClient._IconMap = {};
@@ -2045,6 +2046,12 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     sfRestClient._IconMap = <{[key:string]: string | Date}>imap;
                     sfRestClient._IconMap["_ts"] = new Date();
                     console.log(`Loaded ${Object.keys(sfRestClient._IconMap).length} Icon Map entries from server...`);
+                    for (var key in sfRestClient._IconMap) {
+                        if (sfRestClient._IconMap.hasOwnProperty(key)) {
+                            if (!((sfRestClient._IconMap[key] as string).startsWith("/"))) 
+                                sfRestClient._IconMap[key] = `${RESTClient._SiteRootURL}/${sfRestClient._IconMap[key]}`;
+                        }
+                    }
                     localStorage.setItem(sfRestClient._z.lsKeys.api_icon_map, JSON.stringify(sfRestClient._IconMap));
                 }
                 else {
@@ -5113,6 +5120,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         sfRestClient._SessionClientGetWCC = null;
         sfRestClient._z.WCCLoaded = false;
         sfRestClient._WCC.AdminLevel = 0;
+        sfRestClient._IconMap = null;
         this._CachedDVRequests.clear();
         if (!InGlobalInstance)
             await window.sfClient.ClearCache(false);
