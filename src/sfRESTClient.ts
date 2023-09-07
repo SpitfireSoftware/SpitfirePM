@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8648.2";
+const ClientPackageVersion : string = "23.8648.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2048,7 +2048,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     console.log(`Loaded ${Object.keys(sfRestClient._IconMap).length} Icon Map entries from server...`);
                     for (var key in sfRestClient._IconMap) {
                         if (sfRestClient._IconMap.hasOwnProperty(key)) {
-                            if (!((sfRestClient._IconMap[key] as string).startsWith("/"))) 
+                            if (typeof sfRestClient._IconMap[key] === "string" &&  !((sfRestClient._IconMap[key] as string).startsWith("/"))) 
                                 sfRestClient._IconMap[key] = `${RESTClient._SiteRootURL}/${sfRestClient._IconMap[key]}`;
                         }
                     }
