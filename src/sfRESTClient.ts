@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8648.1";
+const ClientPackageVersion : string = "23.8648.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2140,7 +2140,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
                 if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
-                        if (top?.name==="Dashboard" || this.IsHomeDashboardPage()) { // do we need more here?  
+                        if (!RESTClient.IsPageOfType( RESTClient.PageTypeNames.Login ) &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.None) console.log(`SessionClient.getWCC() redirecting to login`);
                             setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
