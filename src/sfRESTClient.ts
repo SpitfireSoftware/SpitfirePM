@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8648.3";
+const ClientPackageVersion : string = "23.8651.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -356,9 +356,9 @@ class QAInfoOptions {
 
 export class NVPair { [key: string]: any; }
 export class WCCData { [key: string]: any; }
-export class DataModelRow { [key: string]: any; };
+export type DataModelRow = Record<string,any>;
+export type DataModelCollection = DataModelRow[];
 export class InvokeOptions { ByTask: boolean | undefined; ByAcct: boolean | undefined };
-export class DataModelCollection { [key: string]: any; } [];
 export type TableAndFieldInfo = {table:string, field:string, dbf:string, isRO:boolean, isValid:boolean};
 export type PartContextKey = string // PartName[context]::dtk
 export type Permits = number; // 0...31, see PermissionFlags
@@ -443,7 +443,7 @@ export class sfRestClient {
 
         if (changes.Change) {
             changes.Change.forEach( (element:DataModelRow) => {
-                var thisKey : string = element[keyName];
+                var thisKey : string = element[keyName] as string;
                 var foundRow = RESTClient.FindRowIndexByKey(rawData,keyName,thisKey);
                 if (typeof foundRow === "number" && foundRow >= 0){
                     rawData[foundRow] = element;
@@ -503,13 +503,13 @@ export class sfRestClient {
     /**
       *  Async builds a View Model for the rawData, given part context.  - use .then()
       */
-    BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: [{}] | {}): Promise<DataModelCollection> {
+    BuildViewModelForContext(partName: string, context: string, forDocType: GUID | undefined, rawData: DataModelCollection | DataModelRow): Promise<DataModelCollection> {
         if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
         var RESTClient = this;
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, "",context);
         if (!thisPart) {
             console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, "",context)));
-            var EmptyPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => resolve(rawData));
+            var EmptyPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => resolve(rawData as DataModelCollection));
             return EmptyPromise;
         }
         var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
@@ -567,7 +567,7 @@ export class sfRestClient {
             DataField = "TeamList";
             api = new ProjectTeamClient(this._SiteURL);
             NewValue = !(rawData[FlagVisibleFieldName]);
-            RowKey = rawData["UserProjectKey"];
+            RowKey = rawData["UserProjectKey"] as string;
             APIContext = this.GetPageProjectKey();
             ServerUpdatePromise = api.patchProjectTeam(APIContext,RowKey,DataField, NewValue.toString());
         }
@@ -641,14 +641,14 @@ export class sfRestClient {
             $.when.apply($, thisPart!._PromiseList!)
                 .done(function () {
                     var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
-                    if (SingleInstanceMode) FinalData = FinalData[0];
+                    if (SingleInstanceMode) FinalData = FinalData[0] as DataModelCollection;
                     resolve(FinalData);
                     thisPart!.DataModels.delete(DataModelBuildKey);
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     if (FailCount === 0) {
                         var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
-                        if (SingleInstanceMode) FinalData = FinalData[0];
+                        if (SingleInstanceMode) FinalData = FinalData[0] as DataModelCollection;
                         resolve(FinalData);
                         thisPart!.DataModels.delete(DataModelBuildKey);
                         FailCount++;
