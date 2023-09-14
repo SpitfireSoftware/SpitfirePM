@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8652.1";
+const ClientPackageVersion : string = "23.8652.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1195,7 +1195,10 @@ export class sfRestClient {
         if (!iconSizeIgnored) iconSizeIgnored = 24;
         fileType = fileType.toLocaleLowerCase();
 
-        while (!sfRestClient._IconMap && ((Date.now() - start)  < 5432)) console.log("YIKES!!!....waiting for icon map!");  //
+        if (!sfRestClient._IconMap && ((Date.now() - start)  < 5432)) {
+            this._LoadIconMap();
+            console.log("YIKES!!!....waiting for icon map!");  // do not use loop
+        }
 
         if (sfRestClient._IconMap) iconURL = sfRestClient._IconMap[ ( (fileType in sfRestClient._IconMap) ?  fileType : 'default')];
         if (!iconURL) iconURL = `${this._SiteRootURL}/images/OtherFilesIcon.svg?ne=${fileType}`;
