@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8652.2";
+const ClientPackageVersion : string = "23.8662.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2945,6 +2945,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             return header.$scope  as iPowerUXDocumentUI;
         }
 
+    public isWebix(): boolean {
+        return typeof self.$$ === "function";
+    }
+
     public IsDocExclusiveToMe() : boolean {
         return ((!this.IsDocumentPage()) || (sfRestClient._WCC.DataLockFlag >= "2"));
     }
@@ -5469,6 +5473,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
     }
 
+    public NavigateToLogout(reason:string, delayMs:number=222): void {
+        setTimeout(`top.location="${sfRestClient.LogoutPageURL(reason)}";` , delayMs);
+    }
+
     protected static LogoutPageURL(mValue: string) : string {
         var result = "admin/Logout.aspx";
         if (top) {
@@ -5752,8 +5760,15 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         await top!.sfPMSHub.server.sessionAlive().then(async (isAlive:boolean)=>{
                             if (!isAlive) {
                                 console.log("pingServer() NAK persists....");
-                                RESTClient.DisplaySysNotification("Lost authentication.  ", 65432);
-                                setTimeout(`location="${sfRestClient.LogoutPageURL('auth-lost')}";` , 9753);
+                                RESTClient.DisplayUserNotification("Lost authentication.  ", 65432);
+                                if (self.webix) self.webix!.alert({title:"Server Ping",
+                                ok: 'Dismiss',
+                                text: "Authentication Revoked. <br/> Returning to login page!",
+                                type: "alert-warning",
+                            }).then((r)=>{
+                                  this.NavigateToLogout("auth-lost-immediate");
+                            });
+                            this.NavigateToLogout("auth-lost",9753);
                             }
                             else {
                                 responseText = "NAK:Rejuvinated";
@@ -5831,8 +5846,22 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     protected PageServerPingBackAlert(msgText: string | boolean, actionAfterAlert:string) {
         if (typeof msgText === "string") {
-            console.warn(`PageServerPingBackAlert ${msgText}`)
+            console.warn(`PageServerPingBackAlert ${msgText}`);
+            const easyLogout = (msgText === "Please logout and log back in (user session missing)") ;
+            if (this.isWebix()) {
+                self.webix!.alert({title:"Server Ping",
+                    ok: easyLogout ? 'Logout' :'Dismiss',
+                    text: msgText,
+                    type: "alert-warning",
+                }).then((r)=>{
+                    if (easyLogout) this.NavigateToLogout("pingStatus");
+                });
+            } else this.jqAlert(msgText,"Server Ping");
+        }
              //$ALERT = jqAlert(msgText,"Server Ping");
+        else {
+                console.warn(`PageServerPingBackAlert `,msgText);
+                this.jqAlert("Unknown backend connection failure <br> Try CTRL+F5.<br/>If persists, contact help desk, check logs ","Server Ping");
             }
         if (actionAfterAlert.length > 0) {
             console.warn(`PageServerPingBackAlert does not support actionAfterAlert ${actionAfterAlert}` );
@@ -5888,7 +5917,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     if (sfRestClient.PageServerPingFailRunCount > (sfRestClient.PageServerPingFailThreshold * 0.75)) {
         if (sfRestClient.PageServerPingFailRunCount > sfRestClient.PageServerPingFailThreshold) {
-            top?.sfClient.DisplaySysNotification(`Warning: Server not responding ${responseText}`);
+            top?.sfClient.DisplayUserNotification(`Warning: Server not responding ${responseText}`);
             // $ALERT = jqAlert("Server is not responding. (" + responseText + ") Close dialog to retry","Connection Check");  // was jqAlert
             // $ALERT.bind('dialogclose', function (event) {
             //      setTimeout('{0}("{1}"); // manual retry '.format(methodName, id), 222);

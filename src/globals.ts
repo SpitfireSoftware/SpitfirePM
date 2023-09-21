@@ -84,6 +84,12 @@ declare global {
         config: object | {():object};
         $scope: any;
     }
+    export interface iWebixCommon {
+        alert: {(options: {title:string,
+                            ok?:string, 
+                            text:string,
+                            type?:"alert-warning" | "alert-error"}):Promise<boolean> };
+    }
     export interface iWebixSpinner {
         show: {():void};
     }
@@ -111,10 +117,10 @@ declare global {
         [key:string]: any;
     }
 
-
-    interface Window {
+     interface Window {
         $: JQueryStatic;
         $$: {(t:string|object):iWebixObjectSkeleton};
+        webix?: iWebixCommon;
         jQuery: JQueryStatic;
         sfClient: sfRestClient;
         sfPMSHub: sfPMSHub;
