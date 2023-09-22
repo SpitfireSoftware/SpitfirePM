@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8662.1";
+const ClientPackageVersion : string = "23.8662.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -5845,6 +5845,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
 
     protected PageServerPingBackAlert(msgText: string | boolean, actionAfterAlert:string) {
+        if (!msgText) return;
         if (typeof msgText === "string") {
             console.warn(`PageServerPingBackAlert ${msgText}`);
             const easyLogout = (msgText === "Please logout and log back in (user session missing)") ;
