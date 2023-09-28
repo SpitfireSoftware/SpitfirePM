@@ -862,7 +862,9 @@ export class sfRestClient {
                 PartNameList = ["ProjectRES"];
                 //if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
                 // special case for project dashboards: ProjDocMenu
-                PageParts["ProjDocMenu"] = 1;
+            }
+            else if (forPageName === this.PageTypeNames.Catalog) {
+                PartNameList = ["DocSearch","CatVersions","Folders"];
             }
             else {
                 console.warn("GetPagePartPermits() does not (yet) support ",forPageName);
@@ -2427,7 +2429,6 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                }
 
                url  =  url.sfFormat(RESTClient._SiteURL, id) ;
-               if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("PopDoc opening DMK {0} DTK {1} using {2}".sfFormat(id, thisDocType,url));
 
                var TargetTab =  url.substring(url.lastIndexOf("-") + 1).toLowerCase();
                //todo: determine if we need the "how many tabs" logic and dialog
@@ -2436,6 +2437,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                    resolve(null);
                    return;
                }
+               if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) 
+                        console.log(`PopDoc opening DMK ${id} DTK ${thisDocType} tab [${TargetTab}] using ${url}`);
                var PW = window.open(url, TargetTab);
                resolve(PW);
            });
