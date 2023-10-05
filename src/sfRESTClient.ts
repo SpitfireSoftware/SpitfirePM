@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8668.1";
+const ClientPackageVersion : string = "23.8668.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1825,6 +1825,18 @@ export class sfRestClient {
         sessionStorage.setItem(cacheKey,result);
         return result;
 
+    }
+
+    /** returns true if the passed value is effectively empty
+     *  @see  basically the same as Route.helpers.isEmptyValue() */
+    public IsEmptyValue (value:any): boolean {
+        let result = !!value; // false if empty...we flip on return
+        if (result && value === this.EmptyKey) result = false;
+        if (result && (
+            (typeof value === "string" && value === this.EmptyDate) ||
+            (typeof value === "object" && value instanceof Date && value === new Date(this.EmptyDate)))
+        ) result = false;
+        return !result;
     }
 
     /**
@@ -6037,7 +6049,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
     }
 
-    readonly EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
+    public readonly  EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
+    public readonly  EmptyDate: string     = "0001-01-01T00:00:00";
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
     protected static _DialogCoordinateCache: Map<number, CoordinateWithSize> = new Map<number, CoordinateWithSize>();
     protected static _UserPermitResultCache: Map<string, number> = new Map<string, number>();
