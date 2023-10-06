@@ -56,7 +56,7 @@ if (!Date.prototype.diffDays) {
         if (!OmegaDate || (OmegaDate instanceof Date &&  !OmegaDate.isDate())) return 0;
         var ONEDAY = 24 * 60 * 60 * 1000;// hours*minutes*seconds*milliseconds
         var dDays = 0;
-        if (OmegaDate instanceof Date && AlphaDate instanceof Date)  Math.round(Math.abs((AlphaDate.getTime() - OmegaDate.getTime()) / (ONEDAY)));
+        if (OmegaDate instanceof Date && AlphaDate instanceof Date) dDays = Math.round(Math.abs((AlphaDate.getTime() - OmegaDate.getTime()) / (ONEDAY)));
         return dDays
     };
 }
