@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8684.1";
+const ClientPackageVersion : string = "23.8690.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1834,7 +1834,7 @@ export class sfRestClient {
         if (result && value === this.EmptyKey) result = false;
         if (result && (
             (typeof value === "string" && value === this.EmptyDate) ||
-            (typeof value === "object" && value instanceof Date && value === new Date(this.EmptyDate)))
+            (typeof value === "object" && value instanceof Date && value.getTime() === this.EmptyTime))
         ) result = false;
         return !result;
     }
@@ -3433,8 +3433,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         let matchPopWindowName : RegExpExecArray | null = null;
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction: ",ActionString);
 
+        this.rxIsVPgPop.lastIndex = 0; // reset global search to start of string 
         matchVPgName = this.rxIsVPgPop.exec(ActionString); // vpgName, args, width, height
         if (!matchVPgName) {
+            this.rxOfficeLink.lastIndex = 0;
+            this.rxPopWhat.lastIndex = 0;
+            this.rxPopWhatURL.lastIndex = 0;
+            this.rxPopWindowName.lastIndex = 0;
             matchPopOffice =  this.rxOfficeLink.exec(ActionString);
             matchPopWhat =  this.rxPopWhat.exec(ActionString);
             matchPopWhatURL = this.rxPopWhatURL.exec(ActionString);
@@ -3601,7 +3606,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
     }
 
-    private rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(['"](?<vpgName>[\w\/\.]+)['"],\s*(?<argslit>['"])(?<args>.*)['"],\s*(?<width>\d+),\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
+    private rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(\s*['"](?<vpgName>[\w\/\.]+)['"]\s*,\s*(?<argslit>['"])(?<args>.*)['"]\s*,\s*(?<width>\d+)\s*,\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
     private rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)\(/gm);
     private rxPopWhatURL = new RegExp(/javascript:(?<popWhat>PopMSWindowTool|PopXLTool|PopAuditTool|popWin)\(['"`](?<URL>.+?)[`'"](,|\))/gmi);
     private rxPopWindowName = new RegExp(/javascript:(?<popWhat>popWin)\(['"`](?<URL>.+?)[`'"],\s?['"`](?<WindowName>.+?)[`'"],.*\)/gmi);
@@ -6051,6 +6056,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public readonly  EmptyKey: GUID = "00000000-0000-0000-0000-000000000000";
     public readonly  EmptyDate: string     = "0001-01-01T00:00:00";
+    public readonly  EmptyTime: number     = -62135579038000;
     protected _CachedDVRequests: Map<string, Promise<string | null>> = new Map<string, Promise<string | null>>();
     protected static _DialogCoordinateCache: Map<number, CoordinateWithSize> = new Map<number, CoordinateWithSize>();
     protected static _UserPermitResultCache: Map<string, number> = new Map<string, number>();
