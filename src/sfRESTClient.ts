@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8690.2";
+const ClientPackageVersion : string = "23.8690.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -380,7 +380,7 @@ export interface iDocumentModel extends    iDocumentModelBase {
 export class sfRestClient {
     readonly ClientVersion: string = `${ClientPackageVersion}`;
     ServerVersion():string {
-        var result ="2021.0.8400";
+        var result ="";
         if (sfRestClient._WCC.Version) result = sfRestClient._WCC.Version;
         return result;
     }
@@ -5366,11 +5366,19 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     top?.refreshPartbyName(target);
                 }
             };
-            sfHub.client.onApplicationStart = function () {
-                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.OnApplicationStart ${self.location.pathname}`);
+            sfHub.client.onApplicationStart = function (serverVersion:string) {
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.OnApplicationStart ${self.location.pathname} vers ${serverVersion}`);
+                // has version changed?
+                const priorVersion = RESTClient.ServerVersion();
+                const isNewVersion =(priorVersion && serverVersion && !priorVersion.startsWith(serverVersion));
+                if (isNewVersion) RESTClient.ClearCache(true);  
                 if (!top?.sfClient.IsDocumentPage()) {
                     if (top?.location.pathname.endsWith("login.aspx")) {
                         self.location.href = self.location.pathname + "?rwapp=1";
+                        return;
+                    }
+                    else if (top?.location.hash.includes("/login")) {
+                        self.location.reload();
                         return;
                     }
                     sfHub.server.sessionAlive();

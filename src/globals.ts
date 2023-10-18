@@ -33,6 +33,7 @@ declare global {
     interface RefreshPageParts {(eventTarget: string, eventArg:string):void}
     //interface CEPutSourceElementValue {(el: JQuery, newVal:string|number, pv: string|number):void}
     interface CEPStoreElementValue {(el: JQuery,$EDIT: JQuery, $FeedBack: JQuery,newVal:string|number, finalValue?:string, validateAK?:boolean):void}
+    interface StringThenVoid { (stringValue:string): void}
     interface StringThenBooleanPromise { (stringValue:string): Promise<boolean>}
     interface SimpleBooleanPromise {(): Promise<boolean>}
     interface SimpleMethod {():void}
@@ -50,7 +51,7 @@ declare global {
             dashboardRefreshPartByName: DashboardRefreshPartByName;
             documentChangeBy: DocumentChangeBy;
             nowViewingDocument: NowViewingDocument;
-            onApplicationStart: SimpleMethod;
+            onApplicationStart: StringThenVoid;
             onFlushClientDV: FlushClientDV;
             onFlushClientResource: FlushClientResource;
             systemNotificationHasChanged: any;
