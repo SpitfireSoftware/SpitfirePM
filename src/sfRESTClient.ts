@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8690.3";
+const ClientPackageVersion : string = "23.8690.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -456,8 +456,18 @@ export class sfRestClient {
             } );
         }
         if (changes.Add) {
-            changes.Add.forEach(element=>  rawData.push(element));
-            AddCount += changes.Add.length;
+            changes.Add.forEach((element)=>  {
+                var thisKey : string = element[keyName] as string;
+                var foundRow = RESTClient.FindRowIndexByKey(rawData,keyName,thisKey);
+                if (typeof foundRow !== "number" || foundRow < 0) {
+                    rawData.push(element)
+                    AddCount ++;
+                } 
+                else  {
+                    rawData[foundRow] = element;
+                    ChangeCount ++;
+                }
+            });
         }
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges({0}) removed {1}, changed {2}, added {3} in {4}t ".sfFormat(keyName,
                                                                             RemoveCount , ChangeCount , AddCount,            Date.now() - StartAtTicks));
@@ -491,7 +501,7 @@ export class sfRestClient {
         }
         var RESTClient = this;
         rawData.forEach(function(row:DataModelRow) {
-            if ( row[keyName]) {
+            if ( row[keyName] && !result.find(el=> el.RowKey === row[keyName])) {
                 result.push(new _SwaggerClientExports.CurrentDataSummary({"RowKey":row[keyName], "ETag": row["ETag"]}));
             }
         });
@@ -2736,9 +2746,10 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
      * @param rawData array of rows
      * @param keyName required key field name
      * @param keyValue value of key in desired row
-     * @returns index of row (0-based)
+     * @returns index of row (0-based); undefined if not found 
      */
     FindRowIndexByKey( rawData: DataModelCollection, keyName: string, keyValue : string) : number | undefined {
+        if (!Array.isArray(rawData) || rawData.length === 0) return undefined;
         if (!(keyName in rawData[0])) {
             console.warn("FindRowIndexByKey data does not include keyName " + keyName);
             return undefined;
