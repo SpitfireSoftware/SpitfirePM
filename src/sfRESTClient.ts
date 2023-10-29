@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8699.1";
+const ClientPackageVersion : string = "23.8699.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2167,7 +2167,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
                 if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
-                        if (!RESTClient.IsPageOfType( RESTClient.PageTypeNames.Login ) &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
+                        let  IsLoginRelatedPage = RESTClient.IsPageOfType( RESTClient.PageTypeNames.Login ); 
+                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true
+                        if (!IsLoginRelatedPage &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.None) console.log(`SessionClient.getWCC() redirecting to login`);
                             setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
@@ -3051,7 +3053,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             case "cuManager":
                 result = this.PageTypeNames.ManageDashboard;
                 break;
-            case "login": case "Logout": case "loginRequired":
+            case "login": case "Logout": case "loginRequired":  
                 result = this.PageTypeNames.Login;
                 break;
             case "arr":
