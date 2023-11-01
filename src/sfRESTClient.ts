@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8699.6";
+const ClientPackageVersion : string = "23.8699.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2415,18 +2415,48 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         });
     }
 
+    /** search supplied object for a key reference */
+    sfRowKey($For: JQuery<HTMLElement>):GUID {
+        var result;
+        if (typeof $For?.data === 'function') {
+            result = $For.data('key');
+            if (!result) {
+                var $TR = $For.closest("TR");
+                result = $TR.find("INPUT.clsEnabledEdit[type='image'][data-pk]").data('pk');
+                if (!result) result = $TR.find("INPUT[type='hidden'][name$='Key']").val();
+                if (!result) result = $TR.find("TD DIV.clsEnabledEdit[data-pk]").data('pk');
+                if (!result) result = $TR.find("TD:first DIV[data-pk]").data('pk');
+                if (!result) result = $For.closest("DIV#PanelItems").find("TR.clsGridMasterSelectedItem").find("TD DIV[data-pk]").data('pk');
+                if (!result) result = $For.closest("TABLE.clsDetailLayout[data-pk]").data('pk');
+            }
+        }
+        
+        return result;
+    }
+
   /**
      * Opens a new tab with location specified based on Document Key and UI version
      * @param id the guid DocMasterKey for the document to be opened
      * @comment Adds document to the Recent Document List
      */
-   PopDoc(id : GUID) : Promise<Window | null>
+   PopDoc(id : GUID | JQuery<HTMLElement>) : Promise<Window | null>
    {
        var RESTClient = this;
        RESTClient.heartbeat();
+       if (!id) id = self.$(self.document.activeElement as any) as unknown as JQuery<HTMLElement>;
+       if (typeof id !== 'string') id = this.sfRowKey(id);
+
        return new Promise<Window | null>((resolve) => {
-           if (!id.sfIsGuid()) {
+            if (!id || typeof id !== 'string') {
                 console.warn("PopDoc(): Document id expected; received",id);
+                RESTClient.DisplayUserNotification("Document key not found",9876);
+                resolve(null);
+                return;
+            }
+            const DocKey: string = `${id}`;
+
+           if (!DocKey.sfIsGuid()) {
+                console.warn(`PopDoc(): Document id expected; received: ${DocKey}`);
                 RESTClient.DisplayUserNotification("Document key expected",9876);
                 resolve(null);
                 return;
@@ -2438,12 +2468,12 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                    resolve(null);
                    return;
                }
-               RESTClient.GetDV("DocTitleLong",id,undefined)
+               RESTClient.GetDV("DocTitleLong",DocKey,undefined)
                .then((title)=>{
-                    RESTClient.UpdateRecentDocumentList(id,title);
+                    RESTClient.UpdateRecentDocumentList(DocKey,title);
                })
                .catch((reason)=>{
-                    console.warn(`PopDoc(${id}).DocTitleLong`,reason);
+                    console.warn(`PopDoc(${DocKey}).DocTitleLong`,reason);
                });
 
                //todo: determine if we should use the new or old UI based on the document type of this document
@@ -2453,7 +2483,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                    if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",thisDocType,false)) url =  sfRestClient._Options.PopDocXBURL;
                }
 
-               url  =  url.sfFormat(RESTClient._SiteURL, id) ;
+               url  =  url.sfFormat(RESTClient._SiteURL, DocKey) ;
 
                var TargetTab =  url.substring(url.lastIndexOf("-") + 1).toLowerCase();
                //todo: determine if we need the "how many tabs" logic and dialog
@@ -2463,7 +2493,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                    return;
                }
                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) 
-                        console.log(`PopDoc opening DMK ${id} DTK ${thisDocType} tab [${TargetTab}] using ${url}`);
+                        console.log(`PopDoc opening DMK ${DocKey} DTK ${thisDocType} tab [${TargetTab}] using ${url}`);
                var PW = window.open(url, TargetTab);
                resolve(PW);
            });
