@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8699.2";
+const ClientPackageVersion : string = "23.8699.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2172,7 +2172,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                         if (!IsLoginRelatedPage &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.None) console.log(`SessionClient.getWCC() redirecting to login`);
-                            setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoadUserSessionInfo401")}'; // failed in LoadUserSessionInfo`, 3210);
+                            RESTClient.DisplayUserNotification("Redirecting for authentication...");
+                            RESTClient.NavigateToLogout("LoadUserSessionInfo",3210);
                         }
                     }
                 }
@@ -2983,6 +2984,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public static IsPowerUXPage() : boolean {
         return location.hash.startsWith("#!") || location.pathname === "/powerux/";
+    }
+    public IsPowerUXPage() : boolean {
+        return sfRestClient.IsPowerUXPage();
     }
 
     public IsHomeDashboardPage() : boolean {
@@ -5515,8 +5519,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     public NavigateToLogout(reason:string, delayMs:number=222): void {
-        setTimeout(`top.location="${sfRestClient.LogoutPageURL(reason)}";` , delayMs);
+        if (this._navigateToLogoutTimerEvent) {
+            console.log(`${new Date().toSFLogTimeString()} NavigateToLogout already pending, redundant ${reason} ignored...`);
+            return;
+        }
+        this._navigateToLogoutTimerEvent = setTimeout(`top.location="${sfRestClient.LogoutPageURL(reason)}";` , delayMs);
     }
+    private _navigateToLogoutTimerEvent:number | undefined = undefined;
 
     protected static LogoutPageURL(mValue: string) : string {
         var result = "admin/Logout.aspx";
@@ -5801,14 +5810,16 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         await top!.sfPMSHub.server.sessionAlive().then(async (isAlive:boolean)=>{
                             if (!isAlive) {
                                 console.log("pingServer() NAK persists....");
-                                RESTClient.DisplayUserNotification("Lost authentication.  ", 65432);
-                                if (self.webix) self.webix!.alert({title:"Server Ping",
-                                ok: 'Dismiss',
-                                text: "Authentication Revoked. <br/> Returning to login page!",
-                                type: "alert-warning",
-                            }).then((r)=>{
-                                  this.NavigateToLogout("auth-lost-immediate");
-                            });
+                                const AuthenticationMessage = sfRestClient.PageNotificationCount < 2 ?'Authentication required':'Lost authentication.';
+                                RESTClient.DisplayUserNotification(AuthenticationMessage, 65432);
+                                if (self.webix) self.webix!
+                                .alert({title:"Connection Check",
+                                        ok: 'Dismiss',
+                                        text: `Authentication ${ sfRestClient.PageNotificationCount < 2 ?'Required':'Revoked'}. <br/> Returning to login page!`,
+                                        type: "alert-warning",
+                                    }).then((r)=>{
+                                          this.NavigateToLogout("auth-lost-immediate");
+                                    });
                             this.NavigateToLogout("auth-lost",9753);
                             }
                             else {
