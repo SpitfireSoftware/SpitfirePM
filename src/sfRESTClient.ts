@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8699.7";
+const ClientPackageVersion : string = "23.8699.8";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2418,6 +2418,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     /** search supplied object for a key reference */
     sfRowKey($For: JQuery<HTMLElement>):GUID {
         var result;
+        if ($For instanceof HTMLElement) $For = $($For);
         if (typeof $For?.data === 'function') {
             result = $For.data('key');
             if (!result) {
