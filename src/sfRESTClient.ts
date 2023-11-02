@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8699.8";
+const ClientPackageVersion : string = "23.8699.9";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2871,15 +2871,15 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
     }
 
-/** returns an INPUT element 
+/** returns INPUT element(s) inside the data-dbf marked element
  *  @param tableDotField something like DocMasterDetail.ContractType (case sensetive)
  * 
 */
-    public GetDBFInputElement(tableDotField: string): JQuery<HTMLInputElement>  {
+    public GetDBFInputElement(tableDotField: string): JQuery<HTMLInputElement> | undefined  {
         const isPowerUX = sfRestClient.IsPowerUXPage();
         let $I: JQuery<HTMLInputElement> | undefined = this.GetDBFElement(tableDotField);
         if (isPowerUX) {
-             $I = $I.find("INPUT") as JQuery<HTMLInputElement>;
+             $I = $I?.find("INPUT") as JQuery<HTMLInputElement>;
         }
         return $I;
     }
@@ -2888,13 +2888,23 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
  *  @param tableDotField something like DocMasterDetail.ContractType (case sensetive)
  * 
 */
-public GetDBFElement(tableDotField: string): JQuery<HTMLInputElement>  {
+public GetDBFElement(tableDotField: string): JQuery<HTMLInputElement> | undefined {
     const isPowerUX = sfRestClient.IsPowerUXPage();
     let $I: JQuery<HTMLInputElement> | undefined;
     if (isPowerUX) {
          $I = $("DIV[data-dbf='{0}'] ".sfFormat(tableDotField));
     }
-    else  $I = $("INPUT[data-dbf='{0}'], SELECT[data-dbf='{0}'], DIV[data-dbf='{0}'] TABLE.sfUIMiniIgWe INPUT[type='hidden'][name$='_t_a'], DIV[data-dbf='{0}'] ".sfFormat(tableDotField));
+    else {
+        const classicDocWindow:Window &   {$HdrFrame:JQuery<HTMLIFrameElement>,$BodyFrame:JQuery<HTMLIFrameElement>,$AIRFrame:JQuery<HTMLIFrameElement>} = self as any;
+        const searchContexts: Window[] = [classicDocWindow,classicDocWindow.$HdrFrame[0].contentWindow!,
+                                                classicDocWindow.$BodyFrame[0].contentWindow!,
+                                                classicDocWindow.$AIRFrame[0].contentWindow!];
+        searchContexts.filter(sw =>{
+            if (typeof sw?.$ === 'function')
+                $I = sw.$("INPUT[data-dbf='{0}'], SELECT[data-dbf='{0}'], DIV[data-dbf='{0}'] TABLE.sfUIMiniIgWe INPUT[type='hidden'][name$='_t_a'], DIV[data-dbf='{0}'] ".sfFormat(tableDotField));
+            return ($I && $I.length > 0);
+        });
+    } 
     return $I;
 }
 
@@ -2940,7 +2950,7 @@ public SetInputValue(inputView:  any, newValue: string | number | DataModelRow |
  * @param withSRC when specified, use just the image name (delete.gif); when string is passed an <IMG> tag is used instead of <i> and the image them/path is resolved 
  * @returns 
  */
-public CreateButtonElement(withClass: undefined | string, withTip:string|undefined, $AppendTo:JQuery<HTMLInputElement>, withSRC?:string): JQuery<HTMLElement> {
+public CreateButtonElement(withClass: undefined | string, withTip:string|undefined, $AppendTo?:JQuery<HTMLInputElement>, withSRC?:string): JQuery<HTMLElement> {
     
     var BtnType = !withSRC ? "i" : "img";
     if (typeof withClass === "undefined") {
@@ -2949,7 +2959,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
     if (withClass.startsWith("fa")) withClass = "fas " + withClass;
     if (typeof withTip === "undefined") withTip = "";
-    if (typeof $AppendTo === "undefined") $AppendTo = this.GetDBFInputElement("DocMasterDetail.status").closest("TD");
+    if (typeof $AppendTo === "undefined") $AppendTo = this.GetDBFInputElement("DocMasterDetail.status")?.closest("TD");
     var ButtonTemplate = `<${BtnType} class='${withClass} clsEnabledImgBtn clsDynamicBtn' title='${withTip}'></${BtnType}>`;
     let $BTN = $(ButtonTemplate);
     if (withSRC) {
