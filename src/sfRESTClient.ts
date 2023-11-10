@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8699.9";
+const ClientPackageVersion : string = "23.8711.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1677,7 +1677,7 @@ export class sfRestClient {
             var $CancelBTN = $ButtonPane.find("#btnDismiss");
 
 
-            RESTClient.sfAC($TemplateDocument, "TemplateList", TemplateTypeCode);
+            RESTClient.sfAC($TemplateDocument, "TemplateFor", TemplateTypeCode);
             $TemplateDocument.autocomplete("option", "minLength", 0).autocomplete("option", "delay", 200);
             $TemplateDocument.data("acPostbackKey", false); // prevent Auto complete from stuffing the key into our input field
             $TemplateDocument.on("sfAC.KV sfLookup.Stored", function (e, kv) {
@@ -3544,8 +3544,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 }
                 else console.warn("InvokeAction() could not parse PopFVC() ",actionString)
                 }
+        
             else if (popWhat === "OfficeLink.application") {
-
+                    console.warn(popWhat);
                 }
             else {
                     var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
@@ -3604,7 +3605,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 vpgName = "BFANotes";
                 BFAMode = true;
             }
-           
+            else if (popWhat.sfStartsWithCI("sf") &&  popWhat.substring(2) in RESTClient) {
+                const ff:Function  = (RESTClient as unknown as {[key:string]: Function})[popWhat.substring(2)] as unknown as Function;
+                ff.call(RESTClient);   
+                return;
+            }
             else {
                 // this rx does not remove quotes from period
                 let rxString = `${popWhat}\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));`
