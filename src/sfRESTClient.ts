@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8711.2";
+const ClientPackageVersion : string = "23.8711.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -807,7 +807,7 @@ export class sfRestClient {
                         if (ThisUCFK === UCFK) {
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, cl:`,capabilitySet);
                             $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
-                                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, p:`,p);
+                                if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, p:`,p);
                                 var thisPermitValue : Permits = 0;
                                 if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
                                     if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
@@ -2399,7 +2399,10 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     UseID = options.substring(options?.indexOf("&UseID")+7,36);
                 }
                 else UseID = await this.NewGuid();
-                url  =  url.sfFormat(thisRestClient._SiteURL, dtk,(dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup ) ? project : "",options) ;
+                let includeProjectID : boolean = (dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup );
+                // new project setup sends project id as first option
+                //                 if (!includeProjectID && options?.includes("mode=np")) includeProjectID = true;
+                url  =  url.sfFormat(thisRestClient._SiteURL, dtk, includeProjectID ? project : "",options) ;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`PopNewDoc opening ${UseID} DTK ${dtk} using ${url}`);
 
                 var TargetTab =  UseID.substring(UseID.lastIndexOf("-") + 1).toLowerCase();
@@ -3581,9 +3584,19 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             //let rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             //let match = this.rxPopWhatURL.exec(ActionString);
             if (matchPopWhatURL && matchPopWhatURL.groups) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction::Doc({0}})".sfFormat(matchPopWhatURL.groups!.idguid ));
-                var Project = this.GetPageProjectKey();
-                this.PopNewDoc( matchPopWhatURL.groups.idguid ,Project);
+                let dtk: GUID | undefined = undefined;
+                let Project:string | undefined= undefined;
+                if (matchPopWhatURL.groups.URL) dtk = matchPopWhatURL.groups.URL;
+                if (matchPopWhatURL.groups.OPTIONS) {
+                    let rxProjectFromOptions = /^(?<projID>\w*)&/gmi;
+                    let ProjectMatch = rxProjectFromOptions.exec(matchPopWhatURL.groups.OPTIONS);
+                    if (ProjectMatch && ProjectMatch.groups?.projID) Project = ProjectMatch.groups?.projID;
+                }
+                else {
+                    Project = this.GetPageProjectKey();
+                }
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`InvokeAction::PopNewDoc(${dtk},${Project},...)`);
+                this.PopNewDoc(dtk!, Project!,matchPopWhatURL.groups.OPTIONS);
             }
             else {
                 console.warn("InvokeAction::PopNewDoc failed match",actionString);
@@ -3671,7 +3684,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     private rxIsVPgPop =  new RegExp(/vPg(Popup|Dialog)\(\s*['"](?<vpgName>[\w\/\.]+)['"]\s*,\s*(?<argslit>['"])(?<args>.*)['"]\s*,\s*(?<width>\d+)\s*,\s*(?<height>(\d+|null|undefined))(,\s*(?<default>.+)|)\)/gm);
     private rxPopWhat = new RegExp(/javascript:(?<popWhat>\w*)\(/gm);
-    private rxPopWhatURL = new RegExp(/javascript:(?<popWhat>PopMSWindowTool|PopXLTool|PopAuditTool|popWin)\(['"`](?<URL>.+?)[`'"](,|\))/gmi);
+    private rxPopWhatURL = new RegExp(/javascript:(?<popWhat>PopMSWindowTool|PopXLTool|PopAuditTool|popWin|popNewDoc)\(['"`](?<URL>.+?)[`'"](,|\))(['"`](?<TARGET>.+?)[`'"](,|\)))?(['"`](?<OPTIONS>.+?)[`'"](,|\)))?/gmi);
     private rxPopWindowName = new RegExp(/javascript:(?<popWhat>popWin)\(['"`](?<URL>.+?)[`'"],\s?['"`](?<WindowName>.+?)[`'"],.*\)/gmi);
     private rxOfficeLink = new RegExp(/(?<popWhat>OfficeLink.application|(PopXLTool|PopFVC|PopMSWindowTool|PopAuditTool)\()/gmi);
 
@@ -6205,8 +6218,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             return test === this._ValidHash;
         },
         setInfo(newHash: number, newPageName:string, newTypeID: PageTypeName ) {
-            if (newHash) {
-                if (self.sfClient?.DevMode()) console.log(`PageInfo.set ${newPageName} `);
+            if (newHash && this._ValidHash && newHash !== this._ValidHash) {
+                if (self.sfClient?.DevMode(LoggingLevels.Debug)) console.log(`PageInfo.set ${newPageName} #${newHash} `);
                 this._ValidHash = newHash; 
             }
             else {
