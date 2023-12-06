@@ -90,11 +90,33 @@ declare global {
                             ok?:string, 
                             text:string,
                             type?:"alert-warning" | "alert-error"}):Promise<boolean> };
+        confirm: {(options: {title:string,
+            ok?:string, 
+            text:string,
+            type?:"alert-warning" | "alert-error"}):Promise<boolean> };
+        message: {(msg:string| iWebixMessage):void };
+        
     }
     export interface iWebixSpinner {
         show: {():void};
     }
 
+    export type iWebixMessageType = 'info' | 'debug' | 'success' | 'error';
+
+    export interface iWebixMessage { //extends webix.WebixMessageConfig 
+        text: string,
+        type: iWebixMessageType,
+        expire: number,
+        id: string
+   }
+
+    export interface iRouteHelperService {
+        _appContext: object;
+        helpers: {
+            OpenEmail:{(to: string, subject: string, cc?: string, body?: string): void}
+            GenerateMessage(what: string, type: iWebixMessageType): iWebixMessage
+        }
+    }
 
     export interface iPowerUXDocumentUI {
         ReallyReady: Promise<boolean>;

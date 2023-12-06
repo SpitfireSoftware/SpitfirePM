@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8711.3";
+const ClientPackageVersion : string = "23.8711.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -410,8 +410,9 @@ export class sfRestClient {
         Document: 1024,
         Unknown: 8092,
         Unauthenticated: 16384,
-        Login: 16385,
-        RouteWizard: 16386,
+            UnauthenticatedLogin: 16385,
+            UnauthenticatedWizard: 16386,
+            UnauthenticatedLink: 16388,
         UserAccountRecovery: 16387,
         DiagUtilities: 32768,
         PopupAdminTool: 131072,
@@ -2167,7 +2168,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
                 if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
-                        let  IsLoginRelatedPage = RESTClient.IsPageOfType( RESTClient.PageTypeNames.Login ); 
+                        let  IsLoginRelatedPage = RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedLogin ); 
                         if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true
                         if (!IsLoginRelatedPage &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
@@ -3022,6 +3023,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return typeof self.$$ === "function";
     }
 
+    /** requires isWebix() to be true */
+    public GetPowerUXRouteHelper():iRouteHelperService {
+        return self.$$("$layout1").$scope.app._services.routetools;
+    }
+
     public IsDocExclusiveToMe() : boolean {
         return ((!this.IsDocumentPage()) || (sfRestClient._WCC.DataLockFlag >= "2"));
     }
@@ -3060,8 +3066,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (typeof pageWanted === "string") {
             pageWanted = this.ResolveStringPageNametoPageTypeName(pageWanted);
         }
-
-        return ( this.ResolvePageTypeName() === pageWanted);
+        const pageType = this.ResolvePageTypeName();
+        let result = (pageType === pageWanted);
+        if (!result && pageWanted ===  this.PageTypeNames.Unauthenticated) result = (( this.ResolvePageTypeName() & pageWanted) === pageWanted);
+        return result;
     }
 
     protected IsGlobalInstance() : boolean {
@@ -3102,12 +3110,16 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 result = this.PageTypeNames.ManageDashboard;
                 break;
             case "login": case "Logout": case "loginRequired":  
-                result = this.PageTypeNames.Login;
+                result = this.PageTypeNames.UnauthenticatedLogin;
                 break;
             case "arr":
             case "sscontent":
-                    result = this.PageTypeNames.RouteWizard;
+                    result = this.PageTypeNames.UnauthenticatedWizard;
                 break;
+            case "go":
+                result = this.PageTypeNames.UnauthenticatedLink;
+                break; 
+
             case "dxutil": case "diagnostic-tools":
                 result = this.PageTypeNames.DiagUtilities;
                 break;
@@ -3131,7 +3143,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     result = this.PageTypeNames.RichTextEdit;
                     break;
             default:
-                console.warn("Unexpected page type: ", pageNameString);
+                console.warn("Unrecognized page type: ", pageNameString);
+                //debugger;
                 result = this.PageTypeNames.Unknown;
                 break;
         }
@@ -3157,8 +3170,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var pgHash : string = fromHref.substring( hashPos);
         if (pgHash.length > 0)             pgname = pgHash; // for xb style
         if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
-        if (pgname.toLowerCase().includes("arr.aspx",)) pgname = "arr";// maps to RouteWizard
-        if (pgname.toLowerCase().includes("sscontent.aspx",)) pgname = "sscontent"; // maps to RouteWizard
+        const lowerPG = pgname.toLowerCase()
+        if (lowerPG.includes("arr.aspx",)) pgname = "arr";// maps to RouteWizard
+        else if (lowerPG.includes("sscontent.aspx",)) pgname = "sscontent"; // maps to RouteWizard
+        else if (lowerPG.includes("go.aspx",)) pgname = "go"; // external
         if (pgname.indexOf("/") >= 0) pgname = pgname.substring(pgname.lastIndexOf("/") + 1)
         if (pgname.indexOf("?") >= 0) pgname = pgname.substring(0,pgname.indexOf("?") )
         if (pgname.indexOf(".") >= 0) pgname = pgname.substring(0,pgname.indexOf(".") );
@@ -3283,7 +3298,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             result = sfRestClient._WCC.Project;
         else {
                 const pageName = this.ResolvePageName();
-                if (["executiveDashboard","catalog","home","pivot","diagnostic-tools"].find(el=>el=== pageName) ) noResultOK = true;
+                if (["executiveDashboard","catalog","home","pivot","diagnostic-tools","go"].find(el=>el=== pageName) ) noResultOK = true;
             }
         if (!result && !noResultOK) console.warn(`GetPagePK could not resolve key for [${this.ResolvePageName()}]`);
         return result;
@@ -5623,6 +5638,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     protected static _NextPingTimerID :number | undefined= undefined;
+    protected static _RepeatedPingRetryDelay: number = 0;
     public async  pingServer(): Promise<void> {
         let pdsKey = "TBD";
         try {
@@ -5632,11 +5648,20 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for hub */}, 123);
                 return;
             }
-            if (this.IsPageOfType( this.PageTypeNames.Login ) ) {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log("pingServer() Log in pending (ignored)");
+            const isWebix = RESTClient.isWebix();
+            if (this.IsPageOfType( this.PageTypeNames.Unauthenticated ) ) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  console.log(`pingServer() Log in pending (ignored ${sfRestClient._RepeatedPingRetryDelay})`);
                 this.CheckForSystemNotification();
-                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for login */}, 2345);
-                //sfRestClient._NextPingTimerID = setTimeout("RESTClient.pingServer(); // wait for login ", 2345);
+                const returnTo = RESTClient.GetPageQueryParameterByName("ReturnUrl");
+                if (returnTo) {
+                    const m =RESTClient.GetPowerUXRouteHelper().helpers.GenerateMessage("FYI:The requested resource requires authentication...","debug");
+                    if (isWebix) {
+                        self.webix?.message(m);
+                    }
+                    else RESTClient.DisplayUserNotification(m.text);
+                }
+                sfRestClient._RepeatedPingRetryDelay ++;
+                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for login */}, 2345 + (sfRestClient._RepeatedPingRetryDelay * 555) );
                 return;
             }
             const isDocumentPage = RESTClient.IsDocumentPage();
@@ -5654,6 +5679,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 return;
             }
 
+            sfRestClient._RepeatedPingRetryDelay = 0;
             var retryInterval = (sfRestClient._Options.BasicPingServerInterval * (1.1 + Math.random()));
             var $ALERT: JQuery<HTMLDivElement>;
             var ActionAfterAlert = "";
@@ -5871,15 +5897,30 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 console.log("pingServer() NAK persists....");
                                 const AuthenticationMessage = sfRestClient.PageNotificationCount < 2 ?'Authentication required':'Lost authentication.';
                                 RESTClient.DisplayUserNotification(AuthenticationMessage, 65432);
-                                if (self.webix) self.webix!
-                                .alert({title:"Connection Check",
-                                        ok: 'Dismiss',
-                                        text: `Authentication ${ sfRestClient.PageNotificationCount < 2 ?'Required':'Revoked'}. <br/> Returning to login page!`,
-                                        type: "alert-warning",
-                                    }).then((r)=>{
-                                          this.NavigateToLogout("auth-lost-immediate");
-                                    });
-                            this.NavigateToLogout("auth-lost",9753);
+                                let defaultLogoutOnTimer = true;
+                                if (self.webix) {
+                                    if (1===1) { //RESTClient.DevMode()
+                                        self.webix!
+                                            .confirm({title:"Connection Check",
+                                                    ok: 'Logout',
+                                                    text: `Authentication ${ sfRestClient.PageNotificationCount < 2 ?'Required':'Revoked'}. <br/> Returning to login page!`,
+                                                    type: "alert-warning",
+                                                }).then((r:boolean)=>{
+                                                    if (r) this.NavigateToLogout("auth-lost-immediate");
+                                                    else self.webix?.message("ok...");
+                                                });
+                                        defaultLogoutOnTimer = false;
+                                    }
+                                    else self.webix!
+                                        .alert({title:"Connection Check",
+                                                ok: 'Dismiss',
+                                                text: `Authentication ${ sfRestClient.PageNotificationCount < 2 ?'Required':'Revoked'}. <br/> Returning to login page!`,
+                                                type: "alert-warning",
+                                            }).then((r)=>{
+                                                this.NavigateToLogout("auth-lost-immediate");
+                                            });
+                                    }
+                                if (defaultLogoutOnTimer) this.NavigateToLogout("auth-lost",19753);
                             }
                             else {
                                 responseText = "NAK:Rejuvinated";
@@ -6064,13 +6105,14 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      */
     public DevMode(minVerbosity?: LoggingLevels ) : boolean {
         let result = top?.sfClient?.GetPageContextValue("DevMode",false);
+        if (!result && !location.hostname.includes(".")) result = true;
         if (minVerbosity && result) {
             result = (sfRestClient._Options.LogLevel >= minVerbosity)
         }
         return result;
     }
 
-    /** Returns an object for working with a database field */
+    /** Returns a UI object for working with a database field */
     public DBF2TableandTblField(source : string | JQuery<HTMLElement>) :TableAndFieldInfo {
         var result : TableAndFieldInfo = { isValid: false, table: "", field: "", dbf: "", isRO: false };
         let dbf = "";
