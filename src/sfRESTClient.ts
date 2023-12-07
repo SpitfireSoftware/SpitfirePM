@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8711.4";
+const ClientPackageVersion : string = "23.8711.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3040,7 +3040,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     public IsHomeDashboardPage() : boolean {
-        return this.IsPageOfType(this.PageTypeNames.HomeDashboard) ;
+        const result = this.IsPageOfType(this.PageTypeNames.HomeDashboard) ;
+        if (result && top && !(top?.name)) top.name = "Dashboard";
+        return result;
     }
     public IsCatalogPage() : boolean {
         return this.IsPageOfType(this.PageTypeNames.Catalog) ;
@@ -3166,10 +3168,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         const prefixLength = sfRestClient.__SiteRootURL.length + self.location.hostname.length + 1
         const hashPos  =  fromHref.indexOf("#");
 
-        var pgname : string = fromHref.substring(prefixLength,hashPos);
-        var pgHash : string = fromHref.substring( hashPos);
-        if (pgHash.length > 0)             pgname = pgHash; // for xb style
-        if (pgname.endsWith("pvp.aspx")) pgname = this.GetPageQueryParameterByName("vpg");
+        let pgname : string = fromHref.substring(prefixLength,hashPos);
+        let pgHash : string = fromHref.substring( hashPos);
+        if (pgHash.length > 0)            pgname = pgHash; // for xb style
+        if (pgname.includes("ReturnUrl")) pgname = this.SetNameValuePairInString(pgname,"ReturnUrl","1");
+        if (pgname.endsWith("pvp.aspx"))  pgname = this.GetPageQueryParameterByName("vpg");
         const lowerPG = pgname.toLowerCase()
         if (lowerPG.includes("arr.aspx",)) pgname = "arr";// maps to RouteWizard
         else if (lowerPG.includes("sscontent.aspx",)) pgname = "sscontent"; // maps to RouteWizard
