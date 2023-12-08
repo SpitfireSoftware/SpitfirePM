@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8711.7";
+const ClientPackageVersion : string = "23.8711.8";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3053,7 +3053,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public IsHomeDashboardPage() : boolean {
         const result = this.IsPageOfType(this.PageTypeNames.HomeDashboard) ;
-        if (result && top && !(top?.name)) top.name = "Dashboard";
+        if (result && top && !(top?.name)) { 
+            console.log("IsHomeDashboardPage() - Asserting window name == dashboard")
+            top.name = "Dashboard";
+        } 
         return result;
     }
     public IsCatalogPage() : boolean {
@@ -6364,7 +6367,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
                 $(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
-                    if (!RESTClient.IsDocumentPage() && top && !(top?.name)) top.name = "Dashboard";
+                    if (!RESTClient.IsDocumentPage() && top && !(top?.name)
+                        && ((RESTClient.ResolvePageTypeName() & RESTClient.PageTypeNames.Unauthenticated) === 0) 
+                    ) top.name = "Dashboard";
                     RESTClient.activateDynamicJS(RESTClient,"_DynamicJS", "On Ready");
 
                     $("body").off("sfClient.SetWCC__DynamicJS").on("sfClient.SetWCC__DynamicJS", function dynamicJSEventHandler() {
