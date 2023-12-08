@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8711.6";
+const ClientPackageVersion : string = "23.8711.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2535,27 +2535,17 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
    }
 
   /**
-     * Opens a new tab with location specified based on Document Key and UI version
-     * @param id the guid DocMasterKey for the document to be opened
+     * Opens a new dashboard tab with project specified 
+     * @param id the project ID without mask 
      */
    OpenProject(id : string) : Promise<Window | null>
    {
        var RESTClient = this;
        RESTClient.heartbeat();
        if (this.IsDocumentPage()) {
-            //... next line navigates to the project
+            //... next line tells the DASHBOARD tab to navigate to the project
             $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
-            return new Promise<Window | null>((resolve)=>{
-            //window.open("","Dashboard"); // switches tabs or opens empty tab :-(
-                const DashboardWindow = window.open("","Dashboard");
-                if (DashboardWindow) {
-                    console.log(`OpenProject ${DashboardWindow.name} at ${DashboardWindow.location.href}`, DashboardWindow);
-                    if (DashboardWindow.location.href === 'about:blank') {
-                        DashboardWindow.location.href = sfApplicationRootPath;
-                    }
-                } 
-            resolve(DashboardWindow);
-            });
+            return RESTClient.SwitchToDashboardTab();
        }
        return new Promise<Window | null>((resolve) => {
 
@@ -2586,6 +2576,28 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
            });
        });
    }
+
+   /** switches to the peer tab with Name=Dashboard 
+    *   @returns  self if window.name === Dashboard */
+   public SwitchToDashboardTab() : Promise<Window | null> {
+    var RESTClient = this;
+    RESTClient.heartbeat();
+    return new Promise<Window | null>((resolve)=>{
+            if (self.name === "Dashboard") {
+                resolve(self);
+                return;
+            }
+            const DashboardWindow = window.open("","Dashboard");
+            if (DashboardWindow) {
+                console.log(`SwitchToDashboardTab ${DashboardWindow.name} at ${DashboardWindow.location.href}`, DashboardWindow);
+                if (DashboardWindow.location.href === 'about:blank') {
+                    DashboardWindow.location.href = sfApplicationRootPath;
+                }
+            } 
+        resolve(DashboardWindow);
+        });
+   }
+
 
    /** returns true if url starts with _SiteURL  */
    public IsSiteURL(url : string) : boolean {
