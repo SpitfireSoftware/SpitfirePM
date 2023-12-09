@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8711.8";
+const ClientPackageVersion : string = "23.8742.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -3900,17 +3900,19 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return result;
     }
 
-    protected getCookie(cname:string):string {
-        var name = cname + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i]; //.trim() did not work in IE
-            while ( c.length > 0  &&  c.charAt(0) === ' ') c = c.substring(1, c.length);
+    /** returns the value of a browser cookie */
+    public getCookie(cookieName:string):string | undefined{
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const cookiePrefix = `${cookieName}=`;
+        const start = decodedCookie.indexOf(cookiePrefix);
+        if (start < 0) return undefined;
+        let  value =  decodedCookie.substring(start + cookiePrefix.length);
+        const end = value.indexOf(";");
+        if (end >= 0) value = value.substring(0,end);
+        return decodeURIComponent(value);
+}
 
-            if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
-        }
-        return "";
-    }
+ 
     /**
      * Figures out the type of page and the amount of viewable height (without scrolling)
      * @returns height of top frame
