@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8742.1";
+const ClientPackageVersion : string = "23.8742.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -413,6 +413,8 @@ export class sfRestClient {
             UnauthenticatedLogin: 16385,
             UnauthenticatedWizard: 16386,
             UnauthenticatedLink: 16388,
+            /** app root still not redirected to a specific page */
+            UnauthenticatedDefault: 16392,  
         UserAccountRecovery: 16387,
         DiagUtilities: 32768,
         PopupAdminTool: 131072,
@@ -2170,6 +2172,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     if (x.ThisStatus === 401 ) {
                         let  IsLoginRelatedPage = RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedLogin ); 
                         if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true
+                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedDefault ) ) IsLoginRelatedPage = true
                         if (!IsLoginRelatedPage &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.None) console.log(`SessionClient.getWCC() redirecting to login`);
@@ -3159,6 +3162,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
            case "popTinymce5": case "popEdit":
                     result = this.PageTypeNames.RichTextEdit;
                     break;
+            case "default":
+                result = this.PageTypeNames.UnauthenticatedDefault;
+                break;
+
             default:
                 console.warn("Unrecognized page type: ", pageNameString);
                 //debugger;
