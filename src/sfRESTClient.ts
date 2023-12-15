@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8742.2";
+const ClientPackageVersion : string = "23.8742.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -4399,7 +4399,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             var  OpenUrl = url;
             if (!RESTClient.IsSiteURL(OpenUrl)) OpenUrl = `${RESTClient._SiteRootURL}/${url}`;
 
-            if (OpenUrl.indexOf("xbia=1") && sfRestClient.IsPowerUXPage()) {
+            if (OpenUrl.includes("xbia=1") && sfRestClient.IsPowerUXPage()) {
                 //ui-icon-script
                 top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnToClassicUI","Classic UI (new tab)","ui-icon-script").on("click",function() {
                     window.open( OpenUrl.replace("xbia=1","xbia=0"));
