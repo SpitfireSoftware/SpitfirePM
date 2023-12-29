@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8750.3";
+const ClientPackageVersion : string = "23.8750.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2297,7 +2297,15 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
        return XToolLoadPromise;
     }
 
-    public  AddCachedScript(  url: string,headScript?: boolean,context?: Window | undefined,): Promise<boolean> {
+    /**
+     * @param url 
+     * @param headScript true to place the script in the head section
+     * @param [useAsync=false] true to load async
+     * @param [context=self] 
+     * @returns promise - use .then for code after the script has loaded
+     * 
+     */
+    public  AddCachedScript(  url: string,headScript?: boolean,context: Window | undefined = self,useAsync = false): Promise<boolean> {
         if (!context) context = self;
 
         var ScriptPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
@@ -2310,7 +2318,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             script.src = url;
             script.type = "text/javascript"
             script.defer = true;
-            script.async = false;
+            script.async = useAsync;
             script.onload = function _scriptloaded() {
                     resolve(true);
                 };
