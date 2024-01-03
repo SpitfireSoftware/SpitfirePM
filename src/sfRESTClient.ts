@@ -11,7 +11,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8764.0";
+const ClientPackageVersion : string = "23.8764.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -2119,7 +2119,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         var apiResult: Promise<WCCData | null> | null = null;
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
         return new Promise<WCCData>( (resolve)  =>{
-            if (!newHref) newHref = location.toString();
+            if (!newHref) newHref =    location.toString();
             let locationHash = newHref.sfHashCode();
              
             let ThisPageType =  this.ResolveStringPageNametoPageTypeName(this.ResolvePageNameFromURL(newHref)); 
@@ -2170,8 +2170,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
                 if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
-                        let  IsLoginRelatedPage = RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedLogin ); 
-                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true
+                        let  IsLoginRelatedPage = sfRestClient.NextHrefIsPending && sfRestClient.NextHrefIsUnauthenticated;
+                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedLogin )) IsLoginRelatedPage = true; 
+                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true;
                         if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedDefault ) ) IsLoginRelatedPage = true
                         if (!IsLoginRelatedPage &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
@@ -3217,18 +3218,37 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
 
-
+   // private static NextHref:string|undefined;
+    private static NextHrefIsPending:boolean;
+    private static NextHrefIsUnauthenticated:boolean;
 
     /** asserts a new url to resolve the new page type.  Stays in effect until the location hash next changes */
     public urlChange(newURL:string,newHref:string) {
         this.heartbeat();
+        let urlWas = location.href;
         const newPageName = this.ResolvePageNameFromURL(newURL);
         // do not set validHash - but reset the pagetype and pagename
         sfRestClient.ResolvedPageInfo.setInfo(0,newPageName,this.ResolveStringPageNametoPageTypeName(newPageName));
         let newLocationHash = newHref.sfHashCode();
         if (this.DevMode(LoggingLevels.Verbose)) console.log(`sfClient.urlChange(${newURL} ) --> ${sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName}`);
         // too soon to do a fresh this.LoadUserSessionInfo(true); (URL context is still wrong)
-        setTimeout(()=>{ this.LoadUserSessionInfo(true, newHref);},333); // hopefully self.location will catch up to new URL by then!
+        if (location.href === newHref) urlWas = "";
+        else {
+            sfRestClient.NextHrefIsPending  = true;
+            sfRestClient.NextHrefIsUnauthenticated  = newHref.includes("login");
+        };
+        // tried jan 2024 - some pages do not rebuild x< else location.href = newHref;  >x
+        const expireNextHref = (depth:number) => {
+            if (depth < 19 && urlWas === location.href) {
+                console.log(`urlChange ${depth} pending from ${urlWas.replaceAll(this._SiteURL,"~" )} to ${newHref.replaceAll(this._SiteURL,"~" )}, current ${location.href.replaceAll(this._SiteURL,"~" )}`);
+                setTimeout(()=>{ expireNextHref(depth+1); },222);        
+                return;
+            }
+            sfRestClient.NextHrefIsPending  = false;
+            sfRestClient.NextHrefIsUnauthenticated  = false;
+        }
+        expireNextHref(0); 
+        this.LoadUserSessionInfo(true, newHref); 
     }
 
     protected XBVariantOfPageName( classicPageName : PageTypeName ) : string {
@@ -4039,7 +4059,24 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             else thisRestClient.DisplaySysNotification("");
         })
         .catch((reason) => {
+            const showMsg = `${reason.message} [${reason.status}]`;
             console.warn('CheckForSystemNotification() failed', reason);
+            if ("status" in reason && reason.status > 500) {
+                // DisplayThisNotification() requiers a functional server
+                if (thisRestClient.isWebix()) {
+                    const m = {
+                        text: showMsg,
+                        type: 'debug',
+                        expire: 1345 + (showMsg.length * 50) + 1,
+                        id: `sfCheckForSystemNotificationMessage`
+                    }
+                    self.webix?.message(m as unknown as any);
+                }
+                else {
+                    thisRestClient.DisplayUserNotification();
+                }
+              
+            }
         })
         .finally(()=>{
             sfRestClient.lastNotificationCheck = Date.now();
@@ -5680,7 +5717,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             const RESTClient = this;
             pdsKey = RESTClient.GetPageDataContext();
             if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== $.signalR.connectionState.connected) {
-                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for hub */}, 123);
+                sfRestClient._RepeatedPingRetryDelay ++;
+                if (sfRestClient._RepeatedPingRetryDelay > 20) {
+                    RESTClient.CheckForSystemNotification();
+                    console.log(`pingServer() waiting (${sfRestClient._RepeatedPingRetryDelay}) for Websocket connection, state is ${top?.sfPMSHub?.connection.state} `);
+                    sfRestClient._RepeatedPingRetryDelay = 5;
+                }
+                sfRestClient._NextPingTimerID = setTimeout(()=>{RESTClient.pingServer(); /*  wait for hub */}, 123 * sfRestClient._RepeatedPingRetryDelay );
                 return;
             }
             const isWebix = RESTClient.isWebix();
@@ -5705,6 +5748,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             const hasDocSessionkey = (docSessionkey && docSessionkey !== RESTClient.EmptyKey);
             const hasDocKey = (docKey && docKey !== RESTClient.EmptyKey);
             const hasPDSKey = (pdsKey && pdsKey !== 'TBD');
+            const hasWebsocketConnection = top?.sfPMSHub?.connection.state === $.signalR.connectionState.connected ;
 
             if ( isDocumentPage && (!hasDocSessionkey || !hasPDSKey || !hasDocKey) ) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  
@@ -5721,7 +5765,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             var MaxIdleTime = RESTClient.GetPageContextValue("IdleForce",33) * 59000;
             if ($("DIV.ui-dialog-content.sfStopPingServer").length > 0) return;
             sfRestClient.PageServerPingAttempts ++;
-            top.sfPMSHub.server.sessionAlive();
+            if (hasWebsocketConnection) top.sfPMSHub.server.sessionAlive();
 
             if (RESTClient.IsDocumentPage() && sfRestClient.IsPowerUXPage()) {
 
@@ -5937,7 +5981,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                     if (1===1) { //RESTClient.DevMode()
                                         self.webix!
                                             .confirm({title:"Connection Check",
-                                                    ok: 'Logout',
+                                                    ok: 'Login Again',
                                                     text: `Authentication ${ sfRestClient.PageNotificationCount < 2 ?'Required':'Revoked'}. <br/> Returning to login page!`,
                                                     type: "alert-warning",
                                                 }).then((r:boolean)=>{

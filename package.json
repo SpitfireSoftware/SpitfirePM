@@ -1,6 +1,6 @@
 {
   "name": "spitfirepm",
-  "version": "23.8764.0",
+  "version": "23.8764.1",
   "description": "Client API Tools for Spitfire Project Management",
   "main": "",
   "keywords": [
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/SpitfireSoftware/SpitfirePM#readme",
   "devDependencies": {
-    "@types/jquery": "^3.5.16",
+    "@types/jquery": "^3.5.29",
     "jquery-ui": "^1.13.2"
   },
   "browserslist": [
