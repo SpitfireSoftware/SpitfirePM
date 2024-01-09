@@ -1,4 +1,3 @@
-//import { contains } from "jquery";
 import { GoogleAnalyticPayload, GUID } from "./globals";
 import {  IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
@@ -11,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8764.1";
+const ClientPackageVersion : string = "23.8764.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1184,6 +1183,7 @@ export class sfRestClient {
             fileRev = fileKey.LatestRevision;
             fileKey = fileKey.FileKey;
         }
+        ["&",'/','?','+','*'].forEach((v)=>{fn = fn?.replaceAll(v,"" )});
         return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/${fn}?cd=${forDownload ? "1":"0"}${fileRev ? `&rv=${fileRev}`:""}`;
     }
 
