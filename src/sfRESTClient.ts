@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8774.2";
+const ClientPackageVersion : string = "23.8780.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -1031,7 +1031,7 @@ export class sfRestClient {
      * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
      * @param displayName the name of a display value rule (eg sfUser, RoleName, etc)
      * @param keyValue the primary or most significant key
-     * @param dependsOn optional array of context values (multi-part key); 0 to 4 elements allowed
+     * @param dependsOn optional array of context values (multi-part key); 0 to 4 elements allowed; hint: use 'empty' for an empty value
      * @param autoVary force bypass of cache
      * @returns Promise for String
      */
@@ -1181,7 +1181,7 @@ export class sfRestClient {
         if (fileKey instanceof _SwaggerClientExports.FileInformation) {
             fn = fileKey.value;
             fileRev = fileKey.LatestRevision;
-            fileKey = fileKey.FileKey;
+            fileKey = fileKey.FileKey as string;
         }
         ["&",'/','?','+','*'].forEach((v)=>{fn = fn?.replaceAll(v,"" )});
         return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/${fn}?cd=${forDownload ? "1":"0"}${fileRev ? `&rv=${fileRev}`:""}`;
@@ -1194,7 +1194,7 @@ export class sfRestClient {
         if (fileKey instanceof _SwaggerClientExports.FileInformation) {
             fileRev = fileKey.LatestRevision;
             fn = fileKey.value;
-            fileKey = fileKey.FileKey;
+            fileKey = fileKey.FileKey as string;
         }
         return `${this._SiteRootURL}/sfImg.ashx/ck/${fileKey}/preview-${fn}?w=${width}&h=${height}${fileRev ? `&rv=${fileRev}`:""}`;
     }
@@ -1551,7 +1551,7 @@ export class sfRestClient {
                  return uploadxhr;
             }
             taskResult.name = ff.value;
-            if (ff.size > sfRestClient._Options.UploadDirectLimit) {
+            if (ff.size! > sfRestClient._Options.UploadDirectLimit) {
                 let CatAPI = new _SwaggerClientExports.CatalogClient();
                 UploadURL = RESTClient.GetFileChunkUploadURL(uploadContext);
                 UseChunkMode = true;
@@ -1561,7 +1561,7 @@ export class sfRestClient {
                 CatAPI.beginUpload(ff).then((unusedUploadKey) =>{
                     if (unusedUploadKey) FileUploadKey = unusedUploadKey['f'];
                     const chunkSize = sfRestClient._Options.UploadChunkSize;
-                    const chunksQuantity = Math.ceil(ff.size / chunkSize);
+                    const chunksQuantity = Math.ceil(ff.size! / chunkSize);
                     const chunkQueue:number[] =  Array.from(Array(chunksQuantity).keys()).reverse(); // Array.from({length: chunksQuantity}, (_, i) => i + 1);
                     const SendNext = function SendNextChunk() {
                           const chunkId = chunkQueue.pop()!;
@@ -1618,7 +1618,7 @@ export class sfRestClient {
                     else result(<_SwaggerClientExports.XferFilesStatus><unknown>finalResponse);
                 });
             }
-            console.log(`UploadFile ${ff.value} ${Math.round(ff.size/1024.0)}K ${UseChunkMode ? 'in chunks' : 'using a single request'}`)
+            console.log(`UploadFile ${ff.value} ${Math.round(ff.size!/1024.0)}K ${UseChunkMode ? 'in chunks' : 'using a single request'}`)
             //ff.MetaData = [{"UploadMode": uploadContext.mode}]; causes ETag error
 
 
@@ -1714,7 +1714,7 @@ export class sfRestClient {
                 RESTClient.HeyPleaseWait();
                 var api = new _SwaggerClientExports.ExcelToolsClient();
                 api.getCobraExport(PostBackArgs,RESTClient.GetPageDataContext()).then( crt => {
-                    RESTClient.WaitForTask(crt).then( (crtResult) => {
+                    RESTClient.WaitForTask(crt).then( (crtResult : any) => {
                         RESTClient.ClearPleaseWaitDialog();
                         let thisReason = (crtResult!.ThisReason) ? crtResult!.ThisReason : "Failed! Contact Help Desk (see server logs)";
                         if (thisReason.indexOf("Failed!") >= 0) {
@@ -2114,7 +2114,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
      * @param locationHash when omitted, location.toString is used
     */
     LoadUserSessionInfo(bypassCache?:boolean, newHref?:string): Promise<WCCData> {
-        var RESTClient: sfRestClient = this;
+        const RESTClient: sfRestClient = this;
         var api: SessionClient ;
         var apiResult: Promise<WCCData | null> | null = null;
         sfRestClient._z.WCCLoaded = false; // required to make CheckPermit() (etc) wait for this to complete
@@ -2170,10 +2170,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 console.log(`LoadUserSessionInfo(getWCC) catch`,x);
                 if (RESTClient.IsRESTErrorResponse(x) ) {
                     if (x.ThisStatus === 401 ) {
-                        let  IsLoginRelatedPage = sfRestClient.NextHrefIsPending && sfRestClient.NextHrefIsUnauthenticated;
-                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedLogin )) IsLoginRelatedPage = true; 
-                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true;
-                        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedDefault ) ) IsLoginRelatedPage = true
+                        let  IsLoginRelatedPage = RESTClient.IsLoginRelatedPage()  
                         if (!IsLoginRelatedPage &&(  top?.name==="Dashboard" || this.IsHomeDashboardPage())) { // do we need more here?  
                             // goal is to not redirect document pages, etc
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.None) console.log(`SessionClient.getWCC() redirecting to login`);
@@ -2185,6 +2182,16 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 resolve(sfRestClient._MakeFakeWCC());
             });
         });
+    }
+
+    public IsLoginRelatedPage():boolean {
+        const RESTClient: sfRestClient = this;
+
+        let  IsLoginRelatedPage = sfRestClient.NextHrefIsPending && sfRestClient.NextHrefIsUnauthenticated;
+        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedLogin )) IsLoginRelatedPage = true; 
+        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UserAccountRecovery ) ) IsLoginRelatedPage = true;
+        if (!IsLoginRelatedPage && RESTClient.IsPageOfType( RESTClient.PageTypeNames.UnauthenticatedDefault ) ) IsLoginRelatedPage = true
+        return IsLoginRelatedPage;
     }
 
     protected static _SessionClientGetWCC : _SessionClientGetWCCShare | null;
@@ -4048,12 +4055,19 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (hashCode.startsWith("SysNotification")) hashCode = hashCode.substring(16);
         return this.DisplayThisNotification("ajhx/sysnotification.html", hashCode, timeOutMS);
     }
+
+    private lastNotificationCheckPromise: Promise<string|null> | null = null;
     /** Checks backend for a new system notification and displays it */
     CheckForSystemNotification() {
         const SystemAPI = new _SwaggerClientExports.SystemClient();
         const thisRestClient = this;
         if ( (Date.now() - sfRestClient.lastNotificationCheck) < 34567) return;
-        SystemAPI.getSystemNotification("")
+        if (thisRestClient.lastNotificationCheckPromise !== null) {
+            if (thisRestClient.DevMode() ) console.log("Prior notification check still pending...");
+            return;
+        };
+        thisRestClient.lastNotificationCheckPromise = SystemAPI.getSystemNotification("");
+        thisRestClient.lastNotificationCheckPromise
         .then((theNotification)=>{
             if (theNotification) thisRestClient.DisplaySysNotification(theNotification.sfHashCode().toString())
             else thisRestClient.DisplaySysNotification("");
@@ -4064,6 +4078,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             if ("status" in reason && reason.status > 500) {
                 // DisplayThisNotification() requiers a functional server
                 if (thisRestClient.isWebix()) {
+                    if (this.IsLoginRelatedPage()) thisRestClient.NavigateToServerUnavailable(showMsg);
                     const m = {
                         text: showMsg,
                         type: 'debug',
@@ -4079,6 +4094,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             }
         })
         .finally(()=>{
+            thisRestClient.lastNotificationCheckPromise = null;
             sfRestClient.lastNotificationCheck = Date.now();
         });
     }
@@ -5664,6 +5680,14 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
     }
 
+    public NavigateToServerUnavailable(reason:string, delayMs:number=222): void {
+        const RESTClient = this;
+        const url = `${RESTClient._SiteRootURL}/wx/#!/server-unavailable`;
+
+        setTimeout(`top.location="${url}";` , delayMs);
+    }
+
+
     public NavigateToLogout(reason:string, delayMs:number=222): void {
         if (this._navigateToLogoutTimerEvent) {
             console.log(`${new Date().toSFLogTimeString()} NavigateToLogout already pending, redundant ${reason} ignored...`);
@@ -5778,7 +5802,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     // if ($DocBarSignal.length === 0 && $DocBar.find("img").length > 0) $DocBarSignal = $DocBar.prepend('<i class="fa-duotone fa-signal-stream-slash clsSignalR"  ></i>').find(".clsSignalR");
                     
                     let WatchedFileKeys:string[] = [];
-                    if (DocModel.CurrentAttachments) WatchedFileKeys = DocModel.CurrentAttachments.map((el:_SwaggerClientExports.DocAttachment) => el.DocKey) ;
+                    if (DocModel.CurrentAttachments) WatchedFileKeys = DocModel.CurrentAttachments.map((el:_SwaggerClientExports.DocAttachment) => el.DocKey) as string[] ;
             
                     self.sfPMSHub.server.documentWindowOpen(docKey, docSessionkey , pdsKey,sfRestClient.PageNotificationCount, 
                                     DocModel.getExclusivityMode(), WatchedFileKeys)
