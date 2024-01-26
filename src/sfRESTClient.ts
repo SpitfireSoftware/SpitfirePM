@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8790.1";
+const ClientPackageVersion : string = "23.8790.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou
 
@@ -173,12 +173,17 @@ class PartStorageData {
     public static ClearCache() { this._LoadedParts = new Map<PartContextKey, PartStorageData>(); }
     public static PartStorageDataFactory(client: sfRestClient, partName: string, 
                                         forDocType: GUID | undefined, forProject: GUID | undefined, 
-                                        context: string | undefined): PartStorageData {
+                                        context: string | undefined,
+                                        usingCfg?: UIDisplayPart): PartStorageData {
         var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
         var thisPart: PartStorageData;
         if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
         else {
             thisPart = new PartStorageData(client, partName, forDocType, forProject, context);
+            if (usingCfg && usingCfg.PartName === partName ) {
+                thisPart!.CFG = usingCfg;
+                return thisPart;
+            }
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
             try {
                 thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType,forProject, context);
@@ -1160,10 +1165,31 @@ export class sfRestClient {
 
     /**
      * Async Get Part Configuration Data given part name, doc type and context
-    */
+     * @param partName DocRoute or ActionItems etc
+     * @param forDocType guid
+     * @param forProject 
+     * @param partContext 
+     * @returns CFG object
+     */
     GetPartCFG(partName: string, forDocType?: GUID, forProject?:string, partContext?: string): Promise<UIDisplayPart | null> {
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType,forProject, partContext);
         return thisPart.CFGLoader();
+    }
+
+    /**
+     * Tell the cfg manager about a CFG that was recovered from local storage
+     * @param partName 
+     * @param forDocType 
+     * @param forProject 
+     * @param partContext 
+     * @param recoveredCFG  NOT optional, you are responsible for it being current
+     * @returns  the cfg object
+     * @see GetPartCFG
+     */
+    RegisterRestoredCFG(partName: string, forDocType?: GUID, forProject?:string, partContext?: string,recoveredCFG?: UIDisplayPart): UIDisplayPart {
+        if (!recoveredCFG)  throw new Error(`RegisterRestoredCFG(${partName}) requires recoveredCFG object ` );
+        const thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType,forProject, partContext,recoveredCFG);
+        return recoveredCFG;
     }
 
     /**
