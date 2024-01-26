@@ -10,9 +10,9 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8790.2";
+const ClientPackageVersion : string = "23.8790.3";
 
-// originally modified for typescript and linter requirements by Uladzislau Kumakou
+// originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
 export enum LoggingLevels {
     None,
@@ -171,6 +171,16 @@ class PartStorageData {
 
     static _LoadedParts: PartStorageList = new Map<PartContextKey, PartStorageData>();
     public static ClearCache() { this._LoadedParts = new Map<PartContextKey, PartStorageData>(); }
+    /**
+     * 
+     * @param client sfRestClient
+     * @param partName something like ActionItems or ProjectCA
+     * @param forDocType GUID
+     * @param forProject project ID
+     * @param context 
+     * @param usingCfg if supplied, stored, otherwise resolved
+     * @returns 
+     */
     public static PartStorageDataFactory(client: sfRestClient, partName: string, 
                                         forDocType: GUID | undefined, forProject: GUID | undefined, 
                                         context: string | undefined,
@@ -181,7 +191,10 @@ class PartStorageData {
         else {
             thisPart = new PartStorageData(client, partName, forDocType, forProject, context);
             if (usingCfg && usingCfg.PartName === partName ) {
-                thisPart!.CFG = usingCfg;
+                thisPart._InitializationResultPromise = new Promise<UIDisplayPart>((preloaded)=>{
+                    thisPart!.CFG = usingCfg;
+                    preloaded(usingCfg);
+                })
                 return thisPart;
             }
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
