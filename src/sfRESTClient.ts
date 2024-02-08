@@ -3111,9 +3111,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public IsHomeDashboardPage() : boolean {
         const result = this.IsPageOfType(this.PageTypeNames.HomeDashboard) ;
-        if (result && top && !(top?.name)) { 
-            console.log("IsHomeDashboardPage() - Asserting window name == dashboard")
-            top.name = "Dashboard";
+        if (result && top && !(top?.name) ) { 
+            const forUID =  this.GetPageQueryParameterByName("uid");
+            top.name = forUID ? forUID : "Dashboard"; 
+            console.log(`IsHomeDashboardPage() - Asserting window name == ${top.name}`);
         } 
         return result;
     }
