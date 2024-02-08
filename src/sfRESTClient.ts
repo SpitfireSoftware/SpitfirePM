@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8800.1";
+const ClientPackageVersion : string = "23.8800.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -5796,7 +5796,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 this.CheckForSystemNotification();
                 const returnTo = RESTClient.GetPageQueryParameterByName("ReturnUrl");
                 if (returnTo) {
-                    const m =RESTClient.GetPowerUXRouteHelper().helpers.GenerateMessage("FYI:The requested resource requires authentication...","debug");
+                    const m =RESTClient.GetPowerUXRouteHelper().helpers.GenerateMessage("FYI: The requested resource requires authentication...","debug");
                     if (isWebix) {
                         self.webix?.message(m);
                     }
@@ -6493,6 +6493,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 $(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
                     if (!RESTClient.IsDocumentPage() && top && !(top?.name)
+                        && (!RESTClient.IsHomeDashboardPage() || !(RESTClient.GetPageQueryParameterByName("uid")))
                         && ((RESTClient.ResolvePageTypeName() & RESTClient.PageTypeNames.Unauthenticated) === 0) 
                     ) top.name = "Dashboard";
                     RESTClient.activateDynamicJS(RESTClient,"_DynamicJS", "On Ready");
