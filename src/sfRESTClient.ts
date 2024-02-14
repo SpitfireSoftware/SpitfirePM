@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8801.1";
+const ClientPackageVersion : string = "23.8801.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2454,10 +2454,14 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 else {
                     if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) url =  sfRestClient._Options.PopNewDocXBURL;
                 }
-                if (options?.indexOf("&UseID")) {
+                if (options?.includes("&UseID")) {
                     UseID = options.substring(options?.indexOf("&UseID")+7,36);
                 }
-                else UseID = await this.NewGuid();
+                else {
+                    UseID = await this.NewGuid();
+                    if (!options) options = "";
+                    options += `&UseID=${UseID}`;
+                } 
                 let includeProjectID : boolean = (dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup );
                 // new project setup sends project id as first option
                 //                 if (!includeProjectID && options?.includes("mode=np")) includeProjectID = true;
