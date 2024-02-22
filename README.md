@@ -24,10 +24,14 @@ apiResult.then( (a) => {
 
 ### Change Log
 
-23.8810.1 - REST endpoints for federated identites, includding Microsoft Entra
-23.8699.7 - PopDoc supports HTML Element
+```
+23.8810.1 - Updates swagger for Flush session endpoint  
+23.8780.3 - TabStripDetails
+23.8764.0 - Google Auth, Microsoft Entra and endpoints for federated identites
+23.8699.7 - PopDoc supports HTML Element and sfRowKey
 23.8592.1 - Updates swagger
 23.8510.2 - First release for sfPMS v2023
-1.40.206 - SignalR 2.4.3 and FontAwesome 6
-1.40.205 - Improved RecentDocList management
-1.40.208 - Improved poor Signal message and TableAndFieldInfo type
+ 1.40.206 - SignalR 2.4.3 and FontAwesome 6
+ 1.40.205 - Improved RecentDocList management
+ 1.40.208 - Improved poor Signal message and TableAndFieldInfo type
+```
