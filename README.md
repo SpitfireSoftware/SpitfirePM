@@ -4,23 +4,27 @@ Spitfire Project Management is a solution that helps construction and capital or
 
 ### Sample Usage - JavaScript
 
+```
 // client-side-example.js
 ...
 
-if (typeof top.sfRestClient === "undefined") top.sfRestClient = new exports.sfRestClient();
+if (typeof top.sfClient === "undefined") top.sfClient = new exports.sfRestClient();
 
-var api = new exports.ActionItemsClient(sfApplicationRootPath)
-var apiResult = api.getUserActionItemsAll(sfWCC.UserKey)
-apiResult.then(function (a) {
-        //debugger;
-        top.sfRestClient.BuildViewModel("ActionItems", top.sfRestClient._EmptyKey, a)
+
+let userKey = top.sfClient.GetPageContextValue("UserKey")
+let api = new exports.ActionItemsClient(sfApplicationRootPath)
+let apiResult = api.getUserActionItemsAll(userKey)
+apiResult.then( (a) => {
+        top.sfClient.BuildViewModel("ActionItems", top.sfClient._EmptyKey, a)
             .done(function (v) { console.log(v); });
     });
 
 ...
+```
 
 ### Change Log
 
+23.8810.1 - REST endpoints for federated identites, includding Microsoft Entra
 23.8699.7 - PopDoc supports HTML Element
 23.8592.1 - Updates swagger
 23.8510.2 - First release for sfPMS v2023
