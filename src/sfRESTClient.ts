@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8825.3";
+const ClientPackageVersion : string = "23.8825.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2850,6 +2850,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             fieldName = fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
             if (!(fieldName in rawRow)) return undefined;
         }
+        if (`${fieldName}_ov` in rawRow) fieldName = `${fieldName}_ov`;
         return rawRow[fieldName];
     }
 
