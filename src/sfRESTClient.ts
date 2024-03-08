@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8825.4";
+const ClientPackageVersion : string = "23.8825.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -6178,9 +6178,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         const thisClient: sfRestClient = this;
         const TimeSinceLastActivity = Date.now() - sfRestClient.LastActivityAt;
         let showLog = ((thisClient.DevMode()) || sfRestClient.PageServerPingOK < 2 || ((top?.sfPMSHub) && top.sfPMSHub.connection.logging) || ((responseText) && (responseText != "OK")));
-        if (!showLog && TimeSinceLastActivity >  525600) {
+        if (TimeSinceLastActivity >  525600) {
             showLog = true; 
-            console.log(`Idle since ${new Date(sfRestClient.LastActivityAt).toLocaleTimeString()}`);
+            if (!id) id = "";
+            if (typeof id === 'string' && id.length > 8) id = id.substring(0,8);
+            id +=   ` Idle since ${new Date(sfRestClient.LastActivityAt).toLocaleTimeString()}`;
         }
 
         sfRestClient.PageServerPingFailRunCount = 0;
@@ -6190,8 +6192,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             thisClient.DisplayUserNotification();
             sfRestClient.PageServerPingUserNotificationShown = false;
         }
-    if (showLog)
-        console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - ${responseText}; Next: ${nextMS}ms at ${new Date(Date.now() + nextMS).toLocaleTimeString()}`);
+    if (showLog) {
+        const pct = Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2);
+        console.log(`pingServer(${marker},${id},${pct}%) - ${responseText}; Next: ${nextMS}ms at ${new Date(Date.now() + nextMS).toLocaleTimeString()}`);
+    }
         sfRestClient.PageServerPingFailRunCount = 0;
         top!.sfPMSHub.client.ReConnectDelay = 2500;
         top!.sfPMSHub.client.SkipAutoReconnect = false;
