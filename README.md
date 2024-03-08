@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.8825.5 - Adds Report Menu and Route action REST endpoints
 23.8810.1 - Updates swagger for Flush session endpoint  
 23.8780.3 - TabStripDetails
 23.8764.0 - Google Auth, Microsoft Entra and endpoints for federated identites

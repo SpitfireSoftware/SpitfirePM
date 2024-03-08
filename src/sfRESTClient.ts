@@ -5860,7 +5860,6 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         
                                 //$(jqSelector).html(responseText);
                                 //$sfModalDialog.dialog('option', 'width', 'auto');
-                                var RecentIdleMS =  Date.now() - sfRestClient.LastActivityAt ;
                                 var CanAutoSave = isOK;
                                 if (isOK) {
                                
@@ -6176,15 +6175,23 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     protected PageServerPingBackOk(marker:string, id:string, responseText:string, nextMS:number) {
+        const thisClient: sfRestClient = this;
+        const TimeSinceLastActivity = Date.now() - sfRestClient.LastActivityAt;
+        let showLog = ((thisClient.DevMode()) || sfRestClient.PageServerPingOK < 2 || ((top?.sfPMSHub) && top.sfPMSHub.connection.logging) || ((responseText) && (responseText != "OK")));
+        if (!showLog && TimeSinceLastActivity >  525600) {
+            showLog = true; 
+            console.log(`Idle since ${new Date(sfRestClient.LastActivityAt).toLocaleTimeString()}`);
+        }
+
         sfRestClient.PageServerPingFailRunCount = 0;
         sfRestClient.PageServerPingOK ++;
         $("SPAN#spnDashOWarning.sfPingHealthTip").detach();
         if (sfRestClient.PageServerPingUserNotificationShown) {
-            top?.sfClient.DisplayUserNotification();
+            thisClient.DisplayUserNotification();
             sfRestClient.PageServerPingUserNotificationShown = false;
         }
-    if ((top?.sfClient.DevMode()) || sfRestClient.PageServerPingOK < 2 || ((top?.sfPMSHub) && top.sfPMSHub.connection.logging) || ((responseText) && (responseText != "OK")))
-        console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - ${responseText}; Next: ${nextMS}ms at ${new Date(new Date().valueOf() + nextMS).toLocaleTimeString()}`);
+    if (showLog)
+        console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - ${responseText}; Next: ${nextMS}ms at ${new Date(Date.now() + nextMS).toLocaleTimeString()}`);
         sfRestClient.PageServerPingFailRunCount = 0;
         top!.sfPMSHub.client.ReConnectDelay = 2500;
         top!.sfPMSHub.client.SkipAutoReconnect = false;
