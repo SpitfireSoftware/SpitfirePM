@@ -135,11 +135,14 @@ if (!Window.prototype.__HTTPApplicationName) {
     }
 }
 
-
+/** Calculates an integer hash 
+ * @abstract can be negative; max length 19
+*/
 String.prototype.sfHashCode = function caclHashCode(this: string): number {
     let hash = 0;
     for (let i = 0; i < this.length; i++) {
-        hash = Math.imul(31, hash) + this.charCodeAt(i) | 0;
+        hash = (Math.imul(31, hash) + this.charCodeAt(i) | 0) 
+        if (Math.log10(hash) > 18) hash = hash % 611111;
     }
     return hash;
 };

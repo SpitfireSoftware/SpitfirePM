@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8825.5";
+const ClientPackageVersion : string = "23.8825.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3582,14 +3582,14 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             return;
         }
         if (!sfRestClient.ExternalToolsLoadedPromise) sfRestClient.ExternalToolsLoadedPromise = new Promise<boolean>(r=>{r(false);});
-        if (ActionString.startsWith(this._SiteURL)) {
+        if (ActionString.startsWith(this._SiteURL) || ActionString.startsWith(this._SiteRootURL)) {
 
-            //if (ActionString.indexOf("?") === -1 &&  ActionString.indexOf(".aspx&set") > 0 )  ActionString = ActionString.replaceAll("&set","?set");// kludge to fix ?set being &set
-            if (ActionString.indexOf("?") < 0 && ActionString.indexOf("#") < 0) ActionString += "?fq=1"; //fake query parameter
-            if (ActionString.indexOf("?") >0 && ActionString.indexOf("xbia") < 0 && sfRestClient.IsPowerUXPage()) ActionString += "&xbia=1";
-            if (ActionString.indexOf("libview.aspx") > 1) {
+            const actionHasQueryParameters = ActionString.includes("?");
+            if (actionHasQueryParameters && ActionString.includes("#") ) ActionString += "?fq=1"; //fake query parameter
+            if (actionHasQueryParameters  && ActionString.includes("xbia") && sfRestClient.IsPowerUXPage()) ActionString += "&xbia=1";
+            if (ActionString.includes("libview.aspx") ) {
                 var ActionOptions : string = "";
-                if (ActionString.indexOf("?") > 0) {
+                if (actionHasQueryParameters ) {
                     ActionOptions = "&"+  ActionString.substring(ActionString.indexOf("?")+1);
                 }
                 ActionOptions = ActionOptions.replaceAll("xbia=1","xbia=2");
@@ -3599,6 +3599,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             else if (/.*?(cusysm|cuManager|ExecutiveInfo).aspx/gmi.exec(ActionString)) {
                 ActionString = ActionString.replaceAll("xbia=1","xbia=2");
                 UseNewTabWithName = ActionString.indexOf("cusysm.aspx") > 0 ? "SysAdmin" : "ManageTools";
+            }
+            else if (ActionString.includes("sfReportViewer.aspx")) {
+                UseNewTabWithName = `RV${ActionString.sfHashCode()}`
             }
             else {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction(modal): ",ActionString);
