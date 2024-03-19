@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8825.6";
+const ClientPackageVersion : string = "23.8825.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -375,7 +375,7 @@ export class NVPair { [key: string]: any; }
 export class WCCData { [key: string]: any; }
 export type DataModelRow = Record<string,any>;
 export type DataModelCollection = DataModelRow[];
-export class InvokeOptions { ByTask: boolean | undefined; ByAcct: boolean | undefined };
+export class InvokeOptions { ByTask?: boolean | undefined; ByAcct?: boolean | undefined; targetWindow?:string; };
 export type TableAndFieldInfo = {table:string, field:string, dbf:string, isRO:boolean, isValid:boolean};
 export type PartContextKey = string // PartName[context]::dtk
 export type Permits = number; // 0...31, see PermissionFlags
@@ -3560,6 +3560,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      * Parses and performs an action
      * @param actionString often in the form javascript:something(args)
      * @param rowData optional collection of data
+     * @param options InvokeOptions including targetWindow. targetWindow of H is replaced with hash of action
      *
      * Actions Supported
      * - vPgPopup(...)
@@ -3797,7 +3798,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
         }
         else if (ActionString.startsWith("http")) {
-            window.open(ActionString);
+            if (options?.targetWindow === "H") options.targetWindow = `T${ActionString.sfHashCode()}`;
+            window.open(ActionString, options?.targetWindow);
         }
         else {
             this.DisplayUserNotification("Coming soon: could not invoke requested action.",9999);
