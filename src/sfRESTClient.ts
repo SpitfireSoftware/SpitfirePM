@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8825.7";
+const ClientPackageVersion : string = "23.8845.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3583,7 +3583,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             return;
         }
         if (!sfRestClient.ExternalToolsLoadedPromise) sfRestClient.ExternalToolsLoadedPromise = new Promise<boolean>(r=>{r(false);});
-        if (ActionString.startsWith(this._SiteURL) || ActionString.startsWith(this._SiteRootURL)) {
+        if (ActionString.sfStartsWithCI(this._SiteURL) || ActionString.sfStartsWithCI(this._SiteRootURL)) {
 
             const actionHasQueryParameters = ActionString.includes("?");
             if (actionHasQueryParameters && ActionString.includes("#") ) ActionString += "?fq=1"; //fake query parameter
@@ -3603,6 +3603,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             }
             else if (ActionString.includes("sfReportViewer.aspx")) {
                 UseNewTabWithName = `RV${ActionString.sfHashCode()}`
+            }
+            else if (options?.targetWindow === "H") {
+                UseNewTabWithName  = `W${ActionString.sfHashCode()}`;
             }
             else {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("InvokeAction(modal): ",ActionString);
