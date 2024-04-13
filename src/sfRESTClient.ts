@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8845.2";
+const ClientPackageVersion : string = "23.8860.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -19,7 +19,7 @@ export enum LoggingLevels {
     Normal,
     Verbose,
     Debug=9,
-    VerboseDebug=93
+    VerboseDebug=92
 }
 export enum ValidationMode {
     none='0',
@@ -3228,7 +3228,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 break;
 
             default:
-                console.warn("Unrecognized page type: ", pageNameString);
+                if (pageNameString) console.warn("Unrecognized page type: ", pageNameString);
                 //debugger;
                 result = this.PageTypeNames.Unknown;
                 break;
