@@ -25,6 +25,8 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.8882.1 - Adds endpoints to XTSClient
+23.8860.1 - Improves EDB Export support
 23.8825.5 - Adds Report Menu and Route action REST endpoints
 23.8810.1 - Updates swagger for Flush session endpoint  
 23.8780.3 - TabStripDetails
