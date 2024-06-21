@@ -1,4 +1,5 @@
 import { datepicker } from "jquery";
+import { APIClientBase } from "./APIClientBase";
 
 declare global {
     interface String {
@@ -263,5 +264,19 @@ export const sfProcessDTKMap = {
     WorkPosted: 'e18f4f17-377b-499e-bd12-bfbc4764de6c',
     }
 
-export const sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
-export const sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
+export let sfApplicationNamePart : string =  HTTPApplicationName;  // sfPMS
+export let sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePart || 'sfPMS'}`;  // https://try.spitfirepm.com/sfPMS
+
+/**
+ * Overrides default inferred from window.location
+ * @param hostNamePortAppl newtown.spitfirepm.com:8443/sfDev
+ * @description DOES NOT HELP until the path meets CORS restrictions!!
+ */
+export function setRuntimeAPIPath( hostNamePortAppl:string ) {
+    if (hostNamePortAppl.includes("@")) hostNamePortAppl = hostNamePortAppl.replaceAll("@",'/');
+    if (!hostNamePortAppl.includes("/")) hostNamePortAppl += '/sfPMS';
+    sfApplicationNamePart = hostNamePortAppl.substring(hostNamePortAppl.indexOf("/")+1);
+    sfApplicationRootPath = `https://${hostNamePortAppl}`;
+    APIClientBase.setBaseUrl(sfApplicationRootPath);
+    return sfApplicationRootPath;
+}

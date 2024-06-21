@@ -5,6 +5,12 @@ export  class APIClientBase {
     /** Spitfire Assigned Site ID  */
     private static  GAClientID : string | undefined = undefined;
     private static GAIgnoreActions = {account: true, session:true, suggestions: true, uicfg:true, viewable: true};
+
+    public static setBaseUrl(usingURL: string) {
+        APIClientBase._SiteURL = usingURL;
+        console.log('APIClientBase.setBaseUrl()....${APIClientBase._SiteURL}');        
+    }
+
     public getBaseUrl( baseURL : string) : string {
         if (APIClientBase._SiteURL === null) {
             if (window.location.origin === "http://localhost" && window.location.pathname === "/powerux/") {
