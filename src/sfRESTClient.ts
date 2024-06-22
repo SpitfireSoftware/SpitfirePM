@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8910.3";
+const ClientPackageVersion : string = "23.8910.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -933,7 +933,7 @@ export class sfRestClient {
 
             var apiResultPromise: Promise<Suggestion[] | null> | undefined ;
             var RESTClient: sfRestClient = this;
-            var api: LookupClient = new LookupClient(this._SiteURL);
+            var api: LookupClient = new LookupClient();
             var DependsOnSet: string[] = ["", "", "", "",""];
 
             if (limit <= 0) limit = sfRestClient._Options.SuggestionLimit;
@@ -1004,7 +1004,7 @@ export class sfRestClient {
 
           var apiResultPromise: Promise<{[key:string]:any}[] | null>;
           var RESTClient: sfRestClient = this;
-          var api: LookupClient = new LookupClient(this._SiteURL);
+          var api: LookupClient = new LookupClient( );
 
 
           var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
@@ -1095,7 +1095,7 @@ export class sfRestClient {
         }
 
         var RESTClient: sfRestClient = this;
-        var api: LookupClient = new LookupClient(this._SiteURL);
+        var api: LookupClient = new LookupClient();
         var DependsOnSet: string[] = ["undefined", "undefined", "undefined", "undefined"];
         if (Array.isArray(dependsOn)) {
             $.each(dependsOn, function (i, v) {

@@ -275,8 +275,8 @@ export let sfApplicationRootPath : string = `${HTTPOrigin}/${sfApplicationNamePa
 export function setRuntimeAPIPath( hostNamePortAppl:string ) {
     if (hostNamePortAppl.includes("@")) hostNamePortAppl = hostNamePortAppl.replaceAll("@",'/');
     if (!hostNamePortAppl.includes("/")) hostNamePortAppl += '/sfPMS';
-    sfApplicationNamePart = hostNamePortAppl.substring(hostNamePortAppl.indexOf("/")+1);
-    sfApplicationRootPath = `https://${hostNamePortAppl}`;
-    APIClientBase.setBaseUrl(sfApplicationRootPath);
+//    sfApplicationNamePart = hostNamePortAppl.substring(hostNamePortAppl.indexOf("/")+1);
+  //  sfApplicationRootPath = `https://${hostNamePortAppl}`;
+    //APIClientBase.setBaseUrl(sfApplicationRootPath);
     return sfApplicationRootPath;
 }
