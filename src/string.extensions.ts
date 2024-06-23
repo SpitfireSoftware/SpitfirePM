@@ -4,6 +4,7 @@ import { APIClientBase } from "./APIClientBase";
 declare global {
     interface String {
         sfFormat(this: string, ...words: any[]): string;
+        sfReplaceHashValues(this: string,data:{[key:string]:any}):string;
         replaceAll(this: string, pattern: string, replacement: string): string;
         sfHashCode(this: string): number;
         sfIsGuid(this: string): boolean;
@@ -148,13 +149,31 @@ String.prototype.sfHashCode = function caclHashCode(this: string): number {
     return hash;
 };
 
-/** alternative to template string `${varname}` */
+/** alternative to template string `${varname}` that works by position placeholders
+ * @example "CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction)
+ */
 String.prototype.sfFormat = function formatThis(this: string, ...words): string {
     return this.replace(
         /{(\d+)}/g,
         (match, number) => (typeof words[number] !== 'undefined' ? words[number] : match)
     );
 };
+
+/** reokaces values in a string surrounded by "#" with matching values from an object.
+ * @example "CheckPermit could not find #ucMod#|#ucFunc# - verify proper case/trim!".sfReplaceHashValues({ucMod:'SYS', ucFunc:'GLOBAL'})
+ */
+String.prototype.sfReplaceHashValues = function sfReplaceHashValues(this: string, data: {[key:string]:any}): string {
+    let result = this;
+    for (const key in data) {
+        if (data.hasOwnProperty(key)) {
+          const value = data[key];
+          result = result.replace(new RegExp(`#${key}#`, 'g'), String(value));
+        }
+      }
+      return result;
+};
+
+
 String.prototype.sfIsGuid = function IsThisStringaGuid(this: string, ): boolean {
     return (   (typeof this === 'string') &&
                (this.length >= 36) &&
