@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8940.1";
+const ClientPackageVersion : string = "23.8940.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -382,14 +382,31 @@ export type Permits = number; // 0...31, see PermissionFlags
 /** See sfRestClient.PageTypeNames */
 export type PageTypeName = number; // see PageTypeNames
 export type PagePartList= {[key: string]: Permits};
+
+export interface iRaiseDocSaveFinished { (eventData: SaveEventData, whatChanged: _SwaggerClientExports.DocFieldChange, newChangeStamps?: { [key: string]: number }):void };
 export interface iDocumentModel extends    iDocumentModelBase { 
     DocHeaderData: _SwaggerClientExports.DocMasterDetail;
     CurrentRouteRow: _SwaggerClientExports.DocRoute;
     CurrentAttachments: _SwaggerClientExports.DocAttachment[];
+    SaveDocumentPatch: {(deltas:_SwaggerClientExports.IDocFieldChange[],isDone: true | iRaiseDocSaveFinished):Promise<NVPair>}
+
     getExclusivityMode: {():number};
     // and much more!
     [key:string]: any;
 }
+export type SaveEventState =     'queue' | 'saving' | 'done' | 'trouble';
+export interface changeStampSet { [key: string]: number }
+export type SaveEventData = {
+    state: SaveEventState  
+    pending: number,
+    message: string;
+    createdAt: number;
+    promiseAt?: number;
+    backendPromise?: Promise<NVPair>
+    priorChangeStamps?: changeStampSet;
+    newChangeStamps?: changeStampSet;
+};
+
 
 /** Spitfire PM Client
  * @example top.sfClient.GetDV(...)
@@ -3029,7 +3046,7 @@ public SetInputValue(inputView:  any, newValue: string | number | DataModelRow |
  * @param withSRC when specified, use just the image name (delete.gif); when string is passed an <IMG> tag is used instead of <i> and the image them/path is resolved 
  * @returns 
  */
-public CreateButtonElement(withClass: undefined | string, withTip:string|undefined, $AppendTo?:JQuery<HTMLInputElement>, withSRC?:string): JQuery<HTMLElement> {
+public CreateButtonElement(withClass: undefined | string, withTip:string|undefined, $AppendTo?:JQuery<HTMLElement>, withSRC?:string): JQuery<HTMLElement> {
     
     var BtnType = !withSRC ? "i" : "img";
     if (typeof withClass === "undefined") {
@@ -3080,13 +3097,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfRestClient._WCC[key] = newValue;
     }
 
-    /** returns a references to the page document model, including the data and state */
+    /** returns a references to the WX page document model, including the data and state */
     public GetPageDocumentModel() : iDocumentModel | undefined {
         let UI = this.GetPowerUXDocumentUI();
         if (!UI) return  undefined;
         return UI.documentModel as iDocumentModel;
     }
-        /** returns a references to the page document UI, including header */
+    /** returns a references to the page document UI, including header */
     public GetPowerUXDocumentUI() : iPowerUXDocumentUI | undefined {
             if (typeof self.$$ !== "function") return undefined;
             let header = self.$$("spitfireDocumentHeader") as iWebixObjectSkeleton;
@@ -6457,6 +6474,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         this.exports.$ = $;
         this.exports.sfRestClient = sfRestClient;
         this.exports.LoggingLevels = LoggingLevels;
+        this.exports.sfProcessDTKMap = sfProcessDTKMap;
         const SavedOptions = sessionStorage.getItem('SFRestClientOptions');
         if (SavedOptions) {
             try {

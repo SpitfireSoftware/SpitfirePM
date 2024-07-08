@@ -124,6 +124,10 @@ declare global {
         docDesc: string;
         documentId: GUID;
         documentModel: iDocumentModelBase;
+        confirmStatus: {(newStatusCode: string, menuItem: HTMLElement | string):void};
+        createNextDoc: {():void};
+        refreshHeader: {():void};
+        sendStatusChangeToServer: {(oldStatus:string):Promise<boolean>};
         spinner: iWebixSpinner;
         $scope: any;
 

@@ -1,6 +1,6 @@
 # Client API for Spitfire Project Management
 
-Spitfire Project Management is a solution that helps construction and capital organizations manage projects, documents and images.  The web application includes a REST API with dynamic Swagger documentation via NSwag (https://github.com/RicoSuter/NSwag).   This package provides TypeScript and JavaScript clients and helpers for working with this API.
+Spitfire Project Management is a solution that helps construction and capital organizations manage projects, documents and SOP.  The web application includes a REST API with dynamic Swagger documentation via NSwag (https://github.com/RicoSuter/NSwag).   This package provides TypeScript and JavaScript clients and helpers for working with this API.
 
 ### Sample Usage - JavaScript
 
@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.8940.3 - Adds SaveDocumentPatch to DocumentModel exposed from WX and exports sfProcessDTKMap
 23.8882.1 - Adds endpoints to XTSClient
 23.8860.1 - Improves EDB Export support
 23.8825.5 - Adds Report Menu and Route action REST endpoints
