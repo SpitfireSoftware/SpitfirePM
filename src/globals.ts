@@ -136,6 +136,7 @@ declare global {
     export interface iRouteHelperService {
         _appContext: iWebixApp ;
         openDocument(dmk:GUID):Promise<Window>;
+        CloseInSeconds(msg:string,seconds:number):void;
         helpers: {
             OpenEmail:{(to: string, subject: string, cc?: string, body?: string): void}
             GenerateMessage(what: string, type: iWebixMessageType): iWebixMessage;
