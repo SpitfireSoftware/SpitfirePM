@@ -109,6 +109,18 @@ declare global {
         expire: number,
         id: string
    }
+   export interface iWebixConfirm  {
+    title: string,
+    text: string,
+    type:  "confirm-warning" | "confirm-error",
+    expire: number,
+    id: string
+    ok: string, //  the text of the 'Ok' button
+    cancel: string //  the text of the 'Cancel' button
+    css: string ,
+}
+
+
 
     export interface iWebixApp {
         attachEvent: { (eventName:string, handler: Function):void };
@@ -123,6 +135,7 @@ declare global {
     }
     export interface iRouteHelperService {
         _appContext: iWebixApp ;
+        openDocument(dmk:GUID):Promise<Window>;
         helpers: {
             OpenEmail:{(to: string, subject: string, cc?: string, body?: string): void}
             GenerateMessage(what: string, type: iWebixMessageType): iWebixMessage;
