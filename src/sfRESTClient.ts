@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8940.7";
+const ClientPackageVersion : string = "23.8950.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
