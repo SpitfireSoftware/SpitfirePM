@@ -1,5 +1,5 @@
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
-import { sfRestClient } from "./sfRESTClient";
+import { NVPair, sfRestClient } from "./sfRESTClient";
 
 interface Window {
     sfApplicationRootPath: string;
@@ -110,17 +110,29 @@ declare global {
         id: string
    }
 
+    export interface iWebixApp {
+        attachEvent: { (eventName:string, handler: Function):void };
+        blockEvent: { ():void };
+        callEvent: {eventName:string,args:any[]};
+        config: NVPair;
+        detachEvent: { (eventName:string):void};
+        hasEvent: { (eventName:string):boolean};
+        unblockEvent: { ():void };
+        webixJet: boolean;
+        [key:string]:any;
+    }
     export interface iRouteHelperService {
-        _appContext: object;
+        _appContext: iWebixApp ;
         helpers: {
             OpenEmail:{(to: string, subject: string, cc?: string, body?: string): void}
-            GenerateMessage(what: string, type: iWebixMessageType): iWebixMessage
+            GenerateMessage(what: string, type: iWebixMessageType): iWebixMessage;
+            isEmptyValue(value: any): boolean ;
         }
     }
 
     export interface iPowerUXDocumentUI {
         ReallyReady: Promise<boolean>;
-        app: object;
+        app: iWebixApp;
         docDesc: string;
         documentId: GUID;
         documentModel: iDocumentModelBase;
