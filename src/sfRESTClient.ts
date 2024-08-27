@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.8950.1";
+const ClientPackageVersion : string = "23.9000.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3604,7 +3604,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
             const actionHasQueryParameters = ActionString.includes("?");
             if (actionHasQueryParameters && ActionString.includes("#") ) ActionString += "?fq=1"; //fake query parameter
-            if (actionHasQueryParameters  && ActionString.includes("xbia") && sfRestClient.IsPowerUXPage()) ActionString += "&xbia=1";
+            if (actionHasQueryParameters  && !ActionString.includes("xbia") && sfRestClient.IsPowerUXPage()) ActionString += "&xbia=1";
             if (ActionString.includes("libview.aspx") ) {
                 var ActionOptions : string = "";
                 if (actionHasQueryParameters ) {
