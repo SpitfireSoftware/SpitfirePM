@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9000.1";
+const ClientPackageVersion : string = "23.9000.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3604,18 +3604,20 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
             const actionHasQueryParameters = ActionString.includes("?");
             if (actionHasQueryParameters && ActionString.includes("#") ) ActionString += "?fq=1"; //fake query parameter
-            if (actionHasQueryParameters  && !ActionString.includes("xbia") && sfRestClient.IsPowerUXPage()) ActionString += "&xbia=1";
+            if (actionHasQueryParameters  && !ActionString.includes("xbia") && sfRestClient.IsPowerUXPage()) {
+                let classicInvokeActionType = "1"; // a popup inside a webix page
+                ActionString += `&xbia=${classicInvokeActionType}`;
+            }
             if (ActionString.includes("libview.aspx") ) {
                 var ActionOptions : string = "";
                 if (actionHasQueryParameters ) {
                     ActionOptions = "&"+  ActionString.substring(ActionString.indexOf("?")+1);
                 }
-                ActionOptions = ActionOptions.replaceAll("xbia=1","xbia=2");
                 ActionString = `javascript:vPgPopup('v/LibView.aspx', '${ActionOptions}', 850, 950);`; // ... w,h
                 UseNewTabWithName = `LibView@${RESTClient.GetQueryParameterValueByName(ActionOptions,"set")}`;
             }
             else if (/.*?(cusysm|cuManager|ExecutiveInfo).aspx/gmi.exec(ActionString)) {
-                ActionString = ActionString.replaceAll("xbia=1","xbia=2");
+                //ActionString = ActionString.replaceAll("xbia=1","xbia=2");
                 UseNewTabWithName = ActionString.indexOf("cusysm.aspx") > 0 ? "SysAdmin" : "ManageTools";
             }
             else if (ActionString.includes("sfReportViewer.aspx")) {
@@ -3629,7 +3631,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 this.ModalDialog(ActionString, undefined, undefined, window);
                 return;
             }
-
+            if (UseNewTabWithName) ActionString = ActionString.replaceAll("xbia=1","xbia=2");
         }
         let matchVPgName : RegExpExecArray | null = null;
         let matchPopWhat : RegExpExecArray | null = null;
