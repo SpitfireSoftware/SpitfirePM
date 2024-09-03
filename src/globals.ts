@@ -94,7 +94,7 @@ declare global {
             ok?:string, 
             text:string,
             type?:"alert-warning" | "alert-error"}):Promise<boolean> };
-        message: {(msg:string| iWebixMessage):void };
+        message: {(msg:string| iWebixMessageConfig):void };
         
     }
     export interface iWebixSpinner {
@@ -103,7 +103,7 @@ declare global {
 
     export type iWebixMessageType = 'info' | 'debug' | 'success' | 'error';
 
-    export interface iWebixMessage { //extends webix.WebixMessageConfig 
+    export interface iWebixMessageConfig { //extends webix.WebixMessageConfig 
         text: string,
         type: iWebixMessageType,
         expire: number,
@@ -139,7 +139,7 @@ declare global {
         CloseInSeconds(msg:string,seconds:number):void;
         helpers: {
             OpenEmail:{(to: string, subject: string, cc?: string, body?: string): void}
-            GenerateMessage(what: string, type: iWebixMessageType): iWebixMessage;
+            GenerateMessage(what: string, type: iWebixMessageType): iWebixMessageConfig;
             isEmptyValue(value: any): boolean ;
         }
     }
