@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9000.3";
+const ClientPackageVersion : string = "23.9000.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -176,7 +176,7 @@ class PartStorageData {
      * @param client sfRestClient
      * @param partName something like ActionItems or ProjectCA
      * @param forDocType GUID
-     * @param forProject project ID
+     * @param forProject project ID; if empty client.GetPageProjectKey() is used
      * @param context 
      * @param usingCfg if supplied, stored, otherwise resolved
      * @returns 
@@ -185,8 +185,9 @@ class PartStorageData {
                                         forDocType: GUID | undefined, forProject: GUID | undefined, 
                                         context: string | undefined,
                                         usingCfg?: UIDisplayPart): PartStorageData {
-        var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
-        var thisPart: PartStorageData;
+        if (!forProject) forProject = client.GetPageProjectKey();
+        const ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
+        let thisPart: PartStorageData;
         if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
         else {
             thisPart = new PartStorageData(client, partName, forDocType, forProject, context);
@@ -197,7 +198,7 @@ class PartStorageData {
                 })
                 return thisPart;
             }
-            var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
+            const api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
             try {
                 thisPart._InitializationResultPromise = api.getLiveDisplay(partName, forDocType,forProject, context);
                 if (thisPart._InitializationResultPromise) {
