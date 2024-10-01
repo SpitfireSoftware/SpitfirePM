@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9000.4";
+const ClientPackageVersion : string = "23.9000.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -180,6 +180,7 @@ class PartStorageData {
      * @param context 
      * @param usingCfg if supplied, stored, otherwise resolved
      * @returns 
+     * @see RegisterRestoredCFG
      */
     public static PartStorageDataFactory(client: sfRestClient, partName: string, 
                                         forDocType: GUID | undefined, forProject: GUID | undefined, 
@@ -214,12 +215,28 @@ class PartStorageData {
         }
         return thisPart;
     }
-    public static PartStorageDataLookupFactory(client: sfRestClient, lookupName: string): PartStorageData {
+    /**
+     * 
+     * @param client 
+     * @param lookupName 
+     * @param usingCfg 
+     * @returns 
+     * @see RegisterRestoredLookupCFG
+     */
+    public static PartStorageDataLookupFactory(client: sfRestClient, lookupName: string, usingCfg?:UIDisplayPart): PartStorageData {
         var ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(lookupName, "lookup", "lookup", "lookup");
         var thisPart: PartStorageData;
         if (PartStorageData._LoadedParts.has(ReferenceKey)) thisPart = PartStorageData._LoadedParts.get(ReferenceKey)!
         else {
             thisPart = new PartStorageData(client, lookupName, "lookup","lookup", "lookup");
+            if (usingCfg && usingCfg.PartName === lookupName ) {
+                thisPart._InitializationResultPromise = new Promise<UIDisplayPart>((preloaded)=>{
+                    thisPart!.CFG = usingCfg;
+                    preloaded(usingCfg);
+                })
+                return thisPart;
+            }
+            
             var api: UICFGClient = new UICFGClient(PartStorageData._SiteURL);
             thisPart._InitializationResultPromise = api.getLookupDisplay(lookupName );
             if (thisPart._InitializationResultPromise) {
@@ -1223,6 +1240,19 @@ export class sfRestClient {
         return recoveredCFG;
     }
 
+ /**
+     * Tell the cfg manager about a lookup that was recovered from local storage
+     * @param lookupName
+     * @param recoveredCFG  NOT optional, you are responsible for it being current
+     * @returns  the cfg object
+     * @see GetPartCFG
+     */
+    RegisterRestoredLookupCFG(lookupName: string, recoveredCFG: UIDisplayPart): UIDisplayPart {
+        if (!recoveredCFG)  throw new Error(`RegisterRestoredCFG(${lookupName}) requires recoveredCFG object ` );
+        const thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataLookupFactory(this, lookupName,recoveredCFG);
+        return recoveredCFG;
+    }
+
     /**
      * Async Get of Lookup column configuration data
      * @param lookupName name of required Lookup
@@ -2200,17 +2230,16 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 sfRestClient.RecentDocumentList = [ new _SwaggerClientExports.MenuAction()];
                 sfRestClient.RecentDocumentList[0].Enabled=false;
                 sfRestClient.RecentDocumentList[0].ItemText=' (still loading...)';
-                api.getRecentDocs()
-                .then((recentList)=>{
-                    if (recentList) sfRestClient.RecentDocumentList = recentList
-                    else sfRestClient.RecentDocumentList[0].ItemText='Documents will appear here as you open them';
-
-                })
-                .catch((reason)=>{
-                    console.warn('LoadUserSessionInfo().getRecentDocs()',reason);
-                    sfRestClient.RecentDocumentList[0].ItemText='None available';
-
-                });
+                if (!RESTClient.IsDocumentPage())
+                    api.getRecentDocs()
+                    .then((recentList)=>{
+                        if (recentList) sfRestClient.RecentDocumentList = recentList
+                        else sfRestClient.RecentDocumentList[0].ItemText='Documents will appear here as you open them';
+                    })
+                    .catch((reason)=>{
+                        console.warn('LoadUserSessionInfo().getRecentDocs()',reason);
+                        sfRestClient.RecentDocumentList[0].ItemText='None available';
+                    });
             }
             if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
             apiResult.then((r: WCCData | null) => {
@@ -2267,7 +2296,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         return FakeWCC;
     }
 
-    /** applies changes to connection properties */
+    /** applies changes to connection properties 
+     * @see SharePageContext
+    */
     UpdateWCCData( newWCC: WCCData ) : WCCData {
         var RESTClient: sfRestClient = this;
         var ChangeList: Map<string, any> = new Map<string,any>();
