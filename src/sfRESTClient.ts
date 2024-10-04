@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9000.5";
+const ClientPackageVersion : string = "23.9000.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2694,7 +2694,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     var RESTClient = this;
     RESTClient.heartbeat();
     return new Promise<Window | null>((resolve)=>{
-            if (self.name === "Dashboard") {
+            if (self.name.sfStartsWithCI("Dashboard")) {
                 resolve(self);
                 return;
             }
@@ -3157,7 +3157,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     public static IsPowerUXPage() : boolean {
-        return location.hash.startsWith("#!") || location.pathname === "/powerux/";
+        return location.hash.startsWith("#!") || location.pathname === "/wx/";
     }
     public IsPowerUXPage() : boolean {
         return sfRestClient.IsPowerUXPage();
@@ -5517,24 +5517,24 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 }
 
                 if (!sfRestClient.IsPowerUXPage()) {
-                    if (top?.sfClient.IsProjectPage()) {
+                    if (RESTClient.IsProjectPage()) {
                         top?.refreshPartbyName('ProjDocSummary', 'refresh', 'afterDocumentSaved');
                         top?.refreshPartbyName('ProjTypedDocList', 'SlctDocType', dtk);
                 }
-                else if (top?.sfClient.IsHomeDashboardPage()) {
+                else if (RESTClient.IsHomeDashboardPage()) {
                         top?.refreshPartbyName('actionitems', 'refresh', 'afterDocumentSaved');
                     }
                 }
             }
             sfHub.client.addRecentDocument = function (dmk: GUID, title: string) {
                 // this event updates the recent Document list
-                top?.sfClient.UpdateRecentDocumentList(dmk,title);
+                RESTClient.UpdateRecentDocumentList(dmk,title);
             };
 
             sfHub.client.nowViewingDocument = function (target, loginSessionKey, request) {
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.nowViewingDocument from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
-                if (top?.sfClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
+                if (RESTClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
                     var HubEvent = jQuery.Event("sfPMSHubSignal.nowViewingDocument");
                     $("body").trigger(HubEvent,  [target,loginSessionKey,request] );
                     if (HubEvent.isDefaultPrevented()) return;
@@ -5871,6 +5871,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 return;
             }
             const isDocumentPage = RESTClient.IsDocumentPage();
+            const isPowerUXPage = sfRestClient.IsPowerUXPage()
+            const isMainView = !isDocumentPage && isPowerUXPage && (location.hash.includes("/main/"));
             const docSessionkey = RESTClient.GetPageContextValue("DocSessionKey");
             const docKey:string = RESTClient.GetPagePK();  
             const hasDocSessionkey = (docSessionkey && docSessionkey !== RESTClient.EmptyKey);
@@ -5895,7 +5897,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfRestClient.PageServerPingAttempts ++;
             if (hasWebsocketConnection) top.sfPMSHub.server.sessionAlive();
 
-            if (RESTClient.IsDocumentPage() && sfRestClient.IsPowerUXPage()) {
+            if (isDocumentPage && isPowerUXPage) {
 
                 try {
                     let $DocUI = RESTClient.GetPowerUXDocumentUI();
@@ -6054,6 +6056,30 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 }
 
               
+            }
+            else if (isMainView) {
+                if (top.name !== "Dashboard") {
+                    const bc = new BroadcastChannel("sfAuth");
+                    const assertMe = setTimeout(()=>{
+                        console.log('Asserting this is main Dashboard...');
+                        top!.name = "Dashboard";
+                    },1234);
+                    bc.onmessage = function (event) {
+                        // we never receive our own broadcast 
+                        const eventMessage: {event:string, context:string, payload: any}  = event.data;
+                        console.log(`BroadcastChannel.pingServer:${eventMessage.event}`, event);
+                        if (eventMessage.event === "PongWindowByName") { //PingWindowByName
+                            if (eventMessage.context === "Dashboard") {
+                                // this means there is already a dashboard
+                                console.log('Pong from Dashboard...');
+                                clearTimeout(assertMe);
+                            }
+                        }
+                    };  // BroadcastChannel message handling --------- ^^
+
+                    bc.postMessage({event:"PingWindowByName",context:"Dashboard", payload:false}); //MessagePingWindow
+                    // we either get a response or take over as Dashboard
+                }
             }
 
             self.sfPMSHub.server.dashboardHeartbeat(pdsKey,sfRestClient.PageNotificationCount)
