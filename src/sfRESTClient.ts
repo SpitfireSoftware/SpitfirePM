@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9000.6";
+const ClientPackageVersion : string = "23.9040.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -5556,7 +5556,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     //var RESTClient = top.sfClient;
                     var TopName = top.name!;
                     if (TopName && TopName === 'v/LibView.aspx') TopName = "Dashboard"
-                    if (TopName.length! > 0 && target.sfStartsWithCI(TopName)) {
+                    if (TopName.length > 0 && target.sfStartsWithCI(TopName)) {
                         if (request.startsWith("javascript:")) {
                             request = request.substring(11);
                             const rxpopURL = /popURL\(['"](?<url>.*)['"]\)/g;
@@ -5623,7 +5623,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         }
                         setTimeout("top.sfDocDetailPostBack('RefreshAttachments','sfLink'); // signalr", 987);
                     }
-                    else if (target === "CATALOG" && request.sfIsGuid()) {
+                    else if (target === "CATALOG" ) {
                         var HubEvent = jQuery.Event("sfPMSHubSignal.catalogChange");
                         $("body").trigger(HubEvent,  [target,request] );
                         if (HubEvent.isDefaultPrevented()) {
@@ -5634,7 +5634,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             top.RefreshDocPart("DocAIR",`CATALOG;${request}`);
                             return;
                         }
-                         console.log(`sfPMSHub does not know how to forward ${request} to [${target}]`);
+                        console.log(`sfPMSHub does not know how to forward ${request} to [${target}]`);
                     }
                     else console.log(`sfPMSHub ignoring ${request} to [${target}]`);
                 }
