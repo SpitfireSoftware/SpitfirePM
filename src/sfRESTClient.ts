@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9040.3";
+const ClientPackageVersion : string = "23.9040.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -1320,7 +1320,8 @@ export class sfRestClient {
             }
             else {
                 let result : _SwaggerClientExports.ProcessDocumentType | undefined;
-                systemClient.getProcessList(this.EmptyKey).then(pl => {
+                if (!sfRestClient.LocalProcessTypeInfoPromise)  sfRestClient.LocalProcessTypeInfoPromise = systemClient.getProcessList(this.EmptyKey);
+                sfRestClient.LocalProcessTypeInfoPromise.then(pl => {
                     if (pl) {
                         sfRestClient.LocalProcessTypeInfo = pl;
                         result =  findProcess(pl ,forDocType);
@@ -1337,6 +1338,7 @@ export class sfRestClient {
         return processPromise;
     }
     private static LocalProcessTypeInfo: _SwaggerClientExports.ProcessDocumentType[];
+    private static LocalProcessTypeInfoPromise: Promise<_SwaggerClientExports.ProcessDocumentType[] | null>;
 
     /**
      * Displayable size
