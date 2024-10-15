@@ -10,10 +10,11 @@ export class BrowserExtensionChecker {
     };
     static readonly ChromeWebstoreLink = "https://chromewebstore.google.com";
     public static SuggestedExtensionLink():string {
-        return BrowserExtensionChecker.XActwareWebstoreLink;
+        return BrowserExtensionChecker.MetaWebstoreLink;
     }
     static readonly WRemixWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}/detail/wremix-clickonce/dgpgholdldjjbcmpeckiephjigdpikan`;
-    static readonly XActwareWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}//detail/xactware-clickonce/ghonblphoimcehigdfdmomaochonfobc`;
+    static readonly BreezWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}/detail/breez-clickonce/cmkpnegkacdeagdmnbbhjbgdpndmlkgj`;
+    static readonly MetaWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}/detail/cegid-peoplenet-clickonce/jkncabbipkgbconhaajbapbhokpbgkdc?`;
     DetectedID: string = "";
     DetectedName: string = "";
     // always returns false the first time
@@ -24,9 +25,9 @@ export class BrowserExtensionChecker {
             if (result === null) {
                 if (BrowserExtensionChecker.browser.isWindowsOS) {
                     if (BrowserExtensionChecker.browser.chrome) {
-                        if (this._ClickOnceExtensionAvailable) this._CheckForXactwareClickOnceLauncherExtension(); 
-                        if (this._ClickOnceExtensionAvailable) this._CheckForWindowsRemixClickonceExtension();
-                        if (this._ClickOnceExtensionAvailable) this._CheckForMeta4ClickOnceLauncherExtension();
+                        if (!this._ClickOnceExtensionAvailable) this._CheckForMeta4ClickOnceLauncherExtension();
+                        if (!this._ClickOnceExtensionAvailable) this._CheckForWindowsRemixClickonceExtension();
+                        if (!this._ClickOnceExtensionAvailable) this._CheckForBreezClickOnceLauncherExtension(); 
                     }
                     
                 }
@@ -57,6 +58,8 @@ export class BrowserExtensionChecker {
         sessionStorage.setItem(this._SessionStorageCacheKey, "{0};{1}".sfFormat(id, ExtName));
         return true;
     }
+    // find resource using chrome-extension://cmkpnegkacdeagdmnbbhjbgdpndmlkgj/manifest.json
+    // create the correct elment type 
     protected _CheckForWindowsRemixClickonceExtension() : boolean {
         var ExtName = "Windows Remix ClickOnce Helper"
         var ExtID = "dgpgholdldjjbcmpeckiephjigdpikan";
@@ -64,18 +67,18 @@ export class BrowserExtensionChecker {
         var s = document.createElement('script');
         return this._GenericExtensionDetector(ExtID, ExtName, s, "detect.js");
     }
-    protected _CheckForXactwareClickOnceLauncherExtension() :boolean {
-        var ExtName = "Meta4 ClickOnce Launcher"
-        var ExtID = "jkncabbipkgbconhaajbapbhokpbgkdc";
-        var s = new Image(); //document.createElement('script');
-        return this._GenericExtensionDetector(ExtID, ExtName, s, "images/download.png");
+    protected _CheckForBreezClickOnceLauncherExtension() :boolean {
+        var ExtName = "Breez ClickOnce Launcher"
+        var ExtID = "cmkpnegkacdeagdmnbbhjbgdpndmlkgj";
+        var s = document.createElement('script');
+        return this._GenericExtensionDetector(ExtID, ExtName, s, "modalHelper.js"); // manifest.json for list 
     }
 
     protected _CheckForMeta4ClickOnceLauncherExtension() :boolean {
         var ExtName = "Meta4 ClickOnce Launcher"
         var ExtID = "jkncabbipkgbconhaajbapbhokpbgkdc";
         var s = new Image(); //document.createElement('script');
-        return this._GenericExtensionDetector(ExtID, ExtName, s, "images/download.png");
+        return this._GenericExtensionDetector(ExtID, ExtName, s, "images/download_all.png");
     }
     protected _GenericExtensionDetector(ExtID : string, ExtName: string, s : HTMLScriptElement | HTMLImageElement, testResource: string) : boolean {
         var PARENT = this;

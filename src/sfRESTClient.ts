@@ -3904,7 +3904,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     text: "Install",
                     "id": "btnOK",
                     click: function () {
-                        RESTClient.InvokeAction(BrowserExtensionChecker.WRemixWebstoreLink);
+                        RESTClient.InvokeAction(BrowserExtensionChecker.SuggestedExtensionLink());
                         $(this).dialog("close");
                     }
                 });
@@ -3919,7 +3919,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         return;
                     }
                 });
-            var $A = RESTClient.jqAlert(`ClickOnce Helper is required.  Please install <a href='${BrowserExtensionChecker.WRemixWebstoreLink}' style='text-decoration: underline' target='_blank'>this extension</a>!`,
+            var $A = RESTClient.jqAlert(`ClickOnce Helper is required.  Please install <a href='${BrowserExtensionChecker.SuggestedExtensionLink()}' style='text-decoration: underline' target='_blank'>this extension</a>!`,
                              ".NET Link Helper Required");
             $A.dialog('option', 'buttons', DialogButtons);
             return;
