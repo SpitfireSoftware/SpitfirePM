@@ -8,8 +8,12 @@ export class BrowserExtensionChecker {
             isWindowsOS : false,
             isMacOS : false
     };
-    static readonly ChromeWebstoreLink = "https://chrome.google.com/webstore/";
+    static readonly ChromeWebstoreLink = "https://chromewebstore.google.com";
+    public static SuggestedExtensionLink():string {
+        return BrowserExtensionChecker.XActwareWebstoreLink;
+    }
     static readonly WRemixWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}/detail/wremix-clickonce/dgpgholdldjjbcmpeckiephjigdpikan`;
+    static readonly XActwareWebstoreLink = `${BrowserExtensionChecker.ChromeWebstoreLink}//detail/xactware-clickonce/ghonblphoimcehigdfdmomaochonfobc`;
     DetectedID: string = "";
     DetectedName: string = "";
     // always returns false the first time
@@ -19,8 +23,12 @@ export class BrowserExtensionChecker {
             var result = sessionStorage.getItem(this._SessionStorageCacheKey);
             if (result === null) {
                 if (BrowserExtensionChecker.browser.isWindowsOS) {
-                    if (BrowserExtensionChecker.browser.chrome) this._CheckForWindowsRemixClickonceExtension();
-                    if (BrowserExtensionChecker.browser.chrome) this._CheckForMeta4ClickOnceLauncherExtension();
+                    if (BrowserExtensionChecker.browser.chrome) {
+                        if (this._ClickOnceExtensionAvailable) this._CheckForXactwareClickOnceLauncherExtension(); 
+                        if (this._ClickOnceExtensionAvailable) this._CheckForWindowsRemixClickonceExtension();
+                        if (this._ClickOnceExtensionAvailable) this._CheckForMeta4ClickOnceLauncherExtension();
+                    }
+                    
                 }
                 this._ClickOnceExtensionHasBeenChecked = true;
             }
@@ -35,7 +43,7 @@ export class BrowserExtensionChecker {
         this._ExtensionDetected("dgpgholdldjjbcmpeckiephjigdpikan", "FAKE - User clicked Ignore Button", false);
     }
 
-    public Version: string = "2.0";
+    public Version: string = "2.2";
 
     protected _ClickOnceExtensionAvailable: boolean = false;
     protected _ClickOnceExtensionHasBeenChecked: boolean = false
@@ -56,6 +64,13 @@ export class BrowserExtensionChecker {
         var s = document.createElement('script');
         return this._GenericExtensionDetector(ExtID, ExtName, s, "detect.js");
     }
+    protected _CheckForXactwareClickOnceLauncherExtension() :boolean {
+        var ExtName = "Meta4 ClickOnce Launcher"
+        var ExtID = "jkncabbipkgbconhaajbapbhokpbgkdc";
+        var s = new Image(); //document.createElement('script');
+        return this._GenericExtensionDetector(ExtID, ExtName, s, "images/download.png");
+    }
+
     protected _CheckForMeta4ClickOnceLauncherExtension() :boolean {
         var ExtName = "Meta4 ClickOnce Launcher"
         var ExtID = "jkncabbipkgbconhaajbapbhokpbgkdc";
@@ -78,7 +93,7 @@ export class BrowserExtensionChecker {
             // "Caught: Extension not installed: {0}".sfFormat(ExtName);
             console.warn(e);
         }
-        return this._ClickOnceExtensionAvailable;;
+        return this._ClickOnceExtensionAvailable;
     }
     protected _uaMatch(ua:string) : {browser:string, version: string} {
         ua = ua.toLowerCase();
