@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9080.1";
+const ClientPackageVersion : string = "23.9080.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2954,6 +2954,13 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                         if (FieldName in sfRestClient._WCC) {
                             SourceResolved = true;
                             result.push(sfRestClient._WCC[FieldName]);
+                        }
+                        else if (TableName === "DocMasterDetail") {
+                            const headerData = this.GetPageDocumentModel()?.DocHeaderData;
+                            if (headerData && FieldName in headerData) {
+                                SourceResolved = true;
+                                result.push(this.FieldValueFromRow(headerData,FieldName));
+                            }
                         }
                     }
                     if (!SourceResolved) {
