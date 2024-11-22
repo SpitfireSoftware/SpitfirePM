@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9080.5";
+const ClientPackageVersion : string = "23.9080.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -1099,7 +1099,7 @@ export class sfRestClient {
         autoVary?: boolean | undefined): Promise<string | null> {
 
         var apiResultPromise: Promise<string | null>
-        if (!keyValue) return new Promise<string | null>((resolve) => resolve(""));
+        if (!keyValue || keyValue === this.EmptyKey) return new Promise<string | null>((resolve) => resolve(""));
 
         var requestData = this._getDVRequestString(displayName, keyValue, dependsOn);
         if (autoVary) requestData += `?${this._getVaryByQValue()}`;
@@ -1167,7 +1167,16 @@ export class sfRestClient {
         return apiResultPromise;
     }
 
-    private _ThrottleDVRequests(api : LookupClient, dvRequest : _SwaggerClientExports.DVRequest) : Promise<string|null> {
+/**
+     * Throttles and batches requests for display values (DVs) to improve performance.
+     * If there are pending DV requests, it adds the new request to a queue and sets up a timer to batch the requests.
+     * Otherwise, it directly calls the `getDisplayableValue` method on the `LookupClient` API.
+     * 
+     * @param api - The `LookupClient` API instance to use for making DV requests.
+     * @param dvRequest - The DV request object containing the necessary parameters.
+     * @returns A Promise that resolves to the requested display value, or `null` if the request fails.
+     */
+        private _ThrottleDVRequests(api : LookupClient, dvRequest : _SwaggerClientExports.DVRequest) : Promise<string|null> {
         var DVResultPromise: Promise<string | null>;
         var RESTClient = this;
         if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`ThrottleDV(${dvRequest.DVName}:${dvRequest.MatchingValue}) with ${this._CachedDVRequests.size} pending `);
@@ -1182,7 +1191,8 @@ export class sfRestClient {
                         RESTClient._DVRequestQueue = [];
                         RESTClient._DVRequestTimerHandle = undefined;
                         if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`BatchDV() with ${thisGroup.length} in group `);
-                        api.getDisplayValueCollection(thisGroup).then( dvList => {
+                        api.getDisplayValueCollection(thisGroup)
+                        .then( (dvList:Suggestion[] | null): void => {
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`BatchDV().THEN  `,dvList);
                             if (dvList)
                                 dvList.forEach(element => {
@@ -1196,6 +1206,9 @@ export class sfRestClient {
                                     }
                                     else console.warn("Batch DV could not find cacheId",element);
                                 });
+                        })
+                        .catch(err => {
+                            console.error("Batch DV failed",err);
                         });
                     }, 321);
                 }
