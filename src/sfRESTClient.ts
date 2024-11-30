@@ -3171,7 +3171,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     /** requires isWebix() to be true */
     public GetPowerUXRouteHelper():iRouteHelperService {
-        return self.$$("$layout1").$scope.app._services.routetools;
+        const view_id = $("div[view_id]").first().attr("view_id") as string;
+        return self.$$(view_id).$scope.app._services.routetools
     }
 
     public IsDocExclusiveToMe() : boolean {
