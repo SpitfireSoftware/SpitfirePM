@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9100.1";
+const ClientPackageVersion : string = "23.9100.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3895,8 +3895,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return BrowserExtensionChecker.browser.isWindowsOS;
     }
 
-        /** @returns true if this is browser can open .Application linkes  */
-    public HasDotNetApplicationExtension():  Boolean {
+    /** @returns true if this is browser can open .Application linkes  */
+    public HasDotNetApplicationExtension(): boolean {
+        if (!top?.ClickOnceExtension) top!.ClickOnceExtension = new BrowserExtensionChecker();
         return top?.ClickOnceExtension.HasDotNetApplicationExtension()!;
     }
 
