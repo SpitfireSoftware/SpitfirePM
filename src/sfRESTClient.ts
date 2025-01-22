@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9140.0";
+const ClientPackageVersion : string = "23.9140.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -346,22 +346,21 @@ class QAInfoOptions {
      * @returns
      */
     protected static CSSPropertyValueOrEmpty(fromElement:JQuery<HTMLElement> , cssName:string, defaultValue?: string) : string{
-        var CSSValue;
-        CSSValue= fromElement.css(cssName);
+        let CSSValue: string = fromElement.css(cssName);
         if (CSSValue) {
             CSSValue = CSSValue.trim();
             if (CSSValue.startsWith("'") || CSSValue.startsWith("\"")) {
                 try {
-                    CSSValue = eval(CSSValue);
+                    // CSSValue = eval(CSSValue);
+                    // Instead of eval, use string replace
+                    CSSValue = CSSValue.replace(/['"]/g, '').trim();
                     CSSValue = CSSValue.trim();
                 } catch (ex) {
                     console.warn("CSSPropertyValueOrEmpty could not EVAL {0}".sfFormat(CSSValue));
                 }
             }
         }
-        else if (defaultValue) CSSValue = defaultValue;
-        else if (!defaultValue) CSSValue = "";
-        return CSSValue;
+        return CSSValue?.trim() ?? defaultValue ?? "";
     }
 
     LoadFromDataAttributes( fromElement : JQuery<HTMLElement>):void {
@@ -2380,7 +2379,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             if (!$element) $element = $("<div />");
             if (typeof $element.dialog !== "function") {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
-                if (!eval("window.jQuery") ) eval("window.jQuery = $;");
+                //if (!eval("window.jQuery") ) eval("window.jQuery = $;");
+                if (!window.jQuery)                     window.jQuery = window.$;
+                
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
                 this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
                 if ($("LINK[rel='stylesheet'][href*='fontawesome.com']").length + $("SCRIPT[src*='fontawesome.com']").length ===0)
@@ -2756,16 +2757,17 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             return sfRestClient._Options;
         }
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfRestClient.SetOptions() ",options);
+        const thisClient: sfRestClient = this;
         Object.keys(options).forEach((key) => {
-            var PropName : any = '_' + key;
-            //    if ((typeof this[PropName] !== "undefined"  &&  typeof this[key] === typeof options[key] ) {
-            //         this[PropName] = options[key];
-            //    }
+            var PropName : string = '_' + key;
+
+
+
             if (key === "DVCacheLife" && typeof sfRestClient._Options.DVCacheLife === typeof options[key]) sfRestClient._Options.DVCacheLife = options[key]
             else if (key === "LogLevel" && typeof sfRestClient._Options.LogLevel === typeof options[key]) sfRestClient._Options.LogLevel = options[key]
             else if (key === "PopDocForceXBUI" && typeof sfRestClient._Options.PopDocForceXBUI === typeof options[key]) sfRestClient._Options.PopDocForceXBUI = options[key]
-            else if (key in sfRestClient._Options && typeof eval(`sfRestClient._Options.${key}`) === typeof options[key]) sfRestClient._Options[key] = options[key];
-            else if (PropName in this && typeof eval("this." + PropName) === typeof options[key]) sfRestClient._Options[PropName] = options[key];
+            else if (key in sfRestClient._Options && typeof sfRestClient._Options[key] === typeof options[key]) sfRestClient._Options[key] = options[key];
+            else if (PropName in thisClient && typeof (thisClient as any)[PropName] === typeof options[key]) sfRestClient._Options[PropName] = options[key];
         });
         return  sfRestClient._Options;
     }
