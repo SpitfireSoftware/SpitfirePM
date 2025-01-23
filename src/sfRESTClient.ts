@@ -478,6 +478,7 @@ export class sfRestClient {
      * @param keyName name of key field in this data model
      * @param changes (Add,Change,Remote)
      * @returns merged rawData
+     * @see BuildDataSummary
      */
     ApplyDataChanges(rawData: DataModelCollection, keyName: string, changes: _SwaggerClientExports.DataDifferential) : DataModelCollection {
         var RESTClient = this;
@@ -533,6 +534,7 @@ export class sfRestClient {
      * @param rawData array of Data Models or View Models, must have etag
      * @param keyName
      * @returns array of key, etag pairs, suitable for passing to getChange* API endpoints
+     * @see ApplyDataChanges
      */
     BuildDataSummary( rawData: DataModelCollection, keyName: string) : _SwaggerClientExports.CurrentDataSummary[] {
         var result : _SwaggerClientExports.CurrentDataSummary[] = [];
