@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9140.1";
+const ClientPackageVersion : string = "23.9140.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2384,7 +2384,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 //if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 if (!window.jQuery)                     window.jQuery = window.$;
                 
-                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css");
+                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.css");
                 this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
                 if ($("LINK[rel='stylesheet'][href*='fontawesome.com']").length + $("SCRIPT[src*='fontawesome.com']").length ===0)
                    //$("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
@@ -2395,7 +2395,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                             sfRestClient.StartSignalRClientHub();
                         });
                     });
-                    this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',true).then( (likelyTrue) => {
+                    this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js',true).then( (likelyTrue) => {
                         console.log("jQuery UI extensions loaded.");
                         resolve(true);
                     // })
