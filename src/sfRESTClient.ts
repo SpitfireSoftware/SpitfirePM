@@ -10,7 +10,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9140.2";
+const ClientPackageVersion : string = "23.9140.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2423,10 +2423,11 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         if (!context) context = self;
 
         var ScriptPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
-            var PreSearch = "{0}[src='{1}']".sfFormat(headScript ? "HEAD" : "BODY",url);
+            var PreSearch = "{0} script[src*='{1}']".sfFormat(headScript ? "HEAD" : "BODY",url.substring(url.lastIndexOf("/")));
             if ($(PreSearch).length > 0) {
                 console.log('AddCachedScript() found {0} has already been added'.sfFormat(url));
                 resolve(true);
+                return;
             }
             var script = context!.document.createElement('script');
             script.src = url;
@@ -2673,7 +2674,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
        RESTClient.heartbeat();
        if (this.IsDocumentPage()) {
             //... next line tells the DASHBOARD tab to navigate to the project
-            $.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
+            self.$.connection.sfPMSHub.server.dashboardOpenLink("dashboard",`javascript:top.sfClient.OpenProject('${id}');`);
             return RESTClient.SwitchToDashboardTab();
        }
        return new Promise<Window | null>((resolve) => {
@@ -3754,7 +3755,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 }
         
             else if (popWhat === "OfficeLink.application") {
-                    console.warn(popWhat);
+                    console.log(popWhat);
                 }
             else {
                     var rx = /javascript:(PopMSWindowTool|PopXLTool|PopAuditTool)\(['"`](?<URL>.*)[`'"]\)/gm;
@@ -4017,7 +4018,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         try{
             RESTClient.DisplayUserNotification("Opening...",2345);
 
-            $.connection.sfPMSHub.server.activateExchangeToken(openURL).then( ok =>{
+            self.$.connection.sfPMSHub.server.activateExchangeToken(openURL).then( ok =>{
                 if (!ok) setTimeout(xscript, 211)
                 else {
                     console.log("Activated via SignalR");
@@ -5449,7 +5450,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         PartStorageData._LoadedParts.clear();
         try {
             if (typeof top!.sfPMSHub.client.ReConnectDelay === "number")  top!.sfPMSHub.client.ReConnectDelay = 10000;
-            await $.connection.hub.stop();
+            await self.$.connection.hub.stop();
         } catch {// ignore any errors
         }
         sfRestClient._UserPermitResultCache.clear();
@@ -5502,7 +5503,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     protected static StartSignalRClientHub():void {
 
         if (self !== top) return;
-        if (!$.connection || !$.connection.sfPMSHub || !top.sfClient)  {
+        if (!self.$.connection || !self.$.connection.sfPMSHub || !top.sfClient)  {
             setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
             return;
         }
@@ -5510,8 +5511,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (sfRestClient.IsPowerUXPage() && !RESTClient.IsDocumentPage() ) {
             if (!sfRestClient._NextPingTimerID)  sfRestClient._NextPingTimerID =    setTimeout(() =>{RESTClient.pingServer();},234);
         }
-        if ($.connection) {
-            var sfHub = $.connection.sfPMSHub;
+        if (self.$.connection) {
+            var sfHub = self.$.connection.sfPMSHub;
             if (top.sfPMSHub === sfHub) return;
             top.sfPMSHub = sfHub;
             sfHub.client.ReConnectDelay = 5000;
@@ -5745,30 +5746,30 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 top?.sfClient.DisplayUserNotification("You have been logged out!",8765);
                 setTimeout(`top.location.href = '${sfRestClient.LoginPageURL("LoggedOut")}'; //signalr log out`, 3210);
             }
-            if (top.localStorage.getItem("SignalR-Logging")) $.connection.hub.logging = true;
+            if (top.localStorage.getItem("SignalR-Logging")) self.$.connection.hub.logging = true;
 
-            $.connection.hub.connectionSlow(function () {
+            self.$.connection.hub.connectionSlow(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: experiencing difficulties with the connection. `);
                 $("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
             });
 
             const stateConversion:string[] = [ 'connecting', 'connected', 'reconnecting', '3','disconnected'];
 
-            $.connection.hub.stateChanged(function (state: {oldState:number, newState:number}) {
+            self.$.connection.hub.stateChanged(function (state: {oldState:number, newState:number}) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)
                     console.log(`${new Date().toSFLogTimeString()} sfPMSHub: state change from ${stateConversion[state.oldState]} to ${stateConversion[state.newState]} using ${sfHub.connection?.transport?.name} `);
                 let connectionType: string | undefined;
                 if (sfHub && sfHub.connection && sfHub.connection.transport) connectionType =sfHub.connection.transport.name;
                 if (connectionType)  connectionType !== "webSockets" ? top?.sfClient.DisplayUserNotification(`FYI: Your <a href='https://support.spitfirepm.com/kba-01835/' target='_blank' title='Click for details'><i class="fa-duotone fa-signal-stream" style='text-decoration:underline;'></i>&nbsp;connection</a> is using '${connectionType}'; you may occassionally be disconnected.`) : undefined;
             });
-            $.connection.hub.disconnected(function () {
+            self.$.connection.hub.disconnected(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: disconnected.  Sleep ${sfHub.client.ReConnectDelay}ms;  Reconnect:${!sfHub.client.SkipAutoReconnect}`);
-                if ($.connection.hub.lastError) {
-                    console.log($.connection.hub.lastError.message);
+                if (self.$.connection.hub.lastError) {
+                    console.log(self.$.connection.hub.lastError.message);
                 }
                 if (!sfHub.client.SkipAutoReconnect)
                     setTimeout(function () {
-                        $.connection.hub.start().done(function hubReStart() {
+                        self.$.connection.hub.start().done(function hubReStart() {
                             console.log(`${new Date().toLocaleTimeString()} sfPMSHub Hub has been re-started...`);
                             if (RESTClient.IsDocumentPage()) {
                                 const DMK = RESTClient.GetPagePK();
@@ -5779,7 +5780,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (sfHub.client.ReConnectDelay < 120000) sfHub.client.ReConnectDelay *= 2;
             });
 
-            $.connection.hub.start().done(function () {
+            self.$.connection.hub.start().done(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: started...`);
                 //if (typeof top.sfPMSHub === "undefined") top.sfPMSHub = $.connection.sfPMSHub; // $.connection.hub.proxies.sfpmshub;
                 if (RESTClient.IsDocumentPage()) {
@@ -5872,7 +5873,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         try {
             const RESTClient = this;
             pdsKey = RESTClient.GetPageDataContext();
-            if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== $.signalR.connectionState.connected) {
+            if (!top?.sfPMSHub || top.sfPMSHub.connection.state !== self.$.signalR.connectionState.connected) {
                 sfRestClient._RepeatedPingRetryDelay ++;
                 if (sfRestClient._RepeatedPingRetryDelay > 20) {
                     RESTClient.CheckForSystemNotification();
@@ -5906,7 +5907,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             const hasDocSessionkey = (docSessionkey && docSessionkey !== RESTClient.EmptyKey);
             const hasDocKey = (docKey && docKey !== RESTClient.EmptyKey);
             const hasPDSKey = (pdsKey && pdsKey !== 'TBD');
-            const hasWebsocketConnection = top?.sfPMSHub?.connection.state === $.signalR.connectionState.connected ;
+            const hasWebsocketConnection = top?.sfPMSHub?.connection.state === self.$.signalR.connectionState.connected ;
 
             if ( isDocumentPage && (!hasDocSessionkey || !hasPDSKey || !hasDocKey) ) {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose)  
@@ -6139,8 +6140,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 console.log("pingServer() signalR begin stop/start....");
                                 try {
                                     top!.sfPMSHub.client.SkipAutoReconnect  = true;
-                                    await $.connection.hub.stop();
-                                    await $.connection.hub.start();
+                                    await self.$.connection.hub.stop();
+                                    await self.$.connection.hub.start();
                                 }
                                 catch {
                                     console.warn("pingServer() signalR stop/start exception....");
