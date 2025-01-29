@@ -1,16 +1,14 @@
 import { GoogleAnalyticPayload, GUID } from "./globals";
 import {  IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
-import * as $ from 'jquery';
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 //import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
 import * as localForage from "localforage";
-import { contains } from "jquery";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9140.5";
+const ClientPackageVersion : string = "23.9160.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -1473,7 +1471,7 @@ export class sfRestClient {
     }
 
     // search for already open popup querys
-    var $GCI : JQuery<HTMLElement> = $('.{0}'.sfFormat(queryOptions.DialogCSS.replace(' ', '.')));
+    var $GCI : JQuery<HTMLElement> = self.$('.{0}'.sfFormat(queryOptions.DialogCSS.replace(' ', '.')));
     if ($GCI.length > 0) {
         $GCI.dialog('close');
         $GCI[0].remove();
@@ -1507,7 +1505,7 @@ export class sfRestClient {
             }
             else if (jqXHR.status !== 200 && textStatus) {
                 $GCI.html("{0}</hr>{1}".sfFormat(textStatus , jqXHR.responseText));
-                if (jqXHR.responseText.length > 1234) $GCI.css("width",$(window.top!).width()! - 48);
+                if (jqXHR.responseText.length > 1234) $GCI.css("width",self.$(window.top!).width()! - 48);
             }
             else if (!responseText || (typeof responseText === "string" && responseText === "[]")) isEmpty = true;
             if (isEmpty) {
@@ -1525,7 +1523,7 @@ export class sfRestClient {
             // if fluid option == true
         if (dialog.options.fluid) {
             dialog.option("width", "auto"); // temp...to calc required size
-                var wWidth = $(window).width()!;
+                var wWidth = self.$(window).width()!;
                 var dWidth = $DialogContent.width()!;
                 // check window width against dialog width
                 if (wWidth < (dWidth + 50)) {
@@ -1542,11 +1540,11 @@ export class sfRestClient {
 
     UpdateFluidDialogs():void {
         var RESTClient = this;
-        var $visible = $(".ui-dialog:visible");
+        var $visible = self.$(".ui-dialog:visible");
         if ($visible.length === 0) $visible = self.top!.$(".ui-dialog:visible");
         // each open dialog
         $visible.each(function () {
-            var $this = $(this);
+            var $this = self.$(this);
             var dialog = $this.find(".ui-dialog-content").data("ui-dialog");
             RESTClient.AdjustFluidDialog(dialog, $this);
         });
@@ -1773,8 +1771,8 @@ export class sfRestClient {
         var RESTClient = this;
 
         console.log(`sfExportCobra(${TemplateTypeCode}) ${PostBackArgs}`);
-        $("DIV#divDialogExportGrid").remove();
-        var $Box = $("<div id='divDialogExportGrid' />");
+        self.$("DIV#divDialogExportGrid").remove();
+        var $Box = self.$("<div id='divDialogExportGrid' />");
         var $Dialog : JQuery;
         $Dialog = $Box.load(`${RESTClient._SiteURL}/ajhx/ExportGridDialog.html`, function PopFromParentDialogLoaded() {
             // after loaded
@@ -1961,11 +1959,11 @@ export class sfRestClient {
      * @returns JQuery<HTMLTableElement> TABLE that has not been inserted into DOM
      */
     MakeTable = function (mydata : JSON[]) : JQuery<HTMLTableElement > {
-        var table: JQuery<HTMLTableElement> = $('<table border="1px">');
+        var table: JQuery<HTMLTableElement> = self.$('<table border="1px">');
         var tblHeader = "<tr>";
         for (var k in mydata[0]) tblHeader += "<th>" + k.replaceAll("_", " ") + "</th>";
         tblHeader += "</tr>";
-        $(tblHeader).appendTo(table);
+        self.$(tblHeader).appendTo(table);
         $.each(mydata, function (index, value) {
             var TableRow = "<tr>";
             $.each(value, function (key, val : any) {
@@ -1998,7 +1996,7 @@ export class sfRestClient {
                 }
             });
             TableRow += "</tr>";
-            $(table).append(TableRow);
+            self.$(table).append(TableRow);
         });
         return table;
     };
@@ -2020,10 +2018,10 @@ export class sfRestClient {
     public makeResourceURIsSiteRelative($DOM: JQuery<HTMLElement>):void {
         let thisClient:sfRestClient = this;
         var $Targets;
-        if (!$DOM) $Targets = $("img.sfUIMakeSrcSiteRelative");
+        if (!$DOM) $Targets = self.$("img.sfUIMakeSrcSiteRelative");
         else $Targets = $DOM.find("img.sfUIMakeSrcSiteRelative");
         $.each($Targets, function (i, img) {
-            thisClient.setImgSrc($(img)  as JQuery<HTMLImageElement> ) ;
+            thisClient.setImgSrc(self.$(img)  as JQuery<HTMLImageElement> ) ;
         });
     }
 
@@ -2331,7 +2329,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             var eventName = "sfClient.SetWCC_{0}".sfFormat(keyName);
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
             if (eventName === "sfClient.SetWCC__DynamicJS") console.log("sfClient.UpdateWCCData() raising {0} = [{1}]".sfFormat(eventName,value));
-            $("body").trigger(eventName,[RESTClient,keyName,value]);
+            self.$("body").trigger(eventName,[RESTClient,keyName,value]);
             if (eventName === "sfClient.SetWCC_SiteID") this.GAMonitorEvent(  value ,sfRestClient.IsPowerUXPage() ?  "PowerUX" : "ClassicUI", "Init", "WCC", 0);
         });
 
@@ -2356,7 +2354,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         jsResourceList.forEach(scriptSrc => {
             var src = scriptSrc;
             if (src.indexOf("?")>0) src= src.substring(0,src.indexOf("?"));
-            var js : JQuery<HTMLScriptElement> = $("script[src^='{0}']".sfFormat(src));
+            var js : JQuery<HTMLScriptElement> = self.$("script[src^='{0}']".sfFormat(src));
             if (js.length === 0) {
                 var RESTClient: sfRestClient = this;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("Dynamically Loading ",src);
@@ -2378,24 +2376,24 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             if (self !== top) {console.log("AssureJQUITools() only applicable for global/top"); return false;}
             if (sfRestClient._z.XternalScriptsLoaded ) {console.log("AssureJQUITools() already done"); return false;}
             sfRestClient._z.XternalScriptsLoaded = true;
-            if (!$element) $element = $("<div />");
+            if (!$element) $element = self.$("<div />");
             if (typeof $element.dialog !== "function") {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
                 //if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 if (!window.jQuery)                     window.jQuery = window.$;
                 
-                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.css");
+                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css");
                 this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
-                if ($("LINK[rel='stylesheet'][href*='fontawesome.com']").length + $("SCRIPT[src*='fontawesome.com']").length ===0)
+                if (self.$("LINK[rel='stylesheet'][href*='fontawesome.com']").length + self.$("SCRIPT[src*='fontawesome.com']").length ===0)
                    //$("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
-                   $("head").prepend('<script src="https://kit.fontawesome.com/5709acfc1e.js" crossorigin="anonymous"></script>');
+                self.$("head").prepend('<script src="https://kit.fontawesome.com/5709acfc1e.js" crossorigin="anonymous"></script>');
 
                     this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.3.min.js`,true).then((likelyTrue) => {
                         this.AddCachedScript(`${this._SiteURL}/signalR/hubs`,true).then((likelyTrue)=>{
                             sfRestClient.StartSignalRClientHub();
                         });
                     });
-                    this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js',true).then( (likelyTrue) => {
+                    this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js',true).then( (likelyTrue) => {
                         console.log("jQuery UI extensions loaded.");
                         resolve(true);
                     // })
@@ -2424,7 +2422,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
         var ScriptPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
             var PreSearch = "{0} script[src*='{1}']".sfFormat(headScript ? "HEAD" : "BODY",url.substring(url.lastIndexOf("/")));
-            if ($(PreSearch).length > 0) {
+            if (self.$(PreSearch).length > 0) {
                 console.log('AddCachedScript() found {0} has already been added'.sfFormat(url));
                 resolve(true);
                 return;
@@ -2459,9 +2457,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     public AddCSSResource(cssRef : string): void {
         if (!cssRef) return;
         if (cssRef.indexOf("/") < 0) cssRef = `${this._SiteRootURL}/wv.aspx/js/${cssRef}.css`;
-        if ($('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
+        if (self.$('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
 
-        $('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
+        self.$('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
     }
 
     /** Returns a guid/uuid
@@ -2552,7 +2550,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     /** search supplied object for a key reference */
     sfRowKey($For: JQuery<HTMLElement>):GUID {
         var result;
-        if ($For instanceof HTMLElement) $For = $($For);
+        if ($For instanceof HTMLElement) $For = self.$($For);
         if (typeof $For?.data === 'function') {
             result = $For.data('key');
             if (!result) {
@@ -3507,7 +3505,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
         var RESTClient = this;
         if (!top) this.DisplayUserNotification("Missing Window Context...");
-        var $DVI : JQuery<HTMLDivElement> = top!.$("<div class='sfUIShowDevInfo'  style='font-size:0.9em'/>");
+        
+        var $DVI : JQuery<HTMLDivElement> = self.$("<div class='sfUIShowDevInfo'  style='font-size:0.9em'/>");
         $DVI.html("Loading....");
         //width: window.top.$(window.top).width() * 0.88
         $DVI.dialog({
@@ -3515,9 +3514,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             , show: { effect: "blind", duration: 100 }
         });
 
-        var $tbl = $("<ul class='WCCList' />");
+        var $tbl = self.$("<ul class='WCCList' />");
         var sortPad = "";
-        $.each(sfRestClient._WCC, function (index:string, rItemRaw:number | string | boolean) {
+        self.$.each(sfRestClient._WCC, function (index:string, rItemRaw:number | string | boolean) {
             var isJS = false;
             var isGuid = false;
             var isSkipped = false;
@@ -3550,7 +3549,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     "id": "btnOK",
                     click: function () {
                         RESTClient.QAClearEnvironment();
-                        $(this).dialog("close");
+                        self.$(this).dialog("close");
                     }
                 });
             DialogButtons.push(
@@ -3558,7 +3557,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     text: "Cancel",
                     "id": "btnIgnore",
                     click: function () {
-                        $(this).dialog("close");
+                        self.$(this).dialog("close");
                     }
                 });
             $A.dialog('option', 'buttons', DialogButtons);
@@ -3568,14 +3567,14 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             this.DisplayUserNotification("Cache has been cleared",4321);
         });
 
-        var SortedList = (<any>($tbl.find("li"))).sort(function (a:any, b:any) { return ($(b).text().toUpperCase()) < ($(a).text().toUpperCase()) ? 1 : -1; });
+        var SortedList = (<any>($tbl.find("li"))).sort(function (a:any, b:any) { return (self.$(b).text().toUpperCase()) < (self.$(a).text().toUpperCase()) ? 1 : -1; });
         $tbl.html("").append(SortedList);
         //$tbl.append(`<li><i class="fas fa-dumpster-fire clsEnabledImgBtn" title="Warning!"></i> Discard all settings</li>`);
         $DVI.html("");
 
         $tbl.appendTo($DVI);
         $tbl.find("i.fa-clipboard").on("click",(event)=>{
-            var $btn = $(event.currentTarget);
+            var $btn = self.$(event.currentTarget);
             var text = $btn.data('text');
             if (text.length > 0)  RESTClient.SetClipboard(text);
         });
@@ -3586,7 +3585,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
 
         $tbl.find("i.fa-boxes").on("click",function (event) {
-            var js = $(event.currentTarget).data("js")
+            var js = self.$(event.currentTarget).data("js")
             if (!js) return;
             eval(js); // see                ShowPageResourceString
         });
@@ -3932,7 +3931,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     "id": "btnOK",
                     click: function () {
                         RESTClient.InvokeAction(BrowserExtensionChecker.SuggestedExtensionLink());
-                        $(this).dialog("close");
+                        self.$(this).dialog("close");
                     }
                 });
             DialogButtons.push(
@@ -3941,7 +3940,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     "id": "btnIgnore",
                     click: function () {
                         top?.ClickOnceExtension.IgnoreMissingExtension();
-                        $(this).dialog("close");
+                        self.$(this).dialog("close");
                         RESTClient.jqAlert("Please try your action again.  If you see a prompt to keep or open (at the bottom), click to proceed!", ".NET Link Helper Recommended");
                         return;
                     }
@@ -4132,7 +4131,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      * @returns the DIV containing the message, .data("alreadyshown") = true if already shown.
      */
     DisplayThisNotification(templateURL : string, notificationText? : string, timeOutMS? : number) : Promise<JQuery<HTMLElement>>{
-        $("DIV#SNotificationContainerHolder, DIV.sNotificationTarget").remove();
+        self.$("DIV#SNotificationContainerHolder, DIV.sNotificationTarget").remove();
 
         var RESTClient = this;
         var msgReady : Promise<JQuery<HTMLElement>> = new Promise<JQuery<HTMLElement>>( (msgDisplayResolved) => {
@@ -4140,7 +4139,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 clearTimeout(RESTClient.notificationMsgTimeoutHandle);
                 RESTClient.notificationMsgTimeoutHandle = undefined;
             }
-            var $MsgDiv = $('<div class="sNotificationTarget" />');
+            var $MsgDiv = self.$('<div class="sNotificationTarget" />');
             if ((!notificationText) || (RESTClient.WasNotificationShown(notificationText))) {
                 if (notificationText) console.log("Notification Already Shown: {0}".sfFormat(notificationText));
                 $MsgDiv.data("alreadyshown",true);
@@ -4166,7 +4165,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     RESTClient.MarkNotificationAsShown($MsgDiv.data("notification"));
                     $MsgDiv.remove();
                 });
-            }).appendTo('BODY').first().on("click",function () { $(this).remove(); });
+            }).appendTo('BODY').first().on("click",function () { self.$(this).remove(); });
 
         });
         if (timeOutMS) msgReady.then(function () {
@@ -4267,7 +4266,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         UIPromise?.then((unused) => {
 
             if (!this.$LookupDialog!.data("RestoredSize")) {
-                if (w === 440) w = Math.round($(window).width()! * 0.5);
+                if (w === 440) w = Math.round(self.$(window).width()! * 0.5);
                 if (w != null) top?.sfClient?.sfLookupWidthChangeTo(this.$LookupDialog!, w);
                 if (h != null) top?.sfClient?.sfLookupHeightChangeTo( this.$LookupDialog!,h + this._LookupViewPortAdjustments.outsidExtraH);
             }
@@ -4285,7 +4284,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var pageHash : number = url.sfHashCode();
         if (sfRestClient.GALastPageHitSent === pageHash ) return;
 
-        if (!title) title = $('title').text();
+        if (!title) title = self.$('title').text();
         var payload : GoogleAnalyticPayload = {
             v: 1,
             t: "pageview",
@@ -4346,7 +4345,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     private sfClearACHeighLimit():void {
-        var $ACList = $('ul.ui-autocomplete');
+        var $ACList = self.$('ul.ui-autocomplete');
         $ACList.css("max-height", "");
     }
 
@@ -4356,12 +4355,12 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      */
     private sfGetParentIFrame(): JQuery<HTMLElement> {
     // from INSIDE a frame, this returns the PARENT IFRAME
-    if (window === parent || typeof window.parent.$ === "undefined") return $();
+    if (window === parent || typeof window.parent.$ === "undefined") return self.$();
     return window.parent.$(`IFRAME.sfAsyncPartFrame[src='${location.pathname}${location.search}']`);
 }
 
     private sfLimitACHeightInFrame($AnchorEL:JQuery):void {
-        var $ACList = $('ul.ui-autocomplete');
+        var $ACList = self.$('ul.ui-autocomplete');
         if ($ACList.length === 0) return;
         var $PFrame: JQuery<HTMLElement> = this.sfGetParentIFrame();
         if ((!$PFrame) || ($PFrame.length === 0)) return;
@@ -4393,7 +4392,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      * @param dep4
      */
     sfAC($AC: string | JQuery<HTMLInputElement>, lookupName:string, depends1:string|string[], dep2?:string, dep3?:string, dep4?:string) {
-        if (typeof $AC === "string") $AC = $("#" + $AC);
+        if (typeof $AC === "string") $AC = self.$("#" + $AC);
         var RESTClient = this;
         var SourceURL = `${RESTClient._SiteRootURL}/api/suggestions/${lookupName}/${this.GetPageDataContext()}/${this._formatDependsList(true, depends1, dep2, dep3, dep4)}/`;
         $AC.data("sourceurl",SourceURL).autocomplete({
@@ -4403,14 +4402,14 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             , position: { collision: "flip" }
             , autoFocus: false
             , open: function (event:any, ui:any) {
-                var $EL = $(this);
+                var $EL = self.$(this);
                 $EL.data('acOpen', true);
                 RESTClient.sfLimitACHeightInFrame($EL);
                 // too late to increase frame height
             }
             //, search: function (event, ui) { $(this).autocomplete("option", "autoFocus", false); }
             , response: function (event:any, choices:any) {
-                $AC = $(this);
+                $AC = self.$(this);
                 if (!$AC.hasClass("ui-autocomplete-input")) return;
                 var enableAF = !RESTClient.ValueHasWildcard(<string>$AC.val());
                 $AC.autocomplete("option", "autoFocus", enableAF);
@@ -4420,7 +4419,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`sfAC autofocus ${enableAF}`);
             }
             , close: function (event:any, ui:any) {
-                var ib = $(this);
+                var ib = self.$(this);
                 RESTClient.sfClearACHeighLimit();
                 ib.data('acOpen', false);
                 if (ib.data("acChange")) {
@@ -4437,7 +4436,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 }
             }
             , select: function (event:any, ui:any) {
-                var ib = $(this);
+                var ib = self.$(this);
                 ib.data("acChange", true);
                 var kv = ui.item.key;
                 if (kv) {
@@ -4456,13 +4455,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             }
             , change: function (event:any, ui:any) {
                 if (ui.item === null) return;
-                $(this).data("acChange", true);
+                self.$(this).data("acChange", true);
             }
         });
         $AC.on("blur",function (e:any) {
             //if ($(this).data("acOpen")) { e.preventDefault(); return false
         }).on("keypress",function(e:any) {
-            var ib = $(this);
+            var ib = self.$(this);
             if (e.which === 13) return;
             let ibValue = ib?.val() as string;
             if (typeof ibValue ===  "string" && ibValue.length > 0) ib.data("ValLen",  ibValue.length);
@@ -4504,15 +4503,15 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             },
             buttons: {
                 Ok: function () {
-                    $(this).dialog("close");
+                    self.$(this).dialog("close");
                 }
             },
             open: function () {
-                $(this).parent('DIV').find('.ui-dialog-buttonpane button:eq(0)').trigger("focus");
+                self.$(this).parent('DIV').find('.ui-dialog-buttonpane button:eq(0)').trigger("focus");
             }
         };
         if (msg.length > 20) dialogOptions.width = "auto";
-        $ALERT = $(fullMsg).dialog(dialogOptions);
+        $ALERT = self.$(fullMsg).dialog(dialogOptions);
         return ($ALERT);
     }
 
@@ -4540,7 +4539,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var RESTClient = this;
 
         sfRestClient.ExternalToolsLoadedPromise.then((unused)=>{
-            var DefaultWidth = $("body").width();
+            var DefaultWidth = self.$("body").width();
             if (typeof DefaultWidth === "number") DefaultWidth = Math.round(DefaultWidth / 2.2);
             if (!DefaultWidth || DefaultWidth < 500) DefaultWidth = 500;
             if (this.$LookupDialog) {
@@ -4549,7 +4548,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             }
 
             if (!this.$LookupDialog) {
-                this.$LookupDialog =  $(`<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='${sfRestClient._Options.BlankPageURI}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>`)
+                this.$LookupDialog =  self.$(`<div class='clsJQLookup' autofocus='autofocus' ><iframe id='sfClassicUIHolder' src='${sfRestClient._Options.BlankPageURI}' style='width: 100%; height: 150px;border:0;' seamless='seamless' autofocus='autofocus' /></div>`)
                 .dialog(        { autoOpen: false, modal: true, title: 'Lookup Dialog', width: DefaultWidth, height: 200,
                         close: top!.sfClient.sfModalDialogClosed,
                         dialogClass: "lookup",
@@ -4557,8 +4556,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         dragStop: top?.sfClient.sfModelDialogResizedHandler
                     });
                 top?.sfClient.AddDialogTitleButton(top.sfClient.$LookupDialog!,"btnMaximizeDialog","Maximize","ui-icon-arrow-4-diag").on("click",function() {
-                    var $BTN = $(this);
-                    var $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
+                    var $BTN = self.$(this);
+                    var $DialogDiv = self.$(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
                     let PriorSizeData: CoordinateWithSize;
                     const RestoreSizeDataName = "restoresize";
                     if ($BTN.data(RestoreSizeDataName)) {
@@ -4582,8 +4581,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         };
                         $DialogDiv.css({top:sfRestClient._Options.PopupWindowTop,left:14});
                         if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug)  console.log(`ModalDialog() maximize; autofocus off`,PriorSizeData);
-                        top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,$(top).height()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
-                        top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,$(top).width()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
+                        top?.sfClient.sfLookupHeightChangeTo(top.sfClient.$LookupDialog!,self.$(top).height()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
+                        top?.sfClient.sfLookupWidthChangeTo(top.sfClient.$LookupDialog!,self.$(top).width()!-top.sfClient.DialogViewPortAdjustments.outsidExtraW);
                         $BTN.toggleClass("ui-icon-arrow-4-diag",false).toggleClass("ui-icon-arrow-4",true).data(RestoreSizeDataName,PriorSizeData);
                         $DialogDiv.css({top:sfRestClient._Options.PopupWindowTop,left:14});
                     }
@@ -4641,12 +4640,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             this.$LookupDialog.data("multiSelect", false);
             this.$LookupDialog.data("mode", 'modalDialog');
 
-            this.$LookupDialog.data("windowWidth", $(window).width()!);
-            this.$LookupDialog.data("windowHeight", $(window).height()!);
-            this.$LookupDialog.data("documentWidth", $(document).width()!);
-            this.$LookupDialog.data("documentHeight", $(document).height()!);
-            this.$LookupDialog.data("vScrollPosition", $(document).scrollTop()!);
-            this.$LookupDialog.data("hScrollPosition", $(document).scrollLeft()!);
+            const $window = self.$(window);
+            this.$LookupDialog.data("windowWidth", $window.width()!);
+            this.$LookupDialog.data("windowHeight", $window.height()!);
+            this.$LookupDialog.data("documentWidth", $window.width()!);
+            this.$LookupDialog.data("documentHeight", $window.height()!);
+            this.$LookupDialog.data("vScrollPosition", $window.scrollTop()!);
+            this.$LookupDialog.data("hScrollPosition", $window.scrollLeft()!);
 
             //if (isiPad) sfLookupHeightChangeTo( $(window).height());
 
@@ -4663,7 +4663,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
 
             this.$LookupDialog.dialog('open');
-            $DialogDiv = $(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
+            $DialogDiv = self.$(top!.sfClient.$LookupDialog!).closest("DIV.ui-dialog");
 
             try {
                 var $LookupFrameDOM = this.$LookupFrame[0].contentDocument! || this.$LookupFrame[0].contentWindow!.document;
@@ -4676,11 +4676,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (ApplySizeAndPosition && TargetSizeData && $DialogDiv) {
                     this.$LookupDialog!.data("RestoredSize",true );
                     if (TargetSizeData.top < 0) {
-                        var wh =$(window).height()!;
+                        var wh =self.$(window).height()!;
                         TargetSizeData.top = Math.round((wh - TargetSizeData.height) / 2.0);
                     }
                     if (TargetSizeData.left < 0) {
-                        var ww =$(window).width()!;
+                        var ww =self.$(window).width()!;
                         TargetSizeData.left = Math.round((ww - TargetSizeData.width) / 2.0);
                     }
 
@@ -4693,10 +4693,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             }
             catch (e) { console.warn("WARNING: mDialog() could not verify iFrame location uri"); }
 
-            $(top!).off(`resize.${ThisURLHash}`).on(`resize.${ThisURLHash}`,(e) => {
+            self.$(top!).off(`resize.${ThisURLHash}`).on(`resize.${ThisURLHash}`,(e) => {
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(e);
-                top?.sfClient.sfLookupHeightChangeTo(RESTClient.$LookupDialog!,$(RESTClient.$LookupDialog!).height()!);
-                top?.sfClient.sfLookupWidthChangeTo(RESTClient.$LookupDialog!,$(RESTClient.$LookupDialog!).width()!);
+                top?.sfClient.sfLookupHeightChangeTo(RESTClient.$LookupDialog!,self.$(RESTClient.$LookupDialog!).height()!);
+                top?.sfClient.sfLookupWidthChangeTo(RESTClient.$LookupDialog!,self.$(RESTClient.$LookupDialog!).width()!);
             });
         });
 
@@ -4712,7 +4712,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("sfClient ResolveLookupFrame() called without current Dialog, returning undefined");
             return undefined;
         }
-        return $(forDialog.children("iframe").get(0)!) as unknown as  JQuery<HTMLIFrameElement>;
+        return self.$(forDialog.children("iframe").get(0)!) as unknown as  JQuery<HTMLIFrameElement>;
 
     }
 
@@ -4741,7 +4741,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     AddDialogTitleButton($Dialog : JQuery<HTMLElement>, btnID: string, btnText: string, btnIcon?: string) {
         var $DialogTitleBar = $Dialog.parent().children(".ui-dialog-titlebar");
         var $LastButton = <JQuery<HTMLButtonElement>>$DialogTitleBar.find("BUTTON[type='button']:last");
-        var $NewButton = $(`<button type='button' id='${btnID}' />`).text(btnText);
+        var $NewButton = self.$(`<button type='button' id='${btnID}' />`).text(btnText);
         //var ButtonCount = $DialogTitleBar.find("BUTTON[type='button']").length;
         var RightPosOfLeftmostButton = $LastButton.css("right");
         var WidthOfButtons = Math.ceil($LastButton!.width()! * 1.375);
@@ -4771,7 +4771,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             return;
         }
         if (!this.$LookupDialog) {
-            this.$LookupDialog =  $("div.clsJQLookup");
+            this.$LookupDialog =  self.$("div.clsJQLookup");
             this.$LookupFrame   = this.ResolveLookupFrame();
         }
 
@@ -4801,11 +4801,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     ResizeDialogInFrame(FrameElement : HTMLIFrameElement | undefined, RESTClient : sfRestClient) : void {
         var $FrameElement : JQuery<HTMLIFrameElement>
-        if (FrameElement) $FrameElement = $(FrameElement)!;
+        if (FrameElement) $FrameElement = self.$(FrameElement)!;
         else   $FrameElement =  top?.sfClient.ResolveLookupFrame()!;
 
         var RunHeight = $FrameElement.contents().find("html").outerHeight()! + 16;  // see also ResetPartFrameHeight() in sfPMS
-        var MaxHeight :number = $(top!).height()! - 64;
+        var MaxHeight :number = self.$(top!).height()! - 64;
         if (!RunHeight) {
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ResizeDialogInFrame() could not find content height, using 65% of ",MaxHeight);
             RunHeight = Math.round(MaxHeight * 0.65);
@@ -4882,7 +4882,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     protected sfModalDialogClosed(_unusedEl? : any | undefined ) : void {
-        var $LookupDialog : JQuery<HTMLDivElement> = $(<HTMLDivElement><unknown>this );
+        var $LookupDialog : JQuery<HTMLDivElement> = self.$(<HTMLDivElement><unknown>this );
         var RESTClient = top?.sfClient;
         var postbackEventId = $LookupDialog.data("postbackEventId");
         var postbackEventArg = $LookupDialog.data("postbackEventArg");
@@ -4969,7 +4969,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      * this is the lookup DIV
      */
     protected sfModelDialogResizedHandler() : void {
-        var $LookupDialog : JQuery<HTMLDivElement> = $(<HTMLDivElement><unknown>this );
+        var $LookupDialog : JQuery<HTMLDivElement> = self.$(<HTMLDivElement><unknown>this );
         var RESTClient = top?.sfClient;
         if (!$LookupDialog) {
             console.log("sfModelDialogResizedHandler() - no current dialog?");
@@ -4995,10 +4995,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (typeof newValue === "undefined") newValue = 890;
         if (typeof newValue === "string") newValue = Number.parseInt(newValue);
         if (Number.isNaN(newValue)) newValue = 789;
-        if ($("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
+        if (self.$("HTML").css("font-size") > "16px") { newValue = newValue * 1.1; } //"Enlarged" theme is 18px
       //  if (($(window).height()! < (newValue + this._LookupViewPortAdjustments.outsidExtraH))) this.sfSetParentWindowSize(false, -1, newValue + this._LookupViewPortAdjustments.outsidExtraH);
         var PositionNow = ld.closest("DIV.ui-dialog").position();
-        var wh : number =$(window).height()!;
+        var wh : number =self.$(window).height()!;
         if ((wh < (newValue + this._LookupViewPortAdjustments.outsidExtraH + PositionNow.top))) {
             // requested size still too large
             var requestedH = newValue;
@@ -5018,7 +5018,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     private sfLookupWidthChangeTo(ld: JQuery<HTMLDivElement>, newValue:number):void {
       //  if (($(window).width()! < (newValue + this._LookupViewPortAdjustments.outsidExtraW))) this.sfSetParentWindowSize(false, newValue + this._LookupViewPortAdjustments.outsidExtraW + this._LookupViewPortAdjustments.vpExtraW, -1);
-      var ww =$(window).width()!;
+      var ww =self.$(window).width()!;
         if ( ww < (newValue + this._LookupViewPortAdjustments.outsidExtraW)) {
             // requested size still too wide
             var requestedW = newValue;
@@ -5041,13 +5041,13 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     // this is called after a user resizes or moves the dialog
         var dg = forDialog
-        if (!$(window) || !(dg) || (dg.length === 0)) return;
+        if (!self.$(window) || !(dg) || (dg.length === 0)) return;
         var tdh = Math.floor(dg.dialog("option", "height"));
         var tdw = Math.floor(dg.dialog("option", "width"));
         var height = dg.height()!; // actual content area
         var width = Math.round(dg.width()! + 1);  // actual content area
         var fh = dg.height()! - this.DialogViewPortAdjustments.frameExtraH;
-        var $DFrame: JQuery<HTMLIFrameElement> = <any> $( dg.children("iframe").get(0)! as unknown as JQuery<HTMLIFrameElement> ) as JQuery<HTMLIFrameElement>;
+        var $DFrame: JQuery<HTMLIFrameElement> = <any> self.$( dg.children("iframe").get(0)! as unknown as JQuery<HTMLIFrameElement> ) as JQuery<HTMLIFrameElement>;
 
         $DFrame.css('height', fh); // also iframe
         $DFrame.css('width', '100%'); // also iframe
@@ -5531,7 +5531,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
                 if (top?.sfClient.GetPageContextValue("LoginSessionKey") === loginSessionKey) return;
                 var HubEvent =  jQuery.Event("sfPMSHubSignal.documentChangeBy");
-                $("body").trigger(HubEvent,  [otherUserName,changeCount,refreshEvent] );
+                self.$("body").trigger(HubEvent,  [otherUserName,changeCount,refreshEvent] );
                 if (HubEvent.isDefaultPrevented()) return;
                 if (typeof top?.DocumentChangedByAnotherUser === "function") top.DocumentChangedByAnotherUser(refreshEvent, otherUserName, changeCount);
             };
@@ -5539,7 +5539,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfHub.client.afterDocumentSaved = function (dtk:string, project: string) {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.afterDocumentSaved dtk:${dtk}, project:${project}.`); // always myself, refresh related dashboards
                 var HubEvent = jQuery.Event("sfPMSHubSignal.afterDocumentSaved");
-                $("body").trigger(HubEvent,  [dtk,project] );
+                self.$("body").trigger(HubEvent,  [dtk,project] );
                 if (HubEvent.isDefaultPrevented()) {
                     console.log("sfPMSHub afterDocumentSaved handled...");  // in general .preventDefault() was called
                     return;
@@ -5565,7 +5565,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.nowViewingDocument from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
                 if (RESTClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
                     var HubEvent = jQuery.Event("sfPMSHubSignal.nowViewingDocument");
-                    $("body").trigger(HubEvent,  [target,loginSessionKey,request] );
+                    self.$("body").trigger(HubEvent,  [target,loginSessionKey,request] );
                     if (HubEvent.isDefaultPrevented()) return;
                     RESTClient.HandleEvalRequest(request);
  
@@ -5578,7 +5578,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
                 let RequestForWindowMatches:RegExpMatchArray | null = request.match(sfHub.client.ForWindowRX);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardOpenLink");
-                $("body").trigger(HubEvent,  [target,request,RequestForWindowMatches] );
+                self.$("body").trigger(HubEvent,  [target,request,RequestForWindowMatches] );
                 if (HubEvent.isDefaultPrevented()) return;
 
                 if (top) {
@@ -5613,7 +5613,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             }
                             else if ( request === "RefreshAttachments" ) {
                                 var HubEvent = jQuery.Event(`sfPMSHubSignal.${request}`);
-                                $("body").trigger(HubEvent,  [target,request] );
+                                self.$("body").trigger(HubEvent,  [target,request] );
                                 if (HubEvent.isDefaultPrevented()) {
                                     console.log("sfPMSHub RefreshAttachments handled...");  // in general .preventDefault() was called
                                     return;
@@ -5645,7 +5645,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         // how is this different than above
                         console.log("sfPMSHub queing request RefreshAttachments in 1 second (belt and suspenders)");
                         var HubEvent = jQuery.Event("sfPMSHubSignal.RefreshAttachments");
-                        $("body").trigger(HubEvent,  [target,request] );
+                        self.$("body").trigger(HubEvent,  [target,request] );
                         if (HubEvent.isDefaultPrevented()) {
                             console.log("sfPMSHub RefreshAttachments handled...");  // in general .preventDefault() was called
                             return;
@@ -5654,7 +5654,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     }
                     else if (target === "CATALOG" ) {
                         var HubEvent = jQuery.Event("sfPMSHubSignal.catalogChange");
-                        $("body").trigger(HubEvent,  [target,request] );
+                        self.$("body").trigger(HubEvent,  [target,request] );
                         if (HubEvent.isDefaultPrevented()) {
                             console.log("sfPMSHub catalogChange handled...");  // in general .preventDefault() was called
                             return;
@@ -5672,7 +5672,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfHub.client.dashboardRefreshPartByName = function (target) {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.dashboardRefreshPartByName for [${target}] `);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.dashboardRefreshPartByName");
-                $("body").trigger(HubEvent,  [target] );
+                self.$("body").trigger(HubEvent,  [target] );
                 if (HubEvent.isDefaultPrevented()) return;
                 if (typeof top?.refreshPartbyName === "function") {
                     top?.refreshPartbyName(target);
@@ -5701,7 +5701,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfHub.client.onFlushClientDV = function (dvName: string, pValue: string, dependsOn: string[] | undefined) {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.onFlushClientDV for [${dvName}] `);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.onFlushClientDV");
-                $("body").trigger(HubEvent,  [dvName,pValue,dependsOn] );
+                self.$("body").trigger(HubEvent,  [dvName,pValue,dependsOn] );
                 if (HubEvent.isDefaultPrevented()) return;
                 top?.sfClient.ClearDV(dvName,pValue,dependsOn);
             };
@@ -5709,7 +5709,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 //server wants us to flush something other than a DV
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.onFlushClientResource for [${resourceType},${project}] `);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.onFlushClientResource");
-                $("body").trigger(HubEvent,  [resourceType,project,extra] );
+                self.$("body").trigger(HubEvent,  [resourceType,project,extra] );
                 if (HubEvent.isDefaultPrevented()) return;  // not recommended unless they handle all our stuff too!
                 if (resourceType === "project") {
                     //Dim sCacheKey As String = DataSupport.Logic.CacheKeyForProjectKPI(forProject)
@@ -5740,7 +5740,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfHub.client.userLoggedOut = function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.userLoggedOut`);
                 var HubEvent = jQuery.Event("sfPMSHubSignal.userLoggedOut");
-                $("body").trigger(HubEvent, [top?.sfClient.GetPageContextValue("UserKey")] );
+                self.$("body").trigger(HubEvent, [top?.sfClient.GetPageContextValue("UserKey")] );
                 if (HubEvent.isDefaultPrevented()) return;
 
                 top?.sfClient.DisplayUserNotification("You have been logged out!",8765);
@@ -5750,7 +5750,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
             self.$.connection.hub.connectionSlow(function () {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: experiencing difficulties with the connection. `);
-                $("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
+                self.$("SPAN.clsBrandingFooterText").append("<span id='spnDashOWarning' class='sfPingHealthTip' title='{1}'>Weak server connection. (Reported by Push Signal)</span>");
             });
 
             const stateConversion:string[] = [ 'connecting', 'connected', 'reconnecting', '3','disconnected'];
@@ -5922,7 +5922,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             var $ALERT: JQuery<HTMLDivElement>;
             var ActionAfterAlert = "";
             var MaxIdleTime = RESTClient.GetPageContextValue("IdleForce",33) * 59000;
-            if ($("DIV.ui-dialog-content.sfStopPingServer").length > 0) return;
+            if (self.$("DIV.ui-dialog-content.sfStopPingServer").length > 0) return;
             sfRestClient.PageServerPingAttempts ++;
             if (hasWebsocketConnection) top.sfPMSHub.server.sessionAlive();
 
@@ -5946,7 +5946,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         try {
                             if (responseText) { 
                                 var isOK = (responseText.startsWith("OK"));
-                                $("SPAN#spnIdleTime.sfPingHealthTip").detach();
+                                self.$("SPAN#spnIdleTime.sfPingHealthTip").detach();
         
                                 //$(jqSelector).html(responseText);
                                 //$sfModalDialog.dialog('option', 'width', 'auto');
@@ -6301,7 +6301,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
         sfRestClient.PageServerPingFailRunCount = 0;
         sfRestClient.PageServerPingOK ++;
-        $("SPAN#spnDashOWarning.sfPingHealthTip").detach();
+        self.$("SPAN#spnDashOWarning.sfPingHealthTip").detach();
         if (sfRestClient.PageServerPingUserNotificationShown) {
             thisClient.DisplayUserNotification();
             sfRestClient.PageServerPingUserNotificationShown = false;
@@ -6355,8 +6355,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             sfRestClient.PageServerPingUserNotificationShown = true;
         }
     }
-    $("SPAN#spnDashOWarning.sfPingHealthTip").detach();
-    $("SPAN.clsBrandingFooterText")
+    self.$("SPAN#spnDashOWarning.sfPingHealthTip").detach();
+    self.$("SPAN.clsBrandingFooterText")
         .append(`<span id='spnDashOWarning' class='sfPingHealthTip' title='${responseText}'>Weak server connection. (${(Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2))}% successful)</span>` );
 
     console.log(`pingServer(${marker},${id},${Math.round((sfRestClient.PageServerPingOK / sfRestClient.PageServerPingAttempts) * 100).toFixed(2)}%) - failed ${responseText}; Next ${nextMS}ms`);
@@ -6608,8 +6608,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 // if (!$.hasData) $.fn.extend({hasData: function (this:JQuery<HTMLElement>, name:string):boolean {
                 //     return this.data(name) !== undefined;
                 // }});
-                sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools($("div").first());
-                if ($("title").text().length === 0 ) $("title").text("Spitfire PM");
+                sfRestClient.ExternalToolsLoadedPromise = RESTClient.AssureJQUITools(self.$("div").first());
+                if (self.$("title").text().length === 0 ) self.$("title").text("Spitfire PM");
             }
         });
 
@@ -6621,7 +6621,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (!top!.$) top!.$ = $;
                 var RESTClient = window.sfClient;
 
-                $(function DOMReadyNow() {
+                self.$(function DOMReadyNow() {
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("sfClient: DOM Ready...");
                     if (!RESTClient.IsDocumentPage() && top && !(top?.name)
                         && (!RESTClient.IsHomeDashboardPage() || !(RESTClient.GetPageQueryParameterByName("uid")))
@@ -6629,7 +6629,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                     ) top.name = "Dashboard";
                     RESTClient.activateDynamicJS(RESTClient,"_DynamicJS", "On Ready");
 
-                    $("body").off("sfClient.SetWCC__DynamicJS").on("sfClient.SetWCC__DynamicJS", function dynamicJSEventHandler() {
+                    self.$("body").off("sfClient.SetWCC__DynamicJS").on("sfClient.SetWCC__DynamicJS", function dynamicJSEventHandler() {
                         RESTClient.activateDynamicJS(RESTClient,"_DynamicJS", "event");
                     });
                });
