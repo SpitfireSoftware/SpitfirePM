@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9160.1";
+const ClientPackageVersion : string = "23.9160.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2377,34 +2377,29 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             if (sfRestClient._z.XternalScriptsLoaded ) {console.log("AssureJQUITools() already done"); return false;}
             sfRestClient._z.XternalScriptsLoaded = true;
             if (!$element) $element = self.$("<div />");
-            if (typeof $element.dialog !== "function") {
+            //if (typeof $element.dialog !== "function") {
                 // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
                 //if (!eval("window.jQuery") ) eval("window.jQuery = $;");
-                if (!window.jQuery)                     window.jQuery = window.$;
+                if (!window.jQuery) window.jQuery = window.$;
                 
-                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css");
+                this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/cupertino/jquery-ui.css");
                 this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
                 if (self.$("LINK[rel='stylesheet'][href*='fontawesome.com']").length + self.$("SCRIPT[src*='fontawesome.com']").length ===0)
-                   //$("head").prepend('<link rel="stylesheet" href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" id="font-awesome-5-kit-css">');
-                self.$("head").prepend('<script src="https://kit.fontawesome.com/5709acfc1e.js" crossorigin="anonymous"></script>');
+                    self.$("head").prepend('<script src="https://kit.fontawesome.com/5709acfc1e.js" crossorigin="anonymous"></script>');
 
-                    this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.3.min.js`,true).then((likelyTrue) => {
-                        this.AddCachedScript(`${this._SiteURL}/signalR/hubs`,true).then((likelyTrue)=>{
-                            sfRestClient.StartSignalRClientHub();
-                        });
+                this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.3.min.js`,true).then((likelyTrue) => {
+                    this.AddCachedScript(`${this._SiteURL}/signalR/hubs`,true).then((likelyTrue)=>{
+                        sfRestClient.StartSignalRClientHub();
                     });
-                    this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js',true).then( (likelyTrue) => {
-                        console.log("jQuery UI extensions loaded.");
-                        resolve(true);
-                    // })
-                    // .fail(function(jqXHR, textStatus, errorThrown) {
-                    //     console.warn("jQueryUI did not load", errorThrown)
-                    //     resolve(true);
-                    });
+                });
+                this.AddCachedScript('//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js',true).then( (likelyTrue) => {
+                    console.log("jQuery UI extensions loaded.");
+                    resolve(true);
+                });
 
 
-            }
-            else resolve(true);
+            //}
+            //else resolve(true);
        });
        return XToolLoadPromise;
     }
@@ -4739,18 +4734,21 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      * @param btnIcon see
      */
     AddDialogTitleButton($Dialog : JQuery<HTMLElement>, btnID: string, btnText: string, btnIcon?: string) {
-        var $DialogTitleBar = $Dialog.parent().children(".ui-dialog-titlebar");
-        var $LastButton = <JQuery<HTMLButtonElement>>$DialogTitleBar.find("BUTTON[type='button']:last");
-        var $NewButton = self.$(`<button type='button' id='${btnID}' />`).text(btnText);
+        const $DialogTitleBar = $Dialog.parent().children(".ui-dialog-titlebar");
+        const $LastButton = <JQuery<HTMLButtonElement>>$DialogTitleBar.find("BUTTON[type='button']:last");
+        const $NewButton = self.$(`<button type='button' id='${btnID}' />`)
+        $NewButton.attr('title',btnText);
         //var ButtonCount = $DialogTitleBar.find("BUTTON[type='button']").length;
-        var RightPosOfLeftmostButton = $LastButton.css("right");
-        var WidthOfButtons = Math.ceil($LastButton!.width()! * 1.375);
+        const RightPosOfLeftmostButton = $LastButton.css("right");
+        const WidthOfButtons = Math.ceil($LastButton!.width()! * 1.375);
         $DialogTitleBar.find(`BUTTON#${btnID}`).remove();
-        $NewButton.button({ icons: { primary: btnIcon }, text: false })
+        $NewButton.button({ icon:  btnIcon, text: false })
             .addClass("ui-dialog-titlebar-close") // essential to get size
-            .css("right", ((parseInt(RightPosOfLeftmostButton) + WidthOfButtons)  ) + "px")
+            .css({"right": `${((parseInt(RightPosOfLeftmostButton) + WidthOfButtons)  ) }px` })
             .appendTo($DialogTitleBar);
-
+        $NewButton.find(`span.ui-button-icon.${btnIcon}`).css({"vertical-align": "basekune",
+            top: "-2px",
+        });
 
         return $NewButton;
     }
