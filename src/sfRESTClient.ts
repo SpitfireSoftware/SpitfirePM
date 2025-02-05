@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9160.2";
+const ClientPackageVersion : string = "23.9160.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -977,7 +977,8 @@ export class sfRestClient {
             else if (dependsOn) {
                 DependsOnSet[0] = dependsOn;
             }
-
+            //DependsOnSet = [1, "a", 2.5, true, null, undefined, {key: "value"}];
+            DependsOnSet = DependsOnSet.map(String); // makes sure all the elements are strings
             const suggestionGroupKey = `${lookupName}[${seedValue.sfHashCode()}]@${DependsOnSet[0].sfHashCode()}x${DependsOnSet[1].sfHashCode()}x${DependsOnSet[2].sfHashCode()}x${DependsOnSet[3].sfHashCode()}x`
             const TimeNow = Date.now();
             
