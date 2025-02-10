@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9160.3";
+const ClientPackageVersion : string = "23.9160.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2379,8 +2379,6 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             sfRestClient._z.XternalScriptsLoaded = true;
             if (!$element) $element = self.$("<div />");
             //if (typeof $element.dialog !== "function") {
-                // fighting with webpack here which obfuscates simpler: if (!window.jQuery) window.jQuery = $;
-                //if (!eval("window.jQuery") ) eval("window.jQuery = $;");
                 if (!window.jQuery) window.jQuery = window.$;
                 
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/cupertino/jquery-ui.css");
@@ -5482,6 +5480,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
 
         try {
+            // eslint-disable-next-line no-eval 
             eval(request);
         }
         catch (ej:any) {
