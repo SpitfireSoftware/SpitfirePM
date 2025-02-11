@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9160.4";
+const ClientPackageVersion : string = "23.9170.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -1100,6 +1100,7 @@ export class sfRestClient {
 
         var apiResultPromise: Promise<string | null>
         if (!keyValue || keyValue === this.EmptyKey) return new Promise<string | null>((resolve) => resolve(""));
+        if (displayName === "0") return new Promise<string | null>((resolve) => resolve(keyValue));
 
         var requestData = this._getDVRequestString(displayName, keyValue, dependsOn);
         if (autoVary) requestData += `?${this._getVaryByQValue()}`;

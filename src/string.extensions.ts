@@ -181,11 +181,11 @@ String.prototype.sfIsGuid = function IsThisStringaGuid(this: string, ): boolean 
              );
 };
 
-if (!String.prototype.replaceAll) {
-    String.prototype.replaceAll = function replaceAll(this: string, pattern: string, replacement: string): string {
-        return this.split(pattern).join(replacement);
-    }
-}
+// if (!String.prototype.replaceAll) {
+//     String.prototype.replaceAll = function replaceAll(this: string, pattern: string, replacement: string): string {
+//         return this.split(pattern).join(replacement);
+//     }
+// }
 
 if (!String.prototype.sfIsNumeric) {
     String.prototype.sfIsNumeric = function sfIsNumeric(this: string): boolean {
