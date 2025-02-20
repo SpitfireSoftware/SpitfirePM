@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9170.2";
+const ClientPackageVersion : string = "23.9170.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -1603,7 +1603,7 @@ export class sfRestClient {
 
     }
 
-    /** Uploads a file of up to 4 MB in a single request, then falls back to 1MB chunks
+    /** Uploads a file of up to Options.UploadDirectLimit Bytes (around 8MB) in a single request, then falls back to 1MB chunks
      *
      *  @returns promise that resolves on upload complete
       */
