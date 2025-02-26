@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9170.4";
+const ClientPackageVersion : string = "23.9170.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3995,7 +3995,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var RESTClient = this;
         let openURL = `${this._SiteURL}/cabs/sflink/sfLink.application?et=${et}`;
         const affinityInfo = RESTClient.getAffinityInfo();
-        if (affinityInfo.at) openURL += `&acn=${affinityInfo.at}&ak=${this.getCookie("ARRAffinity")}`;
+        if (affinityInfo.at) openURL += `&acn=${affinityInfo.at}&ak=${affinityInfo.ak}`;
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("OpenWindowsLinkHelper() to: " + openURL);
         var xscript = "";
         var innerScript = "";
