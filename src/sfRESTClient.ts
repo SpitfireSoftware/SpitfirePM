@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9170.3";
+const ClientPackageVersion : string = "23.9170.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3973,6 +3973,18 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         });
     }
 
+    public getAffinityInfo() : {at:string| undefined,ak:string| undefined} {
+        let cName: string | undefined, cValue:string | undefined;
+
+        ["ARRAffinity","AWSALB"].some((cookieName)=>{
+            cName = cookieName;
+            cValue = this.getCookie(cName);
+            if (cValue) return true;
+        });
+        if (cValue) return {at:cName, ak:cValue}
+        return {at:undefined,ak:undefined}
+    }
+
     /**
      *
      * @param et token passed to sfLink
@@ -3981,7 +3993,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
      */
     public OpenWindowsLinkHelper(et:string, afterOpenArg? : boolean | string | [string,string] | Function, autoCloseDoc?:boolean) : void {
         var RESTClient = this;
-        var openURL = `${this._SiteURL}/cabs/sflink/sfLink.application?et=${et}&ak=${this.getCookie("ARRAffinity")}`;
+        let openURL = `${this._SiteURL}/cabs/sflink/sfLink.application?et=${et}`;
+        const affinityInfo = RESTClient.getAffinityInfo();
+        if (affinityInfo.at) openURL += `&acn=${affinityInfo.at}&ak=${this.getCookie("ARRAffinity")}`;
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("OpenWindowsLinkHelper() to: " + openURL);
         var xscript = "";
         var innerScript = "";
