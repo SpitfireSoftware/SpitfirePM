@@ -3894,7 +3894,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return BrowserExtensionChecker.browser.isWindowsOS;
     }
 
-    /** @returns true if this is browser can open .Application linkes  */
+    /** @returns true if this is browser can open .Application links  */
     public HasDotNetApplicationExtension(): boolean {
         if (!top?.ClickOnceExtension) top!.ClickOnceExtension = new BrowserExtensionChecker();
         return top?.ClickOnceExtension.HasDotNetApplicationExtension()!;
