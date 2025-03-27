@@ -135,6 +135,7 @@ export class BrowserExtensionChecker {
             BrowserExtensionChecker.browser.iPad = navigator.userAgent.match(/iPad/i) !== null;
             BrowserExtensionChecker.browser.isWindowsOS = navigator.userAgent.match(/Windows/i) !== null;
             BrowserExtensionChecker.browser.isMacOS = navigator.userAgent.match(/Mac OS/i) !== null || navigator.userAgent.match(/Macintosh/i) !== null;
+            BrowserExtensionChecker.browser.isiOS = navigator.userAgent.match(/iOS/i) !== null || navigator.userAgent.match(/Macintosh/i) !== null;
 
             if (userAgent.indexOf(' Trident/') > 0) BrowserExtensionChecker.browser.msie = true; else if (userAgent.indexOf(' Edg/') > 0) BrowserExtensionChecker.browser.msEdge = true;
             //this.browser.msieLegacy = (this.browser.msie && window.attachEvent && !window.addEventListener);
