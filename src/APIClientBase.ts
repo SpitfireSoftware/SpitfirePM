@@ -2,6 +2,9 @@ import { GoogleAnalyticPayload,GA4Payload } from "./globals";
 
 export  class APIClientBase {
     static _SiteURL : string | null = null;
+    private static _LastControler:string='';
+    private static  _LastEndpoint:string='';
+    private static _LastAt:number=0;
     /** Spitfire Assigned Site ID  */
     private static  GAClientID : string | undefined = undefined;
     private static GAIgnoreActions = {account: true, session:true, suggestions: true, uicfg:true, viewable: true};
@@ -31,7 +34,18 @@ export  class APIClientBase {
          const rxAPIURL = /\/\/.+\/api\/(?<controler>\w+)\/(?<endpoint>.*?)(\?|$|\s)/gm;
         const match = rxAPIURL.exec(url); // vpgName, args, width, height
         if (match && match.groups && match.groups.controler && match.groups.endpoint) {
-            if (!(match.groups.controller in APIClientBase.GAIgnoreActions)) this.GAAPIEvent(match.groups.controler, match.groups.endpoint);
+            if (!(match.groups.controller in APIClientBase.GAIgnoreActions)) {
+                const ep = match.groups.endpoint || '?';
+                const ec = match.groups.controler || '';
+                if (( (Date.now() - APIClientBase._LastAt ) > 1357) ||
+                    ! APIClientBase._LastEndpoint.startsWith(ep.substring(0,1))  ||
+                    APIClientBase._LastControler !== ec ) {
+                        APIClientBase._LastAt = Date.now();
+                        APIClientBase._LastEndpoint = ep;
+                        APIClientBase._LastControler = ec;
+                        this.GAAPIEvent(ec, ep);
+                    }
+            }
         }
         else console.log(`REST ${url} non-GA `,match);
         return processor(response);
