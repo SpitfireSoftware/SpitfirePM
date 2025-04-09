@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9200.4";
+const ClientPackageVersion : string = "23.9200.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3174,7 +3174,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     public IsDocExclusiveToMe() : boolean {
-        return ((!this.IsDocumentPage()) || (sfRestClient._WCC.DataLockFlag >= "2"));
+        return ((!this.IsDocumentPage()) || (sfRestClient._WCC?.DataLockFlag >= "2"
+            || this.GetPageDocumentModel()?.getExclusivityMode() == 2
+        ));
     }
 
     public static IsPowerUXPage() : boolean {
