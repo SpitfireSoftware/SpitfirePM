@@ -6440,6 +6440,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     /**
      * Not intended for production use: Clears localStorage, sessionStorage and indexedDB
      * This method preserves SetOptions, including log level 
+     * @see SaveOptions()
      */
     public QAClearEnvironment( ):void {
         var InGlobalInstance = this.IsGlobalInstance();
