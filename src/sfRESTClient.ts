@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9250.2";
+const ClientPackageVersion : string = "23.9250.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3910,8 +3910,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (targetURL.endsWith("&Project=")) targetURL += RESTClient.GetPageProjectKey();
         console.log(`sfLink(${targetURL})`);
         if (targetURL.indexOf("$$") > 0) targetURL = this.ExpandActionMarkers(targetURL);
-        if (!top?.ClickOnceExtension.HasDotNetApplicationExtension()) {
-            var RetryLater = `FollowLinkViaSFLink('${targetURL}'`;
+        if (self !== top) {
+            var RetryLater = `top.sfClient.FollowLinkViaSFLink('${targetURL}'`;
             if (typeof afterOpenArg !== "undefined") {
                 RetryLater = RetryLater + `,${afterOpenArg}`;
                 if (typeof autoCloseDoc !== "undefined") RetryLater = RetryLater + `,${autoCloseDoc}`;
@@ -3933,12 +3933,16 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 });
             DialogButtons.push(
                 {
-                    text: "Ignore",
+                    text: BrowserExtensionChecker.browser.isEdge ? "Use Edge Support" : "Use Browser",
                     "id": "btnIgnore",
                     click: function () {
                         top?.ClickOnceExtension.IgnoreMissingExtension();
                         self.$(this).dialog("close");
-                        RESTClient.jqAlert("Please try your action again.  If you see a prompt to keep or open (at the bottom), click to proceed!", ".NET Link Helper Recommended");
+                        let msg = "Please try your action again. ";
+                        
+                        if (BrowserExtensionChecker.browser.isEdge) msg += " When prompted, click <b>Open</b> to proceed!"
+                        else msg+= " If you see a prompt to keep or open a download, click to proceed!";
+                        RESTClient.jqAlert(msg, ".NET Link Helper Recommended");
                         return;
                     }
                 });
