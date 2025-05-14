@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9250.3";
+const ClientPackageVersion : string = "23.9250.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3933,21 +3933,23 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 });
             DialogButtons.push(
                 {
-                    text: BrowserExtensionChecker.browser.isEdge ? "Use Edge Support" : "Use Browser",
+                    text: "No Extension",
                     "id": "btnIgnore",
                     click: function () {
                         top?.ClickOnceExtension.IgnoreMissingExtension();
                         self.$(this).dialog("close");
-                        let msg = "Please try your action again. ";
+                        let msg = "Please try your original action again and we will continue without an extension. ";
                         
-                        if (BrowserExtensionChecker.browser.isEdge) msg += " When prompted, click <b>Open</b> to proceed!"
-                        else msg+= " If you see a prompt to keep or open a download, click to proceed!";
-                        RESTClient.jqAlert(msg, ".NET Link Helper Recommended");
+                        if (BrowserExtensionChecker.browser.isEdge) msg += " When prompted, click <b>Open</b> for sfLink.application!"
+                        else msg+= " If you see a prompt to keep or open sfLink.application, click to proceed!";
+                        RESTClient.jqAlert(msg, ".Application Links");
                         return;
                     }
                 });
-            var $A = RESTClient.jqAlert(`ClickOnce Helper is required.  Please install <a href='${BrowserExtensionChecker.SuggestedExtensionLink()}' style='text-decoration: underline' target='_blank'>this extension</a>!`,
-                             ".NET Link Helper Required");
+            let m = 'Using a ClickOnce Helper Extension is recommended; click the Install button to add one. ';
+             m +='<br/><br/>Otherwise, if you cannot install an extension, use the No Extension button. '; 
+            var $A = RESTClient.jqAlert(m,
+                             ".Application Link Helper Recommended");
             $A.dialog('option', 'buttons', DialogButtons);
             return;
         }
