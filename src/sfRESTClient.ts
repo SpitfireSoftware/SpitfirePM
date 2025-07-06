@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9300.4";
+const ClientPackageVersion : string = "23.9300.5";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -33,7 +33,8 @@ export enum ValidationMode {
     untildate= "8",
     /** non empty, can be combined with other validations */
     required="16",
-    filename="32"
+    filename="32",
+    url="64"
 }
 
 type PartStorageList = Map<PartContextKey, PartStorageData>;
@@ -729,7 +730,7 @@ export class sfRestClient {
     }
 
     /**
-    * async: returns an numerc bit-flag indicating the user's permission level (R=1,I=2,U=4,D=8,S=16)
+    * async: returns an numeric bit-flag indicating the user's permission level (R=1,I=2,U=4,D=8,S=16)
     * When the user has admin permissions, these are blended (unless ucModule = WORK)
     * @param ucModule WORK,SYS, PAGE, PART,LIST
     * @param ucFunction see xsfUCFunction
@@ -793,8 +794,8 @@ export class sfRestClient {
 
             if (!UCFK) {
                 if (sfRestClient._WCC.UserKey === RESTClient.EmptyKey)
-                    console.warn("CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for {0}|{1}!  LOGIN AGAIN!".sfFormat(ucModule, ucFunction))
-                else console.warn("CheckPermit could not find {0}|{1} - verify proper case/trim!".sfFormat(ucModule, ucFunction));
+                    console.warn(`CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for ${ucModule}|${ucFunction}!  LOGIN AGAIN!`)
+                else console.warn(`CheckPermit could not find ${ucModule}|${ucFunction} - verify proper case/trim!`);
                 ResolveThisPermit(0);
                 return;
             }
