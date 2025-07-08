@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9300.5";
+const ClientPackageVersion : string = "23.9300.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2167,7 +2167,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         const RESTClient = this;
         let ls = localStorage.getItem(sfRestClient._z.lsKeys.api_icon_map);
         if (ls) sfRestClient._IconMap = JSON.parse(ls);
-        if (typeof sfRestClient._IconMap !== "object") sfRestClient._IconMap = {};
+        if (!sfRestClient._IconMap || typeof sfRestClient._IconMap !== "object") sfRestClient._IconMap = {};
         if (typeof sfRestClient._IconMap!["_ts"] === "string") sfRestClient._IconMap!["_ts"] = new Date(sfRestClient._IconMap!["_ts"]);
         let etag : string = "undefined";
         let AsOf = <Date>sfRestClient._IconMap!["_ts"];
@@ -2502,19 +2502,20 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
         return new Promise<Window | null>((resolve) => {
             this.GetDV("DocType",dtk,undefined).then(async (thisDocTypeSiteName) => {
-                var thisRestClient = this;
+                const thisRestClient = this;
+                const isProjectSetupDocType = (dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup );
                 if (!thisDocTypeSiteName) {
                     console.warn("Document type not found"); //hmmm maybe a popup?
                     resolve(null);
                     return;
                 }
-                //todo: determine if we should use the new or old UI based on the document type of this document
-                //todo: generate a GUID if one was not provided
                 var UseID : string;
                 var url : string =  sfRestClient._Options.PopNewDocLegacyURL;
-                if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopNewDocXBURL
-                else {
-                    if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) url =  sfRestClient._Options.PopNewDocXBURL;
+                if (!isProjectSetupDocType) {
+                    if (sfRestClient._Options.PopDocForceXBUI ) url =  sfRestClient._Options.PopNewDocXBURL
+                    else {
+                        if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) url =  sfRestClient._Options.PopNewDocXBURL;
+                    }
                 }
                 if (options?.includes("&UseID")) {
                     UseID = options.substring(options?.indexOf("&UseID")+7,36);
@@ -2524,7 +2525,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     if (!options) options = "";
                     options += `&UseID=${UseID}`;
                 } 
-                let includeProjectID : boolean = (dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup );
+                let includeProjectID : boolean = isProjectSetupDocType
                 // new project setup sends project id as first option
                 //                 if (!includeProjectID && options?.includes("mode=np")) includeProjectID = true;
                 url  =  url.sfFormat(thisRestClient._SiteURL, dtk, includeProjectID ? project : "",options) ;
@@ -2605,7 +2606,6 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     console.warn(`PopDoc(${DocKey}).DocTitleLong`,reason);
                });
 
-               //todo: determine if we should use the new or old UI based on the document type of this document
                var url : string =  sfRestClient._Options.PopDocLegacyURL;
                if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopDocXBURL
                else {
