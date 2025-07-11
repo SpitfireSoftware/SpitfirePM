@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9300.6";
+const ClientPackageVersion : string = "23.9300.7";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2909,6 +2909,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
      *  Returns value from object that matches the field/property name
      */
     FieldValueFromRow(rawRow: any, fieldName: string): any {
+        if (!rawRow) return undefined;
         if (!(fieldName in rawRow)) {
             fieldName = fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
             if (!(fieldName in rawRow)) return undefined;
