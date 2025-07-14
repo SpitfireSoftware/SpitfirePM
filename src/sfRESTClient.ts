@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9300.8";
+const ClientPackageVersion : string = "23.9300.9";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2503,7 +2503,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         return new Promise<Window | null>((resolve) => {
             this.GetDV("DocType",dtk,undefined).then(async (thisDocTypeSiteName) => {
                 const thisRestClient = this;
-                const isProjectSetupDocType = (dtk.toLowerCase() !== sfProcessDTKMap.ProjectSetup );
+                const isProjectSetupDocType = (dtk.toLowerCase() === sfProcessDTKMap.ProjectSetup );
                 if (!thisDocTypeSiteName) {
                     console.warn("Document type not found"); //hmmm maybe a popup?
                     resolve(null);
