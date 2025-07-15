@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9300.9";
+const ClientPackageVersion : string = "23.9326.1";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2525,9 +2525,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     if (!options) options = "";
                     options += `&UseID=${UseID}`;
                 } 
-                let includeProjectID : boolean = isProjectSetupDocType
-                // new project setup sends project id as first option
-                //                 if (!includeProjectID && options?.includes("mode=np")) includeProjectID = true;
+                let includeProjectID : boolean = !isProjectSetupDocType
+                // note: for new project setup, send project id as the first option
                 url  =  url.sfFormat(thisRestClient._SiteURL, dtk, includeProjectID ? project : "",options) ;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`PopNewDoc opening ${UseID} DTK ${dtk} using ${url}`);
 
