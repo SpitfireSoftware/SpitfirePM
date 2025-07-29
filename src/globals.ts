@@ -13,6 +13,14 @@ interface Math {
 
 declare global {
 
+    interface FileStateInfo {
+        AsOf: Date;
+        UserKey: GUID;
+        UserName: string;
+        FileDocKey: GUID;
+        Status: 'I' | 'O' | 'L' | 'U' | '?';
+    }
+
     interface AfterDocumentSaved {(dtk:string, project: string):void}
     interface DashboardOpenLink {(targetWindowName: string, request: string):void}
     interface DashboardRefreshPartByName {(partName: string):void}
@@ -26,6 +34,7 @@ declare global {
     interface FlushClientResource { (resourceType:'Project' | '*', project: string, extra: string | undefined):void }
     interface HeartbeatMonitor { (dsk: string, rep: number):Promise<string>}
     interface NowViewingDocument {(targetWindowName: string, loginSessionKey: GUID, request: string):void}
+    interface FileStateInfoChange {(targetWindowName: string, loginSessionKey: GUID, request: FileStateInfo[]):void}
     // sfClass interfaces
     interface DocumentChangedByAnotherUser {(nextEvent:string, otherUserName:string, changeCount:number): void}
     interface RefreshDocPart {(partName:string | "DocAIR" | "DocBody", arg?:string):void}
@@ -50,6 +59,7 @@ declare global {
             dashboardOpenLink: DashboardOpenLink;
             dashboardRefreshPartByName: DashboardRefreshPartByName;
             documentChangeBy: DocumentChangeBy;
+            fileStateChange: FileStateInfoChange;
             nowViewingDocument: NowViewingDocument;
             onApplicationStart: StringThenVoid;
             onFlushClientDV: FlushClientDV;

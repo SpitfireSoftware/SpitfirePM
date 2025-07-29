@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9330.1";
+const ClientPackageVersion : string = "23.9330.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -5558,6 +5558,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (typeof top?.DocumentChangedByAnotherUser === "function") top.DocumentChangedByAnotherUser(refreshEvent, otherUserName, changeCount);
             };
 
+
+
             sfHub.client.afterDocumentSaved = function (dtk:string, project: string) {
                 console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.afterDocumentSaved dtk:${dtk}, project:${project}.`); // always myself, refresh related dashboards
                 var HubEvent = jQuery.Event("sfPMSHubSignal.afterDocumentSaved");
@@ -5582,12 +5584,48 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 RESTClient.UpdateRecentDocumentList(dmk,title);
             };
 
-            sfHub.client.nowViewingDocument = function (target, loginSessionKey, request) {
+            sfHub.client.fileStateChange = function (targetWindowName:string, loginSessionKey:GUID, stateInfo: FileStateInfo[]) {
+                var RequestForWindowMatches = targetWindowName.match(sfHub.client.ForWindowRX);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.fileStateChange from ${loginSessionKey} to [${targetWindowName}]:${stateInfo} Req4Window:${RequestForWindowMatches} `);
+                if (typeof stateInfo === "string") {
+                    try
+                    {
+                        stateInfo = JSON.parse(stateInfo);
+                    }
+                    catch (error) {
+                        console.warn(`pingServer() Error parsing file state JSON `, stateInfo,error);
+                        return false;
+                    }
+                }
+                // we can get this message from any doc viewer
+                    var HubEvent = jQuery.Event("sfPMSHubSignal.fileStateChange");
+                    self.$("body").trigger(HubEvent,  [targetWindowName,loginSessionKey,stateInfo] );
+                    if (HubEvent.isDefaultPrevented()) return;
+                    stateInfo.forEach(fsi => {
+                                            const fnPromise = RESTClient.GetDV("CatalogFullFileName",fsi.FileDocKey);
+                    fnPromise
+                        .then((fileName:string | null) => {
+                            let what:string = (fsi.Status === 'I' ? "Checked In" :
+                                        fsi.Status === 'O' ? "Checked Out" :
+                                        fsi.Status === 'L' ? "Locked" :
+                                        fsi.Status === 'U' ? "Unlocked" : `"${fsi.Status}"`);
+
+                            RESTClient.DisplayUserNotification(`${fsi.UserName} has ${what} ${fileName}`, 8765);
+                        })
+                        .catch((r)=>{
+                            console.warn(`Could not resolve file name for ${fsi.FileDocKey} `,r);
+                        });
+                    });
+
+                 
+            }
+
+            sfHub.client.nowViewingDocument = function (targettargetWindowName, loginSessionKey, request) {
                 var RequestForWindowMatches = request.match(sfHub.client.ForWindowRX);
-                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.nowViewingDocument from ${loginSessionKey} to [${target}]:${request} Req4Window:${RequestForWindowMatches} `);
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.nowViewingDocument from ${loginSessionKey} to [${targettargetWindowName}]:${request} Req4Window:${RequestForWindowMatches} `);
                 if (RESTClient.GetPageContextValue("LoginSessionKey") !== loginSessionKey) {
                     var HubEvent = jQuery.Event("sfPMSHubSignal.nowViewingDocument");
-                    self.$("body").trigger(HubEvent,  [target,loginSessionKey,request] );
+                    self.$("body").trigger(HubEvent,  [targettargetWindowName,loginSessionKey,request] );
                     if (HubEvent.isDefaultPrevented()) return;
                     RESTClient.HandleEvalRequest(request);
  
@@ -5925,6 +5963,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             const isPowerUXPage = sfRestClient.IsPowerUXPage()
             const isMainView = !isDocumentPage && isPowerUXPage && (location.hash.includes("/main/"));
             const docSessionkey = RESTClient.GetPageContextValue("DocSessionKey");
+            const loginSessionKey = RESTClient.GetPageContextValue("LoginSessionKey");
             const docKey:string = RESTClient.GetPagePK();  
             const hasDocSessionkey = (docSessionkey && docSessionkey !== RESTClient.EmptyKey);
             const hasDocKey = (docKey && docKey !== RESTClient.EmptyKey);
@@ -6013,50 +6052,26 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                     retryInterval = -1;
                                     ActionAfterAlert = "Close"
                                 }
-                                // else if ((responseText.startsWith('[{"FileDocKey":')) &&
-                                //     ((typeof $sfModalDialog != "object") || ($sfModalDialog.length != "number") || (!$sfModalDialog.is(":visible")))) {
-                                //     var ldata = $.parseJSON(responseText);
-                                //     var AIRContext = FrameContext($AIRFrame);
-                                //     $.each(ldata, function (index, watchedFile) {
-                                //         var tform = "";
-                                //         var dform = "";
-                                //         var fkey = watchedFile.FileDocKey;
-                                //         var $FVC = AIRContext.$('IMG[DATA-fk="{0}"]'.format(fkey));
-                                //         if ($FVC.length > 0) {
-                                //             var newIconSrc = $FVC.attr('src');
-                                //             // warning: fragile
-                                //             newIconSrc = newIconSrc.substring(0, newIconSrc.lastIndexOf("/") + 1);
-                                //             if (watchedFile.Status == "locked") newIconSrc = newIconSrc + "fileLocked.gif"
-                                //             else if (watchedFile.Status == "unlocked" || watchedFile.Status == "checked in") newIconSrc = newIconSrc + "fileUnLocked.gif"
-                                //             else if (watchedFile.Status == "checked out") newIconSrc = newIconSrc + "fileOut.gif"
-                                //             $FVC.attr("src", newIconSrc);
-                                //         }
-                                //     });
-        
-                                //     msgText = "FYI: "  // was The file share status has changed for 
-                                //     if (ldata.length == 1) {
-                                //         var $FVC = AIRContext.$('IMG[DATA-fk="{0}"]'.format(ldata[0].FileDocKey));
-                                //         msgText = msgText + $FVC.closest('TR').find('span[id$="lblFileTitle"]').text();
-                                //         msgText = `${msgText} was ${ldata[0].Status} by ${ldata[0].UserName}`; 
-                                //     }
-        
-                                //     else {
-                                //         msgText = msgText + "{0} files have been modified by other user(s)".format(ldata.length);
-                                //     }
-                                //     ActionAfterAlert = "";
-                                //     if ($("DIV.sfUIjqPDL, SPAN.sfUICrtMsgTarget").length > 0) {
-                                //         // we have found a PDF viewer or "Processing" dialog open...
-                                //         // future: we could perhaps just ignore our own template files changing status
-                                //         console.log(msgText);
-                                //         msgText = "";
-                                //     }
-        
-                                //     if (msgText) DisplayUserNotification(msgText,9876);
-                                //     console.log(msgText);
-                                //     msgText = "";
-                                    
-                                //     //darnSoon.resolve();  //makes msgReady be ready
-                                // }
+                                else if ((responseText.startsWith('[{"FileDocKey":')) && responseText.indexOf("UserKey") > 0) {
+                                // see fileStateChange signal!!
+                                const sfHub = self.$.connection.sfPMSHub;
+                                if (sfHub && sfHub.client.fileStateChange) {
+                                    try
+                                    {
+                                        const fcInfo: FileStateInfo[] = JSON.parse(responseText);
+                                        fcInfo.forEach((fci:FileStateInfo)=>{
+                                            sfHub.client.fileStateChange(self.name,loginSessionKey,fci);
+                                        });
+
+                                    }
+                                    catch (error) {
+                                        console.warn(`pingServer() Error parsing JSON `, responseText,error);
+                                    }
+
+                                }
+                                else console.warn('sfHUB client hub is not available', responseText);
+ 
+                                }
                                // changed by another now via SignalR
                                // SysNotification are now via SignalR
                             
