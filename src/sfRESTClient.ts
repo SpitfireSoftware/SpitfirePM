@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9330.2";
+const ClientPackageVersion : string = "23.9330.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -6059,10 +6059,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                     try
                                     {
                                         const fcInfo: FileStateInfo[] = JSON.parse(responseText);
-                                        fcInfo.forEach((fci:FileStateInfo)=>{
-                                            sfHub.client.fileStateChange(self.name,loginSessionKey,fci);
-                                        });
-
+                                        if (fcInfo) sfHub.client.fileStateChange(self.name,loginSessionKey,fcInfo);
                                     }
                                     catch (error) {
                                         console.warn(`pingServer() Error parsing JSON `, responseText,error);
