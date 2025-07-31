@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9330.3";
+const ClientPackageVersion : string = "23.9330.4";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -4229,6 +4229,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 // DisplayThisNotification() requiers a functional server
                 if (thisRestClient.isWebix()) {
                     if (this.IsLoginRelatedPage()) thisRestClient.NavigateToServerUnavailable(showMsg);
+                    const HubEvent =  jQuery.Event("sfPMSHubSignal.serverUnavailable");
+                    self.$("body").trigger(HubEvent,  [reason] );
                     const m = {
                         text: showMsg,
                         type: 'debug',
