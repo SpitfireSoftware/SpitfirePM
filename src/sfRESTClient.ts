@@ -491,7 +491,7 @@ export class sfRestClient {
                     rawData.splice( foundRow,1);
                     RemoveCount ++;
                 }
-                else  if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(REMOVE) did not find a row with key {0}".sfFormat(element));
+                else  if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`ApplyDataChanges(REMOVE) did not find a row with key ${element}`);
             } );
         }
 
@@ -504,7 +504,7 @@ export class sfRestClient {
                     ChangeCount ++;
                 }
                 else {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges(CHANGE) did not find a row with key {0} (changed to add)".sfFormat(element));
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`ApplyDataChanges(CHANGE) did not find a row with key ${element} (changed to add)`);
                     changes.Add?.push( element); // !!! does this work?
                 }
             } );
@@ -523,8 +523,8 @@ export class sfRestClient {
                 }
             });
         }
-        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ApplyDataChanges({0}) removed {1}, changed {2}, added {3} in {4}t ".sfFormat(keyName,
-                                                                            RemoveCount , ChangeCount , AddCount,            Date.now() - StartAtTicks));
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) 
+            console.log(`ApplyDataChanges(${keyName}) removed ${RemoveCount}, changed ${ChangeCount}, added ${AddCount} in ${Date.now() - StartAtTicks}t `);
         return rawData;
     }
 
@@ -547,11 +547,11 @@ export class sfRestClient {
             if (rawData.length === 0) return result;
         }
         if (!(keyName in rawData[0])) {
-            console.warn("BuildDataSummary() - rawData does not include keyName {0} ".sfFormat(keyName));
+            console.warn(`BuildDataSummary() - rawData does not include keyName ${keyName} `);
             return result;
         }
         if (!("ETag" in rawData[0])) {
-            console.warn("BuildDataSummary() - rawData does not include ETag".sfFormat(keyName));
+            console.warn(`BuildDataSummary() - rawData does not include ETag (key ${keyName})`);
             return result;
         }
         var RESTClient = this;
