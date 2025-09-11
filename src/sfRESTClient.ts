@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9330.5";
+const ClientPackageVersion : string = "23.9330.6";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -468,6 +468,7 @@ export class sfRestClient {
         UserAccountRecovery: 16387,
         DiagUtilities: 32768,
         PopupAdminTool: 131072,
+        PopupUserTool: 131073,
         RichTextEdit: 262144
     }
 
@@ -3283,6 +3284,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             case "PLVP":
                 result = this.PageTypeNames.PopupAdminTool;
                 break;
+            case "PUP":
+            case "PVP":
+                result = this.PageTypeNames.PopupUserTool;
+                break;
             case "sfReportViewer":
                 result = this.PageTypeNames.Report;
                 break;
@@ -3296,6 +3301,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
            case "popTinymce5": case "popEdit":
                     result = this.PageTypeNames.RichTextEdit;
                     break;
+
             case "default":
                 result = this.PageTypeNames.UnauthenticatedDefault;
                 break;
