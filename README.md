@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9330.8 - Adds ConfigController, Stats endpoints, serverUnavailable event
 23.9140.0 - Adds Create Project Endpoint
 23.9080.3 - Diffgrams for Doc Items and Attachments; GatherDependsOnValues() supports #DocMasterDetail references
 23.8940.3 - Adds SaveDocumentPatch to DocumentModel exposed from WX and exports sfProcessDTKMap

@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9330.7";
+const ClientPackageVersion : string = "23.9330.8";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3286,6 +3286,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 break;
             case "PUP":
             case "PVP":
+            case "pup":
+            case "pvp":
                 result = this.PageTypeNames.PopupUserTool;
                 break;
             case "sfReportViewer":
@@ -4213,42 +4215,63 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     private lastNotificationCheckPromise: Promise<string|null> | null = null;
+    private notificationCheckIntervalMS: number = 32517;
+    private notificationForcedCheckIntervalMS: number = 567;
+    private lastNotificationHashCode: string = "";
+
     /** Checks backend for a new system notification and displays it */
-    CheckForSystemNotification() {
+    CheckForSystemNotification(force=false) {
         const SystemAPI = new _SwaggerClientExports.SystemClient();
         const thisRestClient = this;
-        if ( (Date.now() - sfRestClient.lastNotificationCheck) < 34567) return;
+        if ( (Date.now() - sfRestClient.lastNotificationCheck) < this.notificationCheckIntervalMS) {
+            // pretty soon...
+            if  (!force || (Date.now() - sfRestClient.lastNotificationCheck) < this.notificationForcedCheckIntervalMS) return;
+            this.notificationForcedCheckIntervalMS *= 2; // prevent over use of forced checks
+            if (this.notificationForcedCheckIntervalMS > this.notificationCheckIntervalMS) this.notificationForcedCheckIntervalMS = this.notificationCheckIntervalMS / 2;
+        } 
         if (thisRestClient.lastNotificationCheckPromise !== null) {
             if (thisRestClient.DevMode() ) console.log("Prior notification check still pending...");
             return;
         };
-        thisRestClient.lastNotificationCheckPromise = SystemAPI.getSystemNotification("");
+        thisRestClient.lastNotificationCheckPromise = SystemAPI.getSystemNotification(force ? Math.random().toString() : '');
         thisRestClient.lastNotificationCheckPromise
         .then((theNotification)=>{
-            if (theNotification) thisRestClient.DisplaySysNotification(theNotification.sfHashCode().toString())
-            else thisRestClient.DisplaySysNotification("");
+            if (theNotification) {
+                //useless to include the hash - it is old news, does not help get a new notification
+                this.lastNotificationHashCode = theNotification.sfHashCode().toString();
+                thisRestClient.DisplaySysNotification(this.lastNotificationHashCode);
+            }
+            else {
+                this.lastNotificationHashCode = "";
+                thisRestClient.DisplaySysNotification("");
+            }
         })
         .catch((reason) => {
             const showMsg = `${reason.message} [${reason.status}]`;
-            console.warn('CheckForSystemNotification() failed', reason);
-            if ("status" in reason && reason.status > 500) {
-                // DisplayThisNotification() requiers a functional server
-                if (thisRestClient.isWebix()) {
-                    if (this.IsLoginRelatedPage()) thisRestClient.NavigateToServerUnavailable(showMsg);
-                    const HubEvent =  jQuery.Event("sfPMSHubSignal.serverUnavailable");
-                    self.$("body").trigger(HubEvent,  [reason] );
-                    const m = {
-                        text: showMsg,
-                        type: 'debug',
-                        expire: 1345 + (showMsg.length * 50) + 1,
-                        id: `sfCheckForSystemNotificationMessage`
+            if ("status" in reason) {
+                if (reason.status === 304)  {
+                    thisRestClient.DisplaySysNotification(this.lastNotificationHashCode);
+                    return;
+                }
+                console.warn('CheckForSystemNotification() failed', reason);
+                if (reason.status > 500) {
+                    // DisplayThisNotification() requires a functional server
+                    if (thisRestClient.isWebix()) {
+                        if (this.IsLoginRelatedPage()) thisRestClient.NavigateToServerUnavailable(showMsg);
+                        const HubEvent =  jQuery.Event("sfPMSHubSignal.serverUnavailable");
+                        self.$("body").trigger(HubEvent,  [reason] );
+                        const m = {
+                            text: showMsg,
+                            type: 'debug',
+                            expire: 1345 + (showMsg.length * 50) + 1,
+                            id: `sfCheckForSystemNotificationMessage`
+                        }
+                        self.webix?.message(m as unknown as any);
                     }
-                    self.webix?.message(m as unknown as any);
+                    else {
+                        thisRestClient.DisplayUserNotification();
+                    }
                 }
-                else {
-                    thisRestClient.DisplayUserNotification();
-                }
-              
             }
         })
         .finally(()=>{
