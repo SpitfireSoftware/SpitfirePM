@@ -25,7 +25,8 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
-23.9400.1 - 23.9400.1 Adds status_dv and responsibleParty_dv to doc header model
+23.9400.2 - FontAwesome 7
+23.9400.1 - Adds status_dv and responsibleParty_dv to doc header model
 23.9390.1 - Adds Probability to FileInformation model
 23.9330.8 - Adds ConfigController, Stats endpoints, serverUnavailable event
 23.9140.0 - Adds Create Project Endpoint

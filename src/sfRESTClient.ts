@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9400.1";
+const ClientPackageVersion : string = "23.9400.2";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -2387,7 +2387,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 this.AddCSSResource("//ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/cupertino/jquery-ui.css");
                 this.AddCSSResource(`${this._SiteURL}/theme-fa/styles.css?v=${sfRestClient._WCC.Version}`);
                 if (self.$("LINK[rel='stylesheet'][href*='fontawesome.com']").length + self.$("SCRIPT[src*='fontawesome.com']").length ===0)
-                    self.$("head").prepend('<script src="https://kit.fontawesome.com/5709acfc1e.js" crossorigin="anonymous"></script>');
+                    self.$("head").prepend('<script src="https://kit.fontawesome.com/c6020291c5.js" crossorigin="anonymous"></script>');
 
                 this.AddCachedScript(`${this._SiteURL}/Scripts/jquery.signalR-2.4.3.min.js`,true).then((likelyTrue) => {
                     this.AddCachedScript(`${this._SiteURL}/signalR/hubs`,true).then((likelyTrue)=>{
