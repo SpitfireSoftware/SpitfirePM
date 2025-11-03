@@ -102,6 +102,7 @@ declare global {
                             type?:"alert-warning" | "alert-error"}):Promise<boolean> };
         confirm: {(options: {title:string,
             ok?:string, 
+            cancel?: string,
             text:string,
             type?:"alert-warning" | "alert-error"}):Promise<boolean> };
         message: {(msg:string| iWebixMessageConfig):void };

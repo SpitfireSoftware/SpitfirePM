@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9400.2";
+const ClientPackageVersion : string = "23.9400.3";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -5959,6 +5959,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     protected static _NextPingTimerID :number | undefined= undefined;
     protected static _RepeatedPingRetryDelay: number = 0;
+    protected static _connectionCheckDialogShown: boolean = false;
     public async  pingServer(): Promise<void> {
         let pdsKey = "TBD";
         try {
@@ -6226,14 +6227,18 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 let defaultLogoutOnTimer = true;
                                 if (self.webix) {
                                     if (1===1) { //RESTClient.DevMode()
+                                        if (sfRestClient._connectionCheckDialogShown = true) return;
+                                        sfRestClient._connectionCheckDialogShown = true;
                                         self.webix!
                                             .confirm({title:"Connection Check",
                                                     ok: 'Login Again',
+                                                    cancel: 'Dismiss', 
                                                     text: `Authentication ${ sfRestClient.PageNotificationCount < 2 ?'Required':'Revoked'}. <br/> Returning to login page!`,
                                                     type: "alert-warning",
                                                 }).then((r:boolean)=>{
                                                     if (r) this.NavigateToLogout("auth-lost-immediate");
                                                     else self.webix?.message("ok...");
+                                                    sfRestClient._connectionCheckDialogShown = false;
                                                 });
                                         defaultLogoutOnTimer = false;
                                     }
