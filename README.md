@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9400.5 - Adds ConfigClient.GetFlexKeyInfo 
 23.9400.3 - Avoid stacked "Connection Check" dialogs
 23.9400.2 - FontAwesome 7
 23.9400.1 - Adds status_dv and responsibleParty_dv to doc header model
