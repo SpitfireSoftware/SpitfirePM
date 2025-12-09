@@ -391,7 +391,7 @@ export class NVPair { [key: string]: any; }
 export class WCCData { [key: string]: any; }
 export type DataModelRow = Record<string,any>;
 export type DataModelCollection = DataModelRow[];
-export class InvokeOptions { ByTask?: boolean | undefined; ByAcct?: boolean | undefined; targetWindow?:string; };
+export class InvokeOptions { ByTask?: boolean | undefined; ByAcct?: boolean | undefined; targetWindow?:string; wxpPopup?: '1'|'0'|'doc';};
 export type TableAndFieldInfo = {table:string, field:string, dbf:string, isRO:boolean, isValid:boolean};
 export type PartContextKey = string // PartName[context]::dtk
 export type Permits = number; // 0...31, see PermissionFlags
@@ -3826,6 +3826,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             var BFAMode : boolean = false;
             var mode : string = "";
             var PageDSK : string = "";
+            let width = 987; 
+            let height = 444;
             if (!options) options = {ByTask: true, ByAcct: true};
             if ( popWhat === "PopBFAHistory")   {
                 rx = /PopBFAHistory\(['"](?<PGDSK>.*?)['"],\s*?(?<project>.*?),\s*?(?<task>.*?),\s*?(?<acct>.*?),['"](?<mode>.*?)['"]\s*?\)/gm;
@@ -3835,7 +3837,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             else if (popWhat === "GetOptionsViaPopup") {
                 matchPopWhatVPG = this.rxPopWhatVPG.exec(ActionString);
                 vpgName = matchPopWhatVPG?.groups?.vpg as string;
-                 rx = /ds=(?<pdsid>\w*['"])/gm;
+                 rx = /ds=(?<pdsid>\w*['"],(?<width>\d*),(?<height>\d*))/gm;
             }
             else if (popWhat.sfStartsWithCI("sf") &&  popWhat.substring(2) in RESTClient) {
                 const ff:Function  = (RESTClient as unknown as {[key:string]: Function})[popWhat.substring(2)] as unknown as Function;
@@ -3856,6 +3858,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (matchCall.groups.mode) mode = matchCall.groups.mode;
                 if (matchCall.groups.PGDSK) PageDSK = matchCall.groups.PGDSK;
                 if (matchCall.groups.period) Period = matchCall.groups.period;
+                if (matchCall.groups.pdsid) PageDSK = this.GetPageDataContext();
+                if (matchCall.groups.width && this.IsNumber(matchCall.groups.width)) width = Number.parseInt(matchCall.groups.width);
+                if (matchCall.groups.height && this.IsNumber(matchCall.groups.height)) height = Number.parseInt(matchCall.groups.height);
             }
             var ModalOptions : string;
             if (options && options.ByTask && rowData && rowData["task"]) Task = rowData["task"];
@@ -3866,12 +3871,14 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             else {
                 ModalOptions = `&project=${Project}&task=${Task}&acct=${Acct}&period=%`
             }
+            if (PageDSK) ModalOptions = `${ModalOptions}&ds=${PageDSK}`;
+            if (options.wxpPopup) ModalOptions = `${ModalOptions}&wxp=${options.wxpPopup}`;
             // sample action: javascript:PopTXHistory(\"TranHistory\", ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" );
             // sample javascript:PopBFAHistory('$$PDSID$$',row.Project, ifByTask() ? Row.task.trim() : \"%\", ifByAcct() ? Row.acct.trim() :\"%\" ,'PA');
             // sample http://stany2017/SFPMS/pvp.aspx?vpg=TranHistory&project=GC003&ds=1f573cce-ddd8-4463-a6a6-40c641357f47_ProjectCA_dsData&task=01000&acct=%25&period=%
            
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Normal) console.log(`InvokeAction: VModalPage(${vpgName})`,ModalOptions);
-            this.VModalPage(vpgName,ModalOptions,999,444,undefined);
+            this.VModalPage(vpgName,ModalOptions,width,height,undefined);
         }
         else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
             console.warn("InvokeAction::tools not really done",ActionString);
