@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9400.7";
+const ClientPackageVersion : string = "23.9400.8";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3700,6 +3700,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
         let matchVPgName : RegExpExecArray | null = null;
         let matchPopWhat : RegExpExecArray | null = null;
+        let matchPopWhatVPG: RegExpExecArray | null = null;
         let matchPopOffice : RegExpExecArray | null = null;
         let matchPopWhatURL : RegExpExecArray | null = null;
         let matchPopWindowName : RegExpExecArray | null = null;
@@ -3712,6 +3713,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             this.rxPopWhat.lastIndex = 0;
             this.rxPopWhatURL.lastIndex = 0;
             this.rxPopWindowName.lastIndex = 0;
+            this.rxPopWhatVPG.lastIndex = 0;
             matchPopOffice =  this.rxOfficeLink.exec(ActionString);
             matchPopWhat =  this.rxPopWhat.exec(ActionString);
             matchPopWhatURL = this.rxPopWhatURL.exec(ActionString);
@@ -3818,6 +3820,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             var rx : RegExp;
             var vpgName : string;
             let popWhat = matchPopWhat.groups.popWhat;
+
             var Project = this.GetPageProjectKey();
             var Task:string = "%",Acct : string = "%", Period:string="%";
             var BFAMode : boolean = false;
@@ -3828,6 +3831,11 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 rx = /PopBFAHistory\(['"](?<PGDSK>.*?)['"],\s*?(?<project>.*?),\s*?(?<task>.*?),\s*?(?<acct>.*?),['"](?<mode>.*?)['"]\s*?\)/gm;
                 vpgName = "BFANotes";
                 BFAMode = true;
+            }
+            else if (popWhat === "GetOptionsViaPopup") {
+                matchPopWhatVPG = this.rxPopWhatVPG.exec(ActionString);
+                vpgName = matchPopWhatVPG?.groups?.vpg as string;
+                 rx = /ds=(?<pdsid>\w*['"])/gm;
             }
             else if (popWhat.sfStartsWithCI("sf") &&  popWhat.substring(2) in RESTClient) {
                 const ff:Function  = (RESTClient as unknown as {[key:string]: Function})[popWhat.substring(2)] as unknown as Function;
@@ -3899,6 +3907,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     private rxPopWhatURL = new RegExp(/javascript:(?<popWhat>PopMSWindowTool|PopXLTool|PopAuditTool|popWin|popNewDoc)\(['"`](?<URL>.+?)[`'"](,|\))(['"`](?<TARGET>.+?)[`'"](,|\)))?(['"`](?<OPTIONS>.+?)[`'"](,|\)))?/gmi);
     private rxPopWindowName = new RegExp(/javascript:(?<popWhat>popWin)\(['"`](?<URL>.+?)[`'"],\s?['"`](?<WindowName>.+?)[`'"],.*\)/gmi);
     private rxOfficeLink = new RegExp(/(?<popWhat>OfficeLink.application|(PopXLTool|PopFVC|PopMSWindowTool|PopAuditTool)\()/gmi);
+    private rxPopWhatVPG = new RegExp(/javascript:(?<popWhat>\w*)(\(['"](?<vpg>\w+){0,1}['"])/gm);
 
     /** @returns true if this is a Microsoft Windows OS device */
     public IsWindowsOS(): boolean {
