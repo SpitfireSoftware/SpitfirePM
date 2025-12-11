@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9400.8";
+const ClientPackageVersion : string = "23.9400.9";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -796,7 +796,23 @@ export class sfRestClient {
             if (!UCFK) {
                 if (sfRestClient._WCC.UserKey === RESTClient.EmptyKey)
                     console.warn(`CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for ${ucModule}|${ucFunction}!  LOGIN AGAIN!`)
-                else console.warn(`CheckPermit could not find ${ucModule}|${ucFunction} - verify proper case/trim!`);
+                else {
+                    console.warn(`CheckPermit() could not find ${ucModule}|${ucFunction} - verify proper case/trim!`);
+                    if (!RESTClient._LoadUCFunctionMapHasBeenForced) {
+                        console.log(`CheckPermit() is reloading the permit map...`);
+                        await RESTClient.LoadUCFunctionMap(true);
+                        const retryPromise = RESTClient.CheckPermit(ucModule,ucFunction,optionalDTK,optionalProject,optionalReference);
+                        retryPromise.then((p)=>{
+                            ResolveThisPermit(p);
+                        })
+                        .catch((r)=>{
+                            console.warn(`CheckPermit() retry failed...`,r);
+                            ResolveThisPermit(0);
+                        });
+                        return;
+                    }
+                }
+
                 ResolveThisPermit(0);
                 return;
             }
@@ -2093,18 +2109,19 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     return cacheResult;
 }
 
-
+    private _LoadUCFunctionMapHasBeenForced = false;
 
     /**
      * Loads UC Function Keys and corresponding Module/System Names
      * NOTE: returns a JQueryPromise
     */
-    protected LoadUCFunctionMap(): JQueryPromise<any> {
-        var RESTClient: sfRestClient = this;
-        var DeferredResult = $.Deferred();
-        var permitCheck = DeferredResult.promise();
+    protected LoadUCFunctionMap(force?:boolean): JQueryPromise<any> {
+        let RESTClient: sfRestClient = this;
+        let DeferredResult = $.Deferred();
+        let permitCheck = DeferredResult.promise();
+        if (force) RESTClient._LoadUCFunctionMapHasBeenForced = true;
 
-        if (sfRestClient._UCPermitMap._etag.w === 0) {
+        if (sfRestClient._UCPermitMap._etag.w === 0 && !force) {
             // see about localStorage
             var ls = JSON.parse(localStorage.getItem(sfRestClient._z.lsKeys.api_session_permits_map)!);
             if (ls && typeof ls._etag.w === "number") {
@@ -2123,13 +2140,12 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 return permitCheck;
                 }
 
-            if ((Date.now() - sfRestClient._UCPermitMap._etag.w) < (sfRestClient._Options.DVCacheLife * 4)   ) {
+            if (!force && (Date.now() - sfRestClient._UCPermitMap._etag.w) < (sfRestClient._Options.DVCacheLife * 4))   {
                 // great: we have a map and it isn't old
                 DeferredResult.resolve(sfRestClient._UCPermitMap);
                 return permitCheck;
             }
         }
-
 
         if (!sfRestClient._SessionClientGetUCFKMap)            sfRestClient._SessionClientGetUCFKMap = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]);
 

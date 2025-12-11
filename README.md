@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9400.9 - CheckPermit automatically re-loads permit map if an unknown permit is requested
 23.9400.8 - Improves InvokeAction, adds fields to ProjectDocsOfType model
 23.9400.5 - Adds ConfigClient.GetFlexKeyInfo 
 23.9400.3 - Avoid stacked "Connection Check" dialogs
