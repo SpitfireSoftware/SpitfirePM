@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9400.9";
+const ClientPackageVersion : string = "23.9400.11";
 
 // originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -170,6 +170,27 @@ class PartStorageData {
 
     static _LoadedParts: PartStorageList = new Map<PartContextKey, PartStorageData>();
     public static ClearCache() { this._LoadedParts = new Map<PartContextKey, PartStorageData>(); }
+    /**
+     * 
+     * @param client sfRestClient
+     * @param partName something like ActionItems or ProjectCA
+     * @param forDocType GUID
+     * @param forProject project ID; if empty client.GetPageProjectKey() is used
+     * @param context 
+     * @returns true if the CFG had been in the cache
+     * @see RegisterRestoredCFG
+     */
+    public static ClearCachedCFG(client: sfRestClient, partName: string, 
+                                        forDocType: GUID | undefined, forProject: GUID | undefined, 
+                                        context: string | undefined):boolean {
+        if (this._LoadedParts?.size === 0) return false;
+        if (!forProject) forProject = client.GetPageProjectKey();
+        const ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
+        let thisPart: PartStorageData;
+        let result =             PartStorageData._LoadedParts.delete(ReferenceKey);
+        return result;
+    }
+
     /**
      * 
      * @param client sfRestClient
@@ -1254,6 +1275,19 @@ export class sfRestClient {
     GetPartCFG(partName: string, forDocType?: GUID, forProject?:string, partContext?: string): Promise<UIDisplayPart | null> {
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType,forProject, partContext);
         return thisPart.CFGLoader();
+    }
+
+ /**
+     * Tell the cfg manager about a CFG that should be discarded
+     * @param partName 
+     * @param forDocType 
+     * @param forProject 
+     * @param partContext 
+     * @returns  true if removed
+     * @see GetPartCFG
+     */
+    DiscardPartCFGCache(partName: string, forDocType?: GUID, forProject?:string, partContext?: string): boolean {
+        return PartStorageData.ClearCachedCFG(this,partName,forDocType,forProject,partContext);
     }
 
     /**
