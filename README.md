@@ -50,3 +50,4 @@ apiResult.then( (a) => {
  1.40.205 - Improved RecentDocList management
  1.40.208 - Improved poor Signal message and TableAndFieldInfo type
 ```
+Originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
