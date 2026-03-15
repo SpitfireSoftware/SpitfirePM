@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9500.05";
+const ClientPackageVersion : string = "23.9500.06";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -4285,6 +4285,22 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     private notificationForcedCheckIntervalMS: number = 567;
     private lastNotificationHashCode: string = "";
 
+    SimpleNotification( showMsg: string,type: iWebixMessageType ):void {
+        const thisRestClient = this;
+        if (thisRestClient.isWebix()) {
+            const m = {
+                text: showMsg,
+                type: type,
+                expire: 1345 + (showMsg.length * 50) + 1,
+                id: `sfSimpleNotificationSignal`
+            }
+            self.webix?.message(m as unknown as any);
+        }
+        else {
+            thisRestClient.DisplayUserNotification();
+        }
+    }
+
     /** Checks backend for a new system notification and displays it */
     CheckForSystemNotification(force=false) {
         const SystemAPI = new _SwaggerClientExports.SystemClient();
@@ -5892,6 +5908,12 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 if (!top?.sfClient.IsDocumentPage()) {
                     sfHub.server.sessionAlive();
                 }
+            }
+
+            sfHub.client.userNotification = function (showMsg:string,type:iWebixMessageType):void
+            {
+                console.log(`${new Date().toSFLogTimeString()} sfPMSHub: Signal.userNotification -${showMsg} `);
+                RESTClient.SimpleNotification(showMsg,type);
             }
 
             sfHub.client.userLoggedOut = function () {

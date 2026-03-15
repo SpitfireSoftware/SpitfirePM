@@ -44,6 +44,7 @@ declare global {
     interface CEPStoreElementValue {(el: JQuery,$EDIT: JQuery, $FeedBack: JQuery,newVal:string|number, finalValue?:string, validateAK?:boolean):void}
     interface StringThenVoid { (stringValue:string): void}
     interface StringThenBooleanPromise { (stringValue:string): Promise<boolean>}
+    interface StringAndWxMsgTypeThenVoid { (stringValue:string,mType:iWebixMessageType): void}
     interface SimpleBooleanPromise {(): Promise<boolean>}
     interface SimpleMethod {():void}
     // sfClassic interfaces ^^^
@@ -68,6 +69,7 @@ declare global {
             systemWideUserNotification: any;
             tickleSession:SimpleMethod;
             userLoggedOut:SimpleMethod;
+            userNotification:StringAndWxMsgTypeThenVoid;
         }
         connection: {
 
