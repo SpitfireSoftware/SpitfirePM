@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9500.5 - Adds Bulk PDF Summary endpoint
 23.9500.4 - Adds Cancel and Send Task Results endpoints
 23.9500.1 - Adds ZAP project endpoint 
 23.9400.9 - CheckPermit automatically re-loads permit map if an unknown permit is requested
