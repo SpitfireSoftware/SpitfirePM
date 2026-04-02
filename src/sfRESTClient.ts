@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9500.08";
+const ClientPackageVersion : string = "23.9500.09";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -5601,9 +5601,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     /**
-     * detects Global function call that is now handled by this client
+     * detects Global function call and performs the action that is now handled by this client
      * @param request can start with javascript:
-     * @returns updated request 
+     * @returns updated request string
      */
     public HandleEvalRequest( request: string ):string {
         let RESTClient = this;
@@ -5611,7 +5611,8 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
         if (request.includes("(")) {
             const token:string = request.substring(0,request.indexOf("("));
-            if ( typeof (RESTClient as any)[token] === "function") request = `RESTClient.${request}`;
+            if ( typeof (RESTClient as any)[token] === "function" 
+                && typeof top === "object" && typeof top?.sfClient === "object" ) request = `top.sfClient.${request}`;
         }
 
         try {
