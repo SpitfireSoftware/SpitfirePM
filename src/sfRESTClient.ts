@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9500.07";
+const ClientPackageVersion : string = "23.9500.08";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -371,12 +371,10 @@ class QAInfoOptions {
             CSSValue = CSSValue.trim();
             if (CSSValue.startsWith("'") || CSSValue.startsWith("\"")) {
                 try {
-                    // CSSValue = eval(CSSValue);
-                    // Instead of eval, use string replace
                     CSSValue = CSSValue.replace(/['"]/g, '').trim();
                     CSSValue = CSSValue.trim();
                 } catch (ex) {
-                    console.warn("CSSPropertyValueOrEmpty could not EVAL {0}".sfFormat(CSSValue));
+                    console.warn(`CSSPropertyValueOrEmpty could not isolate ${CSSValue}`);
                 }
             }
         }
@@ -3643,7 +3641,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         $tbl.find("i.fa-boxes").on("click",function (event) {
             var js = self.$(event.currentTarget).data("js")
             if (!js) return;
-            eval(js); // see                ShowPageResourceString
+            (0,eval)(js); // see                ShowPageResourceString
         });
     }
 
@@ -3941,7 +3939,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
         else if (ActionString.startsWith("javascript:")) {
             try {
-                eval(ActionString.substring(11));
+                (0,eval)(ActionString.substring(11));
             }
             catch (ex:any) {
                 console.warn("InvokeAction::failed javascript ",ActionString, ex.message);
@@ -5618,7 +5616,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
         try {
             // eslint-disable-next-line no-eval 
-            eval(request);
+            (0,eval)(request);
         }
         catch (ej:any) {
             if (ej.name === "ReferenceError") {
@@ -6744,7 +6742,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
 
         var MyHostName = window.location.host;
-        if ((MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2017" || MyHostName.startsWith("sf")) && sfRestClient._Options.LogLevel < 2 ) this.SetOptions({ LogLevel: 2 }); // verbose
+        if ((MyHostName === "scm.spitfirepm.com" || MyHostName === "stany2023" || MyHostName.startsWith("sf")) && sfRestClient._Options.LogLevel < 2 ) this.SetOptions({ LogLevel: 2 }); // verbose
 
         // if the BrowserExtensionChecker has not been created, or if it is a legacy one (without .Version)....
         if ( document.body && (!window.ClickOnceExtension || !(window.ClickOnceExtension.Version))) window.ClickOnceExtension = new BrowserExtensionChecker();
