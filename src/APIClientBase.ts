@@ -14,7 +14,24 @@ export  class APIClientBase {
     //     console.log('APIClientBase.setBaseUrl()....${APIClientBase._SiteURL}');        
     // }
 
+// Regex to match ISO 8601 date strings (e.g., 2026-04-06T12:16:34Z)
+    private readonly _dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d*)?(?:[-+]\d{2}:?\d{2}|Z)?$/;
+
+    // sadly jsonParseReviver is overwritten by nSwag
+    protected jsonParseReviver: {(key: string, value: any):any} | undefined = undefined;
+    // we will replace jsonParseReviver with this
+    protected jsonParseReviverLogic: ((key: string, value: any) => any) | undefined = (key, value) => {
+        if (typeof value === "string" && this._dateFormat.test(value)) {
+            return new Date(value);
+        }
+        return value;
+    };
+
     public getBaseUrl( baseURL : string) : string {
+
+        // Re-arm the reviver function
+        if (!this.jsonParseReviver)  this.jsonParseReviver= this.jsonParseReviverLogic;
+
         if (APIClientBase._SiteURL === null) {
             if (window.location.origin === "http://localhost" && window.location.pathname === "/powerux/") {
                 console.log('APIClientBase.getBaseUrl(${baseURL})....detected DEV path');
