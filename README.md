@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9500.12 - DataModels are now interfaces instead of classes (increases ES2022 compatability)
 23.9500.11 - Adds Preset Search FolderSource
 23.9500.8 - Vite 8 compatibility
 23.9500.7 - adds forDeviceType optional to GetProjectDocSummary endpoint 

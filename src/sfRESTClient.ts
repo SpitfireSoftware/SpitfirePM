@@ -1,5 +1,5 @@
 import { GoogleAnalyticPayload, GUID } from "./globals";
-import {  IUCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
+import {  UCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 //import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9500.11";
+const ClientPackageVersion : string = "23.9500.12";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -229,7 +229,7 @@ class PartStorageData {
                 }
             } catch (error) {
                 console.warn(error);
-                thisPart!.CFG = new UIDisplayPart();
+                thisPart!.CFG = {} as UIDisplayPart;
                 throw error;
             }
         }
@@ -423,7 +423,7 @@ export interface iDocumentModel extends    iDocumentModelBase {
     DocHeaderData: _SwaggerClientExports.DocMasterDetail;
     CurrentRouteRow: _SwaggerClientExports.DocRoute;
     CurrentAttachments: _SwaggerClientExports.DocAttachment[];
-    SaveDocumentPatch: {(deltas:_SwaggerClientExports.IDocFieldChange[],isDone: true | iRaiseDocSaveFinished):Promise<NVPair>}
+    SaveDocumentPatch: {(deltas:_SwaggerClientExports.DocFieldChange[],isDone: true | iRaiseDocSaveFinished):Promise<NVPair>}
 
     getExclusivityMode: {():number};
     // and much more!
@@ -577,7 +577,7 @@ export class sfRestClient {
         var RESTClient = this;
         rawData.forEach(function(row:DataModelRow) {
             if ( row[keyName] && !result.find(el=> el.RowKey === row[keyName])) {
-                result.push(new _SwaggerClientExports.CurrentDataSummary({"RowKey":row[keyName], "ETag": row["ETag"]}));
+                result.push({"RowKey":row[keyName], "ETag": row["ETag"]} as  _SwaggerClientExports.CurrentDataSummary );
             }
         });
 
@@ -840,7 +840,7 @@ export class sfRestClient {
                 if (!(sfRestClient._LoadedPermits.has("0"))) { // global permissions
                     var api = new SessionClient(this._SiteURL);
                     sfRestClient.GlobalPermitAPIPromise  = api.getProjectPermits("0");
-                    sfRestClient._LoadedPermits.set("0",new _SwaggerClientExports.UCPermitSet()); // this prevents repeat requests
+                    sfRestClient._LoadedPermits.set("0",{} as _SwaggerClientExports.UCPermitSet); // this prevents repeat requests
                     if (sfRestClient.GlobalPermitAPIPromise) {
                         sfRestClient.GlobalPermitAPIPromise.then((r) => {
                             if (r) {
@@ -897,7 +897,7 @@ export class sfRestClient {
                     $.each(thisSource, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
                         if (ThisUCFK === UCFK) {
                             if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, cl:`,capabilitySet);
-                            $.each(capabilitySet, function OnePermitCheck(_n, p: IUCPermit) {
+                            $.each(capabilitySet, function OnePermitCheck(_n, p: UCPermit) {
                                 if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, p:`,p);
                                 var thisPermitValue : Permits = 0;
                                 if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
@@ -1033,7 +1033,7 @@ export class sfRestClient {
             }
 
             //var apiResultPromise: Promise<Suggestion[] | null> = api.getSuggestions4(lookupName, "1", DependsOnSet[0], DependsOnSet[1], DependsOnSet[2], DependsOnSet[3],seedValue,limit);
-            var SuggestionContext = new _SwaggerClientExports.QueryFilters();
+            var SuggestionContext = {} as  _SwaggerClientExports.QueryFilters;
             SuggestionContext.DependsOn = DependsOnSet;
             SuggestionContext.MatchingSeed = seedValue;
             SuggestionContext.ResultLimit = limit;
@@ -1183,7 +1183,7 @@ export class sfRestClient {
             if (DependsOnSet[index] == "undefined") DependsOnSet.pop();
           }
 
-        var DVFilters : _SwaggerClientExports.DVRequest  = new _SwaggerClientExports.DVRequest();
+        var DVFilters : _SwaggerClientExports.DVRequest  = {} as _SwaggerClientExports.DVRequest;
         DVFilters.DVName = displayName;
         DVFilters.MatchingValue = keyValue;
         DVFilters.DependsOn = DependsOnSet;
@@ -1327,9 +1327,24 @@ export class sfRestClient {
         return thisPart.CFGLoader();
     }
 
+    static isXferFilesStatus(obj: any): obj is _SwaggerClientExports.XferFilesStatus {
+        return typeof obj === 'object' && obj !== null && 'error' in obj;
+    }
+
+    static isFileInformation(obj: any): obj is _SwaggerClientExports.FileInformation {
+        return typeof obj === 'object' && obj !== null && 'FileKey' in obj;
+    }
+    static isMenuAction(obj: any) : obj is _SwaggerClientExports.MenuAction {
+        return typeof obj === 'object' && obj !== null && 'HRef' in obj;
+    }
+
+    static isDateRange(obj: any) : obj is _SwaggerClientExports.DateRange {
+        return typeof obj === 'object' && obj !== null && ('FromDate' in obj || 'ThruDate' in obj);
+    }
+
     /** Returns URL for a file */
     GetFileURL( fileKey: GUID | _SwaggerClientExports.FileInformation, fn?: string, fileRev?: number,forDownload?: boolean) : string {
-        if (fileKey instanceof _SwaggerClientExports.FileInformation) {
+       if (sfRestClient.isFileInformation(fileKey)) {
             fn = fileKey.value;
             fileRev = fileKey.LatestRevision;
             fileKey = fileKey.FileKey as string;
@@ -1342,7 +1357,7 @@ export class sfRestClient {
     GetFilePreviewURL( fileKey: GUID | _SwaggerClientExports.FileInformation, width: number, height:number,
                         fn?: string,
                          fileRev?: number) : string {
-        if (fileKey instanceof _SwaggerClientExports.FileInformation) {
+        if (sfRestClient.isFileInformation(fileKey))  {
             fileRev = fileKey.LatestRevision;
             fn = fileKey.value;
             fileKey = fileKey.FileKey as string;
@@ -1661,7 +1676,7 @@ export class sfRestClient {
         this.heartbeat();
 
         var fd = new FormData();
-        var ff =  new _SwaggerClientExports.FileInformation();
+        var ff =  { } as _SwaggerClientExports.FileInformation;
         var RESTClient = this;
         ff.FileType = blobFile.type; // actually the mimeType
         ff.value = blobFile.name;
@@ -1671,7 +1686,7 @@ export class sfRestClient {
         (<any>ff).ETag = "na";
 
         return new Promise<_SwaggerClientExports.XferFilesStatus >(async result =>  {
-            var taskResult : _SwaggerClientExports.XferFilesStatus  = new  _SwaggerClientExports.XferFilesStatus();
+            var taskResult : _SwaggerClientExports.XferFilesStatus  = {} as _SwaggerClientExports.XferFilesStatus;
             let UploadURL = '';
             let FileUploadKey: string| null = '';
             let UseChunkMode: boolean = false;
@@ -1792,7 +1807,7 @@ export class sfRestClient {
         if (sfRestClient._Options.TaskStatePollInterval < 300) sfRestClient._Options.TaskStatePollInterval = 300;
         return new Promise<_SwaggerClientExports.HttpResponseJsonContent>(async result =>  {
             var taskResult : _SwaggerClientExports.HttpResponseJsonContent, waitResult : _SwaggerClientExports.HttpResponseJsonContent;
-            taskResult = new _SwaggerClientExports.HttpResponseJsonContent( {ThisStatus: 202});
+            taskResult =  {ThisStatus: 202} as  _SwaggerClientExports.HttpResponseJsonContent;
             var aborted= false;
             while (!aborted && taskResult.ThisStatus == 202) {
                 await new Promise(r => setTimeout(r, sfRestClient._Options.TaskStatePollInterval));
@@ -2293,7 +2308,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Creating getWCC request for HREF hash ${ForPageHash}`);
                 apiResult = <Promise<WCCData | null>> api.getWCC(RESTClient.GetPageQueryContent(newHref));
                 sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
-                sfRestClient.RecentDocumentList = [ new _SwaggerClientExports.MenuAction()];
+                sfRestClient.RecentDocumentList = [ {} as _SwaggerClientExports.MenuAction];
                 sfRestClient.RecentDocumentList[0].Enabled=false;
                 sfRestClient.RecentDocumentList[0].ItemText=' (still loading...)';
                 if (!RESTClient.IsDocumentPage())
@@ -2686,7 +2701,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         if (dmk) dmk = dmk.toLocaleLowerCase();
         let recent = sfRestClient.RecentDocumentList.find(ma=>{return ma.CommandArgument === dmk;});
         if (!recent) {
-            const MostRecent =new _SwaggerClientExports.MenuAction();
+            const MostRecent = {} as  _SwaggerClientExports.MenuAction;
             MostRecent.CommandArgument = dmk;
             MostRecent.ItemText = title;
             MostRecent.HrefTarget="_blank";
@@ -2780,8 +2795,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
    public IsRESTErrorResponse(testObject: _SwaggerClientExports.HttpResponseJsonContent | any) : boolean {
     if (!testObject) return false;
-    if (testObject instanceof _SwaggerClientExports.HttpResponseJsonContent) return true;
-    if (testObject.ThisStatus && testObject.ThisReason) return true;
+    if (typeof testObject === 'object' && testObject != null) 
+        if (testObject.ThisStatus && testObject.ThisReason) return true;
     return false;
     }
 
@@ -3705,7 +3720,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var UseNewTabWithName : string = "";
         var RESTClient = this;
         if (typeof actionString === "string") ActionString = actionString;
-        if ( actionString instanceof _SwaggerClientExports.MenuAction ) {
+        if ( sfRestClient.isMenuAction(actionString)) {
             if (actionString.HRef)         ActionString = actionString.HRef;
         }
         if (!ActionString) {
@@ -4029,7 +4044,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("FollowLinkViaSFLink() xt for: " + targetURL);
 
         var api =  new SessionClient(RESTClient._SiteURL);
-        var tokeArgs = new _SwaggerClientExports.TokenRequest();
+        var tokeArgs = {} as _SwaggerClientExports.TokenRequest;
         tokeArgs.Args = targetURL;
         tokeArgs.UserKey = RESTClient.GetPageContextValue("UserKey");
         tokeArgs.LoginSessionKey = RESTClient.GetPageContextValue("LoginSessionKey");
@@ -4958,7 +4973,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     /** Sends the specified message to the server log file using REST API */
     LogMessageOnServer(msgText: string) : void {
         var api = new SessionClient(this._SiteURL);
-        api.postToWebAppLog(new _SwaggerClientExports.APIData( {Data: msgText, IsURIEncoded: false}));
+        api.postToWebAppLog(  {Data: msgText, IsURIEncoded: false} as  _SwaggerClientExports.APIData);
     }
 
     GetSFTabCount(tabName? : string) : number {
@@ -5456,7 +5471,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         let npos: number = -1;
         let sResult: string;
         let useValue: string;
-        if (sValue instanceof _SwaggerClientExports.DateRange) {
+        if (sfRestClient.isDateRange( sValue)) {
             // MAR 23 DateRange does not support JSON.stringify() 
             useValue = `{"FromDate":"${(sValue.FromDate) ? new Date(sValue.FromDate).toISOString() : ''}", "ThruDate":"${(sValue.ThruDate) ? new Date(sValue.ThruDate).toISOString() : ''}`;
         }
@@ -6635,7 +6650,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         }
     };
 
-    protected _PermitMatches(permit: IUCPermit, optionalDTK?: GUID, optionalReference?: GUID): boolean {
+    protected _PermitMatches(permit: UCPermit, optionalDTK?: GUID, optionalReference?: GUID): boolean {
         // project match is assumed by this point (cached is by project)
         var result = true;
         if (permit.DocTypeKey) {

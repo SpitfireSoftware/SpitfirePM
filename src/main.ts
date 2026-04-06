@@ -3,7 +3,7 @@
 import { String, sfApplicationRootPath } from "./string.extensions";
 
 var x : string = sfApplicationRootPath;
-import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, IUCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart }
+import { ActionItemsClient, AlertsClient, ContactClient, ContactFilters, UCPermit, LookupClient,  SessionClient,  UCPermitSet,  UICFGClient, UIDisplayConfig, UIDisplayPart }
     from "./SwaggerClients"
 
 new ActionItemsClient();
