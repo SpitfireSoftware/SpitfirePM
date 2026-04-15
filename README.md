@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9600.1 - Constructing a view model of 3000 records and many fields improved
 23.9500.12 - DataModels are now interfaces instead of classes (increases ES2022 compatability)
 23.9500.11 - Adds Preset Search FolderSource
 23.9500.8 - Vite 8 compatibility

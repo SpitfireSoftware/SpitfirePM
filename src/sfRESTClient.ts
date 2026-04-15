@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9500.13";
+const ClientPackageVersion : string = "23.9600.1";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -723,16 +723,16 @@ export class sfRestClient {
         thisPart!.CFG!.UIItems!.forEach(element => thisPart!.RestClient._ApplyUICFGtoRawData(element, thisPart!, DataModelBuildKey));
 
         var ViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => {
-            $.when.apply($, thisPart!._PromiseList!)
-                .done(function () {
+            Promise.all(thisPart!._PromiseList!)
+                .then(function () {
                     var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
                     if (SingleInstanceMode) FinalData = FinalData[0] as DataModelCollection;
                     resolve(FinalData);
                     thisPart!.DataModels.delete(DataModelBuildKey);
                     if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log("ViewModel {0} complete in {1}t".sfFormat(DataModelBuildKey, Date.now() - StartAtTicks));
-                }).fail(function(jqXHR, textStatus, errorThrown) {
+                }).catch( ( errorThrown) => {
                     if (FailCount === 0) {
-                        var FinalData =thisPart!.DataModels.get(DataModelBuildKey!)!;
+                        var FinalData = thisPart!.DataModels.get(DataModelBuildKey!)!;
                         if (SingleInstanceMode) FinalData = FinalData[0] as DataModelCollection;
                         resolve(FinalData);
                         thisPart!.DataModels.delete(DataModelBuildKey);
@@ -888,7 +888,8 @@ export class sfRestClient {
 
             var finalCheck = [PPSPromise, UCFKPromise];
 
-            $.when.apply($, finalCheck).done(function () {
+            Promise.all(finalCheck)
+            .then(function () {
                 var finalPermit : Permits = 0;
                 var GlobalPermits = sfRestClient._LoadedPermits.get("0")?.Permits;
                 $.each([ThisProjectPermitSet?.Permits,GlobalPermits],function CheckOneSource(sourceIdx, thisSource) {
@@ -982,7 +983,7 @@ export class sfRestClient {
                 });
             });
 
-            $.when.apply($, finalCheck).done(function () {
+            Promise.all( finalCheck).then(function () {
                 ResolveList(PageParts)
             });
         });
