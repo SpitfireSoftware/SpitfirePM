@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -639,7 +639,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -1117,7 +1117,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -1555,7 +1555,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -3060,7 +3060,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -3245,9 +3245,9 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Sends a resource file to the current user via email
+     * Sends a resource file To the current user via email
      * @param fileKey Catalog File Key
-     * @param location Specifies where to look for the specified key.  Use CK, CRT, RS
+     * @param location Specifies where To look For the specified key.  Use CK, CRT, RS
      * @param refDMK (optional) Specifies the related document key
      */
     sendFile(fileKey: string, location: string | null, refDMK?: string | null | undefined) {
@@ -3414,7 +3414,7 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Gets share state of file (check in/out, lock, etc
+     * Gets share state Of file (check In/out, lock, etc
      * @param fileKey Catalog File Key
      */
     getFileAccessControl(fileKey: string) {
@@ -3492,10 +3492,10 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Changes share state of file (check in/out, lock, etc
+     * Changes share state Of file (check In/out, lock, etc
      * @param fileKey Catalog File Key
      * @param newStatus New Status O(ut);L(ock);U(nlock);I(n);X(cancel);SYS
-     * @param expires (optional) When a checkout or lock expires
+     * @param expires (optional) When a checkout Or lock expires
      */
     updateFileAccess(fileKey: string, newStatus: string | null, expires?: Date | undefined) {
         return new Promise<boolean>((resolve, reject) => {
@@ -4839,8 +4839,8 @@ export class CatalogClient extends APIClientBase {
 
     /**
      * Returns a list of files in the specified location
-     * @param folderDesignation Catalog Folder ID (GUID or root)
-     * @param catalogFilters ClientDataSummary (of FileKey and eTags) and Additional Filters, including ProjectLike, TitleLike (filename), ContainsText, HasHash, DocNoLike, ForDocType, PrimaryDateRange, RefDateRange; seldom used: UserKey, FileKey, DocMasterKey (attached to), MaxItems, TimeoutFactor
+     * @param folderDesignation Catalog Folder ID (GUID Or root)
+     * @param catalogFilters ClientDataSummary (of FileKey And eTags) And Additional Filters, including ProjectLike, TitleLike (filename), ContainsText, HasHash, DocNoLike, ForDocType, PrimaryDateRange, RefDateRange; seldom used UserKey, FileKey, DocMasterKey(attached To), MaxItems, TimeoutFactor
      */
     getChangedFolderContents(folderDesignation: string | null, catalogFilters: QueryFilters) {
         return new Promise<DataDifferential | null>((resolve, reject) => {
@@ -4899,13 +4899,13 @@ export class CatalogClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+            return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -5338,7 +5338,7 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Returns URI for appropriate icon
+     * Returns URI For appropriate icon
      * @param fileType File type such As PDF, DOCX, etc
      * @param iconSize (optional) 16,20,24,32 etc; small(20); big(32)
      */
@@ -5419,9 +5419,9 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Returns URI for appropriate icon for each file type
+     * Returns URI For appropriate icon For Each file type
      * @param iconSize (optional) 16,20,24,32 etc; small(20); big(32)
-     * @param eTag (optional) Returns nothing if eTag matches supplied eTag
+     * @param eTag (optional) Returns Nothing If eTag matches supplied eTag
      */
     getIconListByType(iconSize?: string | null | undefined, eTag?: string | null | undefined) {
         return new Promise<any>((resolve, reject) => {
@@ -5857,7 +5857,7 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Returns settings for a preset search
+     * Returns settings For a preset search
      * @param setID Set ID
      */
     postPresetSearch(setID: string | null) {
@@ -5913,13 +5913,13 @@ export class CatalogClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("not found, or not accessible", status, _responseText, _headers, result404);
+            return throwException("Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -5935,7 +5935,7 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Returns settings for a preset search
+     * Returns settings For a preset search
      * @param setID Set ID
      */
     getPresetSearch(setID: string | null) {
@@ -5991,13 +5991,13 @@ export class CatalogClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("not found, or not accessible", status, _responseText, _headers, result404);
+            return throwException("Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -6087,9 +6087,9 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Returns changes to the list of files and folders that match the criteria
-     * @param folderDesignation Catalog Folder ID (GUID or ROOT)
-     * @param catalogFilters ClientDataSummary (of FileKey and eTags) and Additional Filters, including ProjectLike, TitleLike (filename), ContainsText, HasHash, DocNoLike, ForDocType, PrimaryDateRange, RefDateRange; seldom used: UserKey, FileKey, DocMasterKey (attached to), MaxItems, TimeoutFactor
+     * Returns changes to the list of files And folders that match the criteria
+     * @param folderDesignation Catalog Folder ID (GUID Or ROOT)
+     * @param catalogFilters ClientDataSummary (of FileKey And eTags) And Additional Filters, including ProjectLike, TitleLike (filename), ContainsText, HasHash, DocNoLike, ForDocType, PrimaryDateRange, RefDateRange; seldom used UserKey, FileKey, DocMasterKey(attached To), MaxItems, TimeoutFactor
      */
     getChangedSearchContents(folderDesignation: string | null, catalogFilters: QueryFilters) {
         return new Promise<DataDifferential | null>((resolve, reject) => {
@@ -6154,13 +6154,13 @@ export class CatalogClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+            return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -6176,9 +6176,9 @@ export class CatalogClient extends APIClientBase {
     }
 
     /**
-     * Returns a list of files and folders that match the criteria
-     * @param folderDesignation Catalog Folder ID (GUID or ROOT)
-     * @param catalogFilters Additional Filters, including ProjectLike, TitleLike (filename), ContainsText, HasHash, DocNoLike, ForDocType, PrimaryDateRange, RefDateRange; seldom used: UserKey, FileKey, DocMasterKey (attached to), MaxItems, TimeoutFactor
+     * Returns a list of files And folders that match the criteria
+     * @param folderDesignation Catalog Folder ID (GUID Or ROOT)
+     * @param catalogFilters Additional Filters, including ProjectLike, TitleLike (filename), ContainsText, HasHash, DocNoLike, ForDocType, PrimaryDateRange, RefDateRange; seldom used UserKey, FileKey, DocMasterKey(attached To), MaxItems, TimeoutFactor
      */
     searchContents(folderDesignation: string | null, catalogFilters: QueryFilters) {
         return new Promise<FileInformation[] | null>((resolve, reject) => {
@@ -6243,13 +6243,13 @@ export class CatalogClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+            return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -6499,6 +6499,7 @@ export class CatalogClient extends APIClientBase {
 
     /**
      * Returns the tree Of folders
+     * @param folderSource Blank or Catalog for standard folders, D3 for Dynamic Document Depth
      */
     getFolderTree(folderSource: string | null) {
         return new Promise<FileInformation[] | null>((resolve, reject) => {
@@ -6663,7 +6664,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -7154,7 +7155,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -7489,85 +7490,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
-    }
-
-    /**
-     * Returns the header Of the specified document, including a Document Session Key
-     * @param id Document Key
-     */
-    getDocHeader(id: string) {
-        return new Promise<DocMasterDetail | null>((resolve, reject) => {
-            this.getDocHeaderWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocHeaderWithCallbacks(id: string, onSuccess?: (result: DocMasterDetail | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocHeaderWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocHeader(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocHeader(xhr: any): DocMasterDetail | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocMasterDetail;
-            return result200;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -7741,6 +7664,84 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could Not persist the update", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the header Of the specified document, including a Document Session Key
+     * @param id Document Key
+     */
+    getDocHeader(id: string) {
+        return new Promise<DocMasterDetail | null>((resolve, reject) => {
+            this.getDocHeaderWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocHeaderWithCallbacks(id: string, onSuccess?: (result: DocMasterDetail | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocHeaderWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocHeaderWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocHeader(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocHeader(xhr: any): DocMasterDetail | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocMasterDetail;
+            return result200;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document Not found, Or Not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -16258,7 +16259,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     /**
      * Returns list of tabs
-     * @param id Document Key
+     * @param id Document Key or Document Type Key
      */
     getDocTabs(id: string) {
         return new Promise<TabStripDetails[] | null>((resolve, reject) => {
@@ -16754,7 +16755,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -16845,7 +16846,7 @@ export class ExcelToolsClient extends APIClientBase {
         });
     }
 
-    private getBFAAbstractWithCallbacks(id: string | null, onSuccess?: (result: BFAAbstract | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+    private getBFAAbstractWithCallbacks(id: string | null, onSuccess?: (result: BFAAbstract | null) => void, onFail?: (exception: HttpResponseJsonContent | HttpResponseJsonContent | HttpResponseJsonContent | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/excel/bfa/{id}/abstract";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -16891,19 +16892,19 @@ export class ExcelToolsClient extends APIClientBase {
         } else if (status === 403) {
             const _responseText = xhr.responseText;
             let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as HttpResponseJsonContent;
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
             let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as HttpResponseJsonContent;
             return throwException("id not found, or not accessible", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
             let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as HttpResponseJsonContent;
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
@@ -17597,7 +17598,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -19932,7 +19933,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -20279,7 +20280,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -20368,7 +20369,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -20932,7 +20933,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -21497,7 +21498,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -23769,7 +23770,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -25443,7 +25444,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -25944,7 +25945,7 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
     }
 
     /**
@@ -27782,6 +27783,8 @@ applies to DUE date filtering */
     IncludeDocuments?: boolean;
     /** when true, includes Files in the search result (sets hidden filter) */
     IncludeFiles?: boolean;
+    /** when true, shows the folder tree panel */
+    ShowTree?: boolean;
     /** Subtype (sets filter) */
     Subtype?: string | undefined;
     /** Page Title */
