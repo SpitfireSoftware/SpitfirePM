@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -639,7 +639,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -1117,7 +1117,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -1206,8 +1206,8 @@ export class AlertsClient extends APIClientBase {
     }
 
     /**
-     * Creates and stores an alert
-     * @param theAlert Model with new alert. Specify AlertText, Description.  UserKey, DocMasterKey, Project, Source, SourceKey and Info1 are optional;
+     * Creates And stores an alert
+     * @param theAlert Model With New alert. Specify AlertText, Description.  UserKey, DocMasterKey, Project, Source, SourceKey And Info1 are Optional;
      */
     createAlert(theAlert: UserAlert) {
         return new Promise<HttpStatusCode>((resolve, reject) => {
@@ -1263,7 +1263,7 @@ export class AlertsClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result400: any = null;
             result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
+            return throwException("Not allowed now", status, _responseText, _headers, result400);
 
         } else if (status === 401) {
             const _responseText = xhr.responseText;
@@ -1374,9 +1374,9 @@ export class AlertsClient extends APIClientBase {
     }
 
     /**
-     * Removes a specific alert item for the specified user
+     * Removes a specific alert item For the specified user
      * @param id Alert Key
-     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * @param forUserKey (optional) User Key (For proxy) Or 00000000-0000-0000-0000-000000000000 For self
      */
     deleteAlert(id: string | null, forUserKey?: string | undefined) {
         return new Promise<HttpStatusCode>((resolve, reject) => {
@@ -1435,7 +1435,7 @@ export class AlertsClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result400: any = null;
             result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
+            return throwException("Not allowed now", status, _responseText, _headers, result400);
 
         } else if (status === 401) {
             const _responseText = xhr.responseText;
@@ -1447,7 +1447,7 @@ export class AlertsClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("key not found", status, _responseText, _headers, result404);
+            return throwException("key Not found", status, _responseText, _headers, result404);
 
         } else if (status === 406) {
             const _responseText = xhr.responseText;
@@ -1469,8 +1469,8 @@ export class AlertsClient extends APIClientBase {
     }
 
     /**
-     * Removes all alert item for the specified user
-     * @param forUserKey (optional) User Key (for proxy) or 00000000-0000-0000-0000-000000000000 for self
+     * Removes all alert item For the specified user
+     * @param forUserKey (optional) User Key (For proxy) Or 00000000-0000-0000-0000-000000000000 For self
      */
     deleteAllAlerts(forUserKey?: string | undefined) {
         return new Promise<HttpStatusCode>((resolve, reject) => {
@@ -1526,7 +1526,7 @@ export class AlertsClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result400: any = null;
             result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("not allowed now", status, _responseText, _headers, result400);
+            return throwException("Not allowed now", status, _responseText, _headers, result400);
 
         } else if (status === 401) {
             const _responseText = xhr.responseText;
@@ -1555,7 +1555,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -3060,7 +3060,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -6664,7 +6664,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -7155,7 +7155,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -7490,7 +7490,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -16761,7 +16761,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -17604,7 +17604,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -19939,7 +19939,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -20286,7 +20286,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -20375,7 +20375,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -20939,7 +20939,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -21504,7 +21504,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -23776,7 +23776,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -23827,6 +23827,74 @@ export class SystemClient extends APIClientBase {
             let result200: any = null;
             result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return result200;
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns summary branding data
+     */
+    getSystemBrandingInfo() {
+        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
+            this.getSystemBrandingInfoWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getSystemBrandingInfoWithCallbacks(onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/system/branding/summary";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetSystemBrandingInfoWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetSystemBrandingInfoWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetSystemBrandingInfoWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetSystemBrandingInfo(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetSystemBrandingInfo(xhr: any): { [key: string]: any; } | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as { [key: string]: any; };
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -25450,7 +25518,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -25951,7 +26019,7 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("http://stany2023/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -29942,7 +30010,7 @@ export interface PasswordConfiguredOptions {
 export interface PDSData extends APIData {
     /** ID of data set */
     PDSKey?: string | undefined;
-    /** Type of change (put, set) */
+    /** Type of change (put to persist, set for memory only) */
     Mode?: string | undefined;
     /** key or AK source (eg: AK/tdkeymapkey/TK/@xtsKeyMap.BlockOut/9c337885-0fb1-460c-960a-3bacc1d8e0)
              */
@@ -31454,6 +31522,12 @@ export interface RouteActionInfo2 {
 export interface RouteActionInfo extends RouteActionInfo2 {
 }
 
+/** Concurrent-seat category. Web (named/concurrent browser + REST) seats and Spitfire Mobile Field seats are tracked as fully separate pools. */
+export enum SeatType {
+    Web = 0,
+    Mobile = 1,
+}
+
 /** Key value pair */
 export interface SelectCodeNode {
     /** the key */
@@ -32099,6 +32173,8 @@ export interface UserSessionInfo {
     AgentSummary?: string | undefined;
     /** Key of user  */
     UserKey?: string;
+    /** Seat category consumed by this session (Web or Mobile Field) */
+    SeatType?: SeatType;
 }
 
 export interface Version {
