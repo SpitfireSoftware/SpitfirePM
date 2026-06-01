@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9600.4";
+const ClientPackageVersion : string = "23.9600.5";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -5647,12 +5647,35 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return request;
     }
 
+    private static readonly originalJQBind : Function = jQuery.fn.bind;
+    
     /**
      * Called by the global instance to connect to SignalR
      */
     protected static StartSignalRClientHub():void {
 
         if (self !== top) return;
+
+        // Intercept jQuery's event binding to redirect 'unload'
+        if (sfRestClient.originalJQBind == jQuery.fn.bind) { 
+            (jQuery.fn as any).bind = function (
+                this: any, 
+                type: unknown, 
+                data?: any, 
+                fn?: any
+            ) {
+                // 3. Added a safety check: make sure 'type' is actually a string before calling .includes()
+                if (typeof type === "string" && (type === "unload" || type.includes("unload"))) {
+                    // SignalR uses unload to stop the connection; we use pagehide instead
+                    console.warn("Intercepted binding to 'unload' event. Redirecting to 'pagehide' for better CHROME support.");
+                    return sfRestClient.originalJQBind.apply(this, ["pagehide", data, fn]);
+                }
+
+                // 4. Use rest parameters or cast 'arguments' to bypass strict argument types
+                return sfRestClient.originalJQBind.apply(this, arguments as any);
+            };
+        }
+
         if (!self.$.connection || !self.$.connection.sfPMSHub || !top.sfClient)  {
             setTimeout("top.sfClient.exports.sfRestClient.StartSignalRClientHub(); // retry",234)
             return;
