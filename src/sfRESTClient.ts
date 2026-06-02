@@ -5744,7 +5744,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         stateInfo = JSON.parse(stateInfo);
                     }
                     catch (error) {
-                        console.warn(`pingServer() Error parsing file state JSON `, stateInfo,error);
+                        console.warn(`fileStateChange() Error parsing file state JSON `, stateInfo,error);
                         return false;
                     }
                 }
