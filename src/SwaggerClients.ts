@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -639,7 +639,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1117,7 +1117,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1555,7 +1555,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -3060,7 +3060,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -6664,7 +6664,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -7155,7 +7155,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -7490,7 +7490,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -10818,162 +10818,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Returns the compliance for the specified document
-     * @param id Document Key
-     */
-    getDocCompliance(id: string) {
-        return new Promise<DocCompliance[] | null>((resolve, reject) => {
-            this.getDocComplianceWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocComplianceWithCallbacks(id: string, onSuccess?: (result: DocCompliance[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/compliance";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocComplianceWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocCompliance(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocCompliance(xhr: any): DocCompliance[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocCompliance[];
-            return result200;
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Deletes the compliance on the specified document
-     * @param id Document Key
-     * @param complianceKeys Compliance Item Keys
-     * @return Specified addresses not found
-     */
-    deleteDocCompliance(id: string, complianceKeys: string[]) {
-        return new Promise<string>((resolve, reject) => {
-            this.deleteDocComplianceWithCallbacks(id, complianceKeys, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private deleteDocComplianceWithCallbacks(id: string, complianceKeys: string[], onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/compliance";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(complianceKeys);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteDocComplianceWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocCompliance(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteDocCompliance(xhr: any): string | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 204) {
-            const _responseText = xhr.responseText;
-            let result204: any = null;
-            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return result204;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not acceptable", status, _responseText, _headers, result406);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
      * Updates the compliance on the specified document
      * @param id Document Key
      * @param updatedData Replacement compliance data
@@ -11144,6 +10988,162 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the compliance for the specified document
+     * @param id Document Key
+     */
+    getDocCompliance(id: string) {
+        return new Promise<DocCompliance[] | null>((resolve, reject) => {
+            this.getDocComplianceWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocComplianceWithCallbacks(id: string, onSuccess?: (result: DocCompliance[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/compliance";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocComplianceWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocCompliance(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocCompliance(xhr: any): DocCompliance[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocCompliance[];
+            return result200;
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes the compliance on the specified document
+     * @param id Document Key
+     * @param complianceKeys Compliance Item Keys
+     * @return Specified addresses not found
+     */
+    deleteDocCompliance(id: string, complianceKeys: string[]) {
+        return new Promise<string>((resolve, reject) => {
+            this.deleteDocComplianceWithCallbacks(id, complianceKeys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteDocComplianceWithCallbacks(id: string, complianceKeys: string[], onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/compliance";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(complianceKeys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteDocComplianceWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocCompliance(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteDocCompliance(xhr: any): string | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 204) {
+            const _responseText = xhr.responseText;
+            let result204: any = null;
+            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result204;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not acceptable", status, _responseText, _headers, result406);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -16761,7 +16761,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -17604,7 +17604,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -19939,7 +19939,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -20286,7 +20286,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -20375,7 +20375,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -20939,7 +20939,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -21504,7 +21504,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -23776,7 +23776,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -25518,7 +25518,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -26019,7 +26019,7 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -30246,7 +30246,9 @@ export interface ProjectAbstract {
     actionsMenu?: MenuAction[] | undefined;
     /** list of registers (includes link to project setup) */
     registerMenu?: MenuAction[] | undefined;
-    /** When true, Always Show Links */
+    /** SOP Links by tool part */
+    SOPMenu?: MenuAction[] | undefined;
+    /** When true, Always Show Links Part and ignore ProjectConfig | ExcludedPart.  Set from (undocumented) rule ProjectTypeConfig | LinksPart */
     AlwaysShowLinks?: boolean;
     /** When true, disable Note */
     ExcludeNoteUI?: boolean;
