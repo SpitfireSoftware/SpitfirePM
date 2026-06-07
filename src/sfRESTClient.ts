@@ -3345,7 +3345,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             case "SSPWR":
                 result = this.PageTypeNames.UserAccountRecovery;
                 break;
-            case "PLVP":
+            case "PLVP": case "poke":
                 result = this.PageTypeNames.PopupAdminTool;
                 break;
             case "PUP":
