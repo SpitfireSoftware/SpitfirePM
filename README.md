@@ -25,6 +25,8 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9600.9 - Adds BuildWCCInfoTableHTML
+23.9600.8 - Project SOP links and Send Log Endpoint
 23.9600.5 - SignalR monkey unload to pagehide
 23.9600.3 - Adds PresetSearch ShowTree
 23.9600.1 - Constructing a view model of 3000 records and many fields improved

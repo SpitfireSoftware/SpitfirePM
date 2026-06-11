@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9600.8";
+const ClientPackageVersion : string = "23.9600.9";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3569,13 +3569,58 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         return Context;
     }
 
+    /** builds the WCC info table HTML string
+     * @returns raw HTML string for the WCC list table
+    */
+    public BuildWCCInfoTableHTML(): string {
+        let htmlItems: string[] = [];
+
+        Object.entries(sfRestClient._WCC).forEach(([index, rItemRaw]: [string, number | string | boolean]) => {
+            let isJS = false;
+            let isGuid = false;
+            let isSkipped = false;
+            let rItem: string;
+
+            if (typeof rItemRaw === "string") {
+                isJS = rItemRaw.startsWith("javascript:");
+                isGuid = rItemRaw.length === 36;
+                rItem = rItemRaw;
+            }
+            else if (typeof rItemRaw === "boolean") rItem = rItemRaw ? "true" : "false";
+            else if (typeof rItemRaw === "number") rItem = `${rItemRaw}`;
+            else rItem = `Unexpected ${typeof rItemRaw}`;
+
+            const sortPad = ((isGuid || (index.endsWith("ID")) || isJS) ? "" : " ");
+
+            if (isJS) {
+                rItem = `<i class="fas fa-boxes sfShowPointer" data-js="${rItem.substring(11)}"></i>`;
+            }
+            else if (isGuid && rItem !== this.EmptyKey) {
+                rItem = `${rItem} &nbsp;<i class="far fa-clipboard clsEnabledImgBtn" title="Copy" data-text="${rItem}"></i>`;
+            }
+            else if (index === "Likeness") isSkipped = true;
+
+            if (!isSkipped) {
+                htmlItems.push(`<li>${sortPad}${index} = ${rItem}</li>`);
+            }
+        });
+
+        htmlItems.sort((a, b) => {
+            const textA = a.replace(/<[^>]*>/g, "").toUpperCase();
+            const textB = b.replace(/<[^>]*>/g, "").toUpperCase();
+            return textB < textA ? 1 : -1;
+        });
+
+        return `<ul class='WCCList'>${htmlItems.join("")}</ul>`;
+    }
+
     /** display support panel */
     public InvokeSupportPanel() : void {
         this.heartbeat();
 
         var RESTClient = this;
         if (!top) this.DisplayUserNotification("Missing Window Context...");
-        
+
         var $DVI : JQuery<HTMLDivElement> = self.$("<div class='sfUIShowDevInfo'  style='font-size:0.9em'/>");
         $DVI.html("Loading....");
         //width: window.top.$(window.top).width() * 0.88
@@ -3584,31 +3629,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             , show: { effect: "blind", duration: 100 }
         });
 
-        var $tbl = self.$("<ul class='WCCList' />");
-        var sortPad = "";
-        self.$.each(sfRestClient._WCC, function (index:string, rItemRaw:number | string | boolean) {
-            var isJS = false;
-            var isGuid = false;
-            var isSkipped = false;
-            var rItem : string;
-            if  (typeof rItemRaw === "string") {
-                isJS = rItemRaw.startsWith("javascript:");
-                isGuid = rItemRaw.length === 36;
-                rItem = rItemRaw;
-            }
-            else if (typeof rItemRaw === "boolean")  rItem = <boolean>rItemRaw ? "true" : "false";
-            else if (typeof rItemRaw === "number")  rItem = `${rItemRaw}`;
-            else rItem = `Unexpected ${typeof rItemRaw}`;
-            sortPad = ((isGuid || (index.endsWith("ID")) || isJS) ? "" : " ");
-            if (isJS) {
-                rItem = `<i class="fas fa-boxes sfShowPointer" data-js="${rItem.substring(11)}"></i>`;
-            }
-            else if (isGuid && rItem !== RESTClient.EmptyKey ) {
-                rItem = `${rItem} &nbsp;<i class="far fa-clipboard clsEnabledImgBtn" title="Copy" data-text="${rItem}"></i>`;
-            }
-            else if (index === "Likeness") isSkipped = true;
-            if (!isSkipped) $tbl.append("<li>" + sortPad + `${index} = ${rItem}</li>`); // avoid trim of sortPad
-        });
+        var tableHtml = RESTClient.BuildWCCInfoTableHTML();
+        var $tbl = self.$(tableHtml);
+
         //$tbl.append(`<li><i class="fas fa-pump-soap  clsEnabledImgBtn" title="Clear cache (safe)"></i>Clear local cache</li>`);
         RESTClient.AddDialogTitleButton($DVI,"btnDeleteLocalDB","Discard Local Configuration","ui-icon-trash").on("click",function() {
             var $A = RESTClient.jqAlert("Warning!  This blows away all user settings, including grid columns, home dashboard layout, etc)!","Discard User Settings");
@@ -3637,12 +3660,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             this.DisplayUserNotification("Cache has been cleared",4321);
         });
 
-        var SortedList = (<any>($tbl.find("li"))).sort(function (a:any, b:any) { return (self.$(b).text().toUpperCase()) < (self.$(a).text().toUpperCase()) ? 1 : -1; });
-        $tbl.html("").append(SortedList);
-        //$tbl.append(`<li><i class="fas fa-dumpster-fire clsEnabledImgBtn" title="Warning!"></i> Discard all settings</li>`);
         $DVI.html("");
-
         $tbl.appendTo($DVI);
+
         $tbl.find("i.fa-clipboard").on("click",(event)=>{
             var $btn = self.$(event.currentTarget);
             var text = $btn.data('text');
