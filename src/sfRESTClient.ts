@@ -8,7 +8,7 @@ import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same 
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 //import {dialog}    from "jquery-ui";
 
-const ClientPackageVersion : string = "23.9600.9";
+const ClientPackageVersion : string = "23.9600.10";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -3325,7 +3325,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             case "cusysm": case "system-admin":
                 result = this.PageTypeNames.AdminDashboard;
                 break;
-            case "cuManager":
+            case "cuManager": case "manage":
                 result = this.PageTypeNames.ManageDashboard;
                 break;
             case "login": case "Logout": case "loginRequired":  

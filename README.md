@@ -25,14 +25,15 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
-23.9600.9 - Adds BuildWCCInfoTableHTML
-23.9600.8 - Project SOP links and Send Log Endpoint
-23.9600.5 - SignalR monkey unload to pagehide
-23.9600.3 - Adds PresetSearch ShowTree
-23.9600.1 - Constructing a view model of 3000 records and many fields improved
-23.9500.12 - DataModels are now interfaces instead of classes (increases ES2022 compatability)
-23.9500.11 - Adds Preset Search FolderSource
-23.9500.8 - Vite 8 compatibility
+23.9600.10  - Adds csi-maintenance
+23.9600.9   - Adds BuildWCCInfoTableHTML
+23.9600.8   - Project SOP links and Send Log Endpoint
+23.9600.5   - SignalR monkey unload to pagehide
+23.9600.3   - Adds PresetSearch ShowTree
+23.9600.1   - Constructing a view model of 3000 records and many fields improved
+23.9500.12  - DataModels are now interfaces instead of classes (increases ES2022 compatability)
+23.9500.11  - Adds Preset Search FolderSource
+23.9500.8   - Vite 8 compatibility
 23.9500.7 - adds forDeviceType optional to GetProjectDocSummary endpoint 
 23.9500.6 - adds user notification signal
 23.9500.5 - Adds Bulk PDF Summary endpoint
