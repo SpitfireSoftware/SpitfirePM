@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -639,7 +639,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1117,7 +1117,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1555,7 +1555,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -3060,7 +3060,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -6664,7 +6664,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -6750,6 +6750,171 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Request inappropriate", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns all flex key segments
+     */
+    getFlexKeyList() {
+        return new Promise<FlexMask[] | null>((resolve, reject) => {
+            this.getFlexKeyListWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getFlexKeyListWithCallbacks(onSuccess?: (result: FlexMask[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/config/flex";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetFlexKeyListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetFlexKeyListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetFlexKeyListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetFlexKeyList(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetFlexKeyList(xhr: any): FlexMask[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as FlexMask[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes flex key segments by key
+     * @param keys Flex segment keys (GUIDs) to delete
+     */
+    deleteFlexKeys(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteFlexKeysWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteFlexKeysWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/config/flex";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteFlexKeysWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteFlexKeysWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteFlexKeysWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteFlexKeys(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteFlexKeys(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -7148,6 +7313,2898 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the list of account categories
+     */
+    getAccountCategories() {
+        return new Promise<WBPartEntry[] | null>((resolve, reject) => {
+            this.getAccountCategoriesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getAccountCategoriesWithCallbacks(onSuccess?: (result: WBPartEntry[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/account-categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetAccountCategoriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetAccountCategoriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetAccountCategoriesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetAccountCategories(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetAccountCategories(xhr: any): WBPartEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WBPartEntry[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts account categories
+     * @param data Account category rows to insert
+     */
+    insertAccountCategories(data: WBPartEntry[]) {
+        return new Promise<WBPartEntry[] | null>((resolve, reject) => {
+            this.insertAccountCategoriesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertAccountCategoriesWithCallbacks(data: WBPartEntry[], onSuccess?: (result: WBPartEntry[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/account-categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertAccountCategoriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertAccountCategoriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertAccountCategoriesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertAccountCategories(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertAccountCategories(xhr: any): WBPartEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WBPartEntry[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one account category
+     * @param data Account category row to update
+     */
+    patchAccountCategory(data: WBPartEntry) {
+        return new Promise<WBPartEntry | null>((resolve, reject) => {
+            this.patchAccountCategoryWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchAccountCategoryWithCallbacks(data: WBPartEntry, onSuccess?: (result: WBPartEntry | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/account-categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchAccountCategoryWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchAccountCategoryWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchAccountCategoryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchAccountCategory(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchAccountCategory(xhr: any): WBPartEntry | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WBPartEntry;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes account categories by key
+     * @param keys Account category row keys (GUIDs) to delete
+     */
+    deleteAccountCategories(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteAccountCategoriesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteAccountCategoriesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/account-categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAccountCategoriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAccountCategoriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAccountCategoriesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteAccountCategories(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAccountCategories(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the System Admin dashboard tool menu
+     */
+    getAdminTools() {
+        return new Promise<MenuAction[] | null>((resolve, reject) => {
+            this.getAdminToolsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getAdminToolsWithCallbacks(onSuccess?: (result: MenuAction[] | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/admin-tools";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetAdminToolsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetAdminToolsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetAdminToolsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetAdminTools(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetAdminTools(xhr: any): MenuAction[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MenuAction[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of alert subscriptions
+     */
+    getAlertSubscriptions() {
+        return new Promise<AlertSubscription[] | null>((resolve, reject) => {
+            this.getAlertSubscriptionsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getAlertSubscriptionsWithCallbacks(onSuccess?: (result: AlertSubscription[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetAlertSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetAlertSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetAlertSubscriptionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetAlertSubscriptions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetAlertSubscriptions(xhr: any): AlertSubscription[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AlertSubscription[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts alert subscriptions
+     * @param data Alert subscription rows to insert
+     */
+    insertAlertSubscriptions(data: AlertSubscription[]) {
+        return new Promise<AlertSubscription[] | null>((resolve, reject) => {
+            this.insertAlertSubscriptionsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertAlertSubscriptionsWithCallbacks(data: AlertSubscription[], onSuccess?: (result: AlertSubscription[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertAlertSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertAlertSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertAlertSubscriptionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertAlertSubscriptions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertAlertSubscriptions(xhr: any): AlertSubscription[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AlertSubscription[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one alert subscription
+     * @param data Alert subscription row to update
+     */
+    patchAlertSubscription(data: AlertSubscription) {
+        return new Promise<AlertSubscription | null>((resolve, reject) => {
+            this.patchAlertSubscriptionWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchAlertSubscriptionWithCallbacks(data: AlertSubscription, onSuccess?: (result: AlertSubscription | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchAlertSubscriptionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchAlertSubscriptionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchAlertSubscriptionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchAlertSubscription(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchAlertSubscription(xhr: any): AlertSubscription | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AlertSubscription;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes alert subscriptions by key
+     * @param keys Alert subscription row keys (GUIDs) to delete
+     */
+    deleteAlertSubscriptions(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteAlertSubscriptionsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteAlertSubscriptionsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAlertSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAlertSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAlertSubscriptionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteAlertSubscriptions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAlertSubscriptions(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of alert types
+     */
+    getAlertTypes() {
+        return new Promise<AlertType[] | null>((resolve, reject) => {
+            this.getAlertTypesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getAlertTypesWithCallbacks(onSuccess?: (result: AlertType[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetAlertTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetAlertTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetAlertTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetAlertTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetAlertTypes(xhr: any): AlertType[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AlertType[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts alert types
+     * @param data Alert type rows to insert
+     */
+    insertAlertTypes(data: AlertType[]) {
+        return new Promise<AlertType[] | null>((resolve, reject) => {
+            this.insertAlertTypesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertAlertTypesWithCallbacks(data: AlertType[], onSuccess?: (result: AlertType[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertAlertTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertAlertTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertAlertTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertAlertTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertAlertTypes(xhr: any): AlertType[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AlertType[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one alert type
+     * @param data Alert type row to update
+     */
+    patchAlertType(data: AlertType) {
+        return new Promise<AlertType | null>((resolve, reject) => {
+            this.patchAlertTypeWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchAlertTypeWithCallbacks(data: AlertType, onSuccess?: (result: AlertType | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchAlertTypeWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchAlertTypeWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchAlertTypeWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchAlertType(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchAlertType(xhr: any): AlertType | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AlertType;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes alert types by key
+     * @param keys Alert type row keys (GUIDs) to delete
+     */
+    deleteAlertTypes(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteAlertTypesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteAlertTypesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/alert-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteAlertTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteAlertTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteAlertTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteAlertTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteAlertTypes(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of cloud storage definitions
+     */
+    getCloudStores() {
+        return new Promise<CloudStore[] | null>((resolve, reject) => {
+            this.getCloudStoresWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCloudStoresWithCallbacks(onSuccess?: (result: CloudStore[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/cloud-storage";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCloudStoresWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCloudStoresWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCloudStoresWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetCloudStores(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCloudStores(xhr: any): CloudStore[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CloudStore[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts cloud storage definitions
+     * @param data Cloud storage rows to insert
+     */
+    insertCloudStores(data: CloudStore[]) {
+        return new Promise<CloudStore[] | null>((resolve, reject) => {
+            this.insertCloudStoresWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertCloudStoresWithCallbacks(data: CloudStore[], onSuccess?: (result: CloudStore[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/cloud-storage";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertCloudStoresWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertCloudStoresWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertCloudStoresWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertCloudStores(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertCloudStores(xhr: any): CloudStore[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CloudStore[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one cloud storage definition
+     * @param data Cloud storage row to update
+     */
+    patchCloudStore(data: CloudStore) {
+        return new Promise<CloudStore | null>((resolve, reject) => {
+            this.patchCloudStoreWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchCloudStoreWithCallbacks(data: CloudStore, onSuccess?: (result: CloudStore | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/cloud-storage";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchCloudStoreWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchCloudStoreWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchCloudStoreWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchCloudStore(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchCloudStore(xhr: any): CloudStore | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CloudStore;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes cloud storage definitions by key
+     * @param keys Cloud storage row keys (GUIDs) to delete
+     */
+    deleteCloudStores(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteCloudStoresWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteCloudStoresWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/cloud-storage";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteCloudStoresWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteCloudStoresWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteCloudStoresWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteCloudStores(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteCloudStores(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of code set values
+     */
+    getCodeSetValues() {
+        return new Promise<CodeSetValue[] | null>((resolve, reject) => {
+            this.getCodeSetValuesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCodeSetValuesWithCallbacks(onSuccess?: (result: CodeSetValue[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCodeSetValuesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetCodeSetValues(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCodeSetValues(xhr: any): CodeSetValue[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts code set values
+     * @param data Code set value rows to insert
+     */
+    insertCodeSetValues(data: CodeSetValue[]) {
+        return new Promise<CodeSetValue[] | null>((resolve, reject) => {
+            this.insertCodeSetValuesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertCodeSetValuesWithCallbacks(data: CodeSetValue[], onSuccess?: (result: CodeSetValue[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertCodeSetValuesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertCodeSetValues(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertCodeSetValues(xhr: any): CodeSetValue[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one code set value
+     * @param data Code set value row to update
+     */
+    patchCodeSetValue(data: CodeSetValue) {
+        return new Promise<CodeSetValue | null>((resolve, reject) => {
+            this.patchCodeSetValueWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchCodeSetValueWithCallbacks(data: CodeSetValue, onSuccess?: (result: CodeSetValue | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchCodeSetValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchCodeSetValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchCodeSetValueWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchCodeSetValue(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchCodeSetValue(xhr: any): CodeSetValue | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes code set values by key
+     * @param keys Code set value row keys (GUIDs) to delete
+     */
+    deleteCodeSetValues(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteCodeSetValuesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteCodeSetValuesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteCodeSetValuesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteCodeSetValues(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteCodeSetValues(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of code sets
+     */
+    getCodeSets() {
+        return new Promise<CodeSet[] | null>((resolve, reject) => {
+            this.getCodeSetsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCodeSetsWithCallbacks(onSuccess?: (result: CodeSet[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-sets";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCodeSetsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCodeSetsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCodeSetsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetCodeSets(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCodeSets(xhr: any): CodeSet[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSet[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts code sets
+     * @param data Code set rows to insert
+     */
+    insertCodeSets(data: CodeSet[]) {
+        return new Promise<CodeSet[] | null>((resolve, reject) => {
+            this.insertCodeSetsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertCodeSetsWithCallbacks(data: CodeSet[], onSuccess?: (result: CodeSet[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-sets";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertCodeSetsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertCodeSetsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertCodeSetsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertCodeSets(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertCodeSets(xhr: any): CodeSet[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSet[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one code set
+     * @param data Code set row to update
+     */
+    patchCodeSet(data: CodeSet) {
+        return new Promise<CodeSet | null>((resolve, reject) => {
+            this.patchCodeSetWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchCodeSetWithCallbacks(data: CodeSet, onSuccess?: (result: CodeSet | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-sets";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchCodeSetWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchCodeSetWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchCodeSetWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchCodeSet(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchCodeSet(xhr: any): CodeSet | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSet;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes code sets by key
+     * @param keys Code set row keys (GUIDs) to delete
+     */
+    deleteCodeSets(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteCodeSetsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteCodeSetsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/code-sets";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteCodeSetsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteCodeSetsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteCodeSetsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteCodeSets(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteCodeSets(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of company divisions
+     */
+    getCompanyDivisions() {
+        return new Promise<CompanyDivision[] | null>((resolve, reject) => {
+            this.getCompanyDivisionsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getCompanyDivisionsWithCallbacks(onSuccess?: (result: CompanyDivision[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/company-divisions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetCompanyDivisionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetCompanyDivisionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetCompanyDivisionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetCompanyDivisions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetCompanyDivisions(xhr: any): CompanyDivision[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CompanyDivision[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts company divisions
+     * @param data Company division rows to insert
+     */
+    insertCompanyDivisions(data: CompanyDivision[]) {
+        return new Promise<CompanyDivision[] | null>((resolve, reject) => {
+            this.insertCompanyDivisionsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertCompanyDivisionsWithCallbacks(data: CompanyDivision[], onSuccess?: (result: CompanyDivision[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/company-divisions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertCompanyDivisionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertCompanyDivisionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertCompanyDivisionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertCompanyDivisions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertCompanyDivisions(xhr: any): CompanyDivision[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CompanyDivision[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one company division
+     * @param data Company division row to update
+     */
+    patchCompanyDivision(data: CompanyDivision) {
+        return new Promise<CompanyDivision | null>((resolve, reject) => {
+            this.patchCompanyDivisionWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchCompanyDivisionWithCallbacks(data: CompanyDivision, onSuccess?: (result: CompanyDivision | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/company-divisions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchCompanyDivisionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchCompanyDivisionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchCompanyDivisionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchCompanyDivision(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchCompanyDivision(xhr: any): CompanyDivision | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CompanyDivision;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes company divisions by key
+     * @param keys Company division row keys (GUIDs) to delete
+     */
+    deleteCompanyDivisions(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteCompanyDivisionsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteCompanyDivisionsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/company-divisions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteCompanyDivisionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteCompanyDivisionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteCompanyDivisionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteCompanyDivisions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteCompanyDivisions(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of compliance types
+     */
+    getComplianceTypes() {
+        return new Promise<ComplianceType[] | null>((resolve, reject) => {
+            this.getComplianceTypesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getComplianceTypesWithCallbacks(onSuccess?: (result: ComplianceType[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/compliance-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetComplianceTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetComplianceTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetComplianceTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetComplianceTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetComplianceTypes(xhr: any): ComplianceType[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ComplianceType[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts compliance types
+     * @param data Compliance type rows to insert
+     */
+    insertComplianceTypes(data: ComplianceType[]) {
+        return new Promise<ComplianceType[] | null>((resolve, reject) => {
+            this.insertComplianceTypesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertComplianceTypesWithCallbacks(data: ComplianceType[], onSuccess?: (result: ComplianceType[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/compliance-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertComplianceTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertComplianceTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertComplianceTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertComplianceTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertComplianceTypes(xhr: any): ComplianceType[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ComplianceType[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one compliance type
+     * @param data Compliance type row to update
+     */
+    patchComplianceType(data: ComplianceType) {
+        return new Promise<ComplianceType | null>((resolve, reject) => {
+            this.patchComplianceTypeWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchComplianceTypeWithCallbacks(data: ComplianceType, onSuccess?: (result: ComplianceType | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/compliance-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchComplianceTypeWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchComplianceTypeWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchComplianceTypeWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchComplianceType(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchComplianceType(xhr: any): ComplianceType | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ComplianceType;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes compliance types by key
+     * @param keys Compliance type row keys (GUIDs) to delete
+     */
+    deleteComplianceTypes(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteComplianceTypesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteComplianceTypesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/compliance-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteComplianceTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteComplianceTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteComplianceTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteComplianceTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteComplianceTypes(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns the list of CSI codes
      */
     getCSIList() {
@@ -7213,6 +10270,1344 @@ export class ConfigClient extends APIClientBase {
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts CSI codes
+     * @param data CSI rows to insert
+     */
+    insertCSIList(data: CSIEntry[]) {
+        return new Promise<CSIEntry[] | null>((resolve, reject) => {
+            this.insertCSIListWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertCSIListWithCallbacks(data: CSIEntry[], onSuccess?: (result: CSIEntry[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/csi-maintenance";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertCSIListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertCSIListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertCSIListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertCSIList(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertCSIList(xhr: any): CSIEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CSIEntry[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one CSI code
+     * @param data CSI row to update
+     */
+    patchCSI(data: CSIEntry) {
+        return new Promise<CSIEntry | null>((resolve, reject) => {
+            this.patchCSIWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchCSIWithCallbacks(data: CSIEntry, onSuccess?: (result: CSIEntry | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/csi-maintenance";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchCSIWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchCSIWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchCSIWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchCSI(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchCSI(xhr: any): CSIEntry | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CSIEntry;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes CSI codes by key
+     * @param keys CSI row keys (GUIDs) to delete
+     */
+    deleteCSIList(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteCSIListWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteCSIListWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/csi-maintenance";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteCSIListWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteCSIListWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteCSIListWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteCSIList(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteCSIList(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of doc types
+     */
+    getDocTypes() {
+        return new Promise<DocTypeEntry[] | null>((resolve, reject) => {
+            this.getDocTypesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocTypesWithCallbacks(onSuccess?: (result: DocTypeEntry[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/doc-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocTypes(xhr: any): DocTypeEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocTypeEntry[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts doc types
+     * @param data Doc type rows to insert
+     */
+    insertDocTypes(data: DocTypeEntry[]) {
+        return new Promise<DocTypeEntry[] | null>((resolve, reject) => {
+            this.insertDocTypesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertDocTypesWithCallbacks(data: DocTypeEntry[], onSuccess?: (result: DocTypeEntry[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/doc-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertDocTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertDocTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertDocTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertDocTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertDocTypes(xhr: any): DocTypeEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocTypeEntry[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one doc type
+     * @param data Doc type row to update
+     */
+    patchDocType(data: DocTypeEntry) {
+        return new Promise<DocTypeEntry | null>((resolve, reject) => {
+            this.patchDocTypeWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchDocTypeWithCallbacks(data: DocTypeEntry, onSuccess?: (result: DocTypeEntry | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/doc-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchDocTypeWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchDocTypeWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchDocTypeWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchDocType(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchDocType(xhr: any): DocTypeEntry | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocTypeEntry;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes doc types by key
+     * @param keys Doc type row keys (GUIDs) to delete
+     */
+    deleteDocTypes(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteDocTypesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteDocTypesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/doc-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteDocTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteDocTypesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteDocTypesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocTypes(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteDocTypes(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of event agents
+     */
+    getEventAgents() {
+        return new Promise<EventAgent[] | null>((resolve, reject) => {
+            this.getEventAgentsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getEventAgentsWithCallbacks(onSuccess?: (result: EventAgent[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-agents";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetEventAgentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetEventAgentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetEventAgentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetEventAgents(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetEventAgents(xhr: any): EventAgent[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EventAgent[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts event agents
+     * @param data Event agent rows to insert
+     */
+    insertEventAgents(data: EventAgent[]) {
+        return new Promise<EventAgent[] | null>((resolve, reject) => {
+            this.insertEventAgentsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertEventAgentsWithCallbacks(data: EventAgent[], onSuccess?: (result: EventAgent[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-agents";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertEventAgentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertEventAgentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertEventAgentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertEventAgents(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertEventAgents(xhr: any): EventAgent[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EventAgent[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one event agent
+     * @param data Event agent row to update
+     */
+    patchEventAgent(data: EventAgent) {
+        return new Promise<EventAgent | null>((resolve, reject) => {
+            this.patchEventAgentWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchEventAgentWithCallbacks(data: EventAgent, onSuccess?: (result: EventAgent | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-agents";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchEventAgentWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchEventAgentWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchEventAgentWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchEventAgent(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchEventAgent(xhr: any): EventAgent | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EventAgent;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes event agents by key
+     * @param keys Event agent row keys (GUIDs) to delete
+     */
+    deleteEventAgents(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteEventAgentsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteEventAgentsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-agents";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteEventAgentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteEventAgentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteEventAgentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteEventAgents(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteEventAgents(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of event subscriptions
+     */
+    getEventSubscriptions() {
+        return new Promise<EventSubscription[] | null>((resolve, reject) => {
+            this.getEventSubscriptionsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getEventSubscriptionsWithCallbacks(onSuccess?: (result: EventSubscription[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetEventSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetEventSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetEventSubscriptionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetEventSubscriptions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetEventSubscriptions(xhr: any): EventSubscription[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EventSubscription[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts event subscriptions
+     * @param data Event subscription rows to insert
+     */
+    insertEventSubscriptions(data: EventSubscription[]) {
+        return new Promise<EventSubscription[] | null>((resolve, reject) => {
+            this.insertEventSubscriptionsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertEventSubscriptionsWithCallbacks(data: EventSubscription[], onSuccess?: (result: EventSubscription[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertEventSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertEventSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertEventSubscriptionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertEventSubscriptions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertEventSubscriptions(xhr: any): EventSubscription[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EventSubscription[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one event subscription
+     * @param data Event subscription row to update
+     */
+    patchEventSubscription(data: EventSubscription) {
+        return new Promise<EventSubscription | null>((resolve, reject) => {
+            this.patchEventSubscriptionWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchEventSubscriptionWithCallbacks(data: EventSubscription, onSuccess?: (result: EventSubscription | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchEventSubscriptionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchEventSubscriptionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchEventSubscriptionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchEventSubscription(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchEventSubscription(xhr: any): EventSubscription | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EventSubscription;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes event subscriptions by key
+     * @param keys Event subscription row keys (GUIDs) to delete
+     */
+    deleteEventSubscriptions(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteEventSubscriptionsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteEventSubscriptionsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/event-subscriptions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteEventSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteEventSubscriptionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteEventSubscriptionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteEventSubscriptions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteEventSubscriptions(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -7294,6 +11689,2124 @@ export class ConfigClient extends APIClientBase {
         }
         return null;
     }
+
+    /**
+     * Returns the list of regions
+     */
+    getRegions() {
+        return new Promise<Region[] | null>((resolve, reject) => {
+            this.getRegionsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getRegionsWithCallbacks(onSuccess?: (result: Region[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/regions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetRegionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetRegionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetRegionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetRegions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetRegions(xhr: any): Region[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Region[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts regions
+     * @param data Region rows to insert
+     */
+    insertRegions(data: Region[]) {
+        return new Promise<Region[] | null>((resolve, reject) => {
+            this.insertRegionsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertRegionsWithCallbacks(data: Region[], onSuccess?: (result: Region[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/regions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertRegionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertRegionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertRegionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertRegions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertRegions(xhr: any): Region[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Region[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one region
+     * @param data Region row to update
+     */
+    patchRegion(data: Region) {
+        return new Promise<Region | null>((resolve, reject) => {
+            this.patchRegionWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchRegionWithCallbacks(data: Region, onSuccess?: (result: Region | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/regions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchRegionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchRegionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchRegionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchRegion(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchRegion(xhr: any): Region | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Region;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes regions by key
+     * @param keys Region row keys (GUIDs) to delete
+     */
+    deleteRegions(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteRegionsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteRegionsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/regions";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteRegionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteRegionsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteRegionsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteRegions(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteRegions(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of roles
+     */
+    getRoles() {
+        return new Promise<UCRole[] | null>((resolve, reject) => {
+            this.getRolesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getRolesWithCallbacks(onSuccess?: (result: UCRole[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/roles";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetRolesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetRolesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetRolesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetRoles(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetRoles(xhr: any): UCRole[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UCRole[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts roles
+     * @param data Role rows to insert
+     */
+    insertRoles(data: UCRole[]) {
+        return new Promise<UCRole[] | null>((resolve, reject) => {
+            this.insertRolesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertRolesWithCallbacks(data: UCRole[], onSuccess?: (result: UCRole[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/roles";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertRolesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertRolesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertRolesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertRoles(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertRoles(xhr: any): UCRole[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UCRole[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one role
+     * @param data Role row to update
+     */
+    patchRole(data: UCRole) {
+        return new Promise<UCRole | null>((resolve, reject) => {
+            this.patchRoleWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchRoleWithCallbacks(data: UCRole, onSuccess?: (result: UCRole | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/roles";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchRoleWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchRoleWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchRoleWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchRole(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchRole(xhr: any): UCRole | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UCRole;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes roles by key
+     * @param keys Role row keys (GUIDs) to delete
+     */
+    deleteRoles(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteRolesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteRolesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/roles";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteRolesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteRolesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteRolesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteRoles(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteRoles(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of rule items
+     */
+    getRuleItems() {
+        return new Promise<RuleItem[] | null>((resolve, reject) => {
+            this.getRuleItemsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getRuleItemsWithCallbacks(onSuccess?: (result: RuleItem[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rule-items";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetRuleItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetRuleItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetRuleItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetRuleItems(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetRuleItems(xhr: any): RuleItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as RuleItem[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts rule items
+     * @param data Rule item rows to insert
+     */
+    insertRuleItems(data: RuleItem[]) {
+        return new Promise<RuleItem[] | null>((resolve, reject) => {
+            this.insertRuleItemsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertRuleItemsWithCallbacks(data: RuleItem[], onSuccess?: (result: RuleItem[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rule-items";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertRuleItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertRuleItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertRuleItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertRuleItems(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertRuleItems(xhr: any): RuleItem[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as RuleItem[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one rule item
+     * @param data Rule item row to update
+     */
+    patchRuleItem(data: RuleItem) {
+        return new Promise<RuleItem | null>((resolve, reject) => {
+            this.patchRuleItemWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchRuleItemWithCallbacks(data: RuleItem, onSuccess?: (result: RuleItem | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rule-items";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchRuleItemWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchRuleItemWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchRuleItemWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchRuleItem(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchRuleItem(xhr: any): RuleItem | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as RuleItem;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes rule items by key
+     * @param keys Rule item row keys (GUIDs) to delete
+     */
+    deleteRuleItems(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteRuleItemsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteRuleItemsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rule-items";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteRuleItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteRuleItemsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteRuleItemsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteRuleItems(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteRuleItems(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of rules
+     */
+    getRules() {
+        return new Promise<RuleEntry[] | null>((resolve, reject) => {
+            this.getRulesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getRulesWithCallbacks(onSuccess?: (result: RuleEntry[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetRulesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetRulesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetRulesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetRules(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetRules(xhr: any): RuleEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as RuleEntry[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts rules
+     * @param data Rule rows to insert
+     */
+    insertRules(data: RuleEntry[]) {
+        return new Promise<RuleEntry[] | null>((resolve, reject) => {
+            this.insertRulesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertRulesWithCallbacks(data: RuleEntry[], onSuccess?: (result: RuleEntry[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertRulesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertRulesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertRulesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertRules(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertRules(xhr: any): RuleEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as RuleEntry[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one rule
+     * @param data Rule row to update
+     */
+    patchRule(data: RuleEntry) {
+        return new Promise<RuleEntry | null>((resolve, reject) => {
+            this.patchRuleWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchRuleWithCallbacks(data: RuleEntry, onSuccess?: (result: RuleEntry | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchRuleWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchRuleWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchRuleWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchRule(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchRule(xhr: any): RuleEntry | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as RuleEntry;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes rules by key
+     * @param keys Rule row keys (GUIDs) to delete
+     */
+    deleteRules(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteRulesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteRulesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/rules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteRulesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteRulesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteRulesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteRules(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteRules(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of scoped code set values
+     */
+    getScopedCodeSetValues() {
+        return new Promise<ScopedCodeSetValue[] | null>((resolve, reject) => {
+            this.getScopedCodeSetValuesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getScopedCodeSetValuesWithCallbacks(onSuccess?: (result: ScopedCodeSetValue[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/scoped-code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetScopedCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetScopedCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetScopedCodeSetValuesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetScopedCodeSetValues(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetScopedCodeSetValues(xhr: any): ScopedCodeSetValue[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts scoped code set values
+     * @param data Scoped code set value rows to insert
+     */
+    insertScopedCodeSetValues(data: ScopedCodeSetValue[]) {
+        return new Promise<ScopedCodeSetValue[] | null>((resolve, reject) => {
+            this.insertScopedCodeSetValuesWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertScopedCodeSetValuesWithCallbacks(data: ScopedCodeSetValue[], onSuccess?: (result: ScopedCodeSetValue[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/scoped-code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertScopedCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertScopedCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertScopedCodeSetValuesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertScopedCodeSetValues(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertScopedCodeSetValues(xhr: any): ScopedCodeSetValue[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one scoped code set value
+     * @param data Scoped code set value row to update
+     */
+    patchScopedCodeSetValue(data: ScopedCodeSetValue) {
+        return new Promise<ScopedCodeSetValue | null>((resolve, reject) => {
+            this.patchScopedCodeSetValueWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchScopedCodeSetValueWithCallbacks(data: ScopedCodeSetValue, onSuccess?: (result: ScopedCodeSetValue | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/scoped-code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchScopedCodeSetValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchScopedCodeSetValueWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchScopedCodeSetValueWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchScopedCodeSetValue(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchScopedCodeSetValue(xhr: any): ScopedCodeSetValue | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes scoped code set values by key
+     * @param keys Scoped code set value row keys (GUIDs) to delete
+     */
+    deleteScopedCodeSetValues(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteScopedCodeSetValuesWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteScopedCodeSetValuesWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/scoped-code-set-values";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteScopedCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteScopedCodeSetValuesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteScopedCodeSetValuesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteScopedCodeSetValues(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteScopedCodeSetValues(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the list of workflow scripts
+     */
+    getWorkflowScripts() {
+        return new Promise<WorkflowScriptEntry[] | null>((resolve, reject) => {
+            this.getWorkflowScriptsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getWorkflowScriptsWithCallbacks(onSuccess?: (result: WorkflowScriptEntry[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/workflow-scripts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetWorkflowScriptsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetWorkflowScriptsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetWorkflowScriptsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetWorkflowScripts(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetWorkflowScripts(xhr: any): WorkflowScriptEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEntry[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts workflow scripts
+     * @param data Workflow script rows to insert
+     */
+    insertWorkflowScripts(data: WorkflowScriptEntry[]) {
+        return new Promise<WorkflowScriptEntry[] | null>((resolve, reject) => {
+            this.insertWorkflowScriptsWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private insertWorkflowScriptsWithCallbacks(data: WorkflowScriptEntry[], onSuccess?: (result: WorkflowScriptEntry[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/workflow-scripts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processInsertWorkflowScriptsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processInsertWorkflowScriptsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processInsertWorkflowScriptsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processInsertWorkflowScripts(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processInsertWorkflowScripts(xhr: any): WorkflowScriptEntry[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEntry[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one workflow script
+     * @param data Workflow script row to update
+     */
+    patchWorkflowScript(data: WorkflowScriptEntry) {
+        return new Promise<WorkflowScriptEntry | null>((resolve, reject) => {
+            this.patchWorkflowScriptWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchWorkflowScriptWithCallbacks(data: WorkflowScriptEntry, onSuccess?: (result: WorkflowScriptEntry | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/workflow-scripts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchWorkflowScriptWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchWorkflowScriptWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchWorkflowScriptWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchWorkflowScript(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchWorkflowScript(xhr: any): WorkflowScriptEntry | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEntry;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes workflow scripts by key
+     * @param keys Workflow script row keys (GUIDs) to delete
+     */
+    deleteWorkflowScripts(keys: string[]) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteWorkflowScriptsWithCallbacks(keys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteWorkflowScriptsWithCallbacks(keys: string[], onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/workflow-scripts";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteWorkflowScriptsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteWorkflowScriptsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteWorkflowScriptsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteWorkflowScripts(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteWorkflowScripts(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
 }
 
 export class ContactClient extends APIClientBase {
@@ -7303,7 +13816,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -7638,7 +14151,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -16909,7 +23422,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -17752,7 +24265,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -20087,7 +26600,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -20434,7 +26947,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -20523,7 +27036,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -21087,7 +27600,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -21652,7 +28165,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -23924,7 +30437,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -25751,7 +32264,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -26252,7 +32765,7 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -27936,6 +34449,76 @@ export interface AlertCondition {
     ETag?: string | undefined;
 }
 
+/** A single alert subscription.  Mirrors the AlertSubscription table in PMData.xsd; consumed by the Manage Dashboard Alert Subscriptions tool. */
+export interface AlertSubscription {
+    /** Row key.  (Property name matches the PMData column spelling "AlertSubcriptionKey".) */
+    AlertSubcriptionKey?: string;
+    /** The alert definition this subscription is for */
+    AlertDefKey?: string;
+    /** Optional subscribing user */
+    UserKey?: string | undefined;
+    /** Optional subscribing role */
+    UCRoleKey?: string | undefined;
+    /** Optional document type scope */
+    DocTypeKey?: string | undefined;
+    /** Optional document subtype scope */
+    Subtype?: string | undefined;
+    /** Description */
+    Description?: string | undefined;
+    /** Optional division scope */
+    DivisionID?: string | undefined;
+    /** Optional project scope */
+    Project?: string | undefined;
+    /** Recurrence code */
+    Recurs?: string | undefined;
+    /** Lead time */
+    LeadTime?: number;
+    /** Include routees */
+    IncludeRoutees?: boolean;
+    /** Send remote (mobile) notifications */
+    RemoteNotify?: boolean;
+    /** Suspend this subscription */
+    Suspend?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** Read-only: whether the alert definition allows recurrence */
+    AllowsRecur?: boolean;
+    /** Read-only: whether the alert definition allows lead time */
+    AllowsLeadTime?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A single alert type.  Mirrors the AlertType table in LVData.xsd; consumed by the System Admin Dashboard Alert Types tool. */
+export interface AlertType {
+    /** Row key (xsfAlertType) */
+    AlertTypeKey?: string;
+    /** Alert name */
+    AlertName: string;
+    /** Recurrence specification */
+    Recurs: string;
+    /** Lead time (days) */
+    LeadTime?: number;
+    /** Display sequence */
+    Sequence?: number;
+    /** Associated workflow script (optional) */
+    WorkflowScript?: string | undefined;
+    /** Whether the name is editable */
+    EditName?: boolean;
+    /** Whether a date is shown */
+    ShowDate?: boolean;
+    /** Whether recurrence is allowed */
+    AllowsRecur?: boolean;
+    /** Whether a lead time is allowed */
+    AllowsLeadTime?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** Whether this is a built-in (system) alert type */
+    BuiltIn?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Passes data to a simple API */
 export interface APIData {
     /** Raw Data */
@@ -28128,6 +34711,32 @@ export interface CloudChange {
     WhenModified?: Date;
 }
 
+/** A single cloud-storage definition.  Mirrors the CloudStore table in LVData.xsd; consumed by the System Admin Dashboard Cloud Storage tool.  The Have*Secret flags report whether a secret is on file without exposing it. */
+export interface CloudStore {
+    /** Row key (xsfCldStore) */
+    CldStoreKey?: string;
+    /** Cloud-store type code */
+    CldStoreType: string;
+    /** Drive name */
+    DriveName: string;
+    /** API URL */
+    APIURL: string;
+    /** Whether a drive-level secret is on file (computed) */
+    HaveDriveSecret?: boolean | undefined;
+    /** Whether an account-level secret is on file (computed) */
+    HaveAccountSecret?: boolean | undefined;
+    /** Whether a user-level secret is on file (computed) */
+    HaveUserSecret?: boolean | undefined;
+    /** Default path pattern */
+    DefaultPathPattern?: string | undefined;
+    /** Active flag */
+    Active?: boolean;
+    /** Number of references to this store (computed) */
+    UseCnt?: number;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Attributes describing a choice defined in Code Maintenance - for context UI */
 export interface CodeChoice {
     /** Name for a set of choices */
@@ -28144,6 +34753,68 @@ export interface CodeChoice {
     OnAdd?: boolean;
     /** Code Flag - use varies by code set */
     CodeFlag?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** Describes a named code set definition */
+export interface CodeSet {
+    /** Primary key */
+    CodeSetKey?: string;
+    /** Name of the code set */
+    SetName: string;
+    /** Type classification of the code set.  Usually CodeList or DocTypeSubcodes */
+    SetType: string;
+    /** Display name for the code set */
+    ShowName?: string | undefined;
+    /** Label for the code flag column */
+    CodeFlagLabel?: string | undefined;
+    /** Indicates whether values in this set may be edited */
+    AllowEdit?: boolean;
+    /** Indicates whether new values may be added to this set */
+    AllowAdd?: boolean;
+    /** Indicates whether this set supports a next-set reference */
+    AllowNextSet?: boolean;
+    /** Maximum length of code values in this set */
+    CodeSize?: number;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** Describes a value entry within a global named code set.  ScopedCodeSetValue for codes scoped by Doc Type. */
+export interface CodeSetValue {
+    /** Primary key */
+    CodeValueKey?: string;
+    /** Name of code set */
+    SetName: string;
+    /** Unique within SetName */
+    Code: string;
+    /** Description of Code */
+    Descript?: string | undefined;
+    /** For Site */
+    csCode?: string | undefined;
+    /** For Site */
+    csDate?: Date | undefined;
+    /** For Site */
+    csKey?: string | undefined;
+    /** For Site */
+    csString050?: string | undefined;
+    /** For Site */
+    csValue?: number | undefined;
+    /** For Site */
+    csWhen?: Date | undefined;
+    /** Flag */
+    Active?: boolean;
+    /** Flag */
+    OnAdd?: boolean;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
     /** eTag */
     ETag?: string | undefined;
 }
@@ -28208,6 +34879,144 @@ export interface Comment {
     csWhen?: Date | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A single company division.  Mirrors the CompanyDivisionList table in LVData.xsd; consumed by the System Admin Dashboard Company Divisions tool.  The cs* columns are the configurable custom-field slots carried by the division row. */
+export interface CompanyDivision {
+    /** Row key (xsfDivision) */
+    DivisionKey?: string;
+    /** Division id / code */
+    DivisionID: string;
+    /** Division name */
+    DivisionName: string;
+    /** Address line 1 */
+    Addr1: string;
+    /** Address line 2 */
+    Addr2: string;
+    /** City */
+    City: string;
+    /** State */
+    State: string;
+    /** Zip / postal code */
+    Zip: string;
+    /** Country */
+    Country: string;
+    /** Phone */
+    Phone: string;
+    /** Fax */
+    Fax: string;
+    /** Email */
+    EMail?: string | undefined;
+    /** Website */
+    Website?: string | undefined;
+    /** Logo reference */
+    Logo?: string | undefined;
+    /** Document header */
+    Header?: string | undefined;
+    /** Document footer */
+    Footer?: string | undefined;
+    /** Custom amount slot */
+    csAmount?: number | undefined;
+    /** Custom value slot */
+    csValue?: number | undefined;
+    /** Custom quantity slot */
+    csQty?: number | undefined;
+    /** Custom number slot */
+    csNumber?: number | undefined;
+    /** Custom check slot */
+    csCheck?: boolean;
+    /** Custom flag slot */
+    csFlag?: boolean;
+    /** Custom note slot */
+    csNote?: string | undefined;
+    /** Custom code slot */
+    csCode?: string | undefined;
+    /** Custom string slot (16) */
+    csString016?: string | undefined;
+    /** Custom string slot (30) */
+    csString030?: string | undefined;
+    /** Custom string slot (40) */
+    csString040?: string | undefined;
+    /** Custom string slot (50) */
+    csString050?: string | undefined;
+    /** Custom string slot (60) */
+    csString060?: string | undefined;
+    /** Custom string slot (80) */
+    csString080?: string | undefined;
+    /** Custom string slot (100) */
+    csString100?: string | undefined;
+    /** Custom string slot (120) */
+    csString120?: string | undefined;
+    /** Custom string slot (240) */
+    csString240?: string | undefined;
+    /** Custom contact slot */
+    csContactKey?: string | undefined;
+    /** Custom key slot */
+    csKey?: string | undefined;
+    /** Custom date slot */
+    csDate?: Date | undefined;
+    /** Custom timestamp slot */
+    csWhen?: Date | undefined;
+    /** Whether this is the primary division */
+    IsPrimary?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A single compliance-type definition.  Mirrors the ComplianceTypeList table in LVData.xsd; consumed by the Manage Dashboard Compliance Types tool.  (Not to be confused with DocCompliance, which is a compliance item on a document.) */
+export interface ComplianceType {
+    /** Row key */
+    ComplianceTypeKey?: string;
+    /** Compliance type name */
+    ComplianceName?: string | undefined;
+    /** Recurrence code */
+    Recurs?: string | undefined;
+    /** Lead days before expiration to alert */
+    LeadDays?: number;
+    /** Optional pay percentage withheld until compliant */
+    PayPercent?: number | undefined;
+    /** Optional workflow script */
+    WorkflowScript?: string | undefined;
+    /** Automatically control compliance */
+    AutoControl?: boolean;
+    /** Control payment on non-compliance */
+    PayControl?: boolean;
+    /** Generate alerts */
+    Alert?: boolean;
+    /** Allow a description on the compliance item */
+    AllowDescription?: boolean;
+    /** Allow a carrier */
+    AllowCarrier?: boolean;
+    /** Allow proof of compliance */
+    AllowProof?: boolean;
+    /** Allow an amount */
+    AllowAmount?: boolean;
+    /** Allow an effective date */
+    AllowEffective?: boolean;
+    /** Allow an expiration date */
+    AllowExpiration?: boolean;
+    /** Allow lead days */
+    AllowLeadDays?: boolean;
+    /** Allow recurrence */
+    AllowRecurs?: boolean;
+    /** Allow multiple compliance items */
+    AllowMultiple?: boolean;
+    /** Vendor can cover this compliance */
+    VendorCanCover?: boolean;
+    /** Peer can cover this compliance */
+    PeerCanCover?: boolean;
+    /** Check the amount */
+    CheckAmount?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** Read-only: has commitment maps */
+    HasCommitmentMaps?: boolean;
+    /** Read-only: has vendor maps */
+    HasVendorMaps?: boolean;
     /** eTag */
     ETag?: string | undefined;
 }
@@ -29706,6 +36515,56 @@ export interface DocRoute {
     MenuCommands?: MenuAction[] | undefined;
 }
 
+/** A single document type.  Mirrors the DocTypeList table in LVData.xsd; consumed by the System Admin Dashboard Doc Types tool.  (Named DocTypeEntry, not DocType, because a member may not share the enclosing type's name - CS0542.) */
+export interface DocTypeEntry {
+    /** Row key (xsfDocType) */
+    DocTypeKey?: string;
+    /** Document type name */
+    DocType: string;
+    /** Site-specific display name */
+    SiteName?: string | undefined;
+    /** Product this doc type belongs to */
+    Product: string;
+    /** Dashboard placement flag */
+    OnDashboard: string;
+    /** How the document opens */
+    OpenVia?: string | undefined;
+    /** Whether compliance is checked for this type */
+    CheckCompliance?: boolean;
+    /** Show on the project dashboard */
+    ProjectDashboard?: boolean | undefined;
+    /** Allow new-from-dashboard */
+    NewFromDashboard?: boolean | undefined;
+    /** Plan room enabled */
+    PlanRoom?: boolean;
+    /** Cloud sync enabled */
+    CloudSync?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** Active at the site level */
+    SiteActive?: boolean;
+    /** Parent doc type (optional) */
+    ParentType?: string | undefined;
+    /** Whether this type uses the item register (computed) */
+    UseItemRegister?: boolean;
+    /** Inbound email subject id (computed) */
+    EmailSubjID?: string | undefined;
+    /** Direct inbound email mode (computed) */
+    DirectInboundMode: string;
+    /** Whether items can carry attachments (computed) */
+    ItemAttachments?: boolean;
+    /** Whether web routing is limited (computed) */
+    LimitWebRouting?: boolean;
+    /** Allow mobile attachments via email (computed) */
+    MobileAttViaEml?: boolean;
+    /** Whether a project is optional (computed) */
+    ProjectIsOptional?: boolean;
+    /** Whether the document is created from its parent (computed) */
+    CreateFromParent?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Document State Information */
 export interface DocumentState {
     /** Identifies a Document */
@@ -29740,6 +36599,60 @@ export interface DVRequest {
 export interface EntityTagHeaderValue {
     Tag?: string | undefined;
     IsWeak?: boolean;
+}
+
+/** A single event agent (delivery endpoint).  Mirrors the EventAgentList table in LVData.xsd; consumed by the System Admin Dashboard Event Subscriptions tool. */
+export interface EventAgent {
+    /** Row key (xsfEventAgent) */
+    EventAgentKey?: string;
+    /** Agent name */
+    AgentName: string;
+    /** Agent type */
+    AgentType: string;
+    /** Agent URI / endpoint */
+    AgentURI: string;
+    /** Whether users may select this agent */
+    UserSelectable?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A single event subscription.  Mirrors the EventSubscriptionList table in LVData.xsd; consumed by the System Admin Dashboard Event Subscriptions tool.  The optional key columns scope the subscription (by user, role, doc type, file, container, etc.). */
+export interface EventSubscription {
+    /** Row key (xsfSubscription) */
+    SubscriptionKey?: string;
+    /** Owning event agent (xsfEventAgent) */
+    EventAgentKey?: string;
+    /** Scope: user */
+    UserKey?: string | undefined;
+    /** Scope: role */
+    UCRoleKey?: string | undefined;
+    /** Scope: doc type */
+    DocTypeKey?: string | undefined;
+    /** Scope: file */
+    FileKey?: string | undefined;
+    /** Scope: container */
+    ContainerKey?: string | undefined;
+    /** Scope: doc master */
+    DocMasterKey?: string | undefined;
+    /** Scope: originating user */
+    FromUser?: string | undefined;
+    /** Scope: project */
+    Project?: string | undefined;
+    /** Scope: file type */
+    FileType?: string | undefined;
+    /** Description */
+    Description?: string | undefined;
+    /** Bitmask of subscribed events */
+    EventFlags?: number;
+    /** Bitmask of subscribed item types */
+    ItemTypes?: number;
+    /** Active flag */
+    Active?: boolean | undefined;
+    /** eTag */
+    ETag?: string | undefined;
 }
 
 /** Information required for an export */
@@ -31610,6 +38523,20 @@ export interface RedirectResult {
     Request?: HttpRequestMessage | undefined;
 }
 
+/** A single region.  Mirrors the RegionList table in LVData.xsd; consumed by the Manage Dashboard Region Maintenance tool. */
+export interface Region {
+    /** Row key (xsfRegion) */
+    RegionKey?: string;
+    /** Region ID code */
+    RegionID?: string | undefined;
+    /** Region description */
+    Description?: string | undefined;
+    /** When this row was created */
+    Created?: Date;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Describes an SPRLineDetails Condition */
 export interface RelatedItemDetail {
     /** ID of Project (suitable for use as a key) */
@@ -31783,6 +38710,72 @@ export interface RouteActionInfo2 {
 }
 
 export interface RouteActionInfo extends RouteActionInfo2 {
+}
+
+/** A single rule.  Mirrors the RuleList table in LVData.xsd; consumed by the System Admin Dashboard Rule Maintenance tool.  (Named RuleEntry to avoid a member/type-name clash.) */
+export interface RuleEntry {
+    /** Row key (xsfRule) */
+    RuleKey?: string;
+    /** Rule name */
+    RuleName: string;
+    /** Filter info describing when the rule applies */
+    FilterInfo?: string | undefined;
+    /** Result data type */
+    ResultType?: string | undefined;
+    /** Description */
+    Description?: string | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A single rule item (test/result row under a rule).  Mirrors the RuleItems table in LVData.xsd; consumed by the System Admin Dashboard Rule Maintenance tool. */
+export interface RuleItem {
+    /** Row key (xsfRuleItem) */
+    RuleItemKey?: string;
+    /** Owning rule (xsfRule) */
+    RuleKey?: string;
+    /** Whether this item is distributed (computed) */
+    IsDistributed?: boolean;
+    /** Whether this item is immutable (computed) */
+    Immutable?: boolean;
+    /** Value to test against */
+    TestValue: string;
+    /** Filter value */
+    FilterValue?: string | undefined;
+    /** Result value when the test matches */
+    ResultValue?: string | undefined;
+    /** Purpose / notes */
+    Purpose?: string | undefined;
+    /** Evaluation weight (computed) */
+    Weight?: number | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** Represents a code set value entry scoped to a specific document type */
+export interface ScopedCodeSetValue {
+    /** Primary key */
+    DocSubtypeKey?: string;
+    /** Doc Type (Empty Key for 'all'). See CodeSetRedirect and ExcludeCommonChoices rules */
+    DocTypeKey?: string;
+    /** Segregates codes into sets */
+    SetName: string;
+    /** AK with SetName and DocTypeKey */
+    Code: string;
+    /** Description of Code */
+    Description: string;
+    /** Specifies another set of codes in cascade scenarios */
+    NextSet?: string | undefined;
+    /** Relevance varies by SetName (See CodeSet definition) */
+    CodeFlag?: boolean;
+    /** Flag, true if code still relevant. False does not prevent use. */
+    Active?: boolean;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
 }
 
 /** Concurrent-seat category. Web (named/concurrent browser + REST) seats and Spitfire Mobile Field seats are tracked as fully separate pools. */
@@ -32109,6 +39102,34 @@ export interface UCPermitSet {
     Project: string;
     /** Links to Module|Function  */
     Permits?: { [key: string]: UCPermit[]; } | undefined;
+}
+
+/** A single security role.  Mirrors the UCRoleList table in LVData.xsd; consumed by the System Admin Dashboard Roles tool. */
+export interface UCRole {
+    /** Row key (xsfUCRole) */
+    UCRoleKey?: string;
+    /** Parent role this one reports to (optional) */
+    ReportsTo?: string | undefined;
+    /** Role name */
+    RoleName: string;
+    /** Description */
+    Description?: string | undefined;
+    /** Bitmask of which conditions are allowed for this role */
+    ConditionsAllowed?: number;
+    /** Whether unconditional access is allowed */
+    AllowUnconditional?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** Number of members in this role (computed) */
+    RoleMemberCount?: number | undefined;
+    /** Number of routes referencing this role (computed) */
+    RoleRouteCount?: number | undefined;
+    /** Number of capabilities granted to this role (computed) */
+    RoleCapabilityCount?: number | undefined;
+    /** Number of sub-roles embedded in this role (computed) */
+    RoleEmbedCount?: number | undefined;
+    /** eTag */
+    ETag?: string | undefined;
 }
 
 /** Describes the live configuration for a UI element (not for edit, see UIPartConfig) */
@@ -32496,6 +39517,34 @@ export interface WarningHeaderValue {
     Date?: Date | undefined;
 }
 
+/** A single account category (work-breakdown part).  Mirrors the WBPartList table in LVData.xsd; consumed by the System Admin Dashboard Account Categories tool.  (Named WBPartEntry because a member may not share the enclosing type's name - CS0542.) */
+export interface WBPartEntry {
+    /** Row key (xsfWBPart) */
+    WBPartKey?: string;
+    /** Account category code */
+    WBPart: string;
+    /** Long / descriptive name */
+    LongName: string;
+    /** Category type */
+    WBType: string;
+    /** Category class */
+    WBClass?: string | undefined;
+    /** Display sequence */
+    Sequence?: number;
+    /** GL account */
+    GLAcct?: string | undefined;
+    /** Note */
+    Note?: string | undefined;
+    /** Include on budget templates */
+    BudgetTemplate?: boolean;
+    /** Available for change orders */
+    ChangeOrders?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Primary Site Weather Now */
 export interface WeatherAtLocation {
     /** Location (typically zip code) */
@@ -32529,6 +39578,28 @@ export interface WeatherAtLocation {
     Wind?: number;
     /** Barometric Pressure */
     Barometer?: number;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A single workflow script.  Mirrors the WorkflowScriptLib table in LVData.xsd; consumed by the System Admin Dashboard Workflow Scripts tool.  (Named WorkflowScriptEntry because a member may not share the enclosing type's name - CS0542.) */
+export interface WorkflowScriptEntry {
+    /** Row key (xsfDocWorkflow) */
+    WorkflowScriptKey?: string;
+    /** Script name */
+    WorkflowScriptName: string;
+    /** Script body (nvarchar(max)) */
+    WorkflowScript: string;
+    /** Purpose / notes */
+    Purpose?: string | undefined;
+    /** Last execution log (computed, nvarchar(max)) */
+    LastLog?: string | undefined;
+    /** When the script last ran (computed) */
+    LastRan?: Date | undefined;
+    /** Whether this script is distributed */
+    IsDistributed?: boolean;
+    /** Active flag */
+    Active?: boolean;
     /** eTag */
     ETag?: string | undefined;
 }

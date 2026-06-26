@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9600.11  - Adds Admin and Manage Tool Data Models and Endpoints
 23.9600.10  - Adds csi-maintenance
 23.9600.9   - Adds BuildWCCInfoTableHTML
 23.9600.8   - Project SOP links and Send Log Endpoint
