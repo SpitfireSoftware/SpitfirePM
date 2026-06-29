@@ -252,6 +252,69 @@ export class AccountClient extends APIClientBase {
     }
 
     /**
+     * Mint a short-lived download-session cookie
+     * @return Download cookie set (or an sfSession cookie was already present)
+     */
+    postDownloadSession() {
+        return new Promise<string>((resolve, reject) => {
+            this.postDownloadSessionWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private postDownloadSessionWithCallbacks(onSuccess?: (result: string) => void, onFail?: (exception: string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/account/downloadsession";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPostDownloadSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPostDownloadSessionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPostDownloadSessionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPostDownloadSession(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPostDownloadSession(xhr: any): string | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 204) {
+            const _responseText = xhr.responseText;
+            let result204: any = null;
+            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result204;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No recognized identity", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Digest an identity from an Google token
      * @param subId google nonvolatile id
      * @param nonce nonce
@@ -3044,6 +3107,272 @@ export class LookupClient extends APIClientBase {
             let result500: any = null;
             result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Internal Error", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+}
+
+export class ARRClient extends APIClientBase {
+    baseUrl: string;
+    beforeSend: any = undefined;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string) {
+        super();
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+    }
+
+    /**
+     * Build the routed-content download package
+     * @param data download request {RouteID}
+     */
+    getContent(data: ArrResponseData) {
+        return new Promise<string | null>((resolve, reject) => {
+            this.getContentWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getContentWithCallbacks(data: ArrResponseData, onSuccess?: (result: string | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/arr/content";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetContentWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetContentWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetContentWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetContent(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetContent(xhr: any): string | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("ARR token missing/expired", status, _responseText, _headers, result401);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Route/content not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Token does not match this route", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not build package; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Open a route-response link
+     * @param request open request {StepKey, RouteID}
+     */
+    openRoute(request: ArrOpenRequest) {
+        return new Promise<ArrOpenResult | null>((resolve, reject) => {
+            this.openRouteWithCallbacks(request, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private openRouteWithCallbacks(request: ArrOpenRequest, onSuccess?: (result: ArrOpenResult | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/arr/open";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processOpenRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processOpenRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processOpenRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processOpenRoute(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processOpenRoute(xhr: any): ArrOpenResult | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArrOpenResult;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Keys missing or malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Route step or route not found / withdrawn", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Record a route response
+     * @param data response data
+     */
+    recordResponse(data: ArrResponseData) {
+        return new Promise<ArrResponseResult | null>((resolve, reject) => {
+            this.recordResponseWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private recordResponseWithCallbacks(data: ArrResponseData, onSuccess?: (result: ArrResponseResult | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/arr/response";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processRecordResponseWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processRecordResponseWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processRecordResponseWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processRecordResponse(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processRecordResponse(xhr: any): ArrResponseResult | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArrResponseResult;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request missing required information", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("ARR token missing/expired", status, _responseText, _headers, result401);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Route not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Token does not match this route", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not save; see response", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -34525,6 +34854,92 @@ export interface APIData {
     Data?: string | undefined;
     /** when true, data has been uri encoded (encodeURIComponent) */
     IsURIEncoded?: boolean;
+}
+
+/** Route Response Wizard (ARR / case 36631) data-transfer objects, shared between the sfPMS web app (ARRController) and the OpenAPI/Swagger client. Moved here from ARRController.vb so they live with the rest of the DataSupportModels. */
+export interface ArrOpenRequest {
+    /** RouteStepKey from the link. */
+    StepKey?: string;
+    /** RouteID from the link. */
+    RouteID?: string;
+}
+
+/** Everything the Webix arr view needs to render, plus the (optional) ARR session token. */
+export interface ArrOpenResult {
+    /** RouteStepKey echoed back. */
+    StepKey?: string;
+    /** RouteID echoed back. */
+    RouteID?: string;
+    /** Document the route belongs to. */
+    DocMasterKey?: string;
+    /** Document type of the document. */
+    DocTypeKey?: string;
+    /** Document title for display. */
+    DocTitle?: string | undefined;
+    /** Display name of the routee (the "For" person). */
+    RouteeUserName?: string | undefined;
+    /** Routee email (used for the confirmation checkbox; also a phase-2 verification target). */
+    RouteeEmail?: string | undefined;
+    /** Display name of the person the route replies to. */
+    FromUserName?: string | undefined;
+    /** Route instructions/request text. */
+    Instructions?: string | undefined;
+    /** Timestamp the routed content was set/resolved. */
+    ContentAsOf?: Date;
+    /** True when there is routed content available to download. */
+    HasContent?: boolean;
+    /** When the routee first viewed this route, if ever. */
+    FirstViewed?: Date | undefined;
+    /** When the routee last responded to this route, if ever. */
+    Responded?: Date | undefined;
+    /** True when the document is confidential. */
+    IsConfidential?: boolean;
+    /** Phase 1: when true, no AccessToken is issued and the view shows a "verification coming soon" state. */
+    RequiresVerification?: boolean;
+    /** Whether the free-form response area should be shown. */
+    ShowRouteResponseArea?: boolean;
+    /** Whether the response-code dropdown should be shown. */
+    ShowRouteResponseCode?: boolean;
+    /** Whether the response text may still be edited. */
+    CanEditRouteResponse?: boolean;
+    /** Whether the response code may still be changed. */
+    CanEditRouteResponseCode?: boolean;
+    /** Whether the routee is permitted to send the document back. */
+    AllowSendBack?: boolean;
+    /** Whether the routee is permitted to restart the route. */
+    AllowRestart?: boolean;
+    /** Existing response HTML, if any. */
+    ResponseHtml?: string | undefined;
+    /** Existing response code, if any. */
+    ResponseCode?: string | undefined;
+    /** Available response-code choices (Key = code, Value = description). */
+    ResponseCodeChoices?: SelectCodeNode[] | undefined;
+    /** 59-minute MachineKey-protected token; sent back as the X-SF-ARR header on subsequent ARR calls. */
+    AccessToken?: string | undefined;
+}
+
+/** Request body for ARRController.RecordResponse. */
+export interface ArrResponseData {
+    /** SendOn | SendBack | Restart */
+    Mode?: string | undefined;
+    /** Route being acted on (must match the ARR token's route). */
+    RouteID?: string;
+    /** Response HTML produced by the editor. */
+    ResponseHtml?: string | undefined;
+    /** Selected response code, if any. */
+    ResponseCode?: string | undefined;
+    /** When true, email a confirmation to the routee. */
+    SendConfirmation?: boolean;
+}
+
+/** Result of ARRController.RecordResponse. */
+export interface ArrResponseResult {
+    /** True when the response was saved. */
+    Saved?: boolean;
+    /** Resulting route status code. */
+    Status?: string | undefined;
+    /** Human-readable result message. */
+    Message?: string | undefined;
 }
 
 export interface AuthenticationExchangeData {
