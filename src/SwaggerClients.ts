@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -252,8 +252,8 @@ export class AccountClient extends APIClientBase {
     }
 
     /**
-     * Mint a short-lived download-session cookie
-     * @return Download cookie set (or an sfSession cookie was already present)
+     * Mint a short-lived download-ticket cookie
+     * @return Download ticket cookie set
      */
     postDownloadSession() {
         return new Promise<string>((resolve, reject) => {
@@ -305,7 +305,7 @@ export class AccountClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result401: any = null;
             result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("No recognized identity", status, _responseText, _headers, result401);
+            return throwException("No download-session token presented", status, _responseText, _headers, result401);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -635,7 +635,7 @@ export class AccountClient extends APIClientBase {
         });
     }
 
-    private hasSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+    private hasSessionWithCallbacks(onSuccess?: (result: boolean) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/account/session";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -687,6 +687,12 @@ export class AccountClient extends APIClientBase {
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Not allowed", status, _responseText, _headers, result403);
 
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Backend failure", status, _responseText, _headers, result500);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -702,7 +708,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -1180,7 +1186,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -1618,7 +1624,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -3123,7 +3129,7 @@ export class ARRClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -3221,7 +3227,7 @@ export class ARRClient extends APIClientBase {
         });
     }
 
-    private openRouteWithCallbacks(request: ArrOpenRequest, onSuccess?: (result: ArrOpenResult | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+    private openRouteWithCallbacks(request: ArrOpenRequest, onSuccess?: (result: ArrOpenResult | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/arr/open";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3270,6 +3276,12 @@ export class ARRClient extends APIClientBase {
             let result400: any = null;
             result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Keys missing or malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("reCAPTCHA verification failed", status, _responseText, _headers, result403);
 
         } else if (status === 404) {
             const _responseText = xhr.responseText;
@@ -3389,7 +3401,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -6993,7 +7005,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -14145,7 +14157,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -14480,7 +14492,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -23751,7 +23763,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -24594,7 +24606,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -26929,7 +26941,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -27276,7 +27288,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -27365,7 +27377,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -27929,7 +27941,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -28494,7 +28506,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -30766,7 +30778,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -32219,6 +32231,62 @@ export class SystemClient extends APIClientBase {
     }
 
     /**
+     * Returns the reCAPTCHA Enterprise site key
+     */
+    getRecaptchaConfig() {
+        return new Promise<{ [key: string]: string; } | null>((resolve, reject) => {
+            this.getRecaptchaConfigWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getRecaptchaConfigWithCallbacks(onSuccess?: (result: { [key: string]: string; } | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/system/recaptcha";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetRecaptchaConfigWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetRecaptchaConfigWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetRecaptchaConfigWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetRecaptchaConfig(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetRecaptchaConfig(xhr: any): { [key: string]: string; } | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as { [key: string]: string; };
+            return result200;
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns statistical data
      * @param withDetails (optional) 
      */
@@ -32593,7 +32661,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -33094,7 +33162,7 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -34862,6 +34930,8 @@ export interface ArrOpenRequest {
     StepKey?: string;
     /** RouteID from the link. */
     RouteID?: string;
+    /** reCAPTCHA Enterprise token from the client, assessed before the route is resolved. */
+    RecaptchaToken?: string | undefined;
 }
 
 /** Everything the Webix arr view needs to render, plus the (optional) ARR session token. */
