@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -708,7 +708,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1186,7 +1186,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1624,7 +1624,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -3129,20 +3129,20 @@ export class ARRClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
-     * Build the routed-content download package
+     * Queue the routed-content download package build
      * @param data download request {RouteID}
      */
     getContent(data: ArrResponseData) {
-        return new Promise<string | null>((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             this.getContentWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getContentWithCallbacks(data: ArrResponseData, onSuccess?: (result: string | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+    private getContentWithCallbacks(data: ArrResponseData, onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/arr/content";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3176,7 +3176,7 @@ export class ARRClient extends APIClientBase {
         }
     }
 
-    protected processGetContent(xhr: any): string | null | null {
+    protected processGetContent(xhr: any): string | null {
         const status = xhr.status;
 
         let _headers: any = {};
@@ -3208,7 +3208,7 @@ export class ARRClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result500: any = null;
             result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not build package; see response", status, _responseText, _headers, result500);
+            return throwException("Could not queue package build; see response", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -3401,7 +3401,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -7005,7 +7005,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -14157,7 +14157,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -14492,7 +14492,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -23763,7 +23763,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -24606,7 +24606,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -26941,7 +26941,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -27288,7 +27288,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -27377,7 +27377,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -27941,7 +27941,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -28506,7 +28506,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -30778,7 +30778,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -32661,7 +32661,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -33162,7 +33162,7 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
