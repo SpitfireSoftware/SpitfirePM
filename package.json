@@ -1,6 +1,6 @@
 {
   "name": "spitfirepm",
-  "version": "23.9600.14",
+  "version": "23.9600.15",
   "description": "Client API Tools for Spitfire Project Management",
   "main": "",
   "keywords": [
@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "node scripts/genversion.js",
     "build": "tsc",
     "xpostbuild": "d:/spitfiredev/CopyNPMOutputsToWebApp.cmd"
   },

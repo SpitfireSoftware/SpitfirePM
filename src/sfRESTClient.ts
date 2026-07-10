@@ -6,9 +6,8 @@ import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
 import * as localForage from "localforage";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
+import { ClientPackageVersion } from "./version";
 //import {dialog}    from "jquery-ui";
-
-const ClientPackageVersion : string = "23.9600.14";
 
 // 2021 originally modified for typescript and linter requirements by Uladzislau Kumakou of XB Software
 
@@ -1024,6 +1023,7 @@ export class sfRestClient {
                 if (sfRestClient.RecentSuggestionAsOf.get(suggestionGroupKey)! < TimeNow) {
                     // expired
                     sfRestClient.RecentSuggestionAsOf.delete(suggestionGroupKey);
+                    sfRestClient.RecentSuggestionResultMap.delete(suggestionGroupKey);
                 }
                 else {
                     if (sfRestClient.RecentSuggestionResultMap.has(suggestionGroupKey)) {
@@ -1196,11 +1196,13 @@ export class sfRestClient {
                 (dvResult: string | null) => {
                     if (dvResult) {
                         sessionStorage.setItem(cacheKey, JSON.stringify({ v: dvResult, w: Date.now() }));
-                        if (RESTClient._CachedDVRequests.has(cacheKey)) RESTClient._CachedDVRequests.delete(cacheKey);
                     }
-
                 }
-            );
+            ).catch(() => { /* no result to cache */ })
+            .finally(() => {
+                // remove the pending entry for every outcome so a null/failed DV can be retried
+                RESTClient._CachedDVRequests.delete(cacheKey);
+            });
         }
         this._CachedDVRequests.set(cacheKey, apiResultPromise);
         return apiResultPromise;
@@ -1431,7 +1433,7 @@ export class sfRestClient {
         else if (size < 1024)       result = "< 1KB";
         else if (size < 1048576)    result = `${(size/1024).toFixed(0)}KB`;
         else if (size < 1073741824) result = `${(size/1048576).toFixed(1)}MB` ;
-        else                        result = `${(size/1073741824).toFixed(2)}MB` ;  
+        else                        result = `${(size/1073741824).toFixed(2)}GB` ;
         return result;
     }
 
@@ -1529,11 +1531,11 @@ export class sfRestClient {
         if (sfRestClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() - no query resolved");
         return forElement;
     }
-    if (url.indexOf("$K")) {
+    if (url.includes("$K")) {
         if (typeof resolveKey === "undefined") throw new Error("PopQAInfo requires resolveKey callback when URL includes $K");
         url = url.replaceAll("$K", resolveKey(forElement));
     }
-    if (queryOptions.DialogTitle.indexOf("$V")) {
+    if (queryOptions.DialogTitle.includes("$V")) {
         if (typeof resolveValue === "undefined") throw new Error("PopQAInfo requires resolveValue callback when options include $V");
         queryOptions.DialogTitle = queryOptions.DialogTitle.replaceAll("$V",resolveValue(forElement,queryOptions));
     }
@@ -1886,7 +1888,7 @@ export class sfRestClient {
                     RESTClient.WaitForTask(crt).then( (crtResult : any) => {
                         RESTClient.ClearPleaseWaitDialog();
                         let thisReason = (crtResult!.ThisReason) ? crtResult!.ThisReason : "Failed! Contact Help Desk (see server logs)";
-                        if (thisReason.indexOf("Failed!") >= 0) {
+                        if (thisReason.includes("Failed!")) {
                             RESTClient.DisplayUserNotification(thisReason);
                         }
                         else {
@@ -2517,7 +2519,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
      */
     public AddCSSResource(cssRef : string): void {
         if (!cssRef) return;
-        if (cssRef.indexOf("/") < 0) cssRef = `${this._SiteRootURL}/wv.aspx/js/${cssRef}.css`;
+        if (!cssRef.includes("/")) cssRef = `${this._SiteRootURL}/wv.aspx/js/${cssRef}.css`;
         if (self.$('head').find('link[type="text/css"][href="{0}"]'.sfFormat(cssRef)).length > 0) return;
 
         self.$('head').append('<link rel="stylesheet" href="{0}" type="text/css" />'.sfFormat(cssRef));
@@ -2541,7 +2543,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                           })
                     );
                 }
-                r!.forEach(element => {
+                else r.forEach(element => {
                     sfRestClient._NewGuidList.push(element);
                 });
 
@@ -2583,7 +2585,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                     }
                 }
                 if (options?.includes("&UseID")) {
-                    UseID = options.substring(options?.indexOf("&UseID")+7,36);
+                    const UseIDStart = options.indexOf("&UseID") + 7; // +7 skips past "&UseID="
+                    UseID = options.substring(UseIDStart, UseIDStart + 36);
                 }
                 else {
                     UseID = await this.NewGuid();
@@ -2867,7 +2870,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
         ProjectXBURL: '{0}/wx/#!/main/projectDashboard?project={1}',
-        UseClassicCatalog: ((location.host.indexOf(".9") < 0) &&
+        UseClassicCatalog: ((!location.host.includes(".9")) &&
                              location.host.indexOf(".") > 0 &&
                              location.host !== "scm.spitfirepm.com" &&
                              location.host !== "portal.spitfirepm.com" &&
@@ -2891,9 +2894,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         asPath: boolean, priorList: string | string[], idx: number, dv: any): string {
         if (dv) {
             if (typeof dv === "string")
-                if (dv.indexOf("$") >= 0) dv = dv.replaceAll("$DTK", sfRestClient._WCC.DocTypeKey);
+                if (dv.includes("$")) dv = dv.replaceAll("$DTK", sfRestClient._WCC.DocTypeKey);
         }
-        if (asPath) asPath = (priorList.indexOf("?") < 0);
+        if (asPath) asPath = !priorList.includes("?");
         var parmSep: string = '&';
         if ((asPath) && ((dv === "?") || (dv === "&") || (dv === "%"))) {
             asPath = false;
@@ -2915,8 +2918,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             if (depends1 || typeof depends1 === "boolean") {
                 dependsList = RESTClient._addQueryValue(asPath, dependsList, 1, depends1);
                 if (dep2 || typeof dep2 === "boolean") dependsList = RESTClient._addQueryValue(asPath, dependsList, 2, dep2);
-                if (dep3 || typeof dep2 === "boolean") dependsList = RESTClient._addQueryValue(asPath, dependsList, 3, dep3);
-                if (dep4 || typeof dep2 === "boolean") dependsList = RESTClient._addQueryValue(asPath, dependsList, 4, dep4);
+                if (dep3 || typeof dep3 === "boolean") dependsList = RESTClient._addQueryValue(asPath, dependsList, 3, dep3);
+                if (dep4 || typeof dep4 === "boolean") dependsList = RESTClient._addQueryValue(asPath, dependsList, 4, dep4);
             }
         }
         return dependsList;
@@ -3148,7 +3151,7 @@ public SetInputValue(inputView:  any, newValue: string | number | DataModelRow |
         const inputConfig = inputView.config;
         if (inputConfig.dbf) what = inputConfig.dbf;
         if (inputConfig.customSetValue)  inputConfig.customSetValue(newValue)
-        else if (inputView.getValue) inputView.setValue(newValue)
+        else if (inputView.setValue) inputView.setValue(newValue)
         else {
             console.log(`SetInputValue(${what}) - could not set value `,inputView);
         }
@@ -3525,8 +3528,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             if (!QPSource) QPSource = location.hash;
         } 
         else {
-            QPSource = fromHref.substring(location.href.indexOf("#"));
-            if (!QPSource && fromHref.includes("?")) QPSource = fromHref.substring(location.href.indexOf("?"));
+            const hashPos = fromHref.indexOf("#");
+            if (hashPos >= 0) QPSource = fromHref.substring(hashPos);
+            if (!QPSource && fromHref.includes("?")) QPSource = fromHref.substring(fromHref.indexOf("?"));
         }
         
         return QPSource;
@@ -3863,10 +3867,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         else if (UseNewTabWithName) {
             self.open(ActionString,UseNewTabWithName);
         }
-        else if (ActionString.indexOf("top.location.reload(") >= 0) {
+        else if (ActionString.includes("top.location.reload(")) {
             top!.location.reload(); // per https://developer.mozilla.org/en-US/docs/Web/API/Location/reload including (true) or (false) is ignored.
         }
-        else if (ActionString.indexOf("PopDoc(") >= 0) {
+        else if (ActionString.includes("PopDoc(")) {
             var rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             let match = rxPopDoc.exec(ActionString);
             if (match && match.groups) {
@@ -3877,7 +3881,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 console.warn("InvokeAction::Doc failed match",actionString);
             }
         }
-        else if (ActionString.indexOf("PopNewDoc(") >= 0) {
+        else if (ActionString.includes("PopNewDoc(")) {
             //let rxPopDoc = /(javascript:)?(top.sfClient)?PopDoc\(['"](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
             //let match = this.rxPopWhatURL.exec(ActionString);
             if (matchPopWhatURL && matchPopWhatURL.groups) {
@@ -3964,7 +3968,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             if (sfRestClient._Options.LogLevel >= LoggingLevels.Normal) console.log(`InvokeAction: VModalPage(${vpgName})`,ModalOptions);
             this.VModalPage(vpgName,ModalOptions,width,height,undefined);
         }
-        else if (ActionString.indexOf("/dcmodules/") >= 0  || ActionString.indexOf("/admin/") >= 0 ) {
+        else if (ActionString.includes("/dcmodules/")  || ActionString.includes("/admin/") ) {
             console.warn("InvokeAction::tools not really done",ActionString);
             top!.location.href = ActionString;
         }
@@ -4272,7 +4276,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                 msgDisplayResolved( $MsgDiv );
                 return msgReady;
             }
-            if (notificationText.indexOf("$PopDoc()") > 0 && notificationText.indexOf("data-key")) {
+            if (notificationText.indexOf("$PopDoc()") > 0 && notificationText.includes("data-key")) {
                 var rx = /data-key=["'](?<idguid>[0-9a-fA-F\-]{36})['"]/gm;
                 var match = rx.exec(notificationText);
                 if (match) {
@@ -4502,10 +4506,10 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     }
 
     private ValueHasWildcard(theVal:string) :boolean {
-        if (theVal.indexOf("%") >= 0) return true;
-        if (theVal.indexOf("*") >= 0) return true;
-        if (theVal.indexOf("_") >= 0) return true;
-        if (theVal.indexOf("?") >= 0) return true;
+        if (theVal.includes("%")) return true;
+        if (theVal.includes("*")) return true;
+        if (theVal.includes("_")) return true;
+        if (theVal.includes("?")) return true;
         return false;
     }
 
@@ -5003,7 +5007,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var TabNameList = "";
         var OldestSaneTab = new Date().valueOf() - 36000000.0 // ten hours ago
         if (BrowserExtensionChecker.browser.isMacOS) return 3.14;
-        for (const [k,idx] of Object.keys(top!.localStorage)) {
+        for (const k of Object.keys(top!.localStorage)) {
             if (k.startsWith("sfWindow@")) {
                 var TabAsOf = localStorage.getItem(k);
                 if (parseFloat(TabAsOf!) < OldestSaneTab) {
@@ -5251,9 +5255,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
     _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, dataModelBuildKey: string) {
 
         if (item.CSS) {
-            if (item.CSS.indexOf("sfRowVisibleWhen") >= 0){
+            if (item.CSS.includes("sfRowVisibleWhen")){
                 // handle row visibility based on value of column marked by sfRowVisibleWhen  (multiple columns are applied in order encountered)
-                var IsWhenClear = (item.CSS.indexOf("WhenClear") >= 0);  // reverses visibility
+                var IsWhenClear = (item.CSS.includes("WhenClear"));  // reverses visibility
                 const FlagVisibleFieldName = "_DefaultRowVisible";
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log("_ApplyUICFGtoRawData {0} RowVis {1} ".sfFormat(item.ItemName, item.CSS));
                 thisPart.DataModels.get(dataModelBuildKey)!.forEach(function DataModelRowVis(rawRow: any, index: number) : void{
@@ -6373,7 +6377,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                                 let defaultLogoutOnTimer = true;
                                 if (self.webix) {
                                     if (1===1) { //RESTClient.DevMode()
-                                        if (sfRestClient._connectionCheckDialogShown = true) return;
+                                        if (sfRestClient._connectionCheckDialogShown) return;
                                         sfRestClient._connectionCheckDialogShown = true;
                                         self.webix!
                                             .confirm({title:"Connection Check",

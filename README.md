@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9600.15  - Improves ConfigController
 23.9600.13  - ARR cleanup
 23.9600.12  - ARR endpoints
 23.9600.11  - Adds Admin and Manage Tool Data Models and Endpoints
