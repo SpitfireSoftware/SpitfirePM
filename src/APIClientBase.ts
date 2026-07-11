@@ -8,6 +8,13 @@ export  class APIClientBase {
     /** Spitfire Assigned Site ID  */
     private static  GAClientID : string | undefined = undefined;
     private static GAIgnoreActions = {account: true, session:true, suggestions: true, uicfg:true, viewable: true};
+    /** Set true when the current user has opted out of Analytics data collection (WCCData.GAFMOptOut) */
+    private static _GAOptOut: boolean = false;
+
+    /** Synchronizes the client's Analytics opt-out preference. Call whenever WCCData.GAFMOptOut becomes known/changes. */
+    public static setGAOptOut(optOut: boolean): void {
+        APIClientBase._GAOptOut = !!optOut;
+    }
 
     // public static setBaseUrl(usingURL: string) {
     //     APIClientBase._SiteURL = usingURL;
@@ -34,7 +41,7 @@ export  class APIClientBase {
 
         if (APIClientBase._SiteURL === null) {
             if (window.location.origin === "http://localhost" && window.location.pathname === "/powerux/") {
-                console.log('APIClientBase.getBaseUrl(${baseURL})....detected DEV path');
+                console.log(`APIClientBase.getBaseUrl(${baseURL})....detected DEV path`);
                 APIClientBase._SiteURL = `http://localhost/sfpms`;
             }
             else {
@@ -42,7 +49,7 @@ export  class APIClientBase {
                 ApplicationPath = ApplicationPath.substring(1, ApplicationPath.length === 1 && ApplicationPath === "/" ? 1 : ApplicationPath.substring(1).indexOf("/") + 1);
                 APIClientBase._SiteURL = `${window.location.origin}/${ApplicationPath || 'sfPMS'}`;
             }
-            console.log('APIClientBase.getBaseUrl(${baseURL})....${APIClientBase._SiteURL}');
+            console.log(`APIClientBase.getBaseUrl(${baseURL})....${APIClientBase._SiteURL}`);
         }
         return APIClientBase._SiteURL;
     }
@@ -51,7 +58,7 @@ export  class APIClientBase {
          const rxAPIURL = /\/\/.+\/api\/(?<controler>\w+)\/(?<endpoint>.*?)(\?|$|\s)/gm;
         const match = rxAPIURL.exec(url); // vpgName, args, width, height
         if (match && match.groups && match.groups.controler && match.groups.endpoint) {
-            if (!(match.groups.controller in APIClientBase.GAIgnoreActions)) {
+            if (!(match.groups.controler in APIClientBase.GAIgnoreActions)) {
                 const ep = match.groups.endpoint || '?';
                 const ec = match.groups.controler || '';
                 if (( (Date.now() - APIClientBase._LastAt ) > 1357) ||
@@ -69,6 +76,7 @@ export  class APIClientBase {
     }
 
     protected GAAPIEvent(controllerAction:string, endpointLabel: string) : JQuery.Promise<any> | undefined {
+        if (APIClientBase._GAOptOut) return undefined;
         if (!APIClientBase.GAClientID) return undefined;
         if (controllerAction=="session" && endpointLabel == "who") return undefined;
         if (!APIClientBase.GAClientID) return undefined;
@@ -85,6 +93,7 @@ export  class APIClientBase {
 
     public static GAMonitorEvent(  clientID:string , category:string, action:string, label:string, value:number) : JQuery.Promise<any> | undefined {
 
+        if (APIClientBase._GAOptOut) return undefined;
         if (!clientID && ! APIClientBase.GAClientID) return undefined;
         if (!APIClientBase.GAClientID) APIClientBase.GAClientID = clientID;
 

@@ -2393,6 +2393,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 ChangeList.set(pname,pvalue);
             }
         });
+        RESTClientBase.APIClientBase.setGAOptOut(!!sfRestClient._WCC.GAFMOptOut);
         sfRestClient._WCC.PageName = RESTClient.ResolvePageName();
         sfRestClient._z.WCCLoaded = true;
         ChangeList.forEach((value,keyName) => {
