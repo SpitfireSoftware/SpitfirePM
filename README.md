@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9600.18  - Project Program
 23.9600.17  - Improves Analytics opt out
 23.9600.15  - Improves ConfigController
 23.9600.13  - ARR cleanup

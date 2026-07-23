@@ -15257,7 +15257,7 @@ export class DocumentToolsClient extends APIClientBase {
         });
     }
 
-    private createDocumentWithCallbacks(id: string, typeKey: string, forProject: string | null | undefined, forParent: string | null | undefined, forBatch: string | null | undefined, forSourceContact: string | null | undefined, onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+    private createDocumentWithCallbacks(id: string, typeKey: string, forProject: string | null | undefined, forParent: string | null | undefined, forBatch: string | null | undefined, forSourceContact: string | null | undefined, onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/document/{id}/{typeKey}?";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -15310,6 +15310,12 @@ export class DocumentToolsClient extends APIClientBase {
             let result200: any = null;
             result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Missing Required Data", status, _responseText, _headers, result400);
 
         } else if (status === 401) {
             const _responseText = xhr.responseText;
@@ -18117,6 +18123,66 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Returns the compliance for the specified document
+     * @param id Document Key
+     */
+    getDocCompliance(id: string) {
+        return new Promise<DocCompliance[] | null>((resolve, reject) => {
+            this.getDocComplianceWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocComplianceWithCallbacks(id: string, onSuccess?: (result: DocCompliance[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/compliance";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocComplianceWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocCompliance(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocCompliance(xhr: any): DocCompliance[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocCompliance[];
+            return result200;
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Deletes the compliance on the specified document
      * @param id Document Key
      * @param complianceKeys Compliance Item Keys
@@ -18398,66 +18464,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Returns the compliance for the specified document
-     * @param id Document Key
-     */
-    getDocCompliance(id: string) {
-        return new Promise<DocCompliance[] | null>((resolve, reject) => {
-            this.getDocComplianceWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocComplianceWithCallbacks(id: string, onSuccess?: (result: DocCompliance[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/compliance";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocComplianceWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocComplianceWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocCompliance(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocCompliance(xhr: any): DocCompliance[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocCompliance[];
-            return result200;
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
      * Returns the Project Details based on the specified document.  Update using PatchDocData
      * @param id Document Key
      */
@@ -18628,66 +18634,6 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the dates for the specified document
-     * @param id Document Key
-     */
-    getDocDates(id: string) {
-        return new Promise<DocDate[] | null>((resolve, reject) => {
-            this.getDocDatesWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocDatesWithCallbacks(id: string, onSuccess?: (result: DocDate[] | null) => void, onFail?: (exception: string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/dates";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocDatesWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocDatesWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocDatesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocDates(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocDates(xhr: any): DocDate[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocDate[];
-            return result200;
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -18874,6 +18820,66 @@ export class DocumentToolsClient extends APIClientBase {
             let result500: any = null;
             result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the dates for the specified document
+     * @param id Document Key
+     */
+    getDocDates(id: string) {
+        return new Promise<DocDate[] | null>((resolve, reject) => {
+            this.getDocDatesWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocDatesWithCallbacks(id: string, onSuccess?: (result: DocDate[] | null) => void, onFail?: (exception: string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/dates";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocDatesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocDatesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocDatesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocDates(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocDates(xhr: any): DocDate[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocDate[];
+            return result200;
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -32397,7 +32403,7 @@ export class SystemClient extends APIClientBase {
 
     /**
      * Returns list of active document/process types
-     * @param key Use 00000000-1000-0000-1000-000000000000 for all active processes
+     * @param key Use 00000000-0000-0000-0000-000000000000 for all active processes
      */
     getProcessList(key: string) {
         return new Promise<ProcessDocumentType[] | null>((resolve, reject) => {
@@ -38583,7 +38589,7 @@ export interface ProjectLink {
     ETag?: string | undefined;
 }
 
-/** Describes the link between a project and a program (xsfProgramProjectMap) */
+/** Describes the link between a project and a program (xsfProgramProjectMap via Project Abstract) */
 export interface ProjectPrograms {
     /** Key for this entity */
     PgmPjtMapKey: string;
@@ -38591,7 +38597,11 @@ export interface ProjectPrograms {
     ProgramKey: string;
     /** Project Key (xsfProject) */
     ProjectKey: string;
-    /** When */
+    /** Short ID for the Program  */
+    ProgramID?: string | undefined;
+    /** Title of the Program */
+    ProgramTitle?: string | undefined;
+    /** When this project was added to this program */
     Created: Date;
     /** When True, this program is active  */
     Active?: boolean;
