@@ -592,13 +592,18 @@ export class sfRestClient {
         var RESTClient = this;
         var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, "",context);
         if (!thisPart) {
-            console.warn("Count not resolve part {0}".sfFormat(PartStorageData.GetPartContextKey(partName, forDocType, "",context)));
+            console.warn(`Count not resolve part ${PartStorageData.GetPartContextKey(partName, forDocType, "",context)}`);
             var EmptyPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => resolve(rawData as DataModelCollection));
             return EmptyPromise;
         }
         var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
             thisPart!.CFGLoader().then(() => {
-                var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData);
+                var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData,
+                    {
+                        DocTypeKey: forDocType,
+                        PartName:partName,
+                        Context:context
+                    });
                 ViewModelPromise.then((r) => {
                     finalResolve(r);
                     const RawResultIsArray = (r && Array.isArray(r));
@@ -699,7 +704,7 @@ export class sfRestClient {
     /**
      *  Applies CFG data to raw Data Model, returns promise that resolves when View Model is ready
      */
-    protected _ConstructViewModel(thisPart: PartStorageData, rawData: any): Promise<DataModelCollection> {
+    protected _ConstructViewModel(thisPart: PartStorageData, rawData: any, extraRow?: any): Promise<DataModelCollection> {
         if (!thisPart || !thisPart.CFG || !thisPart!.CFG.UIItems) {
             console.error('_ConstructViewModel requires CFG and UI', thisPart);
             throw `Cannot construct requested ViewModel`;
@@ -719,7 +724,7 @@ export class sfRestClient {
         thisPart!._PromiseList = [];
 
         // this loop builds PromiseList
-        thisPart!.CFG!.UIItems!.forEach(element => thisPart!.RestClient._ApplyUICFGtoRawData(element, thisPart!, DataModelBuildKey));
+        thisPart!.CFG!.UIItems!.forEach(element => thisPart!.RestClient._ApplyUICFGtoRawData(element, thisPart!, DataModelBuildKey, extraRow));
 
         var ViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => {
             Promise.all(thisPart!._PromiseList!)
@@ -3010,8 +3015,10 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
      * Builds a string array of values that help define the context of a lookup or evaluation
      * @param dependsOnList semicolon separated list of related field and constants. eg #DocMasterDetail.Project;=Subtype (# is optional)
      * @param rawRow primary source of data
+     * @param extraRow an object that can provide field values required but not in rawRow (static through a dataModel)
+     * @example #DocMasterDetail.fieldName (eq #DocMasterDetail.DocTypeKey) has special handling
      */
-    GatherDependsOnValues(dependsOnList:string, rawRow: any) : string[] | undefined {
+    GatherDependsOnValues(dependsOnList:string, rawRow: any, extraRow?: any) : string[] | undefined {
         if (!dependsOnList) return undefined;
         var result: string[] = [];
 
@@ -3031,18 +3038,20 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                         SourceResolved = true;
                         result.push(this.FieldValueFromRow(rawRow,FieldName));
                     }
-                    else {
-                        if (FieldName in sfRestClient._WCC) {
+                    else if (extraRow && FieldName in extraRow) {
+                        SourceResolved = true;
+                        result.push(this.FieldValueFromRow(extraRow,FieldName));
+                    }
+                    else if (TableName === "DocMasterDetail") {
+                        const headerData = this.GetPageDocumentModel()?.DocHeaderData;
+                        if (headerData && FieldName in headerData) {
                             SourceResolved = true;
-                            result.push(sfRestClient._WCC[FieldName]);
+                            result.push(this.FieldValueFromRow(headerData,FieldName));
                         }
-                        else if (TableName === "DocMasterDetail") {
-                            const headerData = this.GetPageDocumentModel()?.DocHeaderData;
-                            if (headerData && FieldName in headerData) {
-                                SourceResolved = true;
-                                result.push(this.FieldValueFromRow(headerData,FieldName));
-                            }
-                        }
+                    }
+                    else if (FieldName in sfRestClient._WCC) {
+                        SourceResolved = true;
+                        result.push(sfRestClient._WCC[FieldName]);
                     }
                     if (!SourceResolved) {
                         console.error("Not implemented yet: Depends on data: " + element);
@@ -5253,7 +5262,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
       * @param thisPart Part, including reference to raw data being upscaled to match UI CFG
       * @param dataModelBuildKey allows thread-safe usage
       */
-    _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, dataModelBuildKey: string) {
+    _ApplyUICFGtoRawData(item: UIDisplayConfig, thisPart: PartStorageData, dataModelBuildKey: string, extraRow?: any) {
 
         if (item.CSS) {
             if (item.CSS.includes("sfRowVisibleWhen")){
@@ -5290,7 +5299,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             if ((RealFieldName in rawRow && !(item.DataField in rawRow))) {
                                 var FieldValue: any = thisPart.RestClient.FieldValueFromRow(rawRow, RealFieldName);
                                 var DependsOn : string[] | undefined;
-                                if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow);
+                                if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow,extraRow);
                                 thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
                                     thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, "", r);
                                 }));
@@ -5306,7 +5315,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                             // when XB stops swapping _dv and base, we MAY may need tweaks here.
                             if (!((item.DataField + ThisSuffix) in rawRow)) {  // need we think about aging of the _dv value?
                                 var DependsOn : string[] | undefined;
-                                if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow); ///!!! future: handle depends on #DocMasterDetail.project
+                                if (item.DependsOn) DependsOn = thisPart.RestClient.GatherDependsOnValues(item.DependsOn,rawRow,extraRow); ///!!! future: handle depends on #DocMasterDetail.project
                                 thisPart._PromiseList!.push(thisPart.RestClient.GetDV(item.DV!, FieldValue, DependsOn, false).then(function then_AddDVToDModel(r) : void {
 
                                     thisPart.RestClient._AddDVValueToDataModel(thisPart, dataModelBuildKey, index, item.DataField!, ThisSuffix, r);
