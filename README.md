@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9700.2   - ProcessDocumentType DataModel enriched
 23.9700.1   - GatherDependsOnValues() improved
 23.9600.18  - Project Program
 23.9600.17  - Improves Analytics opt out
