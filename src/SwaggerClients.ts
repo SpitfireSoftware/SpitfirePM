@@ -12114,6 +12114,791 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the Lookup Results (DVs)
+     */
+    getLookupResults() {
+        return new Promise<LookupResult[] | null>((resolve, reject) => {
+            this.getLookupResultsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getLookupResultsWithCallbacks(onSuccess?: (result: LookupResult[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLookupResultsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLookupResultsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLookupResultsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetLookupResults(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLookupResults(xhr: any): LookupResult[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one Lookup Result
+     * @param data Lookup Result row to update
+     */
+    patchLookupResult(data: LookupResult) {
+        return new Promise<LookupResult | null>((resolve, reject) => {
+            this.patchLookupResultWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchLookupResultWithCallbacks(data: LookupResult, onSuccess?: (result: LookupResult | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchLookupResultWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchLookupResult(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchLookupResult(xhr: any): LookupResult | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the parameter slots of one Lookup Result
+     * @param lookupResultKey Lookup Result key
+     */
+    getLookupResultParameters(lookupResultKey: string) {
+        return new Promise<LookupResultQP[] | null>((resolve, reject) => {
+            this.getLookupResultParametersWithCallbacks(lookupResultKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getLookupResultParametersWithCallbacks(lookupResultKey: string, onSuccess?: (result: LookupResultQP[] | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/parameters";
+        if (lookupResultKey === undefined || lookupResultKey === null)
+            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
+        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLookupResultParametersWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLookupResultParametersWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLookupResultParametersWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetLookupResultParameters(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLookupResultParameters(xhr: any): LookupResultQP[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResultQP[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Replaces the parameter slots of one Lookup Result
+     * @param lookupResultKey Lookup Result key
+     * @param data Parameter slots, in call order
+     */
+    putLookupResultParameters(lookupResultKey: string, data: LookupResultQP[]) {
+        return new Promise<LookupResultQP[] | null>((resolve, reject) => {
+            this.putLookupResultParametersWithCallbacks(lookupResultKey, data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private putLookupResultParametersWithCallbacks(lookupResultKey: string, data: LookupResultQP[], onSuccess?: (result: LookupResultQP[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/parameters";
+        if (lookupResultKey === undefined || lookupResultKey === null)
+            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
+        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPutLookupResultParametersWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPutLookupResultParametersWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPutLookupResultParametersWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPutLookupResultParameters(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPutLookupResultParameters(xhr: any): LookupResultQP[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResultQP[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the change", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Resolves a Lookup Result against supplied values, returning the answer AND the SQL
+     * @param valueFor Value to describe, plus its depends-on values
+     */
+    testLookupResult(valueFor: DVRequest) {
+        return new Promise<LookupTestResult | null>((resolve, reject) => {
+            this.testLookupResultWithCallbacks(valueFor, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private testLookupResultWithCallbacks(valueFor: DVRequest, onSuccess?: (result: LookupTestResult | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/test";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(valueFor);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processTestLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processTestLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processTestLookupResultWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processTestLookupResult(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processTestLookupResult(xhr: any): LookupTestResult | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupTestResult;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the Lookups (pickers)
+     */
+    getLookups() {
+        return new Promise<Lookup[] | null>((resolve, reject) => {
+            this.getLookupsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getLookupsWithCallbacks(onSuccess?: (result: Lookup[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLookupsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLookupsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLookupsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetLookups(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLookups(xhr: any): Lookup[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Updates one Lookup
+     * @param data Lookup row to update
+     */
+    patchLookup(data: Lookup) {
+        return new Promise<Lookup | null>((resolve, reject) => {
+            this.patchLookupWithCallbacks(data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private patchLookupWithCallbacks(data: Lookup, onSuccess?: (result: Lookup | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "patch",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPatchLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPatchLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPatchLookupWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPatchLookup(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPatchLookup(xhr: any): Lookup | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the fields of one Lookup
+     * @param lookupKey Lookup key
+     */
+    getLookupFields(lookupKey: string) {
+        return new Promise<LookupField[] | null>((resolve, reject) => {
+            this.getLookupFieldsWithCallbacks(lookupKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getLookupFieldsWithCallbacks(lookupKey: string, onSuccess?: (result: LookupField[] | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/fields";
+        if (lookupKey === undefined || lookupKey === null)
+            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
+        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetLookupFieldsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetLookupFieldsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetLookupFieldsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetLookupFields(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetLookupFields(xhr: any): LookupField[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupField[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Replaces the fields of one Lookup
+     * @param lookupKey Lookup key
+     * @param data Field rows, in FieldSequence order
+     */
+    putLookupFields(lookupKey: string, data: LookupField[]) {
+        return new Promise<LookupField[] | null>((resolve, reject) => {
+            this.putLookupFieldsWithCallbacks(lookupKey, data, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private putLookupFieldsWithCallbacks(lookupKey: string, data: LookupField[], onSuccess?: (result: LookupField[] | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/fields";
+        if (lookupKey === undefined || lookupKey === null)
+            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
+        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processPutLookupFieldsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processPutLookupFieldsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processPutLookupFieldsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processPutLookupFields(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processPutLookupFields(xhr: any): LookupField[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupField[];
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the change", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns the Manage dashboard tool menu
      */
     getManageTools() {
@@ -37992,6 +38777,230 @@ export interface InboundComplianceItem {
 export interface KeyValuePairOfStringAndIEnumerableOfString {
     Key?: string | undefined;
     Value?: string[] | undefined;
+}
+
+/** Defines a lookup - the grid/picker half of the Validation and Lookup Engine.  Where a LookupResult validates or describes one value, a Lookup presents a filterable list from which the user picks one. */
+export interface Lookup {
+    /** Primary key */
+    LookupKey?: string;
+    /** Name of the lookup, unique within Product */
+    LookupName: string;
+    /** Allows multiple sets of definitions; SPM for sfPMS */
+    Product: string;
+    /** Passed to the data layer during data events so it knows which connection runs the query */
+    TargetDS: string;
+    /** Deprecated */
+    LookupResultField?: string | undefined;
+    /** The primary result (output) of this lookup.  Lookups sharing a LookupResultKey are
+offered ahead of others when the user asks for an alternate picker */
+    LookupResultKey?: string | undefined;
+    /** Orders lookups that share a LookupResultKey */
+    OfferSequence?: number;
+    /** Title shown on the lookup window */
+    Caption: string;
+    /** Root of the query for the data source.  First line should be SELECT TOP nnn, with one
+field per line including its AS alias.  The WHERE clause may reference @pv,
+@pD1 through @pD4, @pUID for the requesting user, and @pProject for the current project */
+    DataQuery: string;
+    /** Caller-facing description of what this lookup is for.  Carries more weight than the
+name when choosing between candidates */
+    Purpose?: string | undefined;
+    /** Agent when safe to expose to an external or AI caller; Internal otherwise.  Null is
+unclassified and is treated as Internal, so an unreviewed entry is never exposed */
+    Audience?: string | undefined;
+    /** Whether this lookup is eligible to drive type-ahead through a generated pacq_ procedure,
+rather than only the modal picker.  Defaults true: most lookups qualify, and a
+hand-written pacq_ proc is the exception - pu_AutoCompleteQueryGenerator will not
+overwrite one.  False where no column is filterable, so no WHERE clause can be built */
+    AutoComplete?: boolean;
+    /** True to open the lookup already showing data, false to open it showing filters first */
+    PreLoad?: boolean;
+    /** Flag */
+    Active?: boolean;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Column definitions for this lookup, in FieldSequence order.  Populated when the caller
+asks for the full definition rather than the list */
+    Fields?: LookupField[] | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** Defines one column of a Lookup grid: how it is labelled and formatted, and how (or whether) it participates in the WHERE clause as a filter. */
+export interface LookupField {
+    /** Primary key */
+    LookupFieldKey?: string;
+    /** The parent lookup */
+    LookupKey?: string;
+    /** Which Lookup Result this field is associated with.  The direction depends on whether the
+row is a column or an input, which PredicateMode already declares:
+on a display row it means picking this column yields that result; on a context-parameter
+row (PredicateMode 'I') it means that result PRODUCES a valid value for the parameter,
+so a caller can chain to it rather than guess.  Null for most fields */
+    LookupResultKey?: string | undefined;
+    /** Orders the fields within the lookup */
+    FieldSequence?: number;
+    /** SQL referencing this field.  Not currently used - the query lives on the parent Lookup */
+    FieldQuery: string;
+    /** Name of the field as returned by SQL (its AS clause); binds the grid column.  A field
+that will be filtered must have an alias even when the filter uses PredicateMode R or
+WOperatorType P, because the alias is how a lookup or dropdown filter is found -
+without one the filter falls back to a plain text box */
+    FieldAlias: string;
+    /** Column heading in the grid */
+    Label: string;
+    /** Where the field appears: P in the primary (initial) set, S in the secondary set behind
+the More/Less control, or H hidden - present for filtering but never displayed */
+    ShowField: string;
+    /** Column type: Bound or empty for a standard bound column, DBCheckMark, or DBLabel */
+    GridColumnClass: string;
+    /** Format for the column, for example M/d/yyyy to drop the time from a DateTime,
+:@C_ProjectMask to apply the project mask, or F0, C0, P1 */
+    DisplayFormat: string;
+    /** Display width of the column */
+    DisplayWidth?: number;
+    /** SQL parameter name for the WHERE clause: @pv for the primary output filter,
+@pD1 through @pD4 for values passed in via the depends-on list.  Certain names imply a
+type - @pDateRangeN makes a date range, with WDefault giving the days back */
+    WParamName: string;
+    /** Label for the filter input area */
+    WParamLabel?: string | undefined;
+    /** TSQL building the left side of this item's WHERE clause */
+    WPredicate?: string | undefined;
+    /** How the predicate is compared: L for LIKE with a trailing %, K for LIKE with leading
+and trailing % as needed, = for equals, B for BETWEEN, > for >=, P to use the
+predicate as-is with no operator added, or x to exclude the filter parameter entirely
+(pair x with PredicateMode N) */
+    WOperatorType: string;
+    /** Default value for the parameter */
+    WDefault: string;
+    /** How this field participates in the WHERE clause: P a primary dynamic filter, shown as
+soon as the lookup opens; D dynamic, the most common; I static input, usually a @pDn
+carrying a value the query depends on such as project id; R required, where the
+parameter is always defined but adds nothing to the WHERE clause and a change forces a
+refresh; N not a filter at all.
+'I' with ShowField 'H' is how a lookup's CONTEXT parameters - the subset of
+@pD1..@pD4 that make up its call signature - are recorded.  Those rows are excluded from
+autocomplete: pu_AutoCompleteQueryGenerator selects PredicateMode NOT IN ('N','I'). */
+    PredicateMode: string;
+    /** Whether the column joins the initial sort or is merely available for sorting, and in
+which direction; N makes it unsortable.  The grid can always be re-sorted by the user */
+    OrderByMode: string;
+    /** Input-only field.  May be redundant with ShowField = H.  Note the existing
+convention: context-parameter rows leave this false and rely on PredicateMode 'I', which
+is already enough to exclude them from autocomplete */
+    IsInputOnly?: boolean;
+    /** Flag */
+    Active?: boolean;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** Describes a validatable data entity - the "result" half of the Validation and Lookup Engine. A Lookup Result (also called a DV, or Displayable Value) resolves a primary value plus up to four dependent values into a single cacheable answer, usually a human-readable description. */
+export interface LookupResult {
+    /** Primary key */
+    LookupResultKey?: string;
+    /** Allows multiple sets of definitions; SPM for sfPMS */
+    Product: string;
+    /** Name of the data entity, unique within Product.  Need not match a column name */
+    LookupResultName: string;
+    /** Passed to the data layer during data events so it knows which connection runs the query */
+    TargetDS: string;
+    /** SELECT statement that tests a candidate value.  Returns a single row and column -
+ideally a string description.  Must reference @pv, and @pD1 through @pD4 when the
+answer depends on other values */
+    TestQuery: string;
+    /** Caller-facing description of what this Lookup answers.  Carries more weight than the
+name when choosing between candidates */
+    Purpose?: string | undefined;
+    /** Semantic type of the primary value (@pv), for example GUID or STRING */
+    PVType?: string | undefined;
+    /** What kind of operation this performs: Describe (key to text), Resolve (text to key),
+Check (1 or 0), Compute, or Internal */
+    LookupClass?: string | undefined;
+    /** Agent when safe to expose to an external or AI caller; Internal otherwise.  Null is
+unclassified and is treated as Internal, so an unreviewed entry is never exposed */
+    Audience?: string | undefined;
+    /** Shape of the single answer: Scalar, Flag, Html, JSON, or Packed when several fields
+are delimited into the one answer */
+    ResultFormat?: string | undefined;
+    /** Packed only: the ordered field names, delimited the same way the answer is, so a caller
+can convert the answer into a JSON object */
+    PackedToJSON?: string | undefined;
+    /** Flag */
+    Active?: boolean;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Number of dependent values (@pD1..@pD4) this result expects.  Derived, not stored */
+    DependsCount?: number | undefined;
+    /** Parameter slots for this result, in call order.  Populated when the caller asks for
+the catalog rather than the bare definition */
+    Parameters?: LookupResultQP[] | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** Describes one parameter slot of a Lookup Result (DV): Slot 0 is the primary value @pv, Slots 1 through 4 are the dependent values @pD1 through @pD4, in call order. */
+export interface LookupResultQP {
+    /** Primary key */
+    LookupResultQPKey?: string;
+    /** The Lookup Result these parameters belong to */
+    LookupResultKey?: string;
+    /** Parameter position: 0 is @pv, 1 through 4 are @pD1 through @pD4 */
+    Slot?: number;
+    /** What this slot means to a caller, for example Project ID or Account Category */
+    Label: string;
+    /** Semantic type of this slot's value; same vocabulary as LookupResult.PVType */
+    PVType?: string | undefined;
+    /** False where the Lookup tolerates a blank here.  Note the API convention: the literal
+string "empty" forces a blank dependent value */
+    IsRequired?: boolean;
+    /** A concrete sample value; grounds a caller better than the type name alone */
+    ExampleValue?: string | undefined;
+    /** Name of the Lookup that produces a valid value for this slot, letting a caller chain
+lookups to fill it rather than guess.  A soft reference by name, so it may not resolve */
+    SourceLookup?: string | undefined;
+    /** Free-text caveats about this parameter */
+    Notes?: string | undefined;
+    /** Flag */
+    Active?: boolean;
+    /** Row version */
+    UpdateTS?: string | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** The outcome of testing a Lookup Result (DV) or a Lookup from the maintenance tool. */
+export interface LookupTestResult {
+    /** The resolved value, or null when nothing matched */
+    Value?: string | undefined;
+    /** The SQL actually executed, with the supplied parameter values shown */
+    GeneratedSql?: string | undefined;
+    /** False when the query raised.  Note that true does NOT mean the answer is correct -
+a DV can succeed and still return the wrong value */
+    Succeeded?: boolean;
+    /** Error text when the query raised, or a diagnostic note such as an empty result */
+    Message?: string | undefined;
+    /** True when the answer came from the engine's cache rather than the database.  Cached
+answers can lag an edit, which is worth showing while someone is iterating */
+    FromCache?: boolean;
+    /** Round-trip time in milliseconds */
+    ElapsedMs?: number;
+    /** Rows returned.  A Lookup Result should yield exactly one; anything else is a defect
+worth surfacing rather than silently taking the first row */
+    RowCount?: number;
+    /** eTag */
+    ETag?: string | undefined;
 }
 
 export interface MarshalByRefObject {
