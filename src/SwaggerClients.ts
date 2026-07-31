@@ -36445,8 +36445,6 @@ export interface CodeSet {
     AllowNextSet?: boolean;
     /** Maximum length of code values in this set */
     CodeSize?: number;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
     /** eTag */
@@ -36479,8 +36477,6 @@ export interface CodeSetValue {
     Active?: boolean;
     /** Flag */
     OnAdd?: boolean;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
     /** eTag */
@@ -38817,8 +38813,6 @@ overwrite one.  False where no column is filterable, so no WHERE clause can be b
     PreLoad?: boolean;
     /** Flag */
     Active?: boolean;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Column definitions for this lookup, in FieldSequence order.  Populated when the caller
 asks for the full definition rather than the list */
     Fields?: LookupField[] | undefined;
@@ -38894,8 +38888,6 @@ is already enough to exclude them from autocomplete */
     IsInputOnly?: boolean;
     /** Flag */
     Active?: boolean;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
     /** eTag */
@@ -38935,8 +38927,6 @@ can convert the answer into a JSON object */
     PackedToJSON?: string | undefined;
     /** Flag */
     Active?: boolean;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Number of dependent values (@pD1..@pD4) this result expects.  Derived, not stored */
     DependsCount?: number | undefined;
     /** Parameter slots for this result, in call order.  Populated when the caller asks for
@@ -38972,8 +38962,6 @@ lookups to fill it rather than guess.  A soft reference by name, so it may not r
     Notes?: string | undefined;
     /** Flag */
     Active?: boolean;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
     /** eTag */
@@ -40675,8 +40663,6 @@ export interface ScopedCodeSetValue {
     CodeFlag?: boolean;
     /** Flag, true if code still relevant. False does not prevent use. */
     Active?: boolean;
-    /** Row version */
-    UpdateTS?: string | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
     /** eTag */
