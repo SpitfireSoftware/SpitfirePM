@@ -12114,7 +12114,7 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the Lookup Results (DVs)
+     * Returns the Lookup Results (DVs), each with its parameter slots
      */
     getLookupResults() {
         return new Promise<LookupResult[] | null>((resolve, reject) => {
@@ -12270,6 +12270,195 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deactivates one Lookup Result and its parameter slots
+     * @param lookupResultKey Lookup Result key
+     */
+    deleteLookupResult(lookupResultKey: string) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteLookupResultWithCallbacks(lookupResultKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteLookupResultWithCallbacks(lookupResultKey: string, onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}";
+        if (lookupResultKey === undefined || lookupResultKey === null)
+            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
+        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteLookupResultWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteLookupResult(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteLookupResult(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Still referenced by one or more Lookups", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Copies one Lookup Result and all of its parameter slots
+     * @param lookupResultKey Lookup Result to copy
+     * @param newName (optional) Name for the copy. Omit to have one generated
+     */
+    copyLookupResult(lookupResultKey: string, newName?: string | null | undefined) {
+        return new Promise<LookupResult | null>((resolve, reject) => {
+            this.copyLookupResultWithCallbacks(lookupResultKey, newName, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private copyLookupResultWithCallbacks(lookupResultKey: string, newName: string | null | undefined, onSuccess?: (result: LookupResult | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/copy?";
+        if (lookupResultKey === undefined || lookupResultKey === null)
+            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
+        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
+        if (newName !== undefined && newName !== null)
+            url_ += "newName=" + encodeURIComponent("" + newName) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processCopyLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processCopyLookupResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processCopyLookupResultWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processCopyLookupResult(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processCopyLookupResult(xhr: any): LookupResult | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("That name is already taken", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -12720,6 +12909,189 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Deactivates one Lookup and its fields
+     * @param lookupKey Lookup key
+     */
+    deleteLookup(lookupKey: string) {
+        return new Promise<number>((resolve, reject) => {
+            this.deleteLookupWithCallbacks(lookupKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteLookupWithCallbacks(lookupKey: string, onSuccess?: (result: number) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}";
+        if (lookupKey === undefined || lookupKey === null)
+            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
+        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteLookupWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteLookup(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteLookup(xhr: any): number | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Copies one Lookup and all of its field rows
+     * @param lookupKey Lookup to copy
+     * @param newName (optional) Name for the copy. Omit to have one generated
+     */
+    copyLookup(lookupKey: string, newName?: string | null | undefined) {
+        return new Promise<Lookup | null>((resolve, reject) => {
+            this.copyLookupWithCallbacks(lookupKey, newName, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private copyLookupWithCallbacks(lookupKey: string, newName: string | null | undefined, onSuccess?: (result: Lookup | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/copy?";
+        if (lookupKey === undefined || lookupKey === null)
+            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
+        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
+        if (newName !== undefined && newName !== null)
+            url_ += "newName=" + encodeURIComponent("" + newName) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processCopyLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processCopyLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processCopyLookupWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processCopyLookup(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processCopyLookup(xhr: any): Lookup | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("That name is already taken", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns the fields of one Lookup
      * @param lookupKey Lookup key
      */
@@ -12884,6 +13256,91 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the change", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Runs a Lookup's Data Query against supplied values, returning the row count AND the SQL
+     * @param valueFor Type-ahead text, plus any depends-on values
+     */
+    testLookup(valueFor: DVRequest) {
+        return new Promise<LookupTestResult | null>((resolve, reject) => {
+            this.testLookupWithCallbacks(valueFor, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private testLookupWithCallbacks(valueFor: DVRequest, onSuccess?: (result: LookupTestResult | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/lookups/test";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(valueFor);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processTestLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processTestLookupWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processTestLookupWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processTestLookup(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processTestLookup(xhr: any): LookupTestResult | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupTestResult;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -16028,11 +16485,11 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Creates a New document
+     * Creates a New document.  ,
      * @param id Document Key (use empty for auto assign)
      * @param typeKey Type
      * @param forProject (optional) Project
-     * @param forParent (optional) Parent Doc Key
+     * @param forParent (optional) Parent Doc Key (NextDocFlow rules apply; See https://support.spitfirepm.com/kba-01517/)
      * @param forBatch (optional) Batch/Subcontract
      * @param forSourceContact (optional) Source Contact
      */
@@ -24819,7 +25276,7 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Copies the specified document; returns a list of GUIDs for the created documents
+     * Copies the specified document, applying DocCopyConfig rules; returns a list of GUIDs for the created documents
      * @param id Document Key
      * @param destinationProject (optional) optional - target project; if Not specified, same project
      * @param withItems (optional) optional - should items be copied
@@ -32089,7 +32546,7 @@ export class SystemClient extends APIClientBase {
     }
 
     /**
-     * Reloads site configuration and settings
+     * Reloads site configuration and settings on all peers in a farm
      */
     reloadSiteConfiguration() {
         return new Promise<string | null>((resolve, reject) => {
