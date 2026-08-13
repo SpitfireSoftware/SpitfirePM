@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9700.6   - Audit History Model enhanced
 23.9700.5   - Lookup Editor Endpoints
 23.9700.2   - ProcessDocumentType DataModel enriched
 23.9700.1   - GatherDependsOnValues() improved

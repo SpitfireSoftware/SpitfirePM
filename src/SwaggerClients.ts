@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -780,7 +780,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -1258,7 +1258,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -1696,7 +1696,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -2124,7 +2124,7 @@ export class LookupClient extends APIClientBase {
     /**
      * Returns list of prior values for this field
      * @param dataMember Name of table
-     * @param dataField Name of field
+     * @param dataField Name of field; use zero for all fields
      * @param rowKey PK identifier of specific record
      * @param sinceWhen (optional) Optional date since when data should be returned
      */
@@ -3201,7 +3201,7 @@ export class ARRClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -3473,7 +3473,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -4777,6 +4777,84 @@ export class CatalogClient extends APIClientBase {
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns a site helper script, stylesheet or image held in the catalog
+     * @param assetPath Path below /zPublicHTML, eg js/XTSDocHelper.js
+     */
+    getPublicAsset(assetPath: string | null) {
+        return new Promise<any>((resolve, reject) => {
+            this.getPublicAssetWithCallbacks(assetPath, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getPublicAssetWithCallbacks(assetPath: string | null, onSuccess?: (result: any) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/catalog/asset/{assetPath}";
+        if (assetPath === undefined || assetPath === null)
+            throw new globalThis.Error("The parameter 'assetPath' must be defined.");
+        url_ = url_.replace("{assetPath}", encodeURIComponent("" + assetPath));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/octet-stream"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetPublicAssetWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetPublicAssetWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetPublicAssetWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetPublicAsset(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetPublicAsset(xhr: any): any | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200 || status === 206) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as any;
+            return result200;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated Or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such file in this site\'s catalog", status, _responseText, _headers, result404);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -7077,7 +7155,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -15696,7 +15774,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -16031,7 +16109,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -23294,6 +23372,113 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Inserts a single route on the specified document
+     * @param id Document Key
+     * @param newRoute Route (DocRoute object)
+     */
+    addDocRoute(id: string, newRoute: DocRoute) {
+        return new Promise<DocRoute | null>((resolve, reject) => {
+            this.addDocRouteWithCallbacks(id, newRoute, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private addDocRouteWithCallbacks(id: string, newRoute: DocRoute, onSuccess?: (result: DocRoute | null) => void, onFail?: (exception: string | string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/route";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newRoute);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processAddDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processAddDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processAddDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processAddDocRoute(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processAddDocRoute(xhr: any): DocRoute | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocRoute;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not acceptable", status, _responseText, _headers, result406);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns the route on the specified document
      * @param id Document Key
      */
@@ -23549,113 +23734,6 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Inserts a single route on the specified document
-     * @param id Document Key
-     * @param newRoute Route (DocRoute object)
-     */
-    addDocRoute(id: string, newRoute: DocRoute) {
-        return new Promise<DocRoute | null>((resolve, reject) => {
-            this.addDocRouteWithCallbacks(id, newRoute, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private addDocRouteWithCallbacks(id: string, newRoute: DocRoute, onSuccess?: (result: DocRoute | null) => void, onFail?: (exception: string | string | string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/route";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(newRoute);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processAddDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processAddDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processAddDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processAddDocRoute(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processAddDocRoute(xhr: any): DocRoute | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocRoute;
-            return result200;
-
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Bad Request", status, _responseText, _headers, result400);
-
-        } else if (status === 401) {
-            const _responseText = xhr.responseText;
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not acceptable", status, _responseText, _headers, result406);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -25403,7 +25481,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -26246,7 +26324,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -28581,7 +28659,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -28928,7 +29006,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -29017,7 +29095,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -29581,7 +29659,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -30146,7 +30224,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -32418,7 +32496,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -34301,7 +34379,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
@@ -34802,13 +34880,13 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
     }
 
     /**
-     * Requests the document be requeued for cloud sync
+     * Requests the document's cloud folder be requeued for an inbound scan
      * @param fileKey (optional) 
-     * @return Request enqueued
+     * @return Scan queued - XTSCloudRequeue reported Updated
      */
     cloudSyncDocPUT(id: string, fileKey?: string | null | undefined) {
         return new Promise<string>((resolve, reject) => {
@@ -34816,7 +34894,7 @@ export class XTSClient extends APIClientBase {
         });
     }
 
-    private cloudSyncDocPUTWithCallbacks(id: string, fileKey: string | null | undefined, onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+    private cloudSyncDocPUTWithCallbacks(id: string, fileKey: string | null | undefined, onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/xts/cloudSync/document/{id}?";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -34861,12 +34939,6 @@ export class XTSClient extends APIClientBase {
             result202 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return result202;
 
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Peer and message (body) both required", status, _responseText, _headers, result400);
-
         } else if (status === 401) {
             const _responseText = xhr.responseText;
             let result401: any = null;
@@ -34877,13 +34949,13 @@ export class XTSClient extends APIClientBase {
             const _responseText = xhr.responseText;
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not a valid peer", status, _responseText, _headers, result403);
+            return throwException("Requires DOC | Attachments with Update", status, _responseText, _headers, result403);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
             let result500: any = null;
             result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Failure", status, _responseText, _headers, result500);
+            return throwException("No scan was queued - XTSCloudRequeue reported Failed, or an exception occurred", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -34893,15 +34965,15 @@ export class XTSClient extends APIClientBase {
     }
 
     /**
-     * Requests information about the document related to cloud storage
+     * Returns cloud storage information for a document's published folder
      */
     cloudSyncDocGET(id: string) {
-        return new Promise<{ [key: string]: any; } | null>((resolve, reject) => {
+        return new Promise<CloudFolderInfo | null>((resolve, reject) => {
             this.cloudSyncDocGETWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private cloudSyncDocGETWithCallbacks(id: string, onSuccess?: (result: { [key: string]: any; } | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+    private cloudSyncDocGETWithCallbacks(id: string, onSuccess?: (result: CloudFolderInfo | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/xts/cloudSync/document/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -34934,14 +35006,14 @@ export class XTSClient extends APIClientBase {
         }
     }
 
-    protected processCloudSyncDocGET(xhr: any): { [key: string]: any; } | null | null {
+    protected processCloudSyncDocGET(xhr: any): CloudFolderInfo | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
         if (status === 200) {
             const _responseText = xhr.responseText;
             let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as { [key: string]: any; };
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CloudFolderInfo;
             return result200;
 
         } else if (status === 400) {
@@ -36834,6 +36906,15 @@ export interface CloudChange {
     versionId?: string | undefined;
     removed?: boolean;
     WhenModified?: Date;
+}
+
+export interface CloudFolderInfo {
+    KMK?: string;
+    path?: string | undefined;
+    id?: string | undefined;
+    scanned?: string | undefined;
+    url?: string | undefined;
+    error?: string | undefined;
 }
 
 /** A single cloud-storage definition.  Mirrors the CloudStore table in LVData.xsd; consumed by the System Admin Dashboard Cloud Storage tool.  The Have*Secret flags report whether a secret is on file without exposing it. */
@@ -38797,11 +38878,17 @@ export interface FieldAudit {
     /** when the change was persisted */
     ChangeWhen?: Date;
     /** string representation of the prior field value */
-    PriorValue?: any | undefined;
+    PriorValue?: string | undefined;
     /** string representation of the new field value */
     NewValue?: string | undefined;
     /** user that made the change */
     ByUser?: string | undefined;
+    /** The column that was changed in table.field format */
+    ColName?: string | undefined;
+    /** When true, this entry was inferred by a gap */
+    IsInferred?: boolean;
+    /** When true, this value is a guid  */
+    IsGuid?: boolean;
     /** eTag */
     ETag?: string | undefined;
 }
