@@ -1125,11 +1125,33 @@ export class sfRestClient {
 
     /**
      * Get Display Value using DV-Name and key value, with 0 to 4 dependencies.
-     * @param displayName the name of a display value rule (eg sfUser, RoleName, etc)
-     * @param keyValue the primary or most significant key
-     * @param dependsOn optional array of context values (multi-part key); 0 to 4 elements allowed; hint: use 'empty' for an empty value
+     *
+     * A display value is the single, cacheable answer looked up by key, defined server side as a row of
+     * **xsfLookupResult** (the scalar Lookup Result / Describe Value engine) - so `displayName` is
+     * not free text: it must name a row there, and that row is where the answer's meaning, its
+     * parameter slots and its shape are documented.  `ObjectCatalog\doc\Validation and Lookup
+     * Engine.md` describes the engine; `xsfLookupResultQP` says what each slot expects.
+     *
+     * The answer is **always a single string**, whatever it represents.  The row's `ResultFormat`
+     * says how to read it:
+     * - `Scalar` plain text, the common case (eg sfUser -> a person's name)
+     * - `Flag` '1' or '0' - beware, the string '0' is true to javascript
+     * - `Html` markup, ready to drop into a message or a template
+     * - `Packed` several fields in one string, delimited as the row's `PackedToJSON` column spells
+     *   them out (eg 'ItemCount;DocItemKey'), for the caller to split back apart
+     * - `JSON` an object, for JSON.parse()
+     *
+     * Answers are batched (several near-simultaneous calls become one round trip), de-duplicated
+     * while in flight, and cached in sessionStorage for `DVCacheLife` - so calling this per grid
+     * row is reasonable.  ClearDV() drops one entry; `autoVary` bypasses the cache for one call.
+     * @param displayName the name of a display value rule, ie an xsfLookupResult row (eg sfUser, RoleName)
+     * @param keyValue the primary or most significant key; this is slot 0, `@pv` in the rule's query
+     * @param dependsOn optional array of context values (multi-part key), slots `@pD1`..`@pD4` in
+     * the rule's declared order; 0 to 4 elements allowed; hint: use 'empty' for an empty value
      * @param autoVary force bypass of cache
-     * @returns Promise for String
+     * @returns Promise for String; resolves "" for an empty or Empty-GUID `keyValue` without asking
+     * the server, and **null** when the rule finds no match or the request fails - a rejection is
+     * not the way a miss is reported, so test the value
      */
     GetDV(displayName: string, keyValue: string,
         /**
