@@ -12816,7 +12816,7 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the Lookups (pickers)
+     * Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.
      */
     getLookups() {
         return new Promise<Lookup[] | null>((resolve, reject) => {
@@ -13170,7 +13170,7 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the fields of one Lookup
+     * Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.
      * @param lookupKey Lookup key
      */
     getLookupFields(lookupKey: string) {
@@ -15874,7 +15874,7 @@ export class ContactClient extends APIClientBase {
         });
     }
 
-    private getContactWithCallbacks(id: string, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+    private getContactWithCallbacks(id: string, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/contact/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -15928,6 +15928,12 @@ export class ContactClient extends APIClientBase {
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Not allowed", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Failed", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -16038,7 +16044,7 @@ export class ContactClient extends APIClientBase {
         });
     }
 
-    private matchingContactListWithCallbacks(usingFilters: ContactFilters, onSuccess?: (result: ContactSummary[] | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+    private matchingContactListWithCallbacks(usingFilters: ContactFilters, onSuccess?: (result: ContactSummary[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/contact/list";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -16093,6 +16099,12 @@ export class ContactClient extends APIClientBase {
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Not allowed", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Failed", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -16567,8 +16579,8 @@ export class DocumentToolsClient extends APIClientBase {
      * @param id Document Key (use empty for auto assign)
      * @param typeKey Type
      * @param forProject (optional) Project
-     * @param forParent (optional) Parent Doc Key (NextDocFlow rules apply; See https://support.spitfirepm.com/kba-01517/)
-     * @param forBatch (optional) Batch/Subcontract
+     * @param forParent (optional) Parent Doc Key (NextDocFlow rules apply; See https://support.spitfirepm.com/kba-01517/).  When the parent is a commitment, its subcontract number is used and its lines are brought in
+     * @param forBatch (optional) Batch/Subcontract.  Naming a commitment here brings in its lines, same as forParent
      * @param forSourceContact (optional) Source Contact
      */
     createDocument(id: string, typeKey: string, forProject?: string | null | undefined, forParent?: string | null | undefined, forBatch?: string | null | undefined, forSourceContact?: string | null | undefined) {
@@ -17213,6 +17225,107 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Inserts an attachment on the specified document, optionally from a template
+     * @param id Document Key
+     * @param newData New attachment data. To copy a template use DocKey:TemplateKey
+     */
+    addDocAttachments(id: string, newData: DocAttachment[]) {
+        return new Promise<DocAttachment | null>((resolve, reject) => {
+            this.addDocAttachmentsWithCallbacks(id, newData, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private addDocAttachmentsWithCallbacks(id: string, newData: DocAttachment[], onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/attachments";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processAddDocAttachmentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processAddDocAttachments(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processAddDocAttachments(xhr: any): DocAttachment | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Missing or invalid data", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not acceptable", status, _responseText, _headers, result406);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns the attachments for the specified document
      * @param id Document Key
      * @return No changes
@@ -17475,107 +17588,6 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Inserts an attachment on the specified document, optionally from a template
-     * @param id Document Key
-     * @param newData New attachment data. To copy a template use DocKey:TemplateKey
-     */
-    addDocAttachments(id: string, newData: DocAttachment[]) {
-        return new Promise<DocAttachment | null>((resolve, reject) => {
-            this.addDocAttachmentsWithCallbacks(id, newData, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private addDocAttachmentsWithCallbacks(id: string, newData: DocAttachment[], onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/attachments";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(newData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processAddDocAttachmentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processAddDocAttachments(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processAddDocAttachments(xhr: any): DocAttachment | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
-            return result200;
-
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Missing or invalid data", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not acceptable", status, _responseText, _headers, result406);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -19096,7 +19108,7 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Returns the comments for the specified document
+     * Returns the comments for the specified document, most recent first.
      * @param id Document Key
      */
     getDocComments(id: string) {
@@ -19342,7 +19354,7 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Inserts Comments on the specified document
+     * Inserts Comments on the specified document.  Typically TopicKey=DocRevKey because comments are associated with the Doc Revision.  You can specify the empty GUID for TopicKey and/or FromUser, the correct defaults will be supplied (the current Revision and the current user). Other values for TopicKey must resolve to this document (for example, a prior revision comment). Any value for created more than 5 days ago stamps the comment with the server time.  FromUser is set automatically.
      * @param id Document Key
      * @param newData New comment data
      */
@@ -37411,6 +37423,8 @@ export interface ContactSummary {
     Company?: string | undefined;
     /** For Vendors, indicate related CSI  */
     CSIList?: string | undefined;
+    /** Readonly.  Specifies when this user last logged in.  Kept for inactive and former users. */
+    LastLogin?: Date;
     /** When false, this row is ignored and ineffective */
     Active?: boolean;
     /** When true, there are no references to this contact */

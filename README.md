@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9700.8   - Improved ContactClient endpoints
 23.9700.7   - GetDV method clarifications
 23.9700.6   - Audit History Model enhanced
 23.9700.5   - Lookup Editor Endpoints
