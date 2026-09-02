@@ -13502,6 +13502,152 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the dynamic queries this site defines, each with its parameters
+     */
+    getQueries() {
+        return new Promise<QueryDefinition[] | null>((resolve, reject) => {
+            this.getQueriesWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getQueriesWithCallbacks(onSuccess?: (result: QueryDefinition[] | null) => void, onFail?: (exception: string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/queries";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetQueriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetQueriesWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetQueriesWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetQueries(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetQueries(xhr: any): QueryDefinition[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as QueryDefinition[];
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns one dynamic query definition with its parameters
+     * @param queryName Query name, e.g. qUserActivitySummary
+     */
+    getQuery(queryName: string | null) {
+        return new Promise<QueryDefinition | null>((resolve, reject) => {
+            this.getQueryWithCallbacks(queryName, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getQueryWithCallbacks(queryName: string | null, onSuccess?: (result: QueryDefinition | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/configuration/queries/{queryName}";
+        if (queryName === undefined || queryName === null)
+            throw new globalThis.Error("The parameter 'queryName' must be defined.");
+        url_ = url_.replace("{queryName}", encodeURIComponent("" + queryName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetQueryWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetQueryWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetQueryWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetQuery(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetQuery(xhr: any): QueryDefinition | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as QueryDefinition;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such query is available to you", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Returns the list of regions
      */
     getRegions() {
@@ -17225,107 +17371,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Inserts an attachment on the specified document, optionally from a template
-     * @param id Document Key
-     * @param newData New attachment data. To copy a template use DocKey:TemplateKey
-     */
-    addDocAttachments(id: string, newData: DocAttachment[]) {
-        return new Promise<DocAttachment | null>((resolve, reject) => {
-            this.addDocAttachmentsWithCallbacks(id, newData, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private addDocAttachmentsWithCallbacks(id: string, newData: DocAttachment[], onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/attachments";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(newData);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processAddDocAttachmentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processAddDocAttachments(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processAddDocAttachments(xhr: any): DocAttachment | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
-            return result200;
-
-        } else if (status === 400) {
-            const _responseText = xhr.responseText;
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Missing or invalid data", status, _responseText, _headers, result400);
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not acceptable", status, _responseText, _headers, result406);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
      * Returns the attachments for the specified document
      * @param id Document Key
      * @return No changes
@@ -17588,6 +17633,107 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the update", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts an attachment on the specified document, optionally from a template
+     * @param id Document Key
+     * @param newData New attachment data. To copy a template use DocKey:TemplateKey
+     */
+    addDocAttachments(id: string, newData: DocAttachment[]) {
+        return new Promise<DocAttachment | null>((resolve, reject) => {
+            this.addDocAttachmentsWithCallbacks(id, newData, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private addDocAttachmentsWithCallbacks(id: string, newData: DocAttachment[], onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/attachments";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newData);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processAddDocAttachmentsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processAddDocAttachmentsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processAddDocAttachments(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processAddDocAttachments(xhr: any): DocAttachment | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Missing or invalid data", status, _responseText, _headers, result400);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not acceptable", status, _responseText, _headers, result406);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -37373,27 +37519,42 @@ export interface ContactFilters {
     CSIListLike?: string | undefined;
     /** Phone Like (matches any phone number) */
     PhoneLike?: string | undefined;
-    /** When true, result is limited to  */
+    /** When true, result is limited to contacts who can log in to sfPMS (sfUser=1).
+These six flags COMBINE WITH AND, not OR - see the remarks on this class. */
     Users?: boolean;
-    /** When true, result is limited to  */
+    /** When true, result is limited to customer contacts (ContactType='C'). */
     Customers?: boolean;
-    /** When true, result is limited to  */
+    /** When true, result is limited to employees (ContactType='E'). */
     Employee?: boolean;
-    /** When true, result is limited to  */
+    /** When true, result is limited to public contacts (IsPublic=1).  Rare. */
     Public?: boolean;
-    /** When true, result is limited to primary company contacts  */
+    /** When true, result is limited to primary company contacts - the company itself
+rather than a person at it (xsfContactCompany.PrimaryContactKey). */
     Company?: boolean;
-    /** When true, result is limited to  */
+    /** When true, result is limited to vendor contacts (ContactType='V', or any contact
+carrying a VendorID). */
     Vendors?: boolean;
-    /** 1==Active;0==Inactive; 2==Both */
-    ContactState?: number;
+    /** 1==Active; 0==Inactive; 2==Both.  Omit (null) for active only.
+Null and 1 are the same thing.  The nullability exists because this is a
+short: before it was nullable a caller who simply left the field out sent 0 and
+silently got INACTIVE contacts, which is nobody's intent.  Callers that already send an
+explicit 0, 1 or 2 are unaffected. */
+    ContactState?: number | undefined;
     /** UCRole Key, or use 00000000-0000-0000-0000-000000000000 for unspecified */
     RoleKey?: string | undefined;
     /** Use 00000000-0000-0000-0000-000000000000 for unspecified */
     UserKey?: string | undefined;
-    /** Default 2000-01-01 */
+    /** Earliest LastLogin to include.  Omit for no lower bound.
+THIS IS A LOGIN-DATE FILTER, and supplying either bound therefore limits the
+result to contacts who have signed in at least once - which in practice means system
+users, since only they have a LastLogin at all.  Contacts that have NEVER logged in
+have no LastLogin and so satisfy no range; if "never signed in" is part of the question,
+ask for it without a date bound and look for a null LastLogin on the rows. */
     FromDate?: Date | undefined;
-    /** Default today */
+    /** Latest LastLogin to include.  Omit for no upper bound.
+Inclusive.  A date with no time component covers the whole of that day, so
+ThruDate 2026-02-04 includes a login at 2026-02-04 16:20.  See FromDate
+for what a login-date bound does to the result set. */
     ThruDate?: Date | undefined;
 }
 
@@ -37423,8 +37584,14 @@ export interface ContactSummary {
     Company?: string | undefined;
     /** For Vendors, indicate related CSI  */
     CSIList?: string | undefined;
-    /** Readonly.  Specifies when this user last logged in.  Kept for inactive and former users. */
-    LastLogin?: Date;
+    /** Readonly.  Specifies when this user last logged in.  Kept for inactive and former users.
+NULL means never signed in, and that is a different fact from "signed in a long
+time ago" - for a seat-licensing question it is usually the more actionable one.
+Nullable for exactly that reason: as a plain DateTime a never-logged-in contact
+serialises as 0001-01-01, which reads like a date and buckets like an ancient login.
+Matches Contact.LastLogin, which is already nullable.
+Only contacts who can log in (sfUser=1) ever carry a value here. */
+    LastLogin?: Date | undefined;
     /** When false, this row is ignored and ineffective */
     Active?: boolean;
     /** When true, there are no references to this contact */
@@ -40885,6 +41052,58 @@ export interface ProjKPIFact {
     ItemName?: string | undefined;
 }
 
+/** Describes one dynamic query a site can run - what it answers, what it needs, and who may see it.  This is the catalog entry for a query executed through api/query/{queryName}/{dataContext}. */
+export interface QueryDefinition {
+    /** Name of the query, unique within the rule, and the value passed to api/query.  By
+convention these begin with a lower case q */
+    QueryName: string;
+    /** Document type this definition applies to, or null when it applies everywhere.  A site
+may define the same query name differently per document type */
+    DocTypeKey?: string | undefined;
+    /** Caller-facing description of what this query answers.  Carries more weight than the
+name when choosing between candidates, and is the only prose a caller gets */
+    Purpose?: string | undefined;
+    /** Agent when safe to expose to an external or AI caller; Internal otherwise.  Null is
+unclassified and is treated as Internal, so an unreviewed entry is never exposed.
+Same vocabulary and the same fail-closed rule as LookupResult.Audience */
+    Audience?: string | undefined;
+    /** The TSQL this query runs, normally a thin EXEC wrapper over a stored procedure.
+Returned only to a caller entitled to administer the rule; blank otherwise, because
+this is an execution recipe rather than a description */
+    Alias?: string | undefined;
+    /** Adjustment to the command timeout: a positive value adds that many seconds, a negative
+value multiplies by its magnitude, and -1 means leave the connection default alone */
+    TimeoutAdjust?: number;
+    /** Role the caller must hold to run this query, or null when unrestricted.  Enforced by
+the engine, which answers with a single explanatory Message row rather than an error
+when the caller does not hold it */
+    RequiredRole?: string | undefined;
+    /** True when this definition is one Spitfire distributes.  A site may override any facet
+with its own row, which takes precedence - so a distributed definition is a default,
+not a guarantee of what will run */
+    IsDistributed?: boolean;
+    /** True when the resolved definition includes at least one row the site supplied itself.
+Worth surfacing: it is the difference between what we shipped and what will run */
+    IsOverridden?: boolean;
+    /** Number of caller-supplied parameters this query expects.  Derived from the QPList */
+    DependsCount?: number | undefined;
+    /** True when the query's text references @pDocMasterKey, @pDocTypeKey or @pProject
+respectively, so a caller knows what document context to supply.  A hint derived by
+inspecting the text, not a contract - a commented-out reference counts */
+    UsesDocMasterKey?: boolean;
+    /** See UsesDocMasterKey */
+    UsesDocTypeKey?: boolean;
+    /** See UsesDocMasterKey */
+    UsesProject?: boolean;
+    /** Caller-supplied parameters, in DependsOn order.  Never null; a query taking none has
+an empty array */
+    Parameters?: QueryParameter[] | undefined;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Various common filters - not every filter is supported by every query */
 export interface QueryFilters {
     /** Project Mask (eg GC%) */
@@ -40949,6 +41168,47 @@ export interface QueryFilters {
     nvpFilters?: string | undefined;
     /** Key Value pairs of Keys and ETags, applicable to change/diffgram endpoints */
     ClientDataSummary?: CurrentDataSummary[] | undefined;
+}
+
+/** Describes one caller-supplied parameter of a dynamic query: what it means, what type of value belongs there, and where it lands in the DependsOn array. */
+export interface QueryParameter {
+    /** Query this parameter belongs to, matching QueryDefinition.QueryName */
+    QueryName: string;
+    /** SQL parameter name including the @, exactly as it appears in the query's QPList - or,
+for a context parameter, the engine slot it describes such as @pDocMasterKey */
+    ParameterName: string;
+    /** True where the engine binds this parameter from the REQUEST rather than from DependsOn:
+@pDocMasterKey, @pProject and @pDocTypeKey are supplied as context, not by position */
+    IsContext?: boolean;
+    /** Zero-based position in the DependsOn array, taken from this parameter's position in the
+QPList.  The engine maps DependsOn positionally, so this is the number a caller needs.
+Null when IsContext is set, because a context parameter has no
+position - it is nullable precisely so that a consumer cannot read a meaningful zero
+where there is no index at all */
+    DependsIndex?: number | undefined;
+    /** What this parameter means to a caller, for example As Of Date or Project ID */
+    Label?: string | undefined;
+    /** Semantic type of the value, for example DATE, GUID or STRING.  Advisory only - every
+parameter is bound as a VarChar regardless, so the query itself must convert */
+    PVType?: string | undefined;
+    /** False where the query tolerates a blank here.  Note that an omitted parameter arrives
+as an empty string rather than NULL, so a query that wants NULL must say so itself */
+    IsRequired?: boolean;
+    /** A concrete sample value; grounds a caller better than the type name alone.  Dates
+should be given in ISO form, since the bound value is interpreted by SQL Server and a
+day/month ordering depends on the session */
+    ExampleValue?: string | undefined;
+    /** Name of the Lookup that produces a valid value for this parameter, letting a caller
+chain rather than guess.  A soft reference by name, so it may not resolve */
+    SourceLookup?: string | undefined;
+    /** Free-text caveats about this parameter */
+    Notes?: string | undefined;
+    /** Flag */
+    Active?: boolean;
+    /** Collection of commands for this row */
+    MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
 }
 
 export interface RangeConditionHeaderValue {
