@@ -6163,7 +6163,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         if (top) {
             var RESTClient = top.sfClient;
             var isPowerUX = sfRestClient.IsPowerUXPage();
-            isPowerUX = false;
+            isPowerUX = false;  // <<<  !!!!  All logouts go through an aspx page !!!
             result = `${RESTClient._SiteRootURL}/${isPowerUX ? "wx/#!/login" : "admin/Logout.aspx"}?m=${mValue}`;
         }
         return result;
