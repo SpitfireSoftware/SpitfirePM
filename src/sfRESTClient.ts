@@ -2606,10 +2606,13 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 }
                 var UseID : string;
                 var url : string =  sfRestClient._Options.PopNewDocLegacyURL;
+                // Which template we land on decides which BASE it must be formatted against:
+                // the XB templates are SPA routes, the Legacy ones are backend .aspx pages.
+                var isXBURL : boolean = false;
                 if (!isProjectSetupDocType) {
-                    if (sfRestClient._Options.PopDocForceXBUI ) url =  sfRestClient._Options.PopNewDocXBURL
+                    if (sfRestClient._Options.PopDocForceXBUI ) { url =  sfRestClient._Options.PopNewDocXBURL; isXBURL = true; }
                     else {
-                        if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) url =  sfRestClient._Options.PopNewDocXBURL;
+                        if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",dtk,false)) { url =  sfRestClient._Options.PopNewDocXBURL; isXBURL = true; }
                     }
                 }
                 if (options?.includes("&UseID")) {
@@ -2623,7 +2626,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 } 
                 let includeProjectID : boolean = !isProjectSetupDocType
                 // note: for new project setup, send project id as the first option
-                url  =  url.sfFormat(thisRestClient._SiteURL, dtk, includeProjectID ? project : "",options) ;
+                url  =  url.sfFormat(isXBURL ? sfRestClient.PowerUXBaseURL() : thisRestClient._SiteURL, dtk, includeProjectID ? project : "",options) ;
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`PopNewDoc opening ${UseID} DTK ${dtk} using ${url}`);
 
                 var TargetTab =  UseID.substring(UseID.lastIndexOf("-") + 1).toLowerCase();
@@ -2702,12 +2705,14 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                });
 
                var url : string =  sfRestClient._Options.PopDocLegacyURL;
-               if (sfRestClient._Options.PopDocForceXBUI) url =  sfRestClient._Options.PopDocXBURL
+               // see PopNewDoc: XB templates are SPA routes, Legacy ones are backend .aspx pages
+               var isXBURL : boolean = false;
+               if (sfRestClient._Options.PopDocForceXBUI) { url =  sfRestClient._Options.PopDocXBURL; isXBURL = true; }
                else {
-                   if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",thisDocType,false)) url =  sfRestClient._Options.PopDocXBURL;
+                   if (await RESTClient.RuleResult("DocTypeConfig","WithPowerUX",thisDocType,false)) { url =  sfRestClient._Options.PopDocXBURL; isXBURL = true; }
                }
 
-               url  =  url.sfFormat(RESTClient._SiteURL, DocKey) ;
+               url  =  url.sfFormat(isXBURL ? sfRestClient.PowerUXBaseURL() : RESTClient._SiteURL, DocKey) ;
 
                var TargetTab =  url.substring(url.lastIndexOf("-") + 1).toLowerCase();
                //todo: determine if we need the "how many tabs" logic and dialog
@@ -2777,10 +2782,13 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                    return;
                }
                var url : string =  sfRestClient._Options.ProjectLegacyURL;
+               // see PopNewDoc: XB templates are SPA routes, Legacy ones are backend .aspx pages
+               var isXBURL : boolean = false;
                if (sfRestClient.IsPowerUXPage()) {
                     url = sfRestClient._Options.ProjectXBURL;
+                    isXBURL = true;
                }
-               url  =  url.sfFormat(thisRestClient._SiteURL, id) ;
+               url  =  url.sfFormat(isXBURL ? sfRestClient.PowerUXBaseURL() : thisRestClient._SiteURL, id) ;
                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`OpenProject opening ${id} using ${url}`);
 
 
@@ -2888,16 +2896,16 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         NonPostbackEventID: "DNPB",
         PopDocForceXBUI :  false,
         PopDocLegacyURL:   '{0}/DocDetail.aspx?id={1}',
-        PopDocXBURL:  "{0}/wx/#!/document?id={1}",
+        PopDocXBURL:  "{0}#!/document?id={1}",
         PopNewDocLegacyURL:   '{0}/DocDetail.aspx?add={1}&project={2}{3}',
-        PopNewDocXBURL:  "{0}/wx/#!/document?add={1}&project={2}{3}",
+        PopNewDocXBURL:  "{0}#!/document?add={1}&project={2}{3}",
         PopupWindowLargeCWS: {top: -1, left: -1, width: 1000, height: 750},
         PopupWindowHelpMenuCWS: {top: -1, left: -1, width: 750, height: 700},
         PopupWindowUserSettingsCWS: {top: -1, left: -1, width: 830, height: 750},
         PopupWindowViewUserCWS:{top: -1, left: -1, width: 1000, height: 605},
         PopupWindowTop: 45,
         ProjectLegacyURL: '{0}/ProjectDetail.aspx?id={1}',
-        ProjectXBURL: '{0}/wx/#!/main/projectDashboard?project={1}',
+        ProjectXBURL: '{0}#!/main/projectDashboard?project={1}',
         UseClassicCatalog: ((!location.host.includes(".9")) &&
                              location.host.indexOf(".") > 0 &&
                              location.host !== "scm.spitfirepm.com" &&
@@ -3282,6 +3290,42 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public static IsPowerUXPage() : boolean {
         return location.hash.startsWith("#!") || location.pathname === "/wx/";
+    }
+
+    /**
+     * Base URL of the PowerUX SPA ITSELF, always ending in "/".
+     *
+     * Not the same thing as _SiteURL, which is the BACKEND base - the app root that APIs, assets
+     * and the classic .aspx pages hang off. The two coincide in production only by convention:
+     *
+     *     backend base   https://host/sfPMS          _SiteURL
+     *     SPA base       https://host/sfPMS/wx/      _SiteURL + "/wx/"
+     *
+     * Behind the vite dev server they do NOT coincide. The SPA is served from the origin root
+     * while the API still has to be reached through the /sfPMS proxy prefix, so _SiteURL is
+     * correct for the API and wrong for SPA navigation:
+     *
+     *     backend base   http://localhost:8896/sfPMS   (correct - the proxy prefix)
+     *     SPA base       http://localhost:8896/        (NOT _SiteURL, and no wx/ either)
+     *
+     * Formatting a PowerUX route against _SiteURL therefore produced
+     * http://localhost:8896/sfPMS/wx/#!/main/projectDashboard?project=GC003, which leaves the dev
+     * server and loads the DEPLOYED build through the proxy instead of the code being edited.
+     *
+     * Rather than add configuration that has to be kept in step, derive it: the SPA is by
+     * definition served from its own base, so when we ARE the SPA the document's own directory is
+     * the answer, whatever the hosting shape. Called from a classic page we are not the SPA, so
+     * fall back to the built-in path under the app - which is what every caller got before.
+     *
+     * @returns e.g. "https://host/sfPMS/wx/" in production, "http://localhost:8896/" under vite
+     */
+    public static PowerUXBaseURL() : string {
+        if (sfRestClient.IsPowerUXPage()) {
+            const thisPath = location.pathname;
+            const thisDir = thisPath.endsWith("/") ? thisPath : thisPath.substring(0, thisPath.lastIndexOf("/") + 1);
+            return `${location.origin}${thisDir}`;
+        }
+        return `${sfRestClient.__SiteURL}/wx/`;
     }
     public IsPowerUXPage() : boolean {
         return sfRestClient.IsPowerUXPage();
@@ -6118,7 +6162,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         var root = sfRestClient.ResolveSiteRootURLs();
         var result : string;
         if (isPowerUX) {
-            result = `${root}/wx/#!/login?m=${mValue}`;
+            // SPA route, so it takes the SPA base - see PowerUXBaseURL. `root` is the BACKEND
+            // path and still serves the classic branches below.
+            result = `${sfRestClient.PowerUXBaseURL()}#!/login?m=${mValue}`;
         }
         else {
             if (mValue === 'LoadUserSessionInfo401') {
