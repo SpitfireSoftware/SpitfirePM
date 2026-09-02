@@ -773,7 +773,13 @@ export class sfRestClient {
                 while (!sfRestClient._z.WCCLoaded && retryCount < 9)  try { 
                     const usePageName = ((retryCount++ < 3) && 
                                         (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated) 
-                                        ? `${sfApplicationRootPath}/wx/#!/main/home` : undefined;
+                                        // markClaude: was sfApplicationRootPath + "/wx/", the BACKEND base plus the
+                                        // deployed build's folder - see PowerUXBaseURL. Safe to change: this href is
+                                        // only read by ResolvePageNameFromURL and GetPageQueryContent, and BOTH take
+                                        // just the "#" onwards, so either shape resolves to the same "home". The one
+                                        // difference is sfHashCode(), used purely as the getWCC cache key, which is
+                                        // now keyed on where we actually are.
+                                        ? `${sfRestClient.PowerUXBaseURL()}#!/main/home` : undefined;
                     await RESTClient.LoadUserSessionInfo(false,usePageName); 
                 } catch (ex:any) {
                     rejectThisPermit(ex.message);
