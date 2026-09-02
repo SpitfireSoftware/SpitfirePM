@@ -65,12 +65,14 @@ export type SFRESTClientOptions = {
     /** @default '{0}/DocDetail.aspx?id={1}', */
     PopDocLegacyURL:   string, 
     /** 
-     * @abstract  PopDocXBURL can use {0} place holder for site path and {1} placeholder for document ID
-     * @default "{0}/wx/#!/document?id={1}" */
+     * @abstract  PopDocXBURL can use {0} place holder for the SPA base and {1} placeholder for document ID.
+     * NOTE {0} is the PowerUX SPA base (see PowerUXBaseURL), NOT the site url the *LegacyURL templates take - the two differ wherever the SPA is not served from {site}/wx/, such as the vite dev server. It already ends in "/", so a custom template must not start with one.
+     * @default "{0}#!/document?id={1}" */
     PopDocXBURL:  string ,
     /** @default  '{0}/DocDetail.aspx?add={1}&project={2}{3}' */
     PopNewDocLegacyURL:  string,
-    /** @default "{0}/wx/#!/document?add={1}&project={2}{3}"  */
+    /** {0} is the SPA base (see PowerUXBaseURL) and already ends in "/"
+     * @default "{0}#!/document?add={1}&project={2}{3}"  */
     PopNewDocXBURL:  string ,
     PopupWindowLargeCWS: CoordinateWithSize,
     PopupWindowHelpMenuCWS: CoordinateWithSize,
@@ -79,7 +81,8 @@ export type SFRESTClientOptions = {
         PopupWindowTop: number,
         /** @default '{0}/ProjectDetail.aspx?id={1}' */
     ProjectLegacyURL: string ,
-    /** @default '{0}/wx/#!/main/projectDashboard?project={1}' */
+    /** {0} is the SPA base (see PowerUXBaseURL) and already ends in "/"
+     * @default '{0}#!/main/projectDashboard?project={1}' */
     ProjectXBURL: string ,
     UseClassicCatalog: boolean  ,
     SuggestionLimit: number,
@@ -6132,7 +6135,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     public NavigateToServerUnavailable(reason:string, delayMs:number=222): void {
         const RESTClient = this;
-        const url = `${RESTClient._SiteRootURL}/wx/#!/server-unavailable`;
+        // SPA route, so it takes the SPA base - see PowerUXBaseURL. Was _SiteRootURL + "/wx/",
+        // which on the vite dev server pointed at the DEPLOYED build instead of this one.
+        const url = `${sfRestClient.PowerUXBaseURL()}#!/server-unavailable`;
 
         setTimeout(`top.location="${url}";` , delayMs);
     }
