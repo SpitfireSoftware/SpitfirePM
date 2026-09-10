@@ -3637,7 +3637,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             result = sfRestClient._WCC.Project;
         else {
                 const pageName = this.ResolvePageName();
-                if (["executiveDashboard","catalog","contacts","home","pivot","diagnostic-tools","go","pup"].find(el=>el=== pageName) ) noResultOK = true;
+                if (["executiveDashboard","catalog","contacts","home","pivot",
+                    "manage","system-admin",
+                    "diagnostic-tools","go","pup"].find(el=>el=== pageName) ) noResultOK = true;
             }
         if (!result && !noResultOK) console.warn(`GetPagePK could not resolve key for [${this.ResolvePageName()}]`);
         return result;

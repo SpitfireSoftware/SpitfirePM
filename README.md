@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9700.11  - ContactClient Delete Photo
 23.9700.10  - QueryCatalog and improve Attachment and Contact endpoints
 23.9700.9   - QueryCatalog and improve Attachment and Contact endpoints
 23.9700.8   - Improved ContactClient endpoints
