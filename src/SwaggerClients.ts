@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1001,7 +1001,7 @@ export class ActionItemsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1479,7 +1479,7 @@ export class AlertsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -1917,7 +1917,7 @@ export class LookupClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -3422,7 +3422,7 @@ export class ARRClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -3694,7 +3694,7 @@ export class CatalogClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -7376,7 +7376,7 @@ export class ConfigClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -16141,7 +16141,7 @@ export class ContactClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -17044,7 +17044,7 @@ export class DocumentToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -24307,186 +24307,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Returns the route on the specified document
-     * @param id Document Key
-     */
-    getDocRoute(id: string) {
-        return new Promise<DocRoute[] | null>((resolve, reject) => {
-            this.getDocRouteWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocRouteWithCallbacks(id: string, onSuccess?: (result: DocRoute[] | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/route";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocRoute(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocRoute(xhr: any): DocRoute[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocRoute[];
-            return result200;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Failed to persist", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Deletes the route on the specified document
-     * @param id Document Key
-     * @param routeKeys Route Key(s)
-     * @return Specified route not found
-     */
-    deleteDocRoute(id: string, routeKeys: string[]) {
-        return new Promise<string>((resolve, reject) => {
-            this.deleteDocRouteWithCallbacks(id, routeKeys, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private deleteDocRouteWithCallbacks(id: string, routeKeys: string[], onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/route";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(routeKeys);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocRoute(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteDocRoute(xhr: any): string | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 204) {
-            const _responseText = xhr.responseText;
-            let result204: any = null;
-            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return result204;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not acceptable", status, _responseText, _headers, result406);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
      * Updates a route entry on the specified document
      * @param id Document Key
      * @param updatedRoute Replacement Route
@@ -24669,6 +24489,186 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the route on the specified document
+     * @param id Document Key
+     */
+    getDocRoute(id: string) {
+        return new Promise<DocRoute[] | null>((resolve, reject) => {
+            this.getDocRouteWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocRouteWithCallbacks(id: string, onSuccess?: (result: DocRoute[] | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/route";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocRoute(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocRoute(xhr: any): DocRoute[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocRoute[];
+            return result200;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Failed to persist", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes the route on the specified document
+     * @param id Document Key
+     * @param routeKeys Route Key(s)
+     * @return Specified route not found
+     */
+    deleteDocRoute(id: string, routeKeys: string[]) {
+        return new Promise<string>((resolve, reject) => {
+            this.deleteDocRouteWithCallbacks(id, routeKeys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteDocRouteWithCallbacks(id: string, routeKeys: string[], onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/route";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(routeKeys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocRoute(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteDocRoute(xhr: any): string | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 204) {
+            const _responseText = xhr.responseText;
+            let result204: any = null;
+            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result204;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not acceptable", status, _responseText, _headers, result406);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -26416,7 +26416,7 @@ export class ExcelToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -27259,7 +27259,7 @@ export class ProjectToolsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -29594,7 +29594,7 @@ export class ProjectDocListClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -29941,7 +29941,7 @@ export class ProjectKPIClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -30030,7 +30030,7 @@ export class ProjectTeamClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -30594,7 +30594,7 @@ export class ProjectsClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -31159,7 +31159,7 @@ export class SessionClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -33431,7 +33431,7 @@ export class SystemClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -35314,7 +35314,7 @@ export class UICFGClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
     }
 
     /**
@@ -35815,7 +35815,197 @@ export class XTSClient extends APIClientBase {
 
     constructor(baseUrl?: string) {
         super();
-        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS");
+        this.baseUrl = baseUrl ?? this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS");
+    }
+
+    /**
+     * Returns one XTS action with its trace and, optionally, its envelope
+     * @param actionKey Action key
+     * @param payload (optional) Rebuild and include the envelope (re-runs the payload procedure)
+     * @param traceRows (optional) How many trace rows, newest first
+     */
+    xTSRestGetAction(actionKey: string, payload?: boolean | undefined, traceRows?: number | undefined) {
+        return new Promise<XTSRestActionInfo | null>((resolve, reject) => {
+            this.xTSRestGetActionWithCallbacks(actionKey, payload, traceRows, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestGetActionWithCallbacks(actionKey: string, payload: boolean | undefined, traceRows: number | undefined, onSuccess?: (result: XTSRestActionInfo | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/action/{actionKey}?";
+        if (actionKey === undefined || actionKey === null)
+            throw new globalThis.Error("The parameter 'actionKey' must be defined.");
+        url_ = url_.replace("{actionKey}", encodeURIComponent("" + actionKey));
+        if (payload === null)
+            throw new globalThis.Error("The parameter 'payload' cannot be null.");
+        else if (payload !== undefined)
+            url_ += "payload=" + encodeURIComponent("" + payload) + "&";
+        if (traceRows === null)
+            throw new globalThis.Error("The parameter 'traceRows' cannot be null.");
+        else if (traceRows !== undefined)
+            url_ += "traceRows=" + encodeURIComponent("" + traceRows) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestGetActionWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestGetActionWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestGetActionWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestGetAction(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestGetAction(xhr: any): XTSRestActionInfo | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestActionInfo;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Requires XTS | Queue or a pre-shared credential", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such action", status, _responseText, _headers, result404);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Peer posts the result of a pushed action
+     * @param actionKey Action key from the envelope
+     */
+    xTSRestPostResult(actionKey: string) {
+        return new Promise<XTSRestReceipt | null>((resolve, reject) => {
+            this.xTSRestPostResultWithCallbacks(actionKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestPostResultWithCallbacks(actionKey: string, onSuccess?: (result: XTSRestReceipt | null) => void, onFail?: (exception: string | string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/action/{actionKey}/result";
+        if (actionKey === undefined || actionKey === null)
+            throw new globalThis.Error("The parameter 'actionKey' must be defined.");
+        url_ = url_.replace("{actionKey}", encodeURIComponent("" + actionKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestPostResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestPostResultWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestPostResultWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestPostResult(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestPostResult(xhr: any): XTSRestReceipt | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestReceipt;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Body rejected: not a JSON object, unknown status, rows not an array, or the result procedure refused the data (not retried)", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Requires a pre-shared (machine) credential", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such action", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("XTS not configured", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure (retry later)", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
     }
 
     /**
@@ -36060,6 +36250,434 @@ export class XTSClient extends APIClientBase {
             let result500: any = null;
             result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Admin Required", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * GetAPV contract: Spitfire nudges with the invoice keys, the peer answers with an inboundAPDoc header row
+     */
+    xTSRestContractGetAPV() {
+        return new Promise<XTSRestContractOfXTSNoRowsAndInboundAPDoc | null>((resolve, reject) => {
+            this.xTSRestContractGetAPVWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestContractGetAPVWithCallbacks(onSuccess?: (result: XTSRestContractOfXTSNoRowsAndInboundAPDoc | null) => void, onFail?: (exception: string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/contract/GetAPV";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestContractGetAPVWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestContractGetAPVWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestContractGetAPVWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestContractGetAPV(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestContractGetAPV(xhr: any): XTSRestContractOfXTSNoRowsAndInboundAPDoc | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestContractOfXTSNoRowsAndInboundAPDoc;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * GetPMTX contract: Spitfire nudges with a since-marker, the peer answers with inboundPMDoc rows, chunked
+     */
+    xTSRestContractGetPMTX() {
+        return new Promise<XTSRestContractOfXTSNoRowsAndInboundPMDoc | null>((resolve, reject) => {
+            this.xTSRestContractGetPMTXWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestContractGetPMTXWithCallbacks(onSuccess?: (result: XTSRestContractOfXTSNoRowsAndInboundPMDoc | null) => void, onFail?: (exception: string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/contract/GetPMTX";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestContractGetPMTXWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestContractGetPMTXWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestContractGetPMTXWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestContractGetPMTX(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestContractGetPMTX(xhr: any): XTSRestContractOfXTSNoRowsAndInboundPMDoc | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestContractOfXTSNoRowsAndInboundPMDoc;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * GetVendors contract: Spitfire nudges with a vendor id, the peer answers with inboundContactInfo rows
+     */
+    xTSRestContractGetVendors() {
+        return new Promise<XTSRestContractOfXTSNoRowsAndInboundContactInfo | null>((resolve, reject) => {
+            this.xTSRestContractGetVendorsWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestContractGetVendorsWithCallbacks(onSuccess?: (result: XTSRestContractOfXTSNoRowsAndInboundContactInfo | null) => void, onFail?: (exception: string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/contract/GetVendors";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestContractGetVendorsWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestContractGetVendorsWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestContractGetVendorsWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestContractGetVendors(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestContractGetVendors(xhr: any): XTSRestContractOfXTSNoRowsAndInboundContactInfo | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestContractOfXTSNoRowsAndInboundContactInfo;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * SendAP contract: Spitfire pushes an inboundProjectAP envelope, the peer answers with an inboundAPDoc header row
+     */
+    xTSRestContractSendAP() {
+        return new Promise<XTSRestContractOfInboundProjectAPAndInboundAPDoc | null>((resolve, reject) => {
+            this.xTSRestContractSendAPWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestContractSendAPWithCallbacks(onSuccess?: (result: XTSRestContractOfInboundProjectAPAndInboundAPDoc | null) => void, onFail?: (exception: string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/contract/SendAP";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestContractSendAPWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestContractSendAPWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestContractSendAPWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestContractSendAP(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestContractSendAP(xhr: any): XTSRestContractOfInboundProjectAPAndInboundAPDoc | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestContractOfInboundProjectAPAndInboundAPDoc;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Peer pushes rows for a staging table
+     * @param table inboundAPDoc | inboundPMDoc | inboundContactInfo
+     * @param runImport (optional) Run the table's import procedure after storing
+     */
+    xTSRestPostData(table: string | null, runImport?: boolean | undefined) {
+        return new Promise<XTSRestDataReceipt | null>((resolve, reject) => {
+            this.xTSRestPostDataWithCallbacks(table, runImport, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestPostDataWithCallbacks(table: string | null, runImport: boolean | undefined, onSuccess?: (result: XTSRestDataReceipt | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/data/{table}?";
+        if (table === undefined || table === null)
+            throw new globalThis.Error("The parameter 'table' must be defined.");
+        url_ = url_.replace("{table}", encodeURIComponent("" + table));
+        if (runImport === null)
+            throw new globalThis.Error("The parameter 'runImport' cannot be null.");
+        else if (runImport !== undefined)
+            url_ += "runImport=" + encodeURIComponent("" + runImport) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestPostDataWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestPostDataWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestPostDataWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestPostData(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestPostData(xhr: any): XTSRestDataReceipt | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestDataReceipt;
+            return result200;
+
+        } else if (status === 400) {
+            const _responseText = xhr.responseText;
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not a JSON array, unknown table, or a row the store procedure refused", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Requires a pre-shared (machine) credential", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("XTS not configured", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure (retry later)", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Runs the XTS REST dispatch sweep on this node
+     * @param take (optional) At most this many actions
+     */
+    xTSRestDispatch(take?: number | undefined) {
+        return new Promise<XTSRestDispatchReceipt | null>((resolve, reject) => {
+            this.xTSRestDispatchWithCallbacks(take, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private xTSRestDispatchWithCallbacks(take: number | undefined, onSuccess?: (result: XTSRestDispatchReceipt | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/dispatch?";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processXTSRestDispatchWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processXTSRestDispatchWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processXTSRestDispatchWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processXTSRestDispatch(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processXTSRestDispatch(xhr: any): XTSRestDispatchReceipt | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestDispatchReceipt;
+            return result200;
+
+        } else if (status === 401) {
+            const _responseText = xhr.responseText;
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Requires XTS | Queue (blanket) or a pre-shared credential", status, _responseText, _headers, result403);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("XTS not configured", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure", status, _responseText, _headers, result500);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = xhr.responseText;
@@ -36730,16 +37348,22 @@ export class XTSClient extends APIClientBase {
     }
 
     /**
-     * Returns list of peer tasks
+     * Returns list of peer tasks, optionally filtered by action type and/or status
+     * @param actionType (optional) Optional TDActionType filter (SendAP, GetVendors, etc)
+     * @param status (optional) Optional TDStatus filter (I, *, WR, F, H)
      */
-    getXTSQueue() {
+    getXTSQueue(actionType?: string | null | undefined, status?: string | null | undefined) {
         return new Promise<XTSAction[] | null>((resolve, reject) => {
-            this.getXTSQueueWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
+            this.getXTSQueueWithCallbacks(actionType, status, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private getXTSQueueWithCallbacks(onSuccess?: (result: XTSAction[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/xts/queue";
+    private getXTSQueueWithCallbacks(actionType: string | null | undefined, status: string | null | undefined, onSuccess?: (result: XTSAction[] | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/xts/queue?";
+        if (actionType !== undefined && actionType !== null)
+            url_ += "actionType=" + encodeURIComponent("" + actionType) + "&";
+        if (status !== undefined && status !== null)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         jQuery.ajax({
@@ -40221,6 +40845,104 @@ export enum HttpStatusCode {
     HttpVersionNotSupported = 505,
 }
 
+/** A peer AP invoice / voucher as the peer knows it: the acknowledgement of a SendAP push, the answer to a GetAPV nudge (header only), and the row shape of api/xts/data/inboundAPDoc. Lands in dbo.xtsStagedAPDoc. */
+export interface InboundAPDoc {
+    /** The peer alternate key for this item
+SQL: varchar(50) */
+    AlienKey?: string | undefined;
+    /** Voucher Number
+SQL: varchar(50) NOT NULL */
+    ReferenceNumber: string;
+    /** SQL: varchar(10) */
+    InvoiceType?: string | undefined;
+    /** SQL: varchar(10) */
+    InvoiceStatus?: string | undefined;
+    /** The peer key for the project - hopefully the same as the Spitfire Project ID
+SQL: varchar(50) */
+    ProjectAlienKey?: string | undefined;
+    /** Maps to xsfDocHeader.Project
+SQL: varchar(50) */
+    ProjectID?: string | undefined;
+    /** SQL: datetime2(7) */
+    DocDate?: Date | undefined;
+    /** maps to xsfDocHeader.duedate
+SQL: datetime2(7) */
+    DueDate?: Date | undefined;
+    /** When the compliance is related to a vendor, the vendor id goes here.  Do not update this field
+SQL: varchar(50) */
+    VendorID?: string | undefined;
+    /** SQL: varchar(70) */
+    VendorRefNum?: string | undefined;
+    /** DivisionID hopefully the same as the AlienKey
+SQL: varchar(50) */
+    DivisionID?: string | undefined;
+    /** free form text
+SQL: varchar(80) */
+    Description?: string | undefined;
+    /** YYMMMM
+SQL: char(6) */
+    PostPeriod?: string | undefined;
+    /** SQL: bit */
+    IsOnHold?: boolean | undefined;
+    /** SQL: varchar(10) */
+    Terms?: string | undefined;
+    /** usually maps to xsfDocRevision.costimpact
+SQL: money */
+    TotalAmount?: number | undefined;
+    /** SQL: money */
+    Balance?: number | undefined;
+    /** SQL: int */
+    ApplicationCount?: number | undefined;
+    /** SQL: varchar(50) */
+    CheckNum?: string | undefined;
+    /** SQL: date */
+    CheckDate?: Date | undefined;
+    /** Usually maps to xsfDocRevItem.ItemNumber
+SQL: varchar(50) NOT NULL */
+    LineNumber: string;
+    /** Usually maps to xsfDocItem.Description
+SQL: varchar(80) */
+    LineDescription?: string | undefined;
+    /** via map lookup or direct match to xsfDocItemTask.ProjEntity
+SQL: varchar(50) */
+    WBCodeAlienKey?: string | undefined;
+    /** Seldom used - above WBCode
+SQL: varchar(50) */
+    WBTask?: string | undefined;
+    /** match to xsfDocItemTask.ProjEntity
+SQL: varchar(50) */
+    WBCode?: string | undefined;
+    /** maps to xsfDocItemTask.Quantity
+SQL: money */
+    LineQty?: number | undefined;
+    /** not used
+SQL: varchar(10) */
+    LineUOM?: string | undefined;
+    /** SQL: money */
+    LineAmount?: number | undefined;
+    /** SQL: varchar(50) */
+    LineAccount?: string | undefined;
+    /** SQL: varchar(50) */
+    SubcontractNbr?: string | undefined;
+    /** SQL: varchar(50) */
+    SubcontractLineNbr?: string | undefined;
+    /** When this compliance item was created
+SQL: datetime2(7) */
+    Created?: Date | undefined;
+    /** SQL: datetime2(7) */
+    LastChanged?: Date | undefined;
+    /** SQL: bigint */
+    LastTS?: number | undefined;
+    /** SQL: date */
+    InvoiceDate?: Date | undefined;
+    /** SQL: varchar(50) */
+    PMBatchRef?: string | undefined;
+    /** SQL: varchar(50) */
+    LineSourceNumber?: string | undefined;
+
+    [key: string]: any;
+}
+
 /** Describes peer Compliance Item.  This data is effectively read only.  Update the base compliance item record. */
 export interface InboundComplianceItem {
     /** The Spitfire project id */
@@ -40276,6 +40998,406 @@ export interface InboundComplianceItem {
     SCDMK?: string | undefined;
     /** eTag */
     ETag?: string | undefined;
+}
+
+/** A peer vendor, customer or employee: the answer to GetVendors / GetCustomers / GetEmployees and the row shape of api/xts/data/inboundContactInfo. Lands in dbo.xtsStagedContactInfo. */
+export interface InboundContactInfo {
+    /** PK if available
+SQL: varchar(44) NOT NULL */
+    AlienPK: string;
+    /** key of a parent, allows grouping all contacts at a company
+SQL: varchar(44) */
+    ParentPK?: string | undefined;
+    /** The peer alternate key for this item
+SQL: varchar(44) NOT NULL */
+    AlienKey: string;
+    /** Typically V or C or E then a semicolon than the PK again
+SQL: varchar(64) */
+    CKParts?: string | undefined;
+    /** SQL: varchar(32) */
+    ContactSource?: string | undefined;
+    /** C E or V
+SQL: varchar(32) */
+    ContactType?: string | undefined;
+    /** SQL: varchar(32) NOT NULL */
+    ParentType: string;
+    /** vendor or customer class
+SQL: varchar(10) */
+    ClassID?: string | undefined;
+    /** SQL: varchar(30) */
+    ExternalID?: string | undefined;
+    /** SQL: varchar(30) */
+    EmployeeID?: string | undefined;
+    /** DivisionID hopefully the same as the AlienKey
+SQL: varchar(30) */
+    DivisionID?: string | undefined;
+    /** Typically vendor payment terms
+SQL: varchar(255) */
+    TermsID?: string | undefined;
+    /** SQL: varchar(60) */
+    Department?: string | undefined;
+    /** SQL: varchar(255) */
+    CompanyName?: string | undefined;
+    /** SQL: varchar(255) */
+    FullName?: string | undefined;
+    /** SQL: varchar(255) */
+    FirstName?: string | undefined;
+    /** SQL: varchar(255) */
+    MiddleName?: string | undefined;
+    /** SQL: varchar(255) */
+    LastName?: string | undefined;
+    /** when present can act as a weak AK
+SQL: varchar(255) */
+    Email?: string | undefined;
+    /** should be mapped to xsfDocHeader.status
+SQL: varchar(32) */
+    Status?: string | undefined;
+    /** SQL: varchar(255) */
+    JobTitle?: string | undefined;
+    /** SQL: varchar(255) */
+    ACompany?: string | undefined;
+    /** SQL: varchar(50) */
+    Phone1?: string | undefined;
+    /** SQL: varchar(50) */
+    Phone2?: string | undefined;
+    /** SQL: varchar(50) */
+    Phone3?: string | undefined;
+    /** Office; Mobile; Pager
+SQL: varchar(50) */
+    Phone1Type?: string | undefined;
+    /** Office; Mobile; Pager
+SQL: varchar(50) */
+    Phone2Type?: string | undefined;
+    /** Office; Mobile; Pager
+SQL: varchar(50) */
+    Phone3Type?: string | undefined;
+    /** SQL: varchar(50) */
+    Fax?: string | undefined;
+    /** SQL: varchar(60) */
+    Addr1?: string | undefined;
+    /** SQL: varchar(60) */
+    Addr2?: string | undefined;
+    /** SQL: varchar(50) */
+    City?: string | undefined;
+    /** SQL: varchar(50) */
+    State?: string | undefined;
+    /** SQL: varchar(20) */
+    Zip?: string | undefined;
+    /** SQL: varchar(255) */
+    WebSite?: string | undefined;
+    /** SQL: varchar(3) */
+    CountryID?: string | undefined;
+    /** applies to address - ties this contact address to the parent contact address
+SQL: bit NOT NULL */
+    UseParent?: boolean;
+    /** applies to address - ties this contact address to the parent contact address
+SQL: bit NOT NULL */
+    AAUseParent?: boolean;
+    /** SQL: bit */
+    Vendor1099?: boolean | undefined;
+    /** alternate address type -- seldom used
+SQL: varchar(8) */
+    AAType?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(255) */
+    AACompany?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(255) */
+    AAPerson?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAPhone1?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAPhone2?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAPhone3?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAPhone1Type?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAPhone2Type?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAPhone3Type?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAFax?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(60) */
+    AAAddr1?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(60) */
+    AAAddr2?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(30) */
+    AACity?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(50) */
+    AAState?: string | undefined;
+    /** alternate address   -- seldom used
+SQL: varchar(20) */
+    AAZip?: string | undefined;
+    /** The user id in the peer system if known.  Seldom used now due to Entra
+SQL: varchar(64) */
+    UserID?: string | undefined;
+    /** not use or stored
+SQL: varchar(64) */
+    RawPW?: string | undefined;
+    /** SQL: varchar(50) */
+    SortName?: string | undefined;
+    /** When this compliance item was created
+SQL: datetime */
+    Created?: Date | undefined;
+    /** SQL: datetime */
+    LastChanged?: Date | undefined;
+    /** SQL: bigint */
+    LastTS?: number | undefined;
+
+    [key: string]: any;
+}
+
+/** One line of a peer project-cost transaction: the answer to GetPMTX (delivered in chunks) and the row shape of api/xts/data/inboundPMDoc. Lands in dbo.xtsStagedPMDoc; header fields repeat on every line. */
+export interface InboundPMDoc {
+    /** The peer alternate key for this item
+SQL: varchar(50) NOT NULL */
+    AlienKey: string;
+    /** Voucher Number
+SQL: varchar(50) NOT NULL */
+    ReferenceNumber: string;
+    /** Usually maps to xsfDocHeader.subtype
+SQL: varchar(10) */
+    SubType?: string | undefined;
+    /** should be mapped to xsfDocHeader.status
+SQL: varchar(10) */
+    Status?: string | undefined;
+    /** The peer key for the project - hopefully the same as the Spitfire Project ID
+SQL: varchar(50) */
+    ProjectAlienKey?: string | undefined;
+    /** Maps to xsfDocHeader.Project
+SQL: varchar(50) */
+    ProjectID?: string | undefined;
+    /** SQL: datetime */
+    DocDate?: Date | undefined;
+    /** maps to xsfDocHeader.duedate
+SQL: datetime */
+    DueDate?: Date | undefined;
+    /** Usually Maps to xsfDocheader.SourceContact perhaps after a xtsMap contact lookup
+SQL: varchar(50) */
+    SourceContactAlienKey?: string | undefined;
+    /** usually maps to xsfDocHeader.SourceDocNo
+SQL: varchar(70) */
+    SourceDocno?: string | undefined;
+    /** DivisionID hopefully the same as the AlienKey
+SQL: varchar(50) */
+    DivisionID?: string | undefined;
+    /** free form text
+SQL: varchar(80) */
+    Description?: string | undefined;
+    /** YYMMMM
+SQL: char(6) */
+    PostPeriod?: string | undefined;
+    /** SQL: bit */
+    IsOnHold?: boolean | undefined;
+    /** SQL: varchar(10) */
+    Terms?: string | undefined;
+    /** usually maps to xsfDocRevision.costimpact
+SQL: money */
+    TotalAmount?: number | undefined;
+    /** SQL: money */
+    Balance?: number | undefined;
+    /** Usually maps to xsfDocRevItem.ItemNumber
+SQL: varchar(50) NOT NULL */
+    LineNumber: string;
+    /** Usually maps to xsfDocItem.Description
+SQL: varchar(80) */
+    LineDescription?: string | undefined;
+    /** SQL: varchar(50) */
+    LineResponsibleType?: string | undefined;
+    /** Combined with LineResponsibleType and a contact map lookup, maps to xsfDocItem.ResponsibleParty
+SQL: varchar(50) */
+    LineResponsibleAlienKey?: string | undefined;
+    /** SQL: varchar(50) */
+    LineGLAcct?: string | undefined;
+    /** SQL: varchar(10) */
+    LineShop?: string | undefined;
+    /** via map lookup or direct match to xsfDocItemTask.ProjEntity
+SQL: varchar(50) */
+    WBCodeAlienKey?: string | undefined;
+    /** match to xsfDocItemTask.ProjEntity
+SQL: varchar(50) */
+    WBCode?: string | undefined;
+    /** SQL: varchar(50) */
+    WACodeAlienKey?: string | undefined;
+    /** maps to xsfDocItem.AccountCategory
+SQL: varchar(50) */
+    WACode?: string | undefined;
+    /** maps to xsfDocItemTask.Quantity
+SQL: money */
+    LineQty?: number | undefined;
+    /** SQL: money */
+    LineAmount?: number | undefined;
+    /** SQL: varchar(10) */
+    LineSource?: string | undefined;
+    /** SQL: varchar(10) */
+    LineType?: string | undefined;
+    /** SQL: varchar(50) */
+    LineSourceNumber?: string | undefined;
+    /** not used
+SQL: varchar(10) */
+    LineUOM?: string | undefined;
+    /** When this compliance item was created
+SQL: datetime */
+    Created?: Date | undefined;
+    /** SQL: datetime */
+    LastChanged?: Date | undefined;
+    /** SQL: bigint */
+    LastTS?: number | undefined;
+
+    [key: string]: any;
+}
+
+/** One line of a Spitfire AP voucher as pushed to the peer by SendAP; header fields repeat on every line. Produced by pxts_ProjectSendAP (or the site's configured payload proc), so a site may add columns. */
+export interface InboundProjectAP {
+    /** Spitfire project id (not a peer project; available for a GL segment or attribute)
+SQL: varchar(16) NOT NULL */
+    Project: string;
+    /** INV. A negative DocBal is a credit
+SQL: varchar(3) NOT NULL */
+    DocType: string;
+    /** Unused (Dynamics SL heritage)
+SQL: varchar(1) */
+    BatNbr?: string | undefined;
+    /** Spitfire voucher number once assigned; empty on first send
+SQL: varchar(16) */
+    RefNbr?: string | undefined;
+    /** Shared vendor id: the alternate key, equal to the peer's supplier number
+SQL: varchar(16) */
+    VendID?: string | undefined;
+    /** Spitfire subcontract number (PayItemNumber)
+SQL: varchar(30) */
+    PONbr?: string | undefined;
+    /** Vendor's invoice reference; must be unique per vendor at the peer
+SQL: varchar(30) NOT NULL */
+    InvoiceNumber: string;
+    /** Vendor invoice date
+SQL: datetime NOT NULL */
+    InvoiceDate?: Date;
+    /** Header description
+SQL: varchar(60) */
+    Title?: string | undefined;
+    /** Amount to voucher, net of retention when retention is a separate voucher; equals the sum of LineAmount
+SQL: money */
+    DocBal?: number | undefined;
+    /** Same as DocBal on first send
+SQL: money */
+    OrigAmt?: number | undefined;
+    /** YYYYMM requested accounting period
+SQL: varchar(6) */
+    FiscalPeriod?: string | undefined;
+    /** Null lets the peer compute from terms; set explicitly for a manual-retention voucher
+SQL: datetime */
+    InvoiceDue?: Date | undefined;
+    /** Present when retention is involved (end of project)
+SQL: datetime */
+    RetentionDue?: Date | undefined;
+    /** On a credit, the peer invoice number the credit applies against
+SQL: varchar(50) */
+    ApplyCreditTo?: string | undefined;
+    /** Spitfire commitment type code (FP, CP, PO, LB ...)
+SQL: varchar(8) NOT NULL */
+    ContractType: string;
+    /** Always 0 (Dynamics SL heritage)
+SQL: varchar(1) NOT NULL */
+    PC_Status: string;
+    /** X on send
+SQL: varchar(1) NOT NULL */
+    Status: string;
+    /** Spitfire asks the peer to release / validate the invoice
+SQL: bit NOT NULL */
+    Rlsed?: boolean;
+    /** Always 1 on send
+SQL: bit NOT NULL */
+    OpenDoc?: boolean;
+    /** 1 on a manual retention voucher
+SQL: bit NOT NULL */
+    Hold?: boolean;
+    /** 1 on a manual retention voucher
+SQL: bit NOT NULL */
+    IsRetention?: boolean;
+    /** GL account as Spitfire knows it (from the account-category map)
+SQL: varchar(10) */
+    glAcct?: string | undefined;
+    /** GL sub-account as Spitfire knows it
+SQL: varchar(30) */
+    SubAcct?: string | undefined;
+    /** Seldom used (phase)
+SQL: varchar(32) */
+    ProjectTask?: string | undefined;
+    /** Spitfire cost code
+SQL: varchar(32) */
+    WBCODE?: string | undefined;
+    /** Spitfire cost type (LABOR, MAT, SUB, EQUIP ...): primary input to GL coding
+SQL: varchar(16) */
+    AccountCategory?: string | undefined;
+    /** Voucher line / subcontract line number; the peer returns it so lines can be matched
+SQL: varchar(16) */
+    ItemNumber?: string | undefined;
+    /** Line description
+SQL: varchar(256) */
+    Description?: string | undefined;
+    /** Quantity
+SQL: money NOT NULL */
+    QTY?: number;
+    /** Line amount, net of retention when retention is separate
+SQL: money */
+    LineAmount?: number | undefined;
+    /** Retention held on this line
+SQL: money */
+    LineRetention?: number | undefined;
+    /** Shared unit-of-measure code
+SQL: varchar(10) */
+    UOM?: string | undefined;
+    /** Spitfire company division: natural candidate for the peer business unit
+SQL: varchar(10) */
+    DivisionID?: string | undefined;
+    /** Peer project id from the key map when one exists
+SQL: varchar(64) */
+    ProjectAlienKey?: string | undefined;
+    /** Peer project primary key from the key map when one exists
+SQL: varchar(64) */
+    ProjectAlienPK?: string | undefined;
+    /** Peer cost-code id from the key map when one exists
+SQL: varchar(64) */
+    WBSAlienKey?: string | undefined;
+    /** Peer cost-code primary key when one exists
+SQL: varchar(64) */
+    WBSAlienPK?: string | undefined;
+    /** Peer account-category id when one exists
+SQL: varchar(64) */
+    WAAlienKey?: string | undefined;
+    /** Peer account-category primary key when one exists
+SQL: varchar(64) */
+    WAAlienPK?: string | undefined;
+    /** Peer vendor id from the key map
+SQL: varchar(64) */
+    VendorAlienKey?: string | undefined;
+    /** Peer vendor primary key from the key map
+SQL: varchar(64) */
+    VendorAlienPK?: string | undefined;
+    /** Peer id of the subcontract when known, else Project-Subcontract
+SQL: varchar(64) */
+    SubcontractAlienPK?: string | undefined;
+    /** When Spitfire last changed the voucher
+SQL: datetime */
+    LastChanged?: Date | undefined;
+    /** Spitfire row version of the voucher
+SQL: bigint */
+    LastTS?: number | undefined;
+
+    [key: string]: any;
 }
 
 export interface KeyValuePairOfStringAndIEnumerableOfString {
@@ -43139,6 +44261,34 @@ export interface XTSAction {
     TDKeyMapKey?: string;
     /** Key */
     TDActionKey: string;
+    /** Most recent xtsActionTrace message for a REST-dispatched action (case 37008); null otherwise */
+    LastTrace?: string | undefined;
+    /** When LastTrace was written */
+    LastTraceAt?: Date | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** One xtsActionTrace row. */
+export interface XTSActionTrace {
+    /** Row key. */
+    TraceKey?: string;
+    /** The action this row belongs to. */
+    TDActionKey?: string;
+    /** FailCount + 1 at the time of the row, so retries group together. */
+    Attempt?: number;
+    /** When the row was written. */
+    TracedAt?: Date;
+    /** O push out, I callback in, S state change, E failure. */
+    Direction?: string | undefined;
+    /** HTTP status of the push or the callback, when there was one. */
+    HttpStatus?: number | undefined;
+    /** Rows pushed or stored in this step. */
+    RowsMoved?: number | undefined;
+    /** SHA-256 of the serialized rows pushed, so a resend can be shown byte-identical. */
+    PayloadHash?: string | undefined;
+    /** What happened, in words. */
+    Message?: string | undefined;
     /** eTag */
     ETag?: string | undefined;
 }
@@ -43187,6 +44337,266 @@ export interface XTSKeyMap {
     LastAlienTS?: number;
     /** eTag for this key map, not for the data exchange */
     ETag?: string | undefined;
+}
+
+/** Row type of an envelope that carries no rows: every Get (GetAPV, GetVendors, GetPMTX) pushes only keys and a since-marker; the peer answers with rows. */
+export interface XTSNoRows {
+
+    [key: string]: any;
+}
+
+/** Response to GET api/xts/action/{key}. */
+export interface XTSRestActionInfo {
+    /** The action, its key map and its resolved REST configuration. */
+    Action?: XTSRestActionState | undefined;
+    /** Most recent trace rows, newest first. */
+    Trace?: XTSActionTrace[] | undefined;
+    /** With ?payload=1: the envelope that would be (or was) pushed, payload proc re-run now. */
+    Envelope?: XTSRestEnvelope | undefined;
+}
+
+/** One xtsAction with its key map and resolved REST configuration (pxts_REST_GetAction). */
+export interface XTSRestActionState {
+    /** Action key. */
+    TDActionKey?: string;
+    /** SendAP, GetAPV ... */
+    TDActionType?: string | undefined;
+    /** Partner group; REST for actions this design serves. */
+    TDGroup?: string | undefined;
+    /** The key map the action works on (empty for a project-mode GetPMTX). */
+    TDKeyMapKey?: string;
+    /** I queued, * dispatched, WR retry, F failed, H finished, W recurring/waiting. */
+    TDStatus?: string | undefined;
+    /** NA one-shot, else the recurrence code. */
+    Recurs?: string | undefined;
+    /** The action pulls data from the peer. */
+    TDGet?: boolean;
+    /** The action pushes data to the peer. */
+    TDSend?: boolean;
+    /** Failed attempts so far. */
+    FailCount?: number;
+    /** When the action is (next) due. */
+    Scheduled?: Date;
+    /** When it was last pushed. */
+    LastStarted?: Date | undefined;
+    /** When it last finished. */
+    Completed?: Date | undefined;
+    /** Spitfire's record behind the key map. */
+    SfRecordKey?: string | undefined;
+    /** Secondary Spitfire key, when the map uses one. */
+    SfRecordCode?: string | undefined;
+    /** Key map set (APInvoice, Contact, PMTran ...). */
+    AlienSet?: string | undefined;
+    /** The peer's human-readable id, when known. */
+    AlienKey?: string | undefined;
+    /** The peer's internal id, when known. */
+    AlienPKey?: string | undefined;
+    /** Link or detail text the peer gave for the record. */
+    AlienLink?: string | undefined;
+    /** Last time data for this map came in from the peer. */
+    LastInboundAsOf?: Date | undefined;
+    /** Last time data for this map went out to the peer. */
+    LastOutboundAsOf?: Date | undefined;
+    /** Project of the mapped document, when it is a document. */
+    Project?: string | undefined;
+    /** Number of the mapped document, when it is a document. */
+    DocNo?: string | undefined;
+    /** Title of the mapped document, when it is a document. */
+    Title?: string | undefined;
+    /** Resolved push URL for this action type. */
+    PeerUrl?: string | undefined;
+    /** Resolved payload procedure. */
+    PayloadProc?: string | undefined;
+    /** Resolved result procedure. */
+    ResultProc?: string | undefined;
+    /** Resolved result row shape. */
+    ResultTable?: string | undefined;
+    /** Advisory chunk size for the peer. */
+    ChunkRows?: number;
+    /** HTTP timeout for the push. */
+    TimeoutSeconds?: number;
+    /** How long a 202 may stay silent before a re-push. */
+    SilenceMinutes?: number;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** The typed push / callback pair for one action type, as served by GET api/xts/contract/{actionType}. */
+export interface XTSRestContractOfInboundProjectAPAndInboundAPDoc {
+    /** SendAP, GetAPV ... */
+    ActionType?: string | undefined;
+    /** What Spitfire pushes to {peerUrl}/{actionType}. */
+    Envelope?: XTSRestEnvelopeOfInboundProjectAP | undefined;
+    /** What the peer answers with, synchronously (200) or later at Envelope.ResultUrl. */
+    Result?: XTSRestResultOfInboundAPDoc | undefined;
+    /** Plain-language notes for the peer developer. */
+    Notes?: string[] | undefined;
+}
+
+/** The typed push / callback pair for one action type, as served by GET api/xts/contract/{actionType}. */
+export interface XTSRestContractOfXTSNoRowsAndInboundAPDoc {
+    /** SendAP, GetAPV ... */
+    ActionType?: string | undefined;
+    /** What Spitfire pushes to {peerUrl}/{actionType}. */
+    Envelope?: XTSRestEnvelopeOfXTSNoRows | undefined;
+    /** What the peer answers with, synchronously (200) or later at Envelope.ResultUrl. */
+    Result?: XTSRestResultOfInboundAPDoc | undefined;
+    /** Plain-language notes for the peer developer. */
+    Notes?: string[] | undefined;
+}
+
+/** The typed push / callback pair for one action type, as served by GET api/xts/contract/{actionType}. */
+export interface XTSRestContractOfXTSNoRowsAndInboundContactInfo {
+    /** SendAP, GetAPV ... */
+    ActionType?: string | undefined;
+    /** What Spitfire pushes to {peerUrl}/{actionType}. */
+    Envelope?: XTSRestEnvelopeOfXTSNoRows | undefined;
+    /** What the peer answers with, synchronously (200) or later at Envelope.ResultUrl. */
+    Result?: XTSRestResultOfInboundContactInfo | undefined;
+    /** Plain-language notes for the peer developer. */
+    Notes?: string[] | undefined;
+}
+
+/** The typed push / callback pair for one action type, as served by GET api/xts/contract/{actionType}. */
+export interface XTSRestContractOfXTSNoRowsAndInboundPMDoc {
+    /** SendAP, GetAPV ... */
+    ActionType?: string | undefined;
+    /** What Spitfire pushes to {peerUrl}/{actionType}. */
+    Envelope?: XTSRestEnvelopeOfXTSNoRows | undefined;
+    /** What the peer answers with, synchronously (200) or later at Envelope.ResultUrl. */
+    Result?: XTSRestResultOfInboundPMDoc | undefined;
+    /** Plain-language notes for the peer developer. */
+    Notes?: string[] | undefined;
+}
+
+/** Response to POST api/xts/data/{table}. */
+export interface XTSRestDataReceipt {
+    /** Logical table name as posted. */
+    Table?: string | undefined;
+    /** Rows in the posted array. */
+    Received?: number;
+    /** Rows inserted or updated in the staging table. */
+    Stored?: number;
+    /** true when the table's import proc ran after the store (import=true). */
+    Imported?: boolean;
+    /** What was done, in words. */
+    Message?: string | undefined;
+}
+
+/** Response to POST api/xts/dispatch. */
+export interface XTSRestDispatchReceipt {
+    /** Machine name of the node that answered. */
+    Node?: string | undefined;
+    /** true when this node is xtsConfig REST.DispatchNode; only that node pushes. */
+    IsDispatchNode?: boolean;
+    /** Actions due at the time of the call. */
+    Due?: number;
+    /** Actions pushed and accepted by the peer during this sweep. */
+    Pushed?: number;
+    /** Actions whose push failed during this sweep (rescheduled or terminal). */
+    Failed?: number;
+    /** What the sweep did, or why it did nothing. */
+    Message?: string | undefined;
+}
+
+/** What Spitfire pushes to the peer for one queued action, minus the rows. */
+export interface XTSRestEnvelopeBase {
+    /** xtsAction.TDActionKey. The peer de-duplicates on this: a retry resends the same key. */
+    ActionKey: string;
+    /** SendAP, GetAPV, GetVendors, GetPMTX ... */
+    ActionType: string;
+    /** 1 on the first push; FailCount + 1 on a retry. */
+    Attempt?: number;
+    /** When Spitfire built this envelope (UTC). */
+    SentUtc?: Date;
+    /** xtsKeyMap.TDKeyMapKey (the KMK); empty for a project-mode GetPMTX. */
+    KeyMapKey?: string | undefined;
+    /** Spitfire's own record key behind the key map (voucher DocMasterKey, contact UserKey ...). */
+    SfRecordKey?: string | undefined;
+    /** Key map set: APInvoice, Contact, PMTran ... */
+    AlienSet?: string | undefined;
+    /** The peer's human-readable id when already known (invoice number, vendor id). Null on a first SendAP. */
+    AlienKey?: string | undefined;
+    /** The peer's internal id when already known. */
+    AlienPKey?: string | undefined;
+    /** For a Get: return everything changed since this moment (peer-local time). Null = everything. */
+    Since?: Date | undefined;
+    /** For a Get: the peer's monotonic row version last seen, when the peer offers one. */
+    SinceTS?: number | undefined;
+    /** Where to POST the XTSRestResult for this action. Absolute URL. */
+    ResultUrl: string;
+    /** Row shape expected in the result: inboundAPDoc, inboundPMDoc, inboundContactInfo. */
+    ResultTable?: string | undefined;
+    /** Advisory: post the result in chunks of at most this many rows ("partial": true until the last). */
+    ChunkRows?: number;
+}
+
+/** Runtime envelope: rows as dictionaries, keys are the column names verbatim. */
+export interface XTSRestEnvelope extends XTSRestEnvelopeBase {
+    /** Payload rows (Sends). Empty for a Get. */
+    Rows?: { [key: string]: any; }[] | undefined;
+}
+
+/** Typed envelope, for documentation and tests: the rows are the action's payload row type. */
+export interface XTSRestEnvelopeOfInboundProjectAP extends XTSRestEnvelopeBase {
+    /** Payload rows (Sends). Empty for a Get. */
+    Rows?: InboundProjectAP[] | undefined;
+}
+
+/** Typed envelope, for documentation and tests: the rows are the action's payload row type. */
+export interface XTSRestEnvelopeOfXTSNoRows extends XTSRestEnvelopeBase {
+    /** Payload rows (Sends). Empty for a Get. */
+    Rows?: XTSNoRows[] | undefined;
+}
+
+/** Response to POST api/xts/action/{key}/result. */
+export interface XTSRestReceipt {
+    /** The action the result was posted for. */
+    ActionKey?: string;
+    /** The status the peer sent. */
+    Status?: string | undefined;
+    /** xtsAction.TDStatus after processing: H finished, W recurring rescheduled, * still open (partial), WR retry, F failed. */
+    TDStatus?: string | undefined;
+    /** true when the action is finished (H) or rescheduled (W). */
+    Completed?: boolean;
+    /** true when the action was already finished before this post; nothing was changed. */
+    AlreadyCompleted?: boolean;
+    /** Rows Spitfire received in this post. */
+    RowsReceived?: number;
+    /** Last trace line for the action, usually what the result proc did. */
+    Message?: string | undefined;
+}
+
+/** What the peer posts back for one action, minus the rows. Also the body of a synchronous 200 to a push. */
+export interface XTSRestResultBase {
+    /** ok | failed | terminating | notFound */
+    Status: string;
+    /** true = more rows follow in a later post; the action stays open and the silence window restarts. */
+    Partial?: boolean;
+    /** Free text: the peer's reference, its error, anything support should see. Traced. */
+    Message?: string | undefined;
+    /** With status failed: false makes the action terminal (alert) instead of retrying. Default true. */
+    Retryable?: boolean | undefined;
+    /** With status failed and retryable: how long Spitfire should wait before the next push. Default from REST.Retry.BackoffMinutes. */
+    RetryDelayMinutes?: number | undefined;
+}
+
+/** Typed result, for documentation and tests. */
+export interface XTSRestResultOfInboundAPDoc extends XTSRestResultBase {
+    /** Rows in the action's ResultTable shape. Required with status ok. */
+    Rows?: InboundAPDoc[] | undefined;
+}
+
+/** Typed result, for documentation and tests. */
+export interface XTSRestResultOfInboundContactInfo extends XTSRestResultBase {
+    /** Rows in the action's ResultTable shape. Required with status ok. */
+    Rows?: InboundContactInfo[] | undefined;
+}
+
+/** Typed result, for documentation and tests. */
+export interface XTSRestResultOfInboundPMDoc extends XTSRestResultBase {
+    /** Rows in the action's ResultTable shape. Required with status ok. */
+    Rows?: InboundPMDoc[] | undefined;
 }
 
 export class ApiException extends Error {
