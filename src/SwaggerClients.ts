@@ -18914,6 +18914,93 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Converts a template-generated Word attachment on the specified document into a PDF attachment
+     * @param id Document Key
+     * @param fileKey file Key
+     */
+    makeAttachmentPDF(id: string, fileKey: string) {
+        return new Promise<DocAttachment | null>((resolve, reject) => {
+            this.makeAttachmentPDFWithCallbacks(id, fileKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private makeAttachmentPDFWithCallbacks(id: string, fileKey: string, onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/attachments/pdf/{fileKey}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (fileKey === undefined || fileKey === null)
+            throw new globalThis.Error("The parameter 'fileKey' must be defined.");
+        url_ = url_.replace("{fileKey}", encodeURIComponent("" + fileKey));
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processMakeAttachmentPDFWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processMakeAttachmentPDFWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processMakeAttachmentPDFWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processMakeAttachmentPDF(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processMakeAttachmentPDF(xhr: any): DocAttachment | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
+            return result200;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document or attachment not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Attachment is not convertible, or the PDF could not be produced or stored", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Links an attachment on the specified document to another document
      * @param id Document Key
      * @param attachmentKey source file Key
