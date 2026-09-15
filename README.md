@@ -25,7 +25,8 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
-23.9700.14  - c endpoint 
+23.9700.15  - Add Contact refined
+23.9700.14  - MakeAttachmentPDF  endpoint 
 23.9700.12  - Additional VisitorSettings and XTS support
 23.9700.11  - ContactClient Delete Photo
 23.9700.10  - QueryCatalog and improve Attachment and Contact endpoints

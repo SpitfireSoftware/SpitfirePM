@@ -16149,14 +16149,15 @@ export class ContactClient extends APIClientBase {
      * @param newData Contact Data
      * @param project (optional) Optional Project Contact
      * @param isCompany (optional) Optional is Primary Company Contact
+     * @param quickAdd (optional) Optional; false when the add is deliberate rather than on-the-fly, so the contact does not join the Quick Add role
      */
-    addContact(newData: Contact, project?: string | null | undefined, isCompany?: boolean | undefined) {
+    addContact(newData: Contact, project?: string | null | undefined, isCompany?: boolean | undefined, quickAdd?: boolean | undefined) {
         return new Promise<Contact | null>((resolve, reject) => {
-            this.addContactWithCallbacks(newData, project, isCompany, (result) => resolve(result), (exception, _reason) => reject(exception));
+            this.addContactWithCallbacks(newData, project, isCompany, quickAdd, (result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private addContactWithCallbacks(newData: Contact, project: string | null | undefined, isCompany: boolean | undefined, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
+    private addContactWithCallbacks(newData: Contact, project: string | null | undefined, isCompany: boolean | undefined, quickAdd: boolean | undefined, onSuccess?: (result: Contact | null) => void, onFail?: (exception: string | string | string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/contact?";
         if (project !== undefined && project !== null)
             url_ += "project=" + encodeURIComponent("" + project) + "&";
@@ -16164,6 +16165,10 @@ export class ContactClient extends APIClientBase {
             throw new globalThis.Error("The parameter 'isCompany' cannot be null.");
         else if (isCompany !== undefined)
             url_ += "isCompany=" + encodeURIComponent("" + isCompany) + "&";
+        if (quickAdd === null)
+            throw new globalThis.Error("The parameter 'quickAdd' cannot be null.");
+        else if (quickAdd !== undefined)
+            url_ += "quickAdd=" + encodeURIComponent("" + quickAdd) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(newData);
