@@ -18914,93 +18914,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Converts a template-generated Word attachment on the specified document into a PDF attachment
-     * @param id Document Key
-     * @param fileKey file Key
-     */
-    makeAttachmentPDF(id: string, fileKey: string) {
-        return new Promise<DocAttachment | null>((resolve, reject) => {
-            this.makeAttachmentPDFWithCallbacks(id, fileKey, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private makeAttachmentPDFWithCallbacks(id: string, fileKey: string, onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/attachments/pdf/{fileKey}";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        if (fileKey === undefined || fileKey === null)
-            throw new globalThis.Error("The parameter 'fileKey' must be defined.");
-        url_ = url_.replace("{fileKey}", encodeURIComponent("" + fileKey));
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "post",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processMakeAttachmentPDFWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processMakeAttachmentPDFWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processMakeAttachmentPDFWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processMakeAttachmentPDF(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processMakeAttachmentPDF(xhr: any): DocAttachment | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
-            return result200;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document or attachment not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Attachment is not convertible, or the PDF could not be produced or stored", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
      * Links an attachment on the specified document to another document
      * @param id Document Key
      * @param attachmentKey source file Key
@@ -19090,6 +19003,94 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Converts a template-generated Word attachment on the specified document into a PDF attachment
+     * @param id Document Key
+     * @param fileKey file Key
+     */
+    makeAttachmentPDF(id: string, fileKey: string) {
+        return new Promise<DocAttachment | null>((resolve, reject) => {
+            this.makeAttachmentPDFWithCallbacks(id, fileKey, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private makeAttachmentPDFWithCallbacks(id: string, fileKey: string, onSuccess?: (result: DocAttachment | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/attachments/pdf/{fileKey}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (fileKey === undefined || fileKey === null)
+            throw new globalThis.Error("The parameter 'fileKey' must be defined.");
+        url_ = url_.replace("{fileKey}", encodeURIComponent("" + fileKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "post",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processMakeAttachmentPDFWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processMakeAttachmentPDFWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processMakeAttachmentPDFWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processMakeAttachmentPDF(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processMakeAttachmentPDF(xhr: any): DocAttachment | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttachment;
+            return result200;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document or attachment not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Attachment is not convertible, or the PDF could not be produced or stored", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -24394,6 +24395,186 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Returns the route on the specified document
+     * @param id Document Key
+     */
+    getDocRoute(id: string) {
+        return new Promise<DocRoute[] | null>((resolve, reject) => {
+            this.getDocRouteWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private getDocRouteWithCallbacks(id: string, onSuccess?: (result: DocRoute[] | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/route";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "get",
+            dataType: "text",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processGetDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocRoute(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processGetDocRoute(xhr: any): DocRoute[] | null | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 200) {
+            const _responseText = xhr.responseText;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocRoute[];
+            return result200;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Failed to persist", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes the route on the specified document
+     * @param id Document Key
+     * @param routeKeys Route Key(s)
+     * @return Specified route not found
+     */
+    deleteDocRoute(id: string, routeKeys: string[]) {
+        return new Promise<string>((resolve, reject) => {
+            this.deleteDocRouteWithCallbacks(id, routeKeys, (result) => resolve(result), (exception, _reason) => reject(exception));
+        });
+    }
+
+    private deleteDocRouteWithCallbacks(id: string, routeKeys: string[], onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
+        let url_ = this.baseUrl + "/api/document/{id}/route";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(routeKeys);
+
+        jQuery.ajax({
+            url: url_,
+            beforeSend: this.beforeSend,
+            type: "delete",
+            data: content_,
+            dataType: "text",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        }).done((_data, _textStatus, xhr) => {
+            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        }).fail((xhr) => {
+            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
+        });
+    }
+
+    private processDeleteDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
+        try {
+            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocRoute(xhr));
+            if (onSuccess !== undefined)
+                onSuccess(result);
+        } catch (e) {
+            if (onFail !== undefined)
+                onFail(e, "http_service_exception");
+        }
+    }
+
+    protected processDeleteDocRoute(xhr: any): string | null {
+        const status = xhr.status;
+
+        let _headers: any = {};
+        if (status === 204) {
+            const _responseText = xhr.responseText;
+            let result204: any = null;
+            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result204;
+
+        } else if (status === 403) {
+            const _responseText = xhr.responseText;
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
+
+        } else if (status === 404) {
+            const _responseText = xhr.responseText;
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
+
+        } else if (status === 406) {
+            const _responseText = xhr.responseText;
+            let result406: any = null;
+            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not acceptable", status, _responseText, _headers, result406);
+
+        } else if (status === 409) {
+            const _responseText = xhr.responseText;
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+
+        } else if (status === 500) {
+            const _responseText = xhr.responseText;
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Unexpected failure", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = xhr.responseText;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return null;
+    }
+
+    /**
      * Updates a route entry on the specified document
      * @param id Document Key
      * @param updatedRoute Replacement Route
@@ -24576,186 +24757,6 @@ export class DocumentToolsClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the insert", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Returns the route on the specified document
-     * @param id Document Key
-     */
-    getDocRoute(id: string) {
-        return new Promise<DocRoute[] | null>((resolve, reject) => {
-            this.getDocRouteWithCallbacks(id, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private getDocRouteWithCallbacks(id: string, onSuccess?: (result: DocRoute[] | null) => void, onFail?: (exception: string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/route";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "get",
-            dataType: "text",
-            headers: {
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processGetDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processGetDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processGetDocRoute(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processGetDocRoute(xhr: any): DocRoute[] | null | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 200) {
-            const _responseText = xhr.responseText;
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocRoute[];
-            return result200;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Failed to persist", status, _responseText, _headers, result409);
-
-        } else if (status === 500) {
-            const _responseText = xhr.responseText;
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Unexpected failure", status, _responseText, _headers, result500);
-
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = xhr.responseText;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return null;
-    }
-
-    /**
-     * Deletes the route on the specified document
-     * @param id Document Key
-     * @param routeKeys Route Key(s)
-     * @return Specified route not found
-     */
-    deleteDocRoute(id: string, routeKeys: string[]) {
-        return new Promise<string>((resolve, reject) => {
-            this.deleteDocRouteWithCallbacks(id, routeKeys, (result) => resolve(result), (exception, _reason) => reject(exception));
-        });
-    }
-
-    private deleteDocRouteWithCallbacks(id: string, routeKeys: string[], onSuccess?: (result: string) => void, onFail?: (exception: string | string | string | string | string | string, reason: string) => void) {
-        let url_ = this.baseUrl + "/api/document/{id}/route";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(routeKeys);
-
-        jQuery.ajax({
-            url: url_,
-            beforeSend: this.beforeSend,
-            type: "delete",
-            data: content_,
-            dataType: "text",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        }).done((_data, _textStatus, xhr) => {
-            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        }).fail((xhr) => {
-            this.processDeleteDocRouteWithCallbacks(url_, xhr, onSuccess, onFail);
-        });
-    }
-
-    private processDeleteDocRouteWithCallbacks(_url: string, xhr: any, onSuccess?: any, onFail?: any): void {
-        try {
-            let result = this.transformResult(_url, xhr, (xhr) => this.processDeleteDocRoute(xhr));
-            if (onSuccess !== undefined)
-                onSuccess(result);
-        } catch (e) {
-            if (onFail !== undefined)
-                onFail(e, "http_service_exception");
-        }
-    }
-
-    protected processDeleteDocRoute(xhr: any): string | null {
-        const status = xhr.status;
-
-        let _headers: any = {};
-        if (status === 204) {
-            const _responseText = xhr.responseText;
-            let result204: any = null;
-            result204 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return result204;
-
-        } else if (status === 403) {
-            const _responseText = xhr.responseText;
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result403);
-
-        } else if (status === 404) {
-            const _responseText = xhr.responseText;
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Document not found, or not accessible", status, _responseText, _headers, result404);
-
-        } else if (status === 406) {
-            const _responseText = xhr.responseText;
-            let result406: any = null;
-            result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not acceptable", status, _responseText, _headers, result406);
-
-        } else if (status === 409) {
-            const _responseText = xhr.responseText;
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
 
         } else if (status === 500) {
             const _responseText = xhr.responseText;
@@ -36532,15 +36533,15 @@ export class XTSClient extends APIClientBase {
     }
 
     /**
-     * SendAP contract: Spitfire pushes an inboundProjectAP envelope, the peer answers with an inboundAPDoc header row
+     * SendAP contract: Spitfire pushes outboundProjectAP rows, the peer answers with the sibling inboundAPDoc header row, now or later
      */
     xTSRestContractSendAP() {
-        return new Promise<XTSRestContractOfInboundProjectAPAndInboundAPDoc | null>((resolve, reject) => {
+        return new Promise<XTSRestContractOfOutboundProjectAPAndInboundAPDoc | null>((resolve, reject) => {
             this.xTSRestContractSendAPWithCallbacks((result) => resolve(result), (exception, _reason) => reject(exception));
         });
     }
 
-    private xTSRestContractSendAPWithCallbacks(onSuccess?: (result: XTSRestContractOfInboundProjectAPAndInboundAPDoc | null) => void, onFail?: (exception: string | string, reason: string) => void) {
+    private xTSRestContractSendAPWithCallbacks(onSuccess?: (result: XTSRestContractOfOutboundProjectAPAndInboundAPDoc | null) => void, onFail?: (exception: string | string, reason: string) => void) {
         let url_ = this.baseUrl + "/api/xts/contract/SendAP";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -36570,14 +36571,14 @@ export class XTSClient extends APIClientBase {
         }
     }
 
-    protected processXTSRestContractSendAP(xhr: any): XTSRestContractOfInboundProjectAPAndInboundAPDoc | null | null {
+    protected processXTSRestContractSendAP(xhr: any): XTSRestContractOfOutboundProjectAPAndInboundAPDoc | null | null {
         const status = xhr.status;
 
         let _headers: any = {};
         if (status === 200) {
             const _responseText = xhr.responseText;
             let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestContractOfInboundProjectAPAndInboundAPDoc;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as XTSRestContractOfOutboundProjectAPAndInboundAPDoc;
             return result200;
 
         } else if (status === 401) {
@@ -41005,7 +41006,8 @@ SQL: money */
     /** not used
 SQL: varchar(10) */
     LineUOM?: string | undefined;
-    /** SQL: money */
+    /** Line amount, net of retention when retention is separate
+SQL: money */
     LineAmount?: number | undefined;
     /** SQL: varchar(50) */
     LineAccount?: string | undefined;
@@ -41016,11 +41018,14 @@ SQL: varchar(10) */
     /** When this compliance item was created
 SQL: datetime2(7) */
     Created?: Date | undefined;
-    /** SQL: datetime2(7) */
+    /** When Spitfire last changed the voucher
+SQL: datetime2(7) */
     LastChanged?: Date | undefined;
-    /** SQL: bigint */
+    /** Spitfire row version of the voucher
+SQL: bigint */
     LastTS?: number | undefined;
-    /** SQL: date */
+    /** Vendor invoice date
+SQL: date */
     InvoiceDate?: Date | undefined;
     /** SQL: varchar(50) */
     PMBatchRef?: string | undefined;
@@ -41238,9 +41243,11 @@ SQL: varchar(64) */
     /** When this compliance item was created
 SQL: datetime */
     Created?: Date | undefined;
-    /** SQL: datetime */
+    /** When Spitfire last changed the voucher
+SQL: datetime */
     LastChanged?: Date | undefined;
-    /** SQL: bigint */
+    /** Spitfire row version of the voucher
+SQL: bigint */
     LastTS?: number | undefined;
 
     [key: string]: any;
@@ -41324,7 +41331,8 @@ SQL: varchar(50) */
     /** maps to xsfDocItemTask.Quantity
 SQL: money */
     LineQty?: number | undefined;
-    /** SQL: money */
+    /** Line amount, net of retention when retention is separate
+SQL: money */
     LineAmount?: number | undefined;
     /** SQL: varchar(10) */
     LineSource?: string | undefined;
@@ -41338,145 +41346,6 @@ SQL: varchar(10) */
     /** When this compliance item was created
 SQL: datetime */
     Created?: Date | undefined;
-    /** SQL: datetime */
-    LastChanged?: Date | undefined;
-    /** SQL: bigint */
-    LastTS?: number | undefined;
-
-    [key: string]: any;
-}
-
-/** One line of a Spitfire AP voucher as pushed to the peer by SendAP; header fields repeat on every line. Produced by pxts_ProjectSendAP (or the site's configured payload proc), so a site may add columns. */
-export interface InboundProjectAP {
-    /** Spitfire project id (not a peer project; available for a GL segment or attribute)
-SQL: varchar(16) NOT NULL */
-    Project: string;
-    /** INV. A negative DocBal is a credit
-SQL: varchar(3) NOT NULL */
-    DocType: string;
-    /** Unused (Dynamics SL heritage)
-SQL: varchar(1) */
-    BatNbr?: string | undefined;
-    /** Spitfire voucher number once assigned; empty on first send
-SQL: varchar(16) */
-    RefNbr?: string | undefined;
-    /** Shared vendor id: the alternate key, equal to the peer's supplier number
-SQL: varchar(16) */
-    VendID?: string | undefined;
-    /** Spitfire subcontract number (PayItemNumber)
-SQL: varchar(30) */
-    PONbr?: string | undefined;
-    /** Vendor's invoice reference; must be unique per vendor at the peer
-SQL: varchar(30) NOT NULL */
-    InvoiceNumber: string;
-    /** Vendor invoice date
-SQL: datetime NOT NULL */
-    InvoiceDate?: Date;
-    /** Header description
-SQL: varchar(60) */
-    Title?: string | undefined;
-    /** Amount to voucher, net of retention when retention is a separate voucher; equals the sum of LineAmount
-SQL: money */
-    DocBal?: number | undefined;
-    /** Same as DocBal on first send
-SQL: money */
-    OrigAmt?: number | undefined;
-    /** YYYYMM requested accounting period
-SQL: varchar(6) */
-    FiscalPeriod?: string | undefined;
-    /** Null lets the peer compute from terms; set explicitly for a manual-retention voucher
-SQL: datetime */
-    InvoiceDue?: Date | undefined;
-    /** Present when retention is involved (end of project)
-SQL: datetime */
-    RetentionDue?: Date | undefined;
-    /** On a credit, the peer invoice number the credit applies against
-SQL: varchar(50) */
-    ApplyCreditTo?: string | undefined;
-    /** Spitfire commitment type code (FP, CP, PO, LB ...)
-SQL: varchar(8) NOT NULL */
-    ContractType: string;
-    /** Always 0 (Dynamics SL heritage)
-SQL: varchar(1) NOT NULL */
-    PC_Status: string;
-    /** X on send
-SQL: varchar(1) NOT NULL */
-    Status: string;
-    /** Spitfire asks the peer to release / validate the invoice
-SQL: bit NOT NULL */
-    Rlsed?: boolean;
-    /** Always 1 on send
-SQL: bit NOT NULL */
-    OpenDoc?: boolean;
-    /** 1 on a manual retention voucher
-SQL: bit NOT NULL */
-    Hold?: boolean;
-    /** 1 on a manual retention voucher
-SQL: bit NOT NULL */
-    IsRetention?: boolean;
-    /** GL account as Spitfire knows it (from the account-category map)
-SQL: varchar(10) */
-    glAcct?: string | undefined;
-    /** GL sub-account as Spitfire knows it
-SQL: varchar(30) */
-    SubAcct?: string | undefined;
-    /** Seldom used (phase)
-SQL: varchar(32) */
-    ProjectTask?: string | undefined;
-    /** Spitfire cost code
-SQL: varchar(32) */
-    WBCODE?: string | undefined;
-    /** Spitfire cost type (LABOR, MAT, SUB, EQUIP ...): primary input to GL coding
-SQL: varchar(16) */
-    AccountCategory?: string | undefined;
-    /** Voucher line / subcontract line number; the peer returns it so lines can be matched
-SQL: varchar(16) */
-    ItemNumber?: string | undefined;
-    /** Line description
-SQL: varchar(256) */
-    Description?: string | undefined;
-    /** Quantity
-SQL: money NOT NULL */
-    QTY?: number;
-    /** Line amount, net of retention when retention is separate
-SQL: money */
-    LineAmount?: number | undefined;
-    /** Retention held on this line
-SQL: money */
-    LineRetention?: number | undefined;
-    /** Shared unit-of-measure code
-SQL: varchar(10) */
-    UOM?: string | undefined;
-    /** Spitfire company division: natural candidate for the peer business unit
-SQL: varchar(10) */
-    DivisionID?: string | undefined;
-    /** Peer project id from the key map when one exists
-SQL: varchar(64) */
-    ProjectAlienKey?: string | undefined;
-    /** Peer project primary key from the key map when one exists
-SQL: varchar(64) */
-    ProjectAlienPK?: string | undefined;
-    /** Peer cost-code id from the key map when one exists
-SQL: varchar(64) */
-    WBSAlienKey?: string | undefined;
-    /** Peer cost-code primary key when one exists
-SQL: varchar(64) */
-    WBSAlienPK?: string | undefined;
-    /** Peer account-category id when one exists
-SQL: varchar(64) */
-    WAAlienKey?: string | undefined;
-    /** Peer account-category primary key when one exists
-SQL: varchar(64) */
-    WAAlienPK?: string | undefined;
-    /** Peer vendor id from the key map
-SQL: varchar(64) */
-    VendorAlienKey?: string | undefined;
-    /** Peer vendor primary key from the key map
-SQL: varchar(64) */
-    VendorAlienPK?: string | undefined;
-    /** Peer id of the subcontract when known, else Project-Subcontract
-SQL: varchar(64) */
-    SubcontractAlienPK?: string | undefined;
     /** When Spitfire last changed the voucher
 SQL: datetime */
     LastChanged?: Date | undefined;
@@ -41772,6 +41641,150 @@ export interface NameValueHeaderValue {
 
 export interface NameValueWithParametersHeaderValue extends NameValueHeaderValue {
     Parameters?: NameValueHeaderValue[] | undefined;
+}
+
+/** One line of a Spitfire AP voucher as pushed to the peer by SendAP; header fields repeat on every line. The Send pattern: Spitfire pushes Outbound* rows and expects the sibling Inbound* row (here InboundAPDoc) back, now or later. Produced by pxts_REST_SendAPPayload over pxts_ProjectSendAP, or the site's configured payload proc. */
+export interface OutboundProjectAP {
+    /** Spitfire project id (not a peer project; available for a GL segment or attribute)
+SQL: varchar(16) NOT NULL */
+    Project: string;
+    /** INV. A negative DocBal is a credit
+SQL: varchar(3) NOT NULL */
+    DocType: string;
+    /** Unused (Dynamics SL heritage)
+SQL: varchar(1) */
+    BatNbr?: string | undefined;
+    /** Spitfire voucher number once assigned; empty on first send
+SQL: varchar(16) */
+    RefNbr?: string | undefined;
+    /** Shared vendor id: the alternate key, equal to the peer's supplier number
+SQL: varchar(16) */
+    VendorID?: string | undefined;
+    /** Spitfire subcontract number (PayItemNumber)
+SQL: varchar(30) */
+    PONbr?: string | undefined;
+    /** Vendor's invoice reference; must be unique per vendor at the peer
+SQL: varchar(30) NOT NULL */
+    InvoiceNumber: string;
+    /** Vendor invoice date
+SQL: datetime NOT NULL */
+    InvoiceDate?: Date;
+    /** Header description
+SQL: varchar(60) */
+    Title?: string | undefined;
+    /** Amount to voucher, net of retention when retention is a separate voucher; equals the sum of LineAmount
+SQL: money */
+    DocBal?: number | undefined;
+    /** Same as DocBal on first send
+SQL: money */
+    OrigAmt?: number | undefined;
+    /** YYYYMM requested accounting period
+SQL: varchar(6) */
+    FiscalPeriod?: string | undefined;
+    /** Null lets the peer compute from terms; set explicitly for a manual-retention voucher
+SQL: datetime */
+    InvoiceDue?: Date | undefined;
+    /** Present when retention is involved (end of project)
+SQL: datetime */
+    RetentionDue?: Date | undefined;
+    /** On a credit, the peer invoice number the credit applies against
+SQL: varchar(50) */
+    ApplyCreditTo?: string | undefined;
+    /** Spitfire commitment type code (FP, CP, PO, LB ...)
+SQL: varchar(8) NOT NULL */
+    ContractType: string;
+    /** Always 0 (Dynamics SL heritage)
+SQL: varchar(1) NOT NULL */
+    PC_Status: string;
+    /** X on send
+SQL: varchar(1) NOT NULL */
+    Status: string;
+    /** Spitfire asks the peer to release / validate the invoice
+SQL: bit NOT NULL */
+    Released?: boolean;
+    /** Always 1 on send
+SQL: bit NOT NULL */
+    OpenDoc?: boolean;
+    /** 1 on a manual retention voucher
+SQL: bit NOT NULL */
+    Hold?: boolean;
+    /** 1 on a manual retention voucher
+SQL: bit NOT NULL */
+    IsRetention?: boolean;
+    /** GL account as Spitfire knows it (from the account-category map)
+SQL: varchar(10) */
+    glAcct?: string | undefined;
+    /** GL sub-account as Spitfire knows it
+SQL: varchar(30) */
+    SubAcct?: string | undefined;
+    /** Seldom used (phase)
+SQL: varchar(32) */
+    ProjectTask?: string | undefined;
+    /** Spitfire cost code
+SQL: varchar(32) */
+    WBCODE?: string | undefined;
+    /** Spitfire cost type (LABOR, MAT, SUB, EQUIP ...): primary input to GL coding
+SQL: varchar(16) */
+    AccountCategory?: string | undefined;
+    /** Voucher line / subcontract line number; the peer returns it so lines can be matched
+SQL: varchar(16) */
+    ItemNumber?: string | undefined;
+    /** Line description
+SQL: varchar(256) */
+    Description?: string | undefined;
+    /** Quantity
+SQL: money NOT NULL */
+    QTY?: number;
+    /** Line amount, net of retention when retention is separate
+SQL: money */
+    LineAmount?: number | undefined;
+    /** Retention held on this line
+SQL: money */
+    LineRetention?: number | undefined;
+    /** Shared unit-of-measure code
+SQL: varchar(10) */
+    UOM?: string | undefined;
+    /** Spitfire company division: natural candidate for the peer business unit
+SQL: varchar(10) */
+    DivisionID?: string | undefined;
+    /** Spitfire correlation id for the voucher (the KMK). Keep it on your side; retries de-duplicate on the envelope ActionKey, this one follows the voucher for life
+SQL: uniqueidentifier NOT NULL */
+    TDKeyMapKey?: string;
+    /** Peer project id from the key map when one exists
+SQL: varchar(64) */
+    ProjectAlienKey?: string | undefined;
+    /** Peer project primary key from the key map when one exists
+SQL: varchar(64) */
+    ProjectAlienPK?: string | undefined;
+    /** Peer cost-code id from the key map when one exists
+SQL: varchar(64) */
+    WBSAlienKey?: string | undefined;
+    /** Peer cost-code primary key when one exists
+SQL: varchar(64) */
+    WBSAlienPK?: string | undefined;
+    /** Peer account-category id when one exists
+SQL: varchar(64) */
+    WAAlienKey?: string | undefined;
+    /** Peer account-category primary key when one exists
+SQL: varchar(64) */
+    WAAlienPK?: string | undefined;
+    /** Peer vendor id from the key map
+SQL: varchar(64) */
+    VendorAlienKey?: string | undefined;
+    /** Peer vendor primary key from the key map
+SQL: varchar(64) */
+    VendorAlienPK?: string | undefined;
+    /** Peer id of the subcontract when known, else Project-Subcontract
+SQL: varchar(64) */
+    SubcontractAlienPK?: string | undefined;
+    /** When Spitfire last changed the voucher
+SQL: datetime */
+    LastChanged?: Date | undefined;
+    /** Spitfire row version of the voucher
+SQL: bigint */
+    LastTS?: number | undefined;
+
+    [key: string]: any;
 }
 
 export interface PasswordConfiguredOptions {
@@ -44509,11 +44522,11 @@ export interface XTSRestActionState {
 }
 
 /** The typed push / callback pair for one action type, as served by GET api/xts/contract/{actionType}. */
-export interface XTSRestContractOfInboundProjectAPAndInboundAPDoc {
+export interface XTSRestContractOfOutboundProjectAPAndInboundAPDoc {
     /** SendAP, GetAPV ... */
     ActionType?: string | undefined;
     /** What Spitfire pushes to {peerUrl}/{actionType}. */
-    Envelope?: XTSRestEnvelopeOfInboundProjectAP | undefined;
+    Envelope?: XTSRestEnvelopeOfOutboundProjectAP | undefined;
     /** What the peer answers with, synchronously (200) or later at Envelope.ResultUrl. */
     Result?: XTSRestResultOfInboundAPDoc | undefined;
     /** Plain-language notes for the peer developer. */
@@ -44564,7 +44577,7 @@ export interface XTSRestDataReceipt {
     Received?: number;
     /** Rows inserted or updated in the staging table. */
     Stored?: number;
-    /** true when the table's import proc ran after the store (import=true). */
+    /** true when the table's import proc ran after the store (runImport=true). */
     Imported?: boolean;
     /** What was done, in words. */
     Message?: string | undefined;
@@ -44625,9 +44638,9 @@ export interface XTSRestEnvelope extends XTSRestEnvelopeBase {
 }
 
 /** Typed envelope, for documentation and tests: the rows are the action's payload row type. */
-export interface XTSRestEnvelopeOfInboundProjectAP extends XTSRestEnvelopeBase {
+export interface XTSRestEnvelopeOfOutboundProjectAP extends XTSRestEnvelopeBase {
     /** Payload rows (Sends). Empty for a Get. */
-    Rows?: InboundProjectAP[] | undefined;
+    Rows?: OutboundProjectAP[] | undefined;
 }
 
 /** Typed envelope, for documentation and tests: the rows are the action's payload row type. */
@@ -44636,7 +44649,7 @@ export interface XTSRestEnvelopeOfXTSNoRows extends XTSRestEnvelopeBase {
     Rows?: XTSNoRows[] | undefined;
 }
 
-/** Response to POST api/xts/action/{key}/result. */
+/** Response to POST api/xts/action/{key}/result (and what a synchronous 200 to a push is answered with). */
 export interface XTSRestReceipt {
     /** The action the result was posted for. */
     ActionKey?: string;

@@ -25,7 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
-23.9700.13  - MakeAttachmentPDF endpoint (case 36811)
+23.9700.14  - c endpoint 
 23.9700.12  - Additional VisitorSettings and XTS support
 23.9700.11  - ContactClient Delete Photo
 23.9700.10  - QueryCatalog and improve Attachment and Contact endpoints
