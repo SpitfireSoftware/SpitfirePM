@@ -42731,6 +42731,28 @@ export interface ProjectSummary {
     ImageKey?: string;
     /** TRUE if this project is on the user list */
     UserList?: boolean;
+    /** Project Type code from Project Setup */
+    ProjectType?: string | undefined;
+    /** Web cam URL from Project Setup */
+    WebCamURL?: string | undefined;
+    /** TRUE if the project has a cloud store (cldStoreKey) */
+    IsInCloud?: boolean;
+    /** Source document number of the Project Setup document */
+    SourceDocNo?: string | undefined;
+    /** External document number of the Project Setup document */
+    ExternalDocNo?: string | undefined;
+    /** Due date of the Project Setup document */
+    Due?: Date;
+    /** Signoff date of the Project Setup document */
+    Signoff?: Date;
+    /** Source date of the Project Setup document */
+    SourceDate?: Date;
+    /** Project subtype from Project Setup */
+    Subtype?: string | undefined;
+    /** Area from Project Setup */
+    Area?: number;
+    /** Architect project number from the current Project Setup revision */
+    ArchProject?: string | undefined;
     /** eTag */
     ETag?: string | undefined;
 }

@@ -25,6 +25,7 @@ apiResult.then( (a) => {
 ### Change Log
 
 ```
+23.9700.16  - Additional Project List fields
 23.9700.15  - Add Contact refined
 23.9700.14  - MakeAttachmentPDF  endpoint 
 23.9700.12  - Additional VisitorSettings and XTS support
