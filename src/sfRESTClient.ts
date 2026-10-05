@@ -2480,10 +2480,14 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
 
     public AssureJQUITools($element : JQuery<HTMLElement>  ) : Promise<boolean> {
+        if (self !== top) {console.log("AssureJQUITools() only applicable for global/top"); return Promise.resolve(false);}
+        if (sfRestClient._z.XternalScriptsLoaded ) {
+            console.log("AssureJQUITools() already done");
+            // settles when the first call's scripts have loaded (a repeat call used to stay pending forever)
+            return sfRestClient._AssureJQUIToolsPromise ?? Promise.resolve(false);
+        }
+        sfRestClient._z.XternalScriptsLoaded = true;
         var XToolLoadPromise : Promise<boolean> = new Promise<boolean>((resolve) => {
-            if (self !== top) {console.log("AssureJQUITools() only applicable for global/top"); return false;}
-            if (sfRestClient._z.XternalScriptsLoaded ) {console.log("AssureJQUITools() already done"); return false;}
-            sfRestClient._z.XternalScriptsLoaded = true;
             if (!$element) $element = self.$("<div />");
             //if (typeof $element.dialog !== "function") {
                 if (!window.jQuery) window.jQuery = window.$;
@@ -2507,8 +2511,10 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             //}
             //else resolve(true);
        });
+       sfRestClient._AssureJQUIToolsPromise = XToolLoadPromise;
        return XToolLoadPromise;
     }
+    private static _AssureJQUIToolsPromise: Promise<boolean> | undefined;
 
     /**
      * @param url 

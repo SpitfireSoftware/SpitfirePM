@@ -93,3 +93,15 @@ test("PopDoc, PopNewDoc and OpenProject resolve null when their lookups fail", a
     assert.equal(await settlesWithin(client.PopNewDoc(GUID2, "GC001"), 2000, "PopNewDoc(failing DV)"), null);
     assert.equal(await settlesWithin(client.OpenProject("GC001"), 2000, "OpenProject(failing DV)"), null);
 });
+
+test("AssureJQUITools: a repeat call returns the first call's promise; a non-top frame resolves false", async () => {
+    const p = page();
+    const client = await waitForGlobalClient(p);
+    const first = p.exports.sfRestClient.ExternalToolsLoadedPromise; // the bootstrap's AssureJQUITools call
+    assert.ok(first instanceof p.window.Promise);
+    assert.equal(client.AssureJQUITools(p.window.$("<div />")), first, "repeat call shares the pending load");
+    // simulate the jQuery UI script finishing: the shared promise settles for both callers
+    const jqui = p.window.document.querySelector("script[src*='jquery-ui.min.js']");
+    jqui.dispatchEvent(new p.window.Event("load"));
+    assert.equal(await settlesWithin(first, 1000, "AssureJQUITools"), true);
+});
