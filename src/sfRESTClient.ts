@@ -5042,7 +5042,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             .addClass("ui-dialog-titlebar-close") // essential to get size
             .css({"right": `${((parseInt(RightPosOfLeftmostButton) + WidthOfButtons)  ) }px` })
             .appendTo($DialogTitleBar);
-        $NewButton.find(`span.ui-button-icon.${btnIcon}`).css({"vertical-align": "basekune",
+        $NewButton.find(`span.ui-button-icon.${btnIcon}`).css({"vertical-align": "baseline",
             top: "-2px",
         });
 
