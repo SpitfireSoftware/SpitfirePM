@@ -70,3 +70,16 @@ test("GetLookupResults rejects when the lookup request or its CFG fails, and res
     const rows = await settlesWithin(client.GetLookupResults("Good", {}), 2000, "GetLookupResults(ok)");
     assert.equal(rows[0].Owner_dv, "Owner Name");
 });
+
+test("RuleResult resolves the caller's default when the request fails, without caching it", async () => {
+    let ruleStatus = 500;
+    const p = page({ routes: [{ match: /\/api\/uicfg\/rule\/DocTypeConfig\/boolean/, reply: () => ruleStatus === 500
+        ? { status: 500, body: "", headers: { "Content-Type": "text/plain" } }
+        : { status: 200, body: true } }] });
+    const client = await waitForGlobalClient(p);
+    assert.equal(await settlesWithin(client.RuleResult("DocTypeConfig", "WithPowerUX", GUID1, false), 2000, "RuleResult(500)"), false);
+    ruleStatus = 200;
+    assert.equal(await settlesWithin(client.RuleResult("DocTypeConfig", "WithPowerUX", GUID1, false), 2000, "RuleResult(200)"), true, "the failure was not cached");
+    assert.equal(await client.RuleResult("DocTypeConfig", "WithPowerUX", GUID1, false), true, "the answer is cached");
+    assert.equal(p.callsTo(/uicfg\/rule\/DocTypeConfig/).length, 2);
+});

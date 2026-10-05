@@ -1497,33 +1497,32 @@ export class sfRestClient {
         //     return this._CachedDVRequests.get(cacheKey)!; // already requested, still pending or not doesn't matter
         // }
 
-        var RESTClient: sfRestClient = this;
         var api: UICFGClient = new UICFGClient(this._SiteURL);
 
-        apiResultPromise  = new Promise<string | number | boolean | null>((resolve) => {
-            if (typeof defaultValue === "number") {
-                api.getRuleResultAsNumber(ruleName,testValue,filterValue,defaultValue).then(r=>resolve(r));
-            }
-            else if (typeof defaultValue === "boolean") {
-                api.getRuleResultAsBoolean(ruleName,testValue,filterValue,defaultValue).then(r=>resolve(r));
-            }
-            else {
-                api.getRuleResult(ruleName,testValue,filterValue,defaultValue).then(r=>resolve(r));
-            }
-        });
-
-        if (apiResultPromise) {
-            apiResultPromise.then(
-                (rr: string | number | boolean | null) => {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Rule Result: ${ruleName}|${testValue}[${filterValue}] = ${rr}`);
-                    if (typeof rr !== "undefined" && rr !== null) {
-                        sessionStorage.setItem(cacheKey, JSON.stringify({ v: rr, w: Date.now() }));
-                       // if (RESTClient._CachedDVRequests.has(cacheKey)) RESTClient._CachedDVRequests.delete(cacheKey);
-                    }
-                }
-            );
+        var apiCall: Promise<string | number | boolean | null>;
+        if (typeof defaultValue === "number") {
+            apiCall = api.getRuleResultAsNumber(ruleName,testValue,filterValue,defaultValue);
         }
-        //this._CachedDVRequests.set(cacheKey, apiResultPromise);
+        else if (typeof defaultValue === "boolean") {
+            apiCall = api.getRuleResultAsBoolean(ruleName,testValue,filterValue,defaultValue);
+        }
+        else {
+            apiCall = api.getRuleResult(ruleName,testValue,filterValue,defaultValue);
+        }
+
+        apiResultPromise = apiCall.then(
+            (rr: string | number | boolean | null) => {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`Rule Result: ${ruleName}|${testValue}[${filterValue}] = ${rr}`);
+                if (typeof rr !== "undefined" && rr !== null) {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({ v: rr, w: Date.now() }));
+                }
+                return rr;
+            }
+        ).catch((reason) => {
+            // the request failed: answer the caller's default (not cached) instead of never settling
+            console.warn(`RuleResult(${ruleName}|${testValue}[${filterValue}]) failed; using default ${defaultValue}`, reason);
+            return defaultValue;
+        });
         return apiResultPromise;
     }
 
