@@ -1261,9 +1261,12 @@ export class sfRestClient {
                                     }
                                     else console.warn("Batch DV could not find cacheId",element);
                                 });
+                            // anything the server did not answer resolves null (the documented "no match" value)
+                            RESTClient._SettleUnansweredDVRequests(thisGroup, null);
                         })
                         .catch(err => {
                             console.error("Batch DV failed",err);
+                            RESTClient._SettleUnansweredDVRequests(thisGroup, null);
                         });
                     }, 321);
                 }
@@ -1273,6 +1276,18 @@ export class sfRestClient {
         }
         else DVResultPromise = api.getDisplayableValue(dvRequest.DVName,dvRequest ,RESTClient.GetPageDataContext());
         return DVResultPromise;
+    }
+    /** resolves every still-pending request of a batch with the given value, so no GetDV() caller waits forever */
+    private _SettleUnansweredDVRequests(group: _SwaggerClientExports.DVRequest[], value: string | null): void {
+        for (const request of group) {
+            if (!request.RequestID) continue;
+            const resolver = this._DVThrottledResolvers.get(request.RequestID);
+            if (resolver) {
+                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`BatchDV() no answer for ${request.DVName}:${request.MatchingValue}`);
+                resolver(value);
+                this._DVThrottledResolvers.delete(request.RequestID);
+            }
+        }
     }
     private _DVRequestQueue : _SwaggerClientExports.DVRequest[] = [];
     //private _DVThrottledResolvers1 : {[key:string]:(params:string)=>void; }
