@@ -6050,7 +6050,6 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
                         self.location.reload();
                         return;
                     }
-                    sfHub.server.sessionAlive();
                 }
                 sfHub.server.sessionAlive();
             }

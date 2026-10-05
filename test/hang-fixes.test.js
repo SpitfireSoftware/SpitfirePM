@@ -124,3 +124,26 @@ test("SharePageContext reports false when a Doc* key is offered on a non-documen
     assert.equal(client.GetPageContextValue("dsCacheKey"), "ds-unit", "other keys still applied");
     assert.equal(await client.SharePageContext({ dsCacheKey: "ds-unit-2" }), true);
 });
+
+/** a minimal SignalR 2.x surface so StartSignalRClientHub() wires the sfPMSHub client handlers */
+function installFakeSignalR(p) {
+    const calls = { sessionAlive: 0 };
+    const hub = { logging: false, lastError: null, connectionSlow() {}, stateChanged() {}, disconnected() {},
+        start() { return { done(fn) { fn(); return this; } }; }, stop() { return Promise.resolve(); } };
+    p.window.$.connection = { hub, sfPMSHub: {
+        client: {},
+        server: { sessionAlive() { calls.sessionAlive++; return Promise.resolve(true); }, subscribeToDocument() {}, writeToServerLog() {} },
+        connection: { state: 1, transport: { name: "webSockets" } },
+    } };
+    p.window.$.signalR = { connectionState: { connected: 1 } };
+    return calls;
+}
+
+test("sfPMSHub onApplicationStart calls sessionAlive once (it used to call it twice on non-document pages)", async () => {
+    const p = page();
+    const calls = installFakeSignalR(p);
+    await waitForGlobalClient(p);
+    assert.ok(p.window.sfPMSHub, "hub handlers wired by the bootstrap");
+    p.window.sfPMSHub.client.onApplicationStart("2023.0.9774.21549");
+    assert.equal(calls.sessionAlive, 1);
+});
