@@ -1925,6 +1925,11 @@ export class sfRestClient {
                             window.open(`${top!.sfClient._SiteURL}/sfImg.ashx/CRT/${crt}/${fn}`);
                         }
                     });
+                }).catch((reason) => {
+                    // the export request itself failed: clear the "Please wait" dialog that would otherwise stay up
+                    RESTClient.ClearPleaseWaitDialog();
+                    console.warn("ExportCompetitiveBidData() export request failed", reason);
+                    RESTClient.DisplayUserNotification("Failed! Contact Help Desk (see server logs)");
                 });
                 //setTimeout("top.sfClient.ClearPleaseWaitDialog(); if (top.sfClient.ClearInClientSidePostbackFlag) top.sfClient.ClearInClientSidePostbackFlag(); //ExportCobra", 2345);
             }
