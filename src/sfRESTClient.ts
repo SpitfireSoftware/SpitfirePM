@@ -2643,6 +2643,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 }
                 var PW = window.open(url, TargetTab);
                 resolve(PW);
+            }).catch((reason) => {
+                console.warn(`PopNewDoc(${dtk}) failed`, reason);
+                resolve(null);
             });
         });
     }
@@ -2730,6 +2733,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                         console.log(`PopDoc opening DMK ${DocKey} DTK ${thisDocType} tab [${TargetTab}] using ${url}`);
                var PW = window.open(url, TargetTab);
                resolve(PW);
+           }).catch((reason) => {
+               console.warn(`PopDoc(${DocKey}) failed`, reason);
+               resolve(null);
            });
        });
    }
@@ -2805,6 +2811,9 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                }
                self.location.href = url;
                resolve(self);
+           }).catch((reason) => {
+               console.warn(`OpenProject(${id}) failed`, reason);
+               resolve(null);
            });
        });
    }

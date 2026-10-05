@@ -83,3 +83,13 @@ test("RuleResult resolves the caller's default when the request fails, without c
     assert.equal(await client.RuleResult("DocTypeConfig", "WithPowerUX", GUID1, false), true, "the answer is cached");
     assert.equal(p.callsTo(/uicfg\/rule\/DocTypeConfig/).length, 2);
 });
+
+test("PopDoc, PopNewDoc and OpenProject resolve null when their lookups fail", async () => {
+    const p = page({ routes: [
+        { match: /\/api\/viewable\/(DocMasterType|DocType|Project)\?/, status: 500, body: "", headers: { "Content-Type": "text/plain" } },
+    ] });
+    const client = await waitForGlobalClient(p);
+    assert.equal(await settlesWithin(client.PopDoc(GUID1), 2000, "PopDoc(failing DV)"), null);
+    assert.equal(await settlesWithin(client.PopNewDoc(GUID2, "GC001"), 2000, "PopNewDoc(failing DV)"), null);
+    assert.equal(await settlesWithin(client.OpenProject("GC001"), 2000, "OpenProject(failing DV)"), null);
+});
