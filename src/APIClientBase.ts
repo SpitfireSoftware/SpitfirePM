@@ -116,7 +116,6 @@ export  class APIClientBase {
         if (APIClientBase._GAOptOut) return undefined;
         if (!APIClientBase.GAClientID) return undefined;
         if (controllerAction=="session" && endpointLabel == "who") return undefined;
-        if (!APIClientBase.GAClientID) return undefined;
 
         let G4Payload : GA4Payload = {client_id:APIClientBase.GAClientID!,
             non_personalized_ads:true,
