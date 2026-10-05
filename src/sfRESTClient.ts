@@ -3149,11 +3149,14 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             return false;
         }
 
+        let result = true;
         Object.keys(contextData).forEach((key) => {
             if (key.startsWith("Doc")) {
                 if (!this.IsDocumentPage()) {
-                    console.warn("Not a document");
-                    return false;
+                    // `return false` inside forEach only skipped this key; the caller now hears about it
+                    console.warn(`SharePageContext() ignored ${key}: not a document page`);
+                    result = false;
+                    return;
                 }
                 sfRestClient._WCC[key] = contextData[key];
             }
@@ -3164,7 +3167,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             else console.warn("SharePageContext() rejected {0}={1} due to a type mismatch".sfFormat(key,contextData[key]));
         });
 
-        return true;
+        return result;
 
     }
 

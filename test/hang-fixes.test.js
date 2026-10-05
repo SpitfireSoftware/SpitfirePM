@@ -115,3 +115,12 @@ test("AddCachedScript resolves false when the script fails to load", async () =>
     script.dispatchEvent(new p.window.Event("error"));
     assert.equal(await settlesWithin(loading, 1000, "AddCachedScript(error)"), false);
 });
+
+test("SharePageContext reports false when a Doc* key is offered on a non-document page, and still applies the other keys", async () => {
+    const p = page();
+    const client = await waitForGlobalClient(p);
+    assert.equal(await client.SharePageContext({ DocSessionKey: GUID1, dsCacheKey: "ds-unit" }), false);
+    assert.equal(client.GetPageContextValue("DocSessionKey"), client.EmptyKey, "Doc key ignored on a dashboard");
+    assert.equal(client.GetPageContextValue("dsCacheKey"), "ds-unit", "other keys still applied");
+    assert.equal(await client.SharePageContext({ dsCacheKey: "ds-unit-2" }), true);
+});
