@@ -762,193 +762,177 @@ export class sfRestClient {
     * @param optionalDTK guid or undefined
     * @param optionalProject
     */
-    CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): Promise<Permits> {
+    async CheckPermit(ucModule: string, ucFunction: string, optionalDTK?: string, optionalProject?: string, optionalReference?: string): Promise<Permits> {
         var RESTClient: sfRestClient = this;
-        //was $.Deferred();
-        var DeferredPermitResult : Promise<Permits> = new Promise<Permits>(async (ResolveThisPermit,rejectThisPermit) => {
-            if (!sfRestClient._z.WCCLoaded)  {
-                let retryCount = 0;
-                while (!sfRestClient._z.WCCLoaded && retryCount < 9)  try { 
-                    const usePageName = ((retryCount++ < 3) && 
-                                        (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated) 
-                                        // markClaude: was sfApplicationRootPath + "/wx/", the BACKEND base plus the
-                                        // deployed build's folder - see PowerUXBaseURL. Safe to change: this href is
-                                        // only read by ResolvePageNameFromURL and GetPageQueryContent, and BOTH take
-                                        // just the "#" onwards, so either shape resolves to the same "home". The one
-                                        // difference is sfHashCode(), used purely as the getWCC cache key, which is
-                                        // now keyed on where we actually are.
-                                        ? `${sfRestClient.PowerUXBaseURL()}#!/main/home` : undefined;
-                    await RESTClient.LoadUserSessionInfo(false,usePageName); 
-                } catch (ex:any) {
-                    rejectThisPermit(ex.message);
-                    return;
-                }
+        if (!sfRestClient._z.WCCLoaded)  {
+            let retryCount = 0;
+            while (!sfRestClient._z.WCCLoaded && retryCount < 9)  try {
+                const usePageName = ((retryCount++ < 3) &&
+                                    (sfRestClient.ResolvedPageInfo.LastResolvedPageTypeName & RESTClient.PageTypeNames.Unauthenticated) === RESTClient.PageTypeNames.Unauthenticated)
+                                    // markClaude: was sfApplicationRootPath + "/wx/", the BACKEND base plus the
+                                    // deployed build's folder - see PowerUXBaseURL. Safe to change: this href is
+                                    // only read by ResolvePageNameFromURL and GetPageQueryContent, and BOTH take
+                                    // just the "#" onwards, so either shape resolves to the same "home". The one
+                                    // difference is sfHashCode(), used purely as the getWCC cache key, which is
+                                    // now keyed on where we actually are.
+                                    ? `${sfRestClient.PowerUXBaseURL()}#!/main/home` : undefined;
+                await RESTClient.LoadUserSessionInfo(false,usePageName);
+            } catch (ex:any) {
+                throw ex.message;
             }
-            if (typeof optionalDTK !== "string") optionalDTK = "";
-            if (typeof optionalReference !== "string") optionalReference = "";
-            if (typeof optionalProject !== "string" || !optionalProject) optionalProject = "0";
-            var PermitCacheID = ucModule + "_" + ucFunction
-                + "_T" + optionalDTK.replaceAll("-", "")
-                + "_R" + optionalReference
-                + "_P" + optionalProject;
-            var ValueFromCache = sfRestClient._UserPermitResultCache.get(PermitCacheID);
-            if (typeof ValueFromCache === "number") {
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) = ${ValueFromCache}; from static cache  `);
-                ResolveThisPermit(ValueFromCache);
-                return;
-            }
+        }
+        if (typeof optionalDTK !== "string") optionalDTK = "";
+        if (typeof optionalReference !== "string") optionalReference = "";
+        if (typeof optionalProject !== "string" || !optionalProject) optionalProject = "0";
+        var PermitCacheID = ucModule + "_" + ucFunction
+            + "_T" + optionalDTK.replaceAll("-", "")
+            + "_R" + optionalReference
+            + "_P" + optionalProject;
+        var ValueFromCache = sfRestClient._UserPermitResultCache.get(PermitCacheID);
+        if (typeof ValueFromCache === "number") {
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) = ${ValueFromCache}; from static cache  `);
+            return ValueFromCache;
+        }
 
-            var UCFK = "";
-            var ThisProjectPermitSet: UCPermitSet | undefined;
-            var UCFKDeferredResult = $.Deferred();
-            var UCFKPromise = UCFKDeferredResult.promise();
-            var PPSDeferredResult = $.Deferred();
-            var PPSPromise = PPSDeferredResult.promise();
+        var UCFK = "";
+        var ThisProjectPermitSet: UCPermitSet | undefined;
+        if (!sfRestClient.PermitMapLoaded()) {
+            // new approach, lets wait for a map
+            await RESTClient.LoadUCFunctionMap();
             if (!sfRestClient.PermitMapLoaded()) {
-                // new approach, lets wait for a map
-                await RESTClient.LoadUCFunctionMap();
-                if (!sfRestClient.PermitMapLoaded()) {
-                    // still no map!?
-                    console.warn("CheckPermits() could not load Permit Map!!");
-                }
+                // still no map!?
+                console.warn("CheckPermits() could not load Permit Map!!");
             }
-            if (ucModule.length === 36) {
-                UCFK = ucModule;
-                UCFKDeferredResult.resolve(UCFK);
-            }
-            else if (sfRestClient._UCPermitMap && ucModule in sfRestClient._UCPermitMap
-                        && ucFunction in sfRestClient._UCPermitMap[ucModule] ) {
-                    UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
-                    UCFKDeferredResult.resolve(UCFK);
-            }
-            else UCFKDeferredResult.resolve(RESTClient.EmptyKey);
+        }
+        if (ucModule.length === 36) {
+            UCFK = ucModule;
+        }
+        else if (sfRestClient._UCPermitMap && ucModule in sfRestClient._UCPermitMap
+                    && ucFunction in sfRestClient._UCPermitMap[ucModule] ) {
+                UCFK = sfRestClient._UCPermitMap[ucModule][ucFunction];
+        }
 
-            if (!UCFK) {
-                if (sfRestClient._WCC.UserKey === RESTClient.EmptyKey)
-                    console.warn(`CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for ${ucModule}|${ucFunction}!  LOGIN AGAIN!`)
-                else {
-                    console.warn(`CheckPermit() could not find ${ucModule}|${ucFunction} - verify proper case/trim!`);
-                    if (!RESTClient._LoadUCFunctionMapHasBeenForced) {
-                        console.log(`CheckPermit() is reloading the permit map...`);
-                        await RESTClient.LoadUCFunctionMap(true);
-                        const retryPromise = RESTClient.CheckPermit(ucModule,ucFunction,optionalDTK,optionalProject,optionalReference);
-                        retryPromise.then((p)=>{
-                            ResolveThisPermit(p);
-                        })
-                        .catch((r)=>{
-                            console.warn(`CheckPermit() retry failed...`,r);
-                            ResolveThisPermit(0);
-                        });
-                        return;
-                    }
-                }
-
-                ResolveThisPermit(0);
-                return;
-            }
-
-            if (!sfRestClient.GlobalPermitAPIPromise) {
-                if (!(sfRestClient._LoadedPermits.has("0"))) { // global permissions
-                    var api = new SessionClient(this._SiteURL);
-                    sfRestClient.GlobalPermitAPIPromise  = api.getProjectPermits("0");
-                    sfRestClient._LoadedPermits.set("0",{} as _SwaggerClientExports.UCPermitSet); // this prevents repeat requests
-                    if (sfRestClient.GlobalPermitAPIPromise) {
-                        sfRestClient.GlobalPermitAPIPromise.then((r) => {
-                            if (r) {
-                                //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Received Global Permits from server...`);
-                                sfRestClient._LoadedPermits.set("0", r);
-                                if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Global Permits from server...`);
-                            }
-                        });
-                    }
-                }
-            }
-            if (sfRestClient.GlobalPermitAPIPromise) {
-                //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Waiting for Global Permits from server...`);
-                await sfRestClient.GlobalPermitAPIPromise;
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Global Permits ready() `,sfRestClient._LoadedPermits.get(optionalProject));
-            }
-
-
-            if (!(sfRestClient._LoadedPermits.has(optionalProject))) {
-                var apiResult: Promise<UCPermitSet | null>;
-                var MyAPIRequest : boolean = false;
-                if (!sfRestClient._LoadingPermitRequests.has(optionalProject)) {
-                    var api = new SessionClient(this._SiteURL);
-                    apiResult  = api.getProjectPermits(optionalProject);
-                    sfRestClient._LoadingPermitRequests.set(optionalProject,apiResult);
-                    MyAPIRequest = true;
-                }
-                else apiResult = sfRestClient._LoadingPermitRequests.get(optionalProject)!;
-                if (apiResult) {
-                    apiResult.then((r) => {
-                        if (r) {
-                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Project ${optionalProject} Permits from server...`);
-                            sfRestClient._LoadedPermits.set(optionalProject!, r);
-                            ThisProjectPermitSet = r!;
-                            PPSDeferredResult.resolve(r);
-                            if (MyAPIRequest && optionalProject) sfRestClient._LoadingPermitRequests.delete(optionalProject!);
-                        }
-                    });
-                }
-            }
+        if (!UCFK) {
+            if (sfRestClient._WCC.UserKey === RESTClient.EmptyKey)
+                console.warn(`CheckPermit(): >>>> No user/session!! <<<< Therefore no permission for ${ucModule}|${ucFunction}!  LOGIN AGAIN!`)
             else {
-                ThisProjectPermitSet = sfRestClient._LoadedPermits.get(optionalProject);
-                PPSDeferredResult.resolve(ThisProjectPermitSet);
+                console.warn(`CheckPermit() could not find ${ucModule}|${ucFunction} - verify proper case/trim!`);
+                if (!RESTClient._LoadUCFunctionMapHasBeenForced) {
+                    console.log(`CheckPermit() is reloading the permit map...`);
+                    await RESTClient.LoadUCFunctionMap(true);
+                    try {
+                        return await RESTClient.CheckPermit(ucModule,ucFunction,optionalDTK,optionalProject,optionalReference);
+                    }
+                    catch (r) {
+                        console.warn(`CheckPermit() retry failed...`,r);
+                        return 0;
+                    }
+                }
             }
 
-            var finalCheck = [PPSPromise, UCFKPromise];
+            return 0;
+        }
 
-            Promise.all(finalCheck)
-            .then(function () {
-                var finalPermit : Permits = 0;
-                var GlobalPermits = sfRestClient._LoadedPermits.get("0")?.Permits;
-                $.each([ThisProjectPermitSet?.Permits,GlobalPermits],function CheckOneSource(sourceIdx, thisSource) {
-                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) checking ${thisSource===ThisProjectPermitSet?.Permits ? "project": "global"}`);
-
-                    $.each(thisSource, function OneCapabilityCheck(ThisUCFK, capabilitySet) {
-                        if (ThisUCFK === UCFK) {
-                            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, cl:`,capabilitySet);
-                            $.each(capabilitySet, function OnePermitCheck(_n, p: UCPermit) {
-                                if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, p:`,p);
-                                var thisPermitValue : Permits = 0;
-                                if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
-                                    if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
-                                    if (p.InsOK) thisPermitValue += RESTClient.PermissionFlags.Insert;
-                                    if (p.UpdOK) thisPermitValue += RESTClient.PermissionFlags.Update;
-                                    if (p.DelOK) thisPermitValue += RESTClient.PermissionFlags.Delete;
-                                    if (p.BlanketOK) thisPermitValue += RESTClient.PermissionFlags.Special;
-                                }
-                                finalPermit |= thisPermitValue;
-                                return (finalPermit !== 31);
-                            });
-                        }
-                        return (finalPermit !== 31);
-                    });
+        if (!sfRestClient.GlobalPermitAPIPromise) {
+            if (!(sfRestClient._LoadedPermits.has("0"))) { // global permissions
+                var api = new SessionClient(this._SiteURL);
+                sfRestClient.GlobalPermitAPIPromise  = api.getProjectPermits("0");
+                sfRestClient._LoadedPermits.set("0",{} as _SwaggerClientExports.UCPermitSet); // this prevents repeat requests
+                sfRestClient.GlobalPermitAPIPromise.then((r) => {
+                    if (r) {
+                        //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Received Global Permits from server...`);
+                        sfRestClient._LoadedPermits.set("0", r);
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Global Permits from server...`);
+                    }
+                }).catch((reason) => {
+                    console.warn(`CheckPermit#${RESTClient.ThisInstanceID}() could not load Global Permits from server...`, reason);
+                    // let a later call try again
+                    sfRestClient._LoadedPermits.delete("0");
+                    sfRestClient.GlobalPermitAPIPromise = undefined;
                 });
+            }
+        }
+        if (sfRestClient.GlobalPermitAPIPromise) {
+            //if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Waiting for Global Permits from server...`);
+            try { await sfRestClient.GlobalPermitAPIPromise; } catch { /* reported above; continue without global permits */ }
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Global Permits ready() `,sfRestClient._LoadedPermits.get(optionalProject));
+        }
 
-                if (ucModule !== "WORK") finalPermit = finalPermit |  sfRestClient._WCC.AdminLevel;
-                sfRestClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-                if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) = Usr:${finalPermit},Adm:${sfRestClient._WCC.AdminLevel}; static cache set `);
 
-                ResolveThisPermit(finalPermit);
-                // we do have global permits above: what use case was this for???
-                // if (finalPermit === 31) {
-                //     RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
-                //     ResolveThisPermit(finalPermit);
-                // }
-                // else {
-                //     // not ideal: future we need a way to hold global permits here too
-                //     var api : SessionClient = RESTClient.NewAPIClient("SessionClient");
-                //     api.getCapabilityPermits(ucModule,ucFunction.replaceAll(".","!").replaceAll("/","@"),optionalProject,optionalDTK).then((r)=>{
-                //         RESTClient._UserPermitResultCache.set(PermitCacheID, r);
-                //         ResolveThisPermit(r);
-                //     });
-                // }
+        if (!(sfRestClient._LoadedPermits.has(optionalProject))) {
+            var apiResult: Promise<UCPermitSet | null>;
+            var MyAPIRequest : boolean = false;
+            if (!sfRestClient._LoadingPermitRequests.has(optionalProject)) {
+                var api = new SessionClient(this._SiteURL);
+                apiResult  = api.getProjectPermits(optionalProject);
+                sfRestClient._LoadingPermitRequests.set(optionalProject,apiResult);
+                MyAPIRequest = true;
+            }
+            else apiResult = sfRestClient._LoadingPermitRequests.get(optionalProject)!;
+            try {
+                const r = await apiResult;
+                if (r) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}() Loaded Project ${optionalProject} Permits from server...`);
+                    sfRestClient._LoadedPermits.set(optionalProject!, r);
+                    ThisProjectPermitSet = r!;
+                }
+            }
+            catch (reason) {
+                console.warn(`CheckPermit#${RESTClient.ThisInstanceID}() could not load Project ${optionalProject} Permits from server...`, reason);
+            }
+            finally {
+                if (MyAPIRequest && optionalProject) sfRestClient._LoadingPermitRequests.delete(optionalProject!);
+            }
+        }
+        else {
+            ThisProjectPermitSet = sfRestClient._LoadedPermits.get(optionalProject);
+        }
 
-            });
-        });
-        return DeferredPermitResult; // wait for .then, use (r)
+        var finalPermit : Permits = 0;
+        var GlobalPermits = sfRestClient._LoadedPermits.get("0")?.Permits;
+        CheckEachSource:
+        for (const thisSource of [ThisProjectPermitSet?.Permits,GlobalPermits]) {
+            if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) checking ${thisSource===ThisProjectPermitSet?.Permits ? "project": "global"}`);
+            if (!thisSource) continue;
+
+            for (const [ThisUCFK, capabilitySet] of Object.entries(thisSource)) {
+                if (ThisUCFK === UCFK) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, cl:`,capabilitySet);
+                    for (const p of (capabilitySet ?? [])) {
+                        if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) UCFK ${UCFK}, p:`,p);
+                        var thisPermitValue : Permits = 0;
+                        if (p.IsGlobal || RESTClient._PermitMatches(p, optionalDTK!, optionalReference)) {
+                            if (p.ReadOK) thisPermitValue += RESTClient.PermissionFlags.Read;
+                            if (p.InsOK) thisPermitValue += RESTClient.PermissionFlags.Insert;
+                            if (p.UpdOK) thisPermitValue += RESTClient.PermissionFlags.Update;
+                            if (p.DelOK) thisPermitValue += RESTClient.PermissionFlags.Delete;
+                            if (p.BlanketOK) thisPermitValue += RESTClient.PermissionFlags.Special;
+                        }
+                        finalPermit |= thisPermitValue;
+                        if (finalPermit === 31) break CheckEachSource;
+                    }
+                }
+            }
+        }
+
+        if (ucModule !== "WORK") finalPermit = finalPermit |  sfRestClient._WCC.AdminLevel;
+        sfRestClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+        if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`CheckPermit#${RESTClient.ThisInstanceID}(${ucModule}:${ucFunction},${optionalProject}) = Usr:${finalPermit},Adm:${sfRestClient._WCC.AdminLevel}; static cache set `);
+
+        return finalPermit;
+        // we do have global permits above: what use case was this for???
+        // if (finalPermit === 31) {
+        //     RESTClient._UserPermitResultCache.set(PermitCacheID, finalPermit);
+        //     ResolveThisPermit(finalPermit);
+        // }
+        // else {
+        //     // not ideal: future we need a way to hold global permits here too
+        //     var api : SessionClient = RESTClient.NewAPIClient("SessionClient");
+        //     api.getCapabilityPermits(ucModule,ucFunction.replaceAll(".","!").replaceAll("/","@"),optionalProject,optionalDTK).then((r)=>{
+        //         RESTClient._UserPermitResultCache.set(PermitCacheID, r);
+        //         ResolveThisPermit(r);
+        //     });
+        // }
     }
 
     /**
@@ -960,45 +944,41 @@ export class sfRestClient {
         if (typeof forPageName === "undefined") {
             forPageName = this.ResolvePageTypeName();
         }
-        var DeferredPermitResult : Promise<PagePartList> = new Promise<PagePartList>((ResolveList) => {
-            var finalCheck : JQuery.Promise<any,any,any>[] = [] ;
-            var PartNameList: string[] = [];
-            var PageParts: PagePartList = {};
-            if (forPageName === this.PageTypeNames.HomeDashboard ) { PartNameList = ["ActionItems","ProjectList","AlertList"];}
-            else if (forPageName === this.PageTypeNames.ProjectDashboard) {
-                PartNameList = ["ProjTeam","ProjectKPI","ProjLinks","ProjectCA","ProjNote","ProjPhoto","ProjWeather"];
-                if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
-                // special case for project dashboards: ProjDocMenu
-                PageParts["ProjDocMenu"] = 1;
-            }
-            else if (forPageName === this.PageTypeNames.ExecutiveDashboard) {
-                PartNameList = ["ProjectRES"];
-                //if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
-                // special case for project dashboards: ProjDocMenu
-            }
-            else if (forPageName === this.PageTypeNames.Catalog) {
-                PartNameList = ["DocSearch","CatVersions","Folders"];
-            }
-            else {
-                console.warn("GetPagePartPermits() does not (yet) support ",forPageName);
-            }
+        var PartNameList: string[] = [];
+        var PageParts: PagePartList = {};
+        if (forPageName === this.PageTypeNames.HomeDashboard ) { PartNameList = ["ActionItems","ProjectList","AlertList"];}
+        else if (forPageName === this.PageTypeNames.ProjectDashboard) {
+            PartNameList = ["ProjTeam","ProjectKPI","ProjLinks","ProjectCA","ProjNote","ProjPhoto","ProjWeather"];
+            if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
+            // special case for project dashboards: ProjDocMenu
+            PageParts["ProjDocMenu"] = 1;
+        }
+        else if (forPageName === this.PageTypeNames.ExecutiveDashboard) {
+            PartNameList = ["ProjectRES"];
+            //if (pageKey!.length <= 1) pageKey = this.GetPageProjectKey();
+            // special case for project dashboards: ProjDocMenu
+        }
+        else if (forPageName === this.PageTypeNames.Catalog) {
+            PartNameList = ["DocSearch","CatVersions","Folders"];
+        }
+        else {
+            console.warn("GetPagePartPermits() does not (yet) support ",forPageName);
+        }
 
-            PartNameList.forEach(element  => {
-                var OnePartPermitDeferred = $.Deferred();
-                var OnePartPermitDeferredPromise = OnePartPermitDeferred.promise();
-                finalCheck.push(OnePartPermitDeferredPromise);
-                if (!pageKey && typeof pageKey === "string" ) pageKey = undefined;
-                this.CheckPermit("PART",element,undefined,pageKey).then((r)=>{
-                    PageParts[element] = r;
-                    OnePartPermitDeferred.resolve(r);
-                });
-            });
+        if (!pageKey && typeof pageKey === "string" ) pageKey = undefined;
+        var finalCheck : Promise<void>[] = PartNameList.map(element =>
+            this.CheckPermit("PART",element,undefined,pageKey).then((r)=>{
+                PageParts[element] = r;
+            }).catch((reason) => {
+                // a part whose permit cannot be resolved is reported as no permission rather than hanging the list
+                console.warn(`GetPagePartPermits(${element}) failed`, reason);
+                PageParts[element] = 0;
+            })
+        );
 
-            Promise.all( finalCheck).then(function () {
-                ResolveList(PageParts)
-            });
+        return Promise.all( finalCheck).then(function () {
+            return PageParts;
         });
-        return DeferredPermitResult;
     }
 
     /**
@@ -1021,7 +1001,7 @@ export class sfRestClient {
 
             if (limit <= 0) limit = sfRestClient._Options.SuggestionLimit;
             if (Array.isArray(dependsOn)) {
-                $.each(dependsOn, function (i, v) { DependsOnSet[i] = v; });
+                dependsOn.forEach(function (v, i) { DependsOnSet[i] = v; });
             }
             else if (dependsOn) {
                 DependsOnSet[0] = dependsOn;
@@ -1206,7 +1186,7 @@ export class sfRestClient {
         var api: LookupClient = new LookupClient();
         var DependsOnSet: string[] = ["undefined", "undefined", "undefined", "undefined"];
         if (Array.isArray(dependsOn)) {
-            $.each(dependsOn, function (i, v) {
+            dependsOn.forEach(function (v, i) {
                  if ( v !== undefined) DependsOnSet[i] = v;
             });
         }
@@ -1599,7 +1579,7 @@ export class sfRestClient {
         );
         if (sfRestClient._Options.LogLevel > LoggingLevels.None) console.log("PopQAInfo() loading {0}".sfFormat(url));
         if (!url.startsWith(".")) url = this.MakeSiteRelativeURL(url);
-        $GCI.load(url, function (responseText, textStatus, jqXHR: JQuery.jqXHR) {
+        $GCI.load(url, function (responseText, textStatus, jqXHR: { status: number; responseText: string }) {
             var isEmpty = false;
             if (responseText.startsWith("[{")) {
                 var ldata = JSON.parse(responseText);
@@ -1722,38 +1702,36 @@ export class sfRestClient {
         ff.ReferenceDate = new Date(blobFile.lastModified);
         (<any>ff).ETag = "na";
 
-        return new Promise<_SwaggerClientExports.XferFilesStatus >(async result =>  {
+        return new Promise<_SwaggerClientExports.XferFilesStatus >(result =>  {
             var taskResult : _SwaggerClientExports.XferFilesStatus  = {} as _SwaggerClientExports.XferFilesStatus;
             let UploadURL = '';
             let FileUploadKey: string| null = '';
             let UseChunkMode: boolean = false;
 
+            /** every failure resolves the upload with taskResult.error set (the promise never rejects) */
+            const FailWith = function UploadFileFailed(errorMessage: string): void {
+                taskResult.error = errorMessage;
+                taskResult.name = ff.value;
+                result(taskResult);
+            };
+
+            /** POSTs the FormData to UploadURL; resolves the parsed JSON body (one XferFilesStatus or an array of them) */
             const SendToServer = async function UploadFileSendData(sendFD:FormData, headers?:{[key:string]:string} ): Promise<_SwaggerClientExports.XferFilesStatus[]> {
-                // sends the current contents of the FormData in the data:fd object
-                let uploadxhr = $.ajax({
-                    url: UploadURL,
-                    type: "POST",
-                    data: sendFD,
-                    processData: false,
-                    contentType: false,
+                const uploadResponse = await fetch(UploadURL, {
+                    method: "POST",
+                    body: sendFD,           // browser sets multipart/form-data with the boundary
                     headers: headers,
-                    success: function(response:_SwaggerClientExports.XferFilesStatus[]) {
-                        if (!Array.isArray(response)) response = [response];
-                        response.forEach(fileResponse => {
-                            console.log(`${fileResponse.name} @ ${fileResponse.progress}`);
-                        });
-                    },
-                    error: function(jqXHR, textStatus, errorMessage) {
-                        console.log(errorMessage); // Optional
-                        taskResult.error = errorMessage;
-                        taskResult.name = ff.value;
-                        result(taskResult);
-                    }
-                 });
-                 uploadxhr.progress(function(e){
-                     console.log(`sfRestClient.UploadFile.xhr.progress`,e);  // never fires :-()
-                 });
-                 return uploadxhr;
+                    credentials: "same-origin"
+                });
+                const responseText = await uploadResponse.text();
+                if (!uploadResponse.ok) {
+                    throw new Error(uploadResponse.statusText || `HTTP ${uploadResponse.status}`);
+                }
+                const response: _SwaggerClientExports.XferFilesStatus[] | _SwaggerClientExports.XferFilesStatus = responseText ? JSON.parse(responseText) : [];
+                (Array.isArray(response) ? response : [response]).forEach(fileResponse => {
+                    console.log(`${fileResponse.name} @ ${fileResponse.progress}`);
+                });
+                return response as _SwaggerClientExports.XferFilesStatus[];
             }
             taskResult.name = ff.value;
             if (ff.size! > sfRestClient._Options.UploadDirectLimit) {
@@ -1804,12 +1782,13 @@ export class sfRestClient {
                                 SendNext();
                             }).catch((e) => {
                                 console.error('UploadFile() Chunk Error',e);
-                                response = taskResult;
-                                response.error = `Upload File: Error during chunk ${chunkId}!`;
-                                result(response);
+                                FailWith(`Upload File: Error during chunk ${chunkId}! ${e?.message ?? e}`);
                             });
                     }
                     SendNext();
+                }).catch((reason) => {
+                    console.error('UploadFile() beginUpload failed', reason);
+                    FailWith(`Upload File: could not begin upload of ${ff.value}`);
                 });
 
             }
@@ -1821,6 +1800,9 @@ export class sfRestClient {
                 .then( finalResponse => {
                     if (Array.isArray(finalResponse) && finalResponse.length > 0) result(finalResponse[0])
                     else result(<_SwaggerClientExports.XferFilesStatus><unknown>finalResponse);
+                }).catch((e) => {
+                    console.log(e?.message ?? e);
+                    FailWith(e?.message ?? `${e}`);
                 });
             }
             console.log(`UploadFile ${ff.value} ${Math.round(ff.size!/1024.0)}K ${UseChunkMode ? 'in chunks' : 'using a single request'}`)
@@ -1842,29 +1824,25 @@ export class sfRestClient {
         if (!sessionClient) sessionClient = new SessionClient();
         var RESTClient = this;
         if (sfRestClient._Options.TaskStatePollInterval < 300) sfRestClient._Options.TaskStatePollInterval = 300;
-        return new Promise<_SwaggerClientExports.HttpResponseJsonContent>(async result =>  {
-            var taskResult : _SwaggerClientExports.HttpResponseJsonContent, waitResult : _SwaggerClientExports.HttpResponseJsonContent;
-            taskResult =  {ThisStatus: 202} as  _SwaggerClientExports.HttpResponseJsonContent;
-            var aborted= false;
-            while (!aborted && taskResult.ThisStatus == 202) {
-                await new Promise(r => setTimeout(r, sfRestClient._Options.TaskStatePollInterval));
-                var taskCheck =   sessionClient!.getTaskState(taskKey).then(t=>taskResult = t).catch(x=>{taskResult = x;});
-                await taskCheck;
+        var taskResult : _SwaggerClientExports.HttpResponseJsonContent;
+        taskResult =  {ThisStatus: 202} as  _SwaggerClientExports.HttpResponseJsonContent;
+        var aborted= false;
+        while (!aborted && taskResult.ThisStatus == 202) {
+            await new Promise(r => setTimeout(r, sfRestClient._Options.TaskStatePollInterval));
+            await sessionClient!.getTaskState(taskKey).then(t=>taskResult = t).catch(x=>{taskResult = x;});
 
-                if (taskResult!.ThisStatus == 202) {
-                    if (progressCallback) {
-                        if (progressCallback(taskResult)) {
-                            result(taskResult);
-                            aborted = true;
-                        }
-                    }
-                    else if (taskResult.ThisReason) {
-                         RESTClient.DisplayUserNotification(taskResult.ThisReason, 9876);
+            if (taskResult!.ThisStatus == 202) {
+                if (progressCallback) {
+                    if (progressCallback(taskResult)) {
+                        aborted = true;
                     }
                 }
+                else if (taskResult.ThisReason) {
+                     RESTClient.DisplayUserNotification(taskResult.ThisReason, 9876);
+                }
             }
-            result(taskResult);
-        });
+        }
+        return taskResult;
     }
 
 
@@ -2068,9 +2046,9 @@ export class sfRestClient {
         for (var k in mydata[0]) tblHeader += "<th>" + k.replaceAll("_", " ") + "</th>";
         tblHeader += "</tr>";
         self.$(tblHeader).appendTo(table);
-        $.each(mydata, function (index, value) {
+        for (const value of mydata) {
             var TableRow = "<tr>";
-            $.each(value, function (key, val : any) {
+            for (const val of Object.values(value as unknown as object) as any[]) {
                 if ((typeof (val) === "string")  ) {
                     var when = new Date(val);
                     if (val.length > 3 && when.isDate()) {
@@ -2098,10 +2076,10 @@ export class sfRestClient {
                     console.log("makeTable processed type {0}".sfFormat(typeof (val)));
                     TableRow += "<td>{0}</td>".sfFormat( val );
                 }
-            });
+            }
             TableRow += "</tr>";
             self.$(table).append(TableRow);
-        });
+        }
         return table;
     };
 
@@ -2124,18 +2102,17 @@ export class sfRestClient {
         var $Targets;
         if (!$DOM) $Targets = self.$("img.sfUIMakeSrcSiteRelative");
         else $Targets = $DOM.find("img.sfUIMakeSrcSiteRelative");
-        $.each($Targets, function (i, img) {
+        for (const img of $Targets.toArray()) {
             thisClient.setImgSrc(self.$(img)  as JQuery<HTMLImageElement> ) ;
-        });
+        }
     }
 
-    /** resolves full path (for current theme) and sets sfImg flag */
-    protected setImgSrc($T: JQuery<HTMLImageElement>): JQuery.jqXHR<any> |JQuery.Promise<string>  {
+    /** resolves full path (for current theme) and sets sfImg flag
+     * @returns promise of the resolved path; "" when nothing could be resolved (a failed request is logged, not thrown)
+     */
+    protected setImgSrc($T: JQuery<HTMLImageElement>): Promise<string>  {
         if ($T.data('sfimg')) {
-            let darnSoon = $.Deferred();
-            let ImgReady = darnSoon.promise();
-            darnSoon.resolve($T.attr("src"));  //makes ImgReady be ready
-            return ImgReady;
+            return Promise.resolve($T.attr("src") ?? "");
         }
         var imgName = $T.attr("src");
         if ((!imgName) || (imgName.length === 0)) {
@@ -2143,41 +2120,39 @@ export class sfRestClient {
         }
         else $T.attr("src", ""); // avoid 404
         if (!imgName) {
-            let darnSoon = $.Deferred();
-            let ImgReady = darnSoon.promise();
-            darnSoon.resolve("");  //makes ImgReady be ready
-            return ImgReady;
+            return Promise.resolve("");
         }
-        var arq = this.requestImgPath(imgName);
-        arq.done(function (dvResponse:string, txtStatus:string, _XHR : any) {
+        return this.requestImgPath(imgName).then(function (dvResponse:string) {
             if (dvResponse.length > 260) {
                 console.log("setImgSrc() done: response too long");
-                return arq;
+                return dvResponse;
             }
             $T.attr("src", dvResponse).data("src", "").data('sfimg', true);
-        }).fail(function () {
-            console.warn("setImgSrc() failed for " + imgName);
+            return dvResponse;
+        }).catch(function (reason) {
+            console.warn("setImgSrc() failed for " + imgName, reason);
+            return "";
         });
-    
-        return arq;
     }
 
-    protected requestImgPath(imgName:string): JQuery.jqXHR<any> | JQuery.Promise<string> {
+    /** resolves the themed path for an image name via px.ashx (cached in sessionStorage)
+     * @returns promise of the path; rejects when the request fails
+     */
+    protected async requestImgPath(imgName:string): Promise<string> {
         var imgRequest = this.SessionStorageKeyForImageName(imgName );
-        var cacheResult = this.SessionStoragePathForImageName(imgRequest); 
+        var cacheResult = this.SessionStoragePathForImageName(imgRequest);
         if (cacheResult) imgName = cacheResult;
         if (imgName.startsWith('/')) {
-            var darnSoon = $.Deferred();
-            var ImgReady = darnSoon.promise();
-            darnSoon.resolve(imgName);  //makes ImgReady be ready
-            return ImgReady  ;
+            return imgName;
         }
         var url = this.MakeSiteRelativeURL(`px.ashx/${imgRequest}`);  // classic getPXURL
-        return $.ajax({ url: url, dataType: 'html' }).done(function (imgPath) {
-            if ((typeof imgPath === "string") && (imgPath.startsWith("/"))) {
-                    sessionStorage.setItem(imgRequest, imgPath);
-                }
-        });
+        const response = await fetch(url, { credentials: "same-origin" });
+        if (!response.ok) throw new Error(`requestImgPath(${imgName}) ${response.status} ${response.statusText}`);
+        const imgPath = await response.text();
+        if ((typeof imgPath === "string") && (imgPath.startsWith("/"))) {
+            sessionStorage.setItem(imgRequest, imgPath);
+        }
+        return imgPath;
     }
 
     
@@ -2197,20 +2172,23 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
 
     /**
      * Loads UC Function Keys and corresponding Module/System Names
-     * NOTE: returns a JQueryPromise
+     * @returns promise of the map; resolves with the current (possibly stale or empty) map when the
+     *          server cannot be reached, never rejects.  Concurrent callers share one in-flight request.
     */
-    protected LoadUCFunctionMap(force?:boolean): JQueryPromise<any> {
+    protected LoadUCFunctionMap(force?:boolean): Promise<any> {
         let RESTClient: sfRestClient = this;
-        let DeferredResult = $.Deferred();
-        let permitCheck = DeferredResult.promise();
         if (force) RESTClient._LoadUCFunctionMapHasBeenForced = true;
 
         if (sfRestClient._UCPermitMap._etag.w === 0 && !force) {
             // see about localStorage
-            var ls = JSON.parse(localStorage.getItem(sfRestClient._z.lsKeys.api_session_permits_map)!);
-            if (ls && typeof ls._etag.w === "number") {
-                console.log("Loaded Function Map from localStorage...");
-                sfRestClient._UCPermitMap = ls;
+            try {
+                var ls = JSON.parse(localStorage.getItem(sfRestClient._z.lsKeys.api_session_permits_map) ?? "null");
+                if (ls && typeof ls._etag === "object" && ls._etag !== null && typeof ls._etag.w === "number") {
+                    console.log("Loaded Function Map from localStorage...");
+                    sfRestClient._UCPermitMap = ls;
+                }
+            } catch (ex) {
+                console.warn("LoadUCFunctionMap() ignoring unusable Function Map in localStorage", ex);
             }
             this._LoadIconMap();
         }
@@ -2220,85 +2198,93 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             // we have a map, lets see if we should use it as-is
             if ((sfRestClient._WCC.UserKey === this.EmptyKey)) {
                 // no session? So, now is not a good time to refreh the map, just use what we have
-                DeferredResult.resolve(sfRestClient._UCPermitMap);
-                return permitCheck;
+                return Promise.resolve(sfRestClient._UCPermitMap);
                 }
 
             if (!force && (Date.now() - sfRestClient._UCPermitMap._etag.w) < (sfRestClient._Options.DVCacheLife * 4))   {
                 // great: we have a map and it isn't old
-                DeferredResult.resolve(sfRestClient._UCPermitMap);
-                return permitCheck;
+                return Promise.resolve(sfRestClient._UCPermitMap);
             }
         }
 
-        if (!sfRestClient._SessionClientGetUCFKMap)            sfRestClient._SessionClientGetUCFKMap = RESTClient._GetAPIXHR("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0]);
-
-        sfRestClient._SessionClientGetUCFKMap.done(function DoneGetPermitMapRequest(r) {
-            if (sfRestClient._SessionClientGetUCFKMap!.status !== 304) {
-                if (typeof r === "object" && typeof r._etag === "object") {
+        if (!sfRestClient._SessionClientGetUCFKMap) {
+            sfRestClient._SessionClientGetUCFKMap = RESTClient._GetAPIJSON("session/permits/map?etag=" + Object.keys(sfRestClient._UCPermitMap._etag)[0])
+            .then(function DoneGetPermitMapRequest({ status, data: r }) {
+                if (status === 304) {
+                    console.log("LoadUCFunctionMap() resolved as not modified...");
+                    sfRestClient._UCPermitMap._etag.w = Date.now();
+                }
+                else if (status === 200 && typeof r === "object" && r !== null && typeof r._etag === "object") {
                     r._etag.w = Date.now();
                     console.log("Loaded Function Map from server...");
                     localStorage.setItem(sfRestClient._z.lsKeys.api_session_permits_map, JSON.stringify(r));
                     sfRestClient._UCPermitMap = r;
                 }
-                else {
-                    console.log("LoadUCFunctionMap() could not load Function Map from server...", sfRestClient._SessionClientGetUCFKMap);
+                else if (status === 403) {
+                    console.log("LoadUCFunctionMap() ...forbidden; likely not logged in " );
                 }
-            } else {
-                console.log("LoadUCFunctionMap() resolved as not modified...");
-                sfRestClient._UCPermitMap._etag.w = Date.now();
-            }
+                else {
+                    console.log(`LoadUCFunctionMap() could not load Function Map from server (${status})...`, r);
+                }
+                return sfRestClient._UCPermitMap;
+            })
+            .catch(function GetPermitMapFailed(reason) {
+                console.warn("LoadUCFunctionMap() failed ", reason);
+                return sfRestClient._UCPermitMap; // will make do for now
+            })
+            .finally(() => {
+                // settled: a later call (for example force=true) starts a fresh request
+                sfRestClient._SessionClientGetUCFKMap = null;
+            });
+        }
 
-            DeferredResult.resolve(sfRestClient._UCPermitMap);
-        }).fail(function GetPermitMapFailed(jqXHR, textStatus, errorThrown) {
-            if (jqXHR.status == 403) {
-                console.log("LoadUCFunctionMap() ...forbidden; likely not logged in " );
-            }
-            else {
-                console.warn("LoadUCFunctionMap() failed ", textStatus,errorThrown,jqXHR);
-            }
-            DeferredResult.resolve(sfRestClient._UCPermitMap); // will make do for now
-        });
-
-        return permitCheck;
+        return sfRestClient._SessionClientGetUCFKMap;
     }
 
     protected _LoadIconMap(): void {
         if (sfRestClient._IconMap) return;
         const RESTClient = this;
         let ls = localStorage.getItem(sfRestClient._z.lsKeys.api_icon_map);
-        if (ls) sfRestClient._IconMap = JSON.parse(ls);
+        if (ls) {
+            try {
+                sfRestClient._IconMap = JSON.parse(ls);
+            } catch (ex) {
+                console.warn("_LoadIconMap() ignoring unusable Icon Map in localStorage", ex);
+                sfRestClient._IconMap = null;
+            }
+        }
         if (!sfRestClient._IconMap || typeof sfRestClient._IconMap !== "object") sfRestClient._IconMap = {};
         if (typeof sfRestClient._IconMap!["_ts"] === "string") sfRestClient._IconMap!["_ts"] = new Date(sfRestClient._IconMap!["_ts"]);
         let etag : string = "undefined";
         let AsOf = <Date>sfRestClient._IconMap!["_ts"];
         if (!AsOf || !(AsOf instanceof Date)) AsOf = new Date(0);
         if (sfRestClient._IconMap) etag = <string>sfRestClient._IconMap["_etag"];
-        let getIconMapXHR = this._GetAPIXHR(`catalog/icon/list?etag=${etag}`);
-        getIconMapXHR.done(function _doneGetIcomMap(imap) {
-            if (getIconMapXHR.status === 200) {
+        this._GetAPIJSON(`catalog/icon/list?etag=${etag}`).then(function _doneGetIcomMap({ status, data: imap }) {
+            if (status === 200) {
                 if (imap && typeof imap === "object" && typeof imap._etag === "string") {
                     sfRestClient._IconMap = <{[key:string]: string | Date}>imap;
                     sfRestClient._IconMap["_ts"] = new Date();
                     console.log(`Loaded ${Object.keys(sfRestClient._IconMap).length} Icon Map entries from server...`);
                     for (var key in sfRestClient._IconMap) {
                         if (sfRestClient._IconMap.hasOwnProperty(key)) {
-                            if (typeof sfRestClient._IconMap[key] === "string" &&  !((sfRestClient._IconMap[key] as string).startsWith("/"))) 
+                            if (typeof sfRestClient._IconMap[key] === "string" &&  !((sfRestClient._IconMap[key] as string).startsWith("/")))
                                 sfRestClient._IconMap[key] = `${RESTClient._SiteRootURL}/${sfRestClient._IconMap[key]}`;
                         }
                     }
                     localStorage.setItem(sfRestClient._z.lsKeys.api_icon_map, JSON.stringify(sfRestClient._IconMap));
                 }
                 else {
-                    console.warn("_LoadIconMap() could not load Function Map from server...", getIconMapXHR);
+                    console.warn("_LoadIconMap() could not load Icon Map from server...", imap);
                 }
-            } else if (getIconMapXHR.status === 304) {
+            } else if (status === 304) {
                 console.log(`_LoadIconMap(${AsOf.toISOString()}) resolved icon map as not modified...`);
                 //sfRestClient._IconMap!["_ts"] = new Date();
             } else {
                 console.log(`_LoadIconMap(${AsOf.toISOString()}) using ${Object.keys(sfRestClient._IconMap!).length} old map data...`);
                 if (Object.keys(sfRestClient._IconMap!).length < 5) sfRestClient._IconMap = null;
             }
+        }).catch((reason) => {
+            console.warn(`_LoadIconMap(${AsOf.toISOString()}) failed; using ${Object.keys(sfRestClient._IconMap ?? {}).length} old map data...`, reason);
         });
     }
 
@@ -2399,7 +2385,8 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     }
 
     protected static _SessionClientGetWCC : _SessionClientGetWCCShare | null;
-    protected static _SessionClientGetUCFKMap : JQueryXHR | null;
+    /** the in-flight permit map request shared by concurrent LoadUCFunctionMap() callers; null once settled */
+    protected static _SessionClientGetUCFKMap : Promise<any> | null;
 
     private static _MakeFakeWCC() : WCCData {
         let FakeWCC =new WCCData();
@@ -2420,13 +2407,13 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
     UpdateWCCData( newWCC: WCCData ) : WCCData {
         var RESTClient: sfRestClient = this;
         var ChangeList: Map<string, any> = new Map<string,any>();
-        $.each(newWCC, function SetWCCProperties(pname: string  , pvalue) {
+        for (const [pname, pvalue] of Object.entries(newWCC)) {
             var HasChanged = (typeof sfRestClient._WCC[pname] === "undefined") || (sfRestClient._WCC[pname] !== pvalue);
             if (HasChanged) {
                 sfRestClient._WCC[pname] = pvalue;
                 ChangeList.set(pname,pvalue);
             }
-        });
+        }
         RESTClientBase.APIClientBase.setGAOptOut(!!sfRestClient._WCC.GAFMOptOut);
         sfRestClient._WCC.PageName = RESTClient.ResolvePageName();
         sfRestClient._z.WCCLoaded = true;
@@ -2954,7 +2941,7 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         var dependsList = "";
         var RESTClient = this;
         if (Array.isArray(depends1)) {
-            $.each(depends1, function (i, v) { dependsList = RESTClient._addQueryValue(asPath, dependsList, i + 1, v); });
+            depends1.forEach(function (v, i) { dependsList = RESTClient._addQueryValue(asPath, dependsList, i + 1, v); });
         }
         else {
             //if (typeof depends1 !== "string" && typeof depends1 !== "undefined" && depends1 !== null) depends1 = depends1.toString();
@@ -2983,10 +2970,21 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         return "zvqms={0}".sfFormat(new Date().valueOf());
     }
 
-    protected _GetAPIXHR(url: string): JQueryXHR {
+    /**
+     * GETs an API url (relative to /api/) and resolves {status, data}; data is the parsed JSON body of
+     * a 200, otherwise undefined.  Resolves for every HTTP status (304 included, callers branch on it);
+     * rejects only when the request cannot be made or a 200 body is not JSON.
+     */
+    protected async _GetAPIJSON(url: string): Promise<{ status: number; data: any }> {
         url = this._APIURL(url);
         if (sfRestClient._Options.LogLevel >= LoggingLevels.Verbose) console.log(url);
-        return $.getJSON(url);
+        const response = await fetch(url, { headers: { "Accept": "application/json" }, credentials: "same-origin" });
+        let data: any = undefined;
+        if (response.status === 200) {
+            const text = await response.text();
+            data = text ? JSON.parse(text) : undefined;
+        }
+        return { status: response.status, data: data };
     }
     protected _APIURL(suffix: any) {
         return this._SiteURL + '/api/' + suffix;
@@ -4528,7 +4526,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
 
     }
 
-    private static GlobalPermitAPIPromise: Promise<UCPermitSet | null>;
+    private static GlobalPermitAPIPromise: Promise<UCPermitSet | null> | undefined;
     private static GALastPageHitSent: number = 0; // !!! this needs work
     private GAMonitorPageHit( clientID:string, url?:string, title?:string) {
         var RESTClient = this;
@@ -4550,12 +4548,12 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         sfRestClient.GALastPageHitSent = pageHash ;
 
         return RESTClientBase.APIClientBase.GAMonitorSend(payload)
-                         .done(function (data, textStatus, jqXHR) {
-                             console.log(`GAMonitor(pageview:${url}) ok`);
-                         })
-                        .fail(function (jqXHR, textStatus) {
+                        .then(function () {
+                            console.log(`GAMonitor(pageview:${url}) ok`);
+                        })
+                        .catch(function (reason) {
                             // GAMonitorSendFailed = true; set in APIClientBase
-                            console.warn(`GAMonitor(pgvw:${url}) failed: ${jqXHR.responseText} ` );
+                            console.warn(`GAMonitor(pgvw:${url}) failed: ${reason?.message ?? reason} ` );
                         });
     }
 
@@ -5480,7 +5478,7 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             vv = `${v2}`;
         }
         else {
-            vv = $.trim(el.text());
+            vv = el.text().trim();
         }
         if (el.hasData("is")) elInfo = el.data("is");
         if (typeof vv === "string") {
@@ -6624,16 +6622,21 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
         top!.sfPMSHub.client.SkipAutoReconnect = false;
 }
 
-    protected PageServerPingBackFailed(marker:string, id:string, jqXHR: string | JQueryXHR, nextMS:number, methodName:string) {
-    var responseText;
-    if (typeof jqXHR === "string") responseText = jqXHR;
-    if (typeof jqXHR === "object") {
-        responseText = jqXHR.responseText;
-        if (typeof responseText !== "string") {
-            console.log(jqXHR);
-            responseText = "";
+    /**
+     * @param failure what the failed call rejected with: a string, a Response, an Error or an xhr-like
+     *                object with responseText/statusText
+     */
+    protected PageServerPingBackFailed(marker:string, id:string, failure: string | Response | unknown, nextMS:number, methodName:string) {
+    var responseText: string = "";
+    if (typeof failure === "string") responseText = failure;
+    else if (typeof failure === "object" && failure !== null) {
+        const failed = failure as { responseText?: unknown; statusText?: unknown; message?: unknown };
+        if (typeof failed.responseText === "string") responseText = failed.responseText;
+        else console.log(failure);
+        if ((responseText.length === 0) || (responseText.length > 200)) {
+            responseText = typeof failed.statusText === "string" ? failed.statusText
+                         : typeof failed.message === "string" ? failed.message : "";
         }
-        if ((responseText.length === 0) || (responseText.length > 200)) responseText = jqXHR.statusText;
     }
     if (responseText === "NAK: Not Authenticated") {
         var msgText = "You are no longer logged into this server.  This window will close when you click OK";
