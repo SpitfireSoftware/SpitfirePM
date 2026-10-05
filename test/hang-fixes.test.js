@@ -39,3 +39,17 @@ test("GetDV: a failed batch and an unanswered item both resolve null instead of 
     assert.equal(await settlesWithin(unanswered, 2000, "GetDV(batched, unanswered)"), null);
     assert.equal(client._DVThrottledResolvers.size, 0, "no resolver left behind");
 });
+
+test("BuildViewModelForContext rejects when the part CFG cannot be loaded, and still builds when it can", async () => {
+    const p = page({ routes: [
+        { match: /\/api\/uicfg\/live\/Broken/, status: 500, body: "", headers: { "Content-Type": "text/plain" } },
+        { match: /\/api\/uicfg\/live\/Simple/, status: 200, body: { PartName: "Simple", UIItems: [{ ItemName: "Owner", DataField: "Owner", DV: "sfUser" }] } },
+        { match: /\/api\/viewable\/sfUser\?/, status: 200, body: JSON.stringify("Owner Name") },
+    ] });
+    const client = await waitForGlobalClient(p);
+    await assert.rejects(settlesWithin(client.BuildViewModelForContext("Broken", "ctx", undefined, [{ Owner: GUID1 }]), 2000, "BuildViewModelForContext(broken cfg)"),
+        (reason) => !/did not settle/.test(reason.message));
+    const rows = await settlesWithin(client.BuildViewModelForContext("Simple", "ctx", undefined, [{ Owner: GUID1 }]), 2000, "BuildViewModelForContext(ok)");
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].Owner_dv, "Owner Name");
+});

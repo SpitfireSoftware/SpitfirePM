@@ -225,6 +225,9 @@ class PartStorageData {
                 if (thisPart._InitializationResultPromise) {
                     thisPart._InitializationResultPromise.then((r) => {
                         thisPart!.CFG = r;
+                    }).catch((reason) => {
+                        // callers of CFGLoader() see the same rejection; this side chain only records the CFG
+                        console.warn(`PartStorageDataFactory(${partName}) could not load the part CFG`, reason);
                     });
                 }
             } catch (error) {
@@ -262,6 +265,8 @@ class PartStorageData {
             if (thisPart._InitializationResultPromise) {
                 thisPart._InitializationResultPromise.then((r) => {
                     thisPart!.CFG = r;
+                }).catch((reason) => {
+                    console.warn(`PartStorageDataLookupFactory(${lookupName}) could not load the lookup CFG`, reason);
                 });
             }
         }
@@ -597,24 +602,23 @@ export class sfRestClient {
             var EmptyPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((resolve) => resolve(rawData as DataModelCollection));
             return EmptyPromise;
         }
-        var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
-            thisPart!.CFGLoader().then(() => {
-                var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData,
-                    {
-                        DocTypeKey: forDocType,
-                        PartName:partName,
-                        Context:context
-                    });
-                ViewModelPromise.then((r) => {
-                    finalResolve(r);
-                    const RawResultIsArray = (r && Array.isArray(r));
-                    let rowCount = 1;
-                    if (!RawResultIsArray) {
-                        if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug)  console.log(`BuildViewModelForContext GA ${partName} ${typeof r} isArray ${Array.isArray(r)} - single row` ,r);
-                    }
-                    else rowCount = r.length;
-                    RESTClient.GAViewModelEvent(partName,rowCount);
+        // a CFG that cannot be loaded, or a view model that cannot be constructed, rejects (it used to never settle)
+        var FinalViewModelPromise: Promise<DataModelCollection> = thisPart.CFGLoader().then(() => {
+            var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, rawData,
+                {
+                    DocTypeKey: forDocType,
+                    PartName:partName,
+                    Context:context
                 });
+            return ViewModelPromise.then((r) => {
+                const RawResultIsArray = (r && Array.isArray(r));
+                let rowCount = 1;
+                if (!RawResultIsArray) {
+                    if (sfRestClient._Options.LogLevel >= LoggingLevels.VerboseDebug)  console.log(`BuildViewModelForContext GA ${partName} ${typeof r} isArray ${Array.isArray(r)} - single row` ,r);
+                }
+                else rowCount = r.length;
+                try { RESTClient.GAViewModelEvent(partName,rowCount); } catch (ex) { console.warn("BuildViewModelForContext() GA event failed", ex); }
+                return r;
             });
         });
         return FinalViewModelPromise;
