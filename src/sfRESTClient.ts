@@ -1037,6 +1037,13 @@ export class sfRestClient {
             apiResultPromise = api.getSuggestionsWithContext(lookupName,RESTClient.GetPageDataContext(),SuggestionContext)
             sfRestClient.RecentSuggestionAsOf.set(suggestionGroupKey,TimeNow + sfRestClient.suggestionCacheLifespan );
             sfRestClient.RecentSuggestionResultMap.set(suggestionGroupKey,apiResultPromise);
+            apiResultPromise.catch(() => {
+                // a failed request must not stay the cached answer for the next four minutes
+                if (sfRestClient.RecentSuggestionResultMap.get(suggestionGroupKey) === apiResultPromise) {
+                    sfRestClient.RecentSuggestionResultMap.delete(suggestionGroupKey);
+                    sfRestClient.RecentSuggestionAsOf.delete(suggestionGroupKey);
+                }
+            });
 
             return apiResultPromise;
     }

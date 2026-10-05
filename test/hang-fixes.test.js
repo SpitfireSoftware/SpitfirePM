@@ -147,3 +147,17 @@ test("sfPMSHub onApplicationStart calls sessionAlive once (it used to call it tw
     p.window.sfPMSHub.client.onApplicationStart("2023.0.9774.21549");
     assert.equal(calls.sessionAlive, 1);
 });
+
+test("GetLookupSuggestions does not keep a rejected request as the cached answer", async () => {
+    let status = 500;
+    const p = page({ routes: [{ match: /\/api\/suggestions\//, reply: () => status === 500
+        ? { status: 500, body: "", headers: { "Content-Type": "text/plain" } }
+        : { status: 200, body: [{ value: "v1", label: "Vendor 1" }] } }] });
+    const client = await waitForGlobalClient(p);
+    await assert.rejects(settlesWithin(client.GetLookupSuggestions("Vendor", "ve", undefined), 2000, "GetLookupSuggestions(500)"), (r) => !/did not settle/.test(r.message));
+    status = 200;
+    const again = await settlesWithin(client.GetLookupSuggestions("Vendor", "ve", undefined), 2000, "GetLookupSuggestions(200)");
+    assert.equal(again[0].label, "Vendor 1");
+    assert.equal(p.callsTo(/\/api\/suggestions\//).length, 2, "the failure was not served from the cache");
+    assert.equal(await client.GetLookupSuggestions("Vendor", "ve", undefined), again, "the success is cached");
+});
