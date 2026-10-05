@@ -1071,24 +1071,17 @@ export class sfRestClient {
          filterValues: QueryFilters
          ) : Promise<DataModelCollection> {
 
-          var apiResultPromise: Promise<{[key:string]:any}[] | null>;
           var RESTClient: sfRestClient = this;
           var api: LookupClient = new LookupClient( );
 
-
-          var FinalViewModelPromise: Promise<DataModelCollection> = new Promise<DataModelCollection>((finalResolve) => {
-            apiResultPromise  = api.getLookupResultAll(lookupName, RESTClient.GetPageDataContext() ,  filterValues);
-
-            apiResultPromise.then((lookupResultData) => {
+          // a failed lookup request or lookup CFG rejects (it used to never settle)
+          var FinalViewModelPromise: Promise<DataModelCollection> = api.getLookupResultAll(lookupName, RESTClient.GetPageDataContext() ,  filterValues)
+            .then((lookupResultData) => {
                   var thisPart : PartStorageData = PartStorageData.PartStorageDataLookupFactory(this,lookupName);
-                  thisPart!.CFGLoader().then(() => {
-                    var ViewModelPromise: Promise<DataModelCollection> = this._ConstructViewModel(thisPart!, lookupResultData);
-                    ViewModelPromise.then((r) => finalResolve(r));
+                  return thisPart!.CFGLoader().then(() => {
+                    return this._ConstructViewModel(thisPart!, lookupResultData);
                 });
             });
-
-
-        });
         return FinalViewModelPromise;
   }
 

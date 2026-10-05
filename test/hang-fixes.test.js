@@ -53,3 +53,20 @@ test("BuildViewModelForContext rejects when the part CFG cannot be loaded, and s
     assert.equal(rows.length, 1);
     assert.equal(rows[0].Owner_dv, "Owner Name");
 });
+
+test("GetLookupResults rejects when the lookup request or its CFG fails, and resolves rows when both work", async () => {
+    const p = page({ routes: [
+        { match: /\/api\/matches\/BrokenLookup\//, status: 500, body: "", headers: { "Content-Type": "text/plain" } },
+        { match: /\/api\/matches\/NoCfg\//, status: 200, body: [{ Key: "k" }] },
+        { match: /\/api\/uicfg\/lookup\/NoCfg/, status: 500, body: "", headers: { "Content-Type": "text/plain" } },
+        { match: /\/api\/matches\/Good\//, status: 200, body: [{ Key: "k", Owner: GUID1 }] },
+        { match: /\/api\/uicfg\/lookup\/Good/, status: 200, body: { PartName: "Good", UIItems: [{ ItemName: "Owner", DataField: "Owner", DV: "sfUser" }] } },
+        { match: /\/api\/viewable\/sfUser\?/, status: 200, body: JSON.stringify("Owner Name") },
+    ] });
+    const client = await waitForGlobalClient(p);
+    const notSettled = (reason) => !/did not settle/.test(reason.message);
+    await assert.rejects(settlesWithin(client.GetLookupResults("BrokenLookup", {}), 2000, "GetLookupResults(500)"), notSettled);
+    await assert.rejects(settlesWithin(client.GetLookupResults("NoCfg", {}), 2000, "GetLookupResults(no cfg)"), notSettled);
+    const rows = await settlesWithin(client.GetLookupResults("Good", {}), 2000, "GetLookupResults(ok)");
+    assert.equal(rows[0].Owner_dv, "Owner Name");
+});
