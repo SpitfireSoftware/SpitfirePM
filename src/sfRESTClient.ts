@@ -1171,7 +1171,7 @@ export class sfRestClient {
             // if falls through, we get a fresh value
         }
         catch (err2:any        ) {
-            new Error("GetDV() cache error: " + err2.message);
+            console.warn("GetDV() cache error: " + err2.message);
         }
 
         if (this._CachedDVRequests.has(cacheKey)) {
@@ -1488,7 +1488,7 @@ export class sfRestClient {
             // if falls through, we get a fresh value
         }
         catch (err2:any) {
-            new Error("RuleResult() cache error: " + err2.message);
+            console.warn("RuleResult() cache error: " + err2.message);
         }
 
         // rule checks are not so numerous that we worry about in process requests
