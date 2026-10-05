@@ -75,3 +75,7 @@ yarn.lock
 # Spitfire special directory that will contain node modules, that are used inside docker
 # container which is used to test bitbucket pipelines locally
 node_modules_for_local_bb_pipelines
+
+# generator build output
+/tools/ClientGenerator/bin/
+/tools/ClientGenerator/obj/

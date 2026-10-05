@@ -22,23 +22,26 @@ namespace APIClientGenerator
     /// .NET 10 works with nswag 14.6
     /// 
     /// 
-    /// IMPORTANT - to deploy, copy BIN from D:\SpitfireDev\TypeScriptClientGenerator\bin\Debug\net10XXX to D:\Util\swag2ts\netx
-    /// 
+    /// Lives in the spitfirepm repo under tools/ClientGenerator and is run through npm:
+    ///     npm run swagger:update   refreshes swagger/v23.json from the dev site
+    ///     npm run generate         regenerates src/SwaggerClients.ts from swagger/v23.json
+    ///
     /// </remarks>
-    /// 
+    ///
     class Program
     {
         static async Task Main(string[] args)
         {
             if (args.Length != 3)
             {
-                Console.WriteLine("Expecting 3 arguments: URL, mode, generatePath\\fileName (.js added) ");
+                Console.WriteLine("Expecting 3 arguments: swaggerSource, mode, generatePath\\fileName (.ts added) ");
+                Console.WriteLine("swaggerSource is a path to a swagger/OpenAPI json file or an http(s) URL");
                 Console.WriteLine("mode can be C for UpperCamel or s for As in Swagger   ");
                 Environment.Exit((int)ExitCode.InvalidUsage);
                 return;
             }
 
-            var url = args[0];
+            var source = args[0];
             var mode = args[1];
             IPropertyNameGenerator UseNameGenerator;
             if (string.Compare(mode,"C",true) == 0)
@@ -57,8 +60,25 @@ namespace APIClientGenerator
                 return;
             }
             var OutputPath = Path.Combine(Directory.GetCurrentDirectory(), args[2]);
-            
-            var document = await NSwag.OpenApiDocument.FromUrlAsync(url);
+
+            NSwag.OpenApiDocument document;
+            var isUrl = source.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                     || source.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+            if (isUrl)
+            {
+                document = await NSwag.OpenApiDocument.FromUrlAsync(source);
+            }
+            else
+            {
+                var sourcePath = Path.Combine(Directory.GetCurrentDirectory(), source);
+                if (!File.Exists(sourcePath))
+                {
+                    Console.WriteLine($"Swagger file not found: {sourcePath}");
+                    Environment.Exit((int)ExitCode.InvalidFilename);
+                    return;
+                }
+                document = await NSwag.OpenApiDocument.FromFileAsync(sourcePath);
+            }
 
             var sortedPaths = document.Paths.OrderBy(p => p.Key).ToList();
             document.Paths.Clear();

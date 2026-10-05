@@ -11,6 +11,8 @@
     "test": "node --test \"test/**/*.test.js\"",
     "prebuild": "node scripts/genversion.js",
     "build": "tsc",
+    "swagger:update": "node scripts/update-swagger.js",
+    "generate": "dotnet run --project tools/ClientGenerator -- swagger/v23.json S src/SwaggerClients",
     "xpostbuild": "d:/spitfiredev/CopyNPMOutputsToWebApp.cmd"
   },
   "repository": {
