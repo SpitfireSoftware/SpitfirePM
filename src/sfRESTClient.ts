@@ -186,9 +186,7 @@ class PartStorageData {
         if (this._LoadedParts?.size === 0) return false;
         if (!forProject) forProject = client.GetPageProjectKey();
         const ReferenceKey: PartContextKey = PartStorageData.GetPartContextKey(partName, forDocType, forProject, context);
-        let thisPart: PartStorageData;
-        let result =             PartStorageData._LoadedParts.delete(ReferenceKey);
-        return result;
+        return PartStorageData._LoadedParts.delete(ReferenceKey);
     }
 
     /**
@@ -579,7 +577,6 @@ export class sfRestClient {
             console.warn(`BuildDataSummary() - rawData does not include ETag (key ${keyName})`);
             return result;
         }
-        var RESTClient = this;
         rawData.forEach(function(row:DataModelRow) {
             if ( row[keyName] && !result.find(el=> el.RowKey === row[keyName])) {
                 result.push({"RowKey":row[keyName], "ETag": row["ETag"]} as  _SwaggerClientExports.CurrentDataSummary );
@@ -1336,7 +1333,7 @@ export class sfRestClient {
      */
     RegisterRestoredCFG(partName: string, forDocType?: GUID, forProject?:string, partContext?: string,recoveredCFG?: UIDisplayPart): UIDisplayPart {
         if (!recoveredCFG)  throw new Error(`RegisterRestoredCFG(${partName}) requires recoveredCFG object ` );
-        const thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType,forProject, partContext,recoveredCFG);
+        PartStorageData.PartStorageDataFactory(this, partName, forDocType,forProject, partContext,recoveredCFG); // registers it
         return recoveredCFG;
     }
 
@@ -1348,8 +1345,8 @@ export class sfRestClient {
      * @see GetPartCFG
      */
     RegisterRestoredLookupCFG(lookupName: string, recoveredCFG: UIDisplayPart): UIDisplayPart {
-        if (!recoveredCFG)  throw new Error(`RegisterRestoredCFG(${lookupName}) requires recoveredCFG object ` );
-        const thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataLookupFactory(this, lookupName,recoveredCFG);
+        if (!recoveredCFG)  throw new Error(`RegisterRestoredLookupCFG(${lookupName}) requires recoveredCFG object ` );
+        PartStorageData.PartStorageDataLookupFactory(this, lookupName,recoveredCFG); // registers it
         return recoveredCFG;
     }
 

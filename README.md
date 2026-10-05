@@ -15,8 +15,8 @@ let userKey = top.sfClient.GetPageContextValue("UserKey")
 let api = new exports.ActionItemsClient(sfApplicationRootPath)
 let apiResult = api.getUserActionItemsAll(userKey)
 apiResult.then( (a) => {
-        top.sfClient.BuildViewModel("ActionItems", top.sfClient._EmptyKey, a)
-            .done(function (v) { console.log(v); });
+        top.sfClient.BuildViewModelForContext("ActionItems", "", undefined, a)
+            .then(function (v) { console.log(v); });
     });
 
 ...
