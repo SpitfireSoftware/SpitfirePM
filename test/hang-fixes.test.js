@@ -105,3 +105,13 @@ test("AssureJQUITools: a repeat call returns the first call's promise; a non-top
     jqui.dispatchEvent(new p.window.Event("load"));
     assert.equal(await settlesWithin(first, 1000, "AssureJQUITools"), true);
 });
+
+test("AddCachedScript resolves false when the script fails to load", async () => {
+    const p = page();
+    const client = await waitForGlobalClient(p);
+    const loading = client.AddCachedScript("https://cdn.example.test/missing.js", true);
+    const script = p.window.document.querySelector("script[src='https://cdn.example.test/missing.js']");
+    assert.ok(script, "script element appended");
+    script.dispatchEvent(new p.window.Event("error"));
+    assert.equal(await settlesWithin(loading, 1000, "AddCachedScript(error)"), false);
+});

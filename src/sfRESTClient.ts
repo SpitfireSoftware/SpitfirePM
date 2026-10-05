@@ -2542,6 +2542,10 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
             script.onload = function _scriptloaded() {
                     resolve(true);
                 };
+            script.onerror = function _scriptfailed() {
+                    console.warn("AddCachedScript() failed to load", url);
+                    resolve(false);
+                };
             if (!headScript) document.body.appendChild(script)
             else document.head.appendChild(script);
             console.log("Added:",url);
