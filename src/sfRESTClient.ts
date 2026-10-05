@@ -621,24 +621,6 @@ export class sfRestClient {
         return FinalViewModelPromise;
     }
 
-    // /**
-    //  *  Legacy version of BuildViewModelForContext  - use .done()
-    //  *  @deprecated use BuildViewModelForContext()
-    //  */
-    // BuildViewModel(partName: string, context: string, rawData: any, unusedCfgData: undefined, forDocType: GUID | undefined): JQueryPromise<any> {
-    //     if (!sfRestClient._z.WCCLoaded) this.LoadUserSessionInfo();
-    //     var thisPart: PartStorageData | undefined = PartStorageData.PartStorageDataFactory(this, partName, forDocType, "",context);
-    //     var darnSoon = $.Deferred();
-    //     var ResultReady = darnSoon.promise();
-    //     // what purpose would this serve?? if (cfg) thisPart.CFGLoader = cfg;
-    //     thisPart.CFGLoader().then(() => {
-    //         this._ConstructViewModel(thisPart!, rawData)
-    //             .then((r) => darnSoon.resolve(r))
-    //     }
-    //     );
-    //     return ResultReady;
-    // }
-
     /**
      * Updates row visibility on the server and updates the in-memory flags for display of this row
      * @param partName ProjTeam or ProjectPublicInfo
@@ -2557,11 +2539,6 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
         });
 
         return ScriptPromise;
-        // return $.ajax({
-        //     url: url,
-        //     dataType: "script",
-        //     cache: true
-        // });
     }
 
     /**
