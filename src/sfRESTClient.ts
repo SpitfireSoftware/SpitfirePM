@@ -4052,8 +4052,9 @@ public CreateButtonElement(withClass: undefined | string, withTip:string|undefin
             }
             else {
                 // this rx does not remove quotes from period
-                let rxString = `${popWhat}\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));`
-                rx = new RegExp(rxString,"gm"); 
+                // String.raw keeps the regex escapes; in a plain template literal \( and \s were silently lost
+                let rxString = String.raw`${popWhat}\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));`;
+                rx = new RegExp(rxString,"gm");
                 //rx =  /PopTXHistory\(\\?['"](?<pgname>.*?)\\?['"],\s*?(?<task>.*?),\s*?(?<acct>.*?) (,\s*?(?<period>.*?)|\));/gm;
                 vpgName = popWhat === "PopCommitDetail" ? "CommitDetail" :  "TranHistory";
             }
