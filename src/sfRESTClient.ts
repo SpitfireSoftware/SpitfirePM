@@ -2,8 +2,6 @@ import { GoogleAnalyticPayload, GUID } from "./globals";
 import {  UCPermit, LookupClient, ProjectTeamClient, ProjectsClient, QueryFilters, SessionClient, Suggestion, UCPermitSet, UICFGClient, UIDisplayConfig, UIDisplayPart } from "./SwaggerClients"
 import * as _SwaggerClientExports from "./SwaggerClients";
 import { BrowserExtensionChecker } from "./BrowserExtensionChecker";
-//import localForage from "localforage"; requires --allowSyntheticDefaultImports in tsconfig
-import * as localForage from "localforage";
 import  * as RESTClientBase from "./APIClientBase"; // avoid conflict with same in SwaggerClient when loaded by classic UI
 import { sfApplicationRootPath, sfProcessDTKMap } from "./string.extensions";
 import { ClientPackageVersion } from "./version";
