@@ -1,3 +1,0 @@
- // not in use....
- // browserify src/CreateBundle.js -o dist/APIClientBundle.js
- // "postbuild": "browserify src/CreateBundle.js > dist/APIClientBundle.js"

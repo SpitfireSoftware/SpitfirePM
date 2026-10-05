@@ -80,6 +80,25 @@ namespace APIClientGenerator
                 document = await NSwag.OpenApiDocument.FromFileAsync(sourcePath);
             }
 
+            // sfPMS actions that return HttpResponseMessage are documented as application/octet-stream
+            // (string/binary) but answer JSON.  The JQueryPromises template parsed every 2xx body as
+            // JSON and typed the result any; the Fetch template would instead resolve a
+            // FileResponse { data: Blob }.  Keep the established contract until the controllers
+            // declare their real response types (see docs/modernization/FINDINGS.md).
+            foreach (var operationDescription in document.Operations)
+            {
+                foreach (var response in operationDescription.Operation.Responses.Values)
+                {
+                    if (response.Content.Count == 1
+                        && response.Content.TryGetValue("application/octet-stream", out var octetStream)
+                        && (octetStream.Schema == null || octetStream.Schema.Format == "binary"))
+                    {
+                        response.Content.Remove("application/octet-stream");
+                        response.Content["application/json"] = new NSwag.OpenApiMediaType { Schema = new JsonSchema() };
+                    }
+                }
+            }
+
             var sortedPaths = document.Paths.OrderBy(p => p.Key).ToList();
             document.Paths.Clear();
             foreach (var path in sortedPaths)
@@ -99,7 +118,7 @@ namespace APIClientGenerator
             var settings = new NSwag.CodeGeneration.TypeScript.TypeScriptClientGeneratorSettings
             {
                 ClassName = "{controller}Client",
-                Template = TypeScriptTemplate.JQueryPromises,
+                Template = TypeScriptTemplate.Fetch,  // was JQueryPromises; APIClientBase supplies transformOptions/transformResult
                 PromiseType = PromiseType.Promise,
                 HttpClass = HttpClass.HttpClient,
                 WithCredentials = false,
@@ -119,13 +138,13 @@ namespace APIClientGenerator
                 ProtectedMethods = Array.Empty<string>(),
                 ExcludedParameterNames = Array.Empty<string>(),
                 ConfigurationClass = "",
-                UseTransformOptionsMethod = false,
+                UseTransformOptionsMethod = true,   // APIClientBase.transformOptions applies beforeSend hooks
                 UseTransformResultMethod = true,
                 ImportRequiredTypes = true,
                 UseGetBaseUrlMethod = true,
                 //BaseUrlTokenName = "API_BASE_URL", // angular
                 QueryNullValue = "",
-                UseAbortSignal = false, // not supported by jQuery
+                UseAbortSignal = false, // option: fetch supports it; would add a trailing signal? parameter to every endpoint
                 //serviceHost = null,
                 //serviceSchemes= null,
                 //output = "src/SwaggerClients.ts",

@@ -1,5 +1,8 @@
 import { GoogleAnalyticPayload,GA4Payload } from "./globals";
 
+/** What a beforeSend hook receives: the subset of the old jqXHR surface the hook can still use */
+export type SFBeforeSendRequest = { setRequestHeader(name: string, value: string): void };
+
 export  class APIClientBase {
     static _SiteURL : string | null = null;
     private static _LastControler:string='';
@@ -34,7 +37,17 @@ export  class APIClientBase {
         return value;
     };
 
-    public getBaseUrl( baseURL : string) : string {
+    /**
+     * Resolves the base URL for a generated client.
+     * @param baseURL the default the generator baked in (ignored; logged only)
+     * @param explicitBaseUrl the baseUrl the caller passed to the client constructor, if any
+     * @remarks The Fetch template calls getBaseUrl(default, explicit) for every construction; the
+     * JQueryPromises template only called it when no explicit URL was given.  Behaviour is kept
+     * identical: an explicit URL is returned as-is and the date reviver is armed only on the
+     * default path (see docs/modernization/FINDINGS.md, B1).
+     */
+    public getBaseUrl( baseURL : string, explicitBaseUrl?: string | null) : string {
+        if (explicitBaseUrl !== undefined && explicitBaseUrl !== null) return explicitBaseUrl;
 
         // Re-arm the reviver function
         if (!this.jsonParseReviver)  this.jsonParseReviver= this.jsonParseReviverLogic;
@@ -52,6 +65,30 @@ export  class APIClientBase {
             console.log(`APIClientBase.getBaseUrl(${baseURL})....${APIClientBase._SiteURL}`);
         }
         return APIClientBase._SiteURL;
+    }
+
+    /**
+     * Hook invoked before every generated client request (replaces the jQuery.ajax beforeSend option
+     * the previous generator template exposed).  Receives an adapter whose setRequestHeader() writes
+     * into the request headers; nothing else of the old jqXHR surface is available.
+     * @example accountClient.beforeSend = (xhr) => xhr.setRequestHeader("Authorization", "Bearer ...");
+     */
+    public beforeSend: ((xhr: SFBeforeSendRequest) => void) | undefined = undefined;
+
+    /**
+     * Called by every generated endpoint with the RequestInit it is about to pass to fetch.
+     * Applies beforeSend (if set) and returns the options to use.
+     */
+    protected transformOptions(options: RequestInit): Promise<RequestInit> {
+        if (typeof this.beforeSend === "function") {
+            const headers = new Headers(options.headers ?? undefined);
+            const adapter: SFBeforeSendRequest = {
+                setRequestHeader(name: string, value: string): void { headers.set(name, value); }
+            };
+            this.beforeSend(adapter);
+            options.headers = headers;
+        }
+        return Promise.resolve(options);
     }
 
     protected transformResult(url: string, response: Response, processor: (response: Response) => any) {
