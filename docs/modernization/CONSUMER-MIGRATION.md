@@ -60,8 +60,8 @@ Everything jQuery-UI, SignalR, DOM, `sfPMSHubSignal.*` events, `sfClient.SetWCC_
 6. `GAMonitorEvent` / `GAEvent` return values were never used; no change needed.
 6a. **`Property '$' does not exist on type 'Window'`** (seen in `modules/dynamicForm/dynamicForm.ts` on
    `top.$`). The `Window.$`/`sfClient`/`sfPMSHub` augmentations live in `dist/globals.d.ts` and only reach a
-   file whose program loads that declaration. Add it to `tsconfig.json` once rather than importing per file:
-   `"include": ["sources/**/*", "node_modules/spitfirepm/dist/globals.d.ts"]`. Vite does not type-check,
+   file whose program loads that declaration. Append it to the existing `include` list in `tsconfig.json`
+   (keep every entry already there) rather than importing per file: `"node_modules/spitfirepm/dist/globals.d.ts"`. Vite does not type-check,
    so this shows in `tsc --noEmit` and the editor, not in `vite build`. Under TypeScript 6 also list
    `"types": ["jquery"]`, because `types` now defaults to none and `JQueryStatic` would lose its call signatures.
 7. Rebuild and run the type check (`vite build` / `tsc --noEmit`) before testing the three login paths,
