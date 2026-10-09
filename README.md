@@ -40,6 +40,7 @@ in both. The generator needs the .NET 10 SDK; `nswag.json` is not used.
 ### Change Log
 
 ```
+23.9700.20  - Reduced use of jQuery
 23.9700.16  - Additional Project List fields
 23.9700.15  - Add Contact refined
 23.9700.14  - MakeAttachmentPDF  endpoint 
