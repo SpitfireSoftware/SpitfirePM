@@ -1,5 +1,8 @@
 import { GoogleAnalyticPayload,GA4Payload } from "./globals";
 
+/** What a beforeSend hook receives: the subset of the old jqXHR surface the hook can still use */
+export type SFBeforeSendRequest = { setRequestHeader(name: string, value: string): void };
+
 export  class APIClientBase {
     static _SiteURL : string | null = null;
     private static _LastControler:string='';
@@ -34,7 +37,17 @@ export  class APIClientBase {
         return value;
     };
 
-    public getBaseUrl( baseURL : string) : string {
+    /**
+     * Resolves the base URL for a generated client.
+     * @param baseURL the default the generator baked in (ignored; logged only)
+     * @param explicitBaseUrl the baseUrl the caller passed to the client constructor, if any
+     * @remarks The Fetch template calls getBaseUrl(default, explicit) for every construction; the
+     * JQueryPromises template only called it when no explicit URL was given.  Behaviour is kept
+     * identical: an explicit URL is returned as-is and the date reviver is armed only on the
+     * default path (see docs/modernization/FINDINGS.md, B1).
+     */
+    public getBaseUrl( baseURL : string, explicitBaseUrl?: string | null) : string {
+        if (explicitBaseUrl !== undefined && explicitBaseUrl !== null) return explicitBaseUrl;
 
         // Re-arm the reviver function
         if (!this.jsonParseReviver)  this.jsonParseReviver= this.jsonParseReviverLogic;
@@ -52,6 +65,30 @@ export  class APIClientBase {
             console.log(`APIClientBase.getBaseUrl(${baseURL})....${APIClientBase._SiteURL}`);
         }
         return APIClientBase._SiteURL;
+    }
+
+    /**
+     * Hook invoked before every generated client request (replaces the jQuery.ajax beforeSend option
+     * the previous generator template exposed).  Receives an adapter whose setRequestHeader() writes
+     * into the request headers; nothing else of the old jqXHR surface is available.
+     * @example accountClient.beforeSend = (xhr) => xhr.setRequestHeader("Authorization", "Bearer ...");
+     */
+    public beforeSend: ((xhr: SFBeforeSendRequest) => void) | undefined = undefined;
+
+    /**
+     * Called by every generated endpoint with the RequestInit it is about to pass to fetch.
+     * Applies beforeSend (if set) and returns the options to use.
+     */
+    protected transformOptions(options: RequestInit): Promise<RequestInit> {
+        if (typeof this.beforeSend === "function") {
+            const headers = new Headers(options.headers ?? undefined);
+            const adapter: SFBeforeSendRequest = {
+                setRequestHeader(name: string, value: string): void { headers.set(name, value); }
+            };
+            this.beforeSend(adapter);
+            options.headers = headers;
+        }
+        return Promise.resolve(options);
     }
 
     protected transformResult(url: string, response: Response, processor: (response: Response) => any) {
@@ -75,11 +112,10 @@ export  class APIClientBase {
         return processor(response);
     }
 
-    protected GAAPIEvent(controllerAction:string, endpointLabel: string) : JQuery.Promise<any> | undefined {
+    protected GAAPIEvent(controllerAction:string, endpointLabel: string) : Promise<any> | undefined {
         if (APIClientBase._GAOptOut) return undefined;
         if (!APIClientBase.GAClientID) return undefined;
         if (controllerAction=="session" && endpointLabel == "who") return undefined;
-        if (!APIClientBase.GAClientID) return undefined;
 
         let G4Payload : GA4Payload = {client_id:APIClientBase.GAClientID!,
             non_personalized_ads:true,
@@ -91,7 +127,7 @@ export  class APIClientBase {
         return APIClientBase.GA4MonitorSend(G4Payload);
     }
 
-    public static GAMonitorEvent(  clientID:string , category:string, action:string, label:string, value:number) : JQuery.Promise<any> | undefined {
+    public static GAMonitorEvent(  clientID:string , category:string, action:string, label:string, value:number) : Promise<any> | undefined {
 
         if (APIClientBase._GAOptOut) return undefined;
         if (!clientID && ! APIClientBase.GAClientID) return undefined;
@@ -109,14 +145,6 @@ export  class APIClientBase {
         }
 
         return APIClientBase.GA4MonitorSend(payload);
-                        // .done(function (data, textStatus, jqXHR) {
-                        //     console.log(`GAMonitor(${category}:${action}) ${label} ok`);
-                        // })
-                        // .fail(function (jqXHR, textStatus) {
-                        //     console.warn(`GAMonitor(${category}:${action}) failed: ${jqXHR.responseText}`);
-                        //     APIClientBase.GAMonitorSendFailed = true;
-                        // });
-
     }
     static GAMonitorSendFailed: boolean = false;
     static GA4MonitorSendFailed: boolean = false;
@@ -124,40 +152,21 @@ export  class APIClientBase {
 
 
     /** POSTS supplied payload to Google Analytics
-     *  @summary - Defaults property ID (tid) to sfPMS and version (v) to 1
-     *          - One failure disables all future tracking on this client instance
-     *  @async uses jQuery.ajax
-     *  @see  https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide#page
+     *  @summary Forwards to GA4MonitorSend; the Universal Analytics (/collect) transport this method
+     *           used to fall back to was shut down by Google and has been removed.
      *  @obsolete Use GA4MonitorSend
     */
-    public static GAMonitorSend(payload:GoogleAnalyticPayload ): JQuery.Promise<any> {
-
-        if ((typeof (APIClientBase.GA4MonitorSendFailed) === "boolean") && (!APIClientBase.GA4MonitorSendFailed)) {
+    public static GAMonitorSend(payload:GoogleAnalyticPayload ): Promise<any> {
+        if (!APIClientBase.GA4MonitorSendFailed) {
             return this.GA4MonitorSend(payload);
         }
-        if ((typeof (APIClientBase.GAMonitorSendFailed) === "boolean") && (APIClientBase.GAMonitorSendFailed)) {
-            var darnSoon = $.Deferred();
-            var GASendDone = darnSoon.promise();
-            darnSoon.resolve("fake");  //makes GASendDone be ready
-            return GASendDone;
-        }
-        if (!payload.tid) payload.tid = 'UA-6465434-4';
-        if (!payload.v) payload.v = 1;
-        return $.ajax({
-            type: "POST",
-            url: "https://www.google-analytics.com/collect",
-            async: true,
-            data: payload
-        }).fail(function (jqXHR, textStatus) {
-            console.warn(`GAMonitorSend() failed: ${jqXHR.responseText}`,payload);
-            APIClientBase.GAMonitorSendFailed = true;
-        });
+        return Promise.resolve("fake");
     }
 
       /** converts and posts supplied payload to Google Analytics v4
      *  @summary - Defaults property ID (tid) to sfPMS and version (v) to 1
      *          - One failure disables all future tracking on this client instance
-     *  @async uses jQuery.ajax
+     *  @async uses fetch with keepalive; the returned promise never rejects (a failure is logged)
      *  @see  https://developers.google.com/analytics/devguides/collection/protocol/ga4
      * Requests can have a maximum of 25 events.
      * Events can have a maximum of 25 parameters.
@@ -171,12 +180,9 @@ export  class APIClientBase {
      * The post body must be smaller than 130kB.
      *
     */
-       public static GA4MonitorSend(payload:GoogleAnalyticPayload | GA4Payload): JQuery.Promise<any> {
-        if ((typeof (APIClientBase.GA4MonitorSendFailed) === "boolean") && (APIClientBase.GA4MonitorSendFailed)) {
-            var darnSoon = $.Deferred();
-            var GASendDone = darnSoon.promise();
-            darnSoon.resolve("fake");  //makes GASendDone be ready
-            return GASendDone;
+       public static GA4MonitorSend(payload:GoogleAnalyticPayload | GA4Payload): Promise<any> {
+        if (APIClientBase.GA4MonitorSendFailed) {
+            return Promise.resolve("fake");
         }
         const measurement_id = 'G-9NW0XG0RRE';
         const apiSecret = 'gCh1G03eRv2mIkT1uAiu0Q';
@@ -206,15 +212,24 @@ export  class APIClientBase {
 
         //console.log(`GA4MonitorSend() : `,G4Payload);
 
-        return $.ajax({
-            type: "POST",
-            url: `https://www.google-analytics.com/mp/collect?api_secret=${apiSecret}&measurement_id=${measurement_id}`,
-            async: true,
-            data: JSON.stringify(G4Payload)
-        }).fail(function (jqXHR, textStatus) {
-            console.warn(`GA4MonitorSend() failed: ${jqXHR.responseText}`,G4Payload);
-           // APIClientBase.GA4MonitorSendFailed = true;
-        });
+        if (typeof fetch !== "function") return Promise.resolve(undefined);
+        try {
+            return fetch(`https://www.google-analytics.com/mp/collect?api_secret=${apiSecret}&measurement_id=${measurement_id}`, {
+                method: "POST",
+                body: JSON.stringify(G4Payload),
+                keepalive: true
+            }).then((response) => {
+                if (!response.ok) console.warn(`GA4MonitorSend() failed: ${response.status} ${response.statusText}`, G4Payload);
+                return response;
+            }).catch((reason) => {
+                console.warn(`GA4MonitorSend() failed: ${reason?.message ?? reason}`, G4Payload);
+               // APIClientBase.GA4MonitorSendFailed = true;
+            });
+        }
+        catch (ex: any) {
+            console.warn(`GA4MonitorSend() failed: ${ex?.message ?? ex}`, G4Payload);
+            return Promise.resolve(undefined);
+        }
     }
 
 }

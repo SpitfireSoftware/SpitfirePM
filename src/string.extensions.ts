@@ -1,6 +1,3 @@
-import { datepicker } from "jquery";
-import { APIClientBase } from "./APIClientBase";
-
 declare global {
     interface String {
         sfFormat(this: string, ...words: any[]): string;

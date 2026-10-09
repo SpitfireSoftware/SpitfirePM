@@ -16,6 +16,7 @@ lib-cov
 .lock-wscript
 
 # IDEs and editors
+.vs/
 .idea
 .project
 .classpath
@@ -69,10 +70,13 @@ Thumbs.db
 # environment variables preset
 .env
 
-# package-lock files (because it produces too many bugs and gives too small profit)
-package-lock.json
+# package-lock.json is tracked so that npm ci installs the same tool versions everywhere
 yarn.lock
 
 # Spitfire special directory that will contain node modules, that are used inside docker
 # container which is used to test bitbucket pipelines locally
 node_modules_for_local_bb_pipelines
+
+# generator build output
+/tools/ClientGenerator/bin/
+/tools/ClientGenerator/obj/
