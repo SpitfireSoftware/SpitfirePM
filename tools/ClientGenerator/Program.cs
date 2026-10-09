@@ -187,7 +187,11 @@ namespace APIClientGenerator
             var generator = new NSwag.CodeGeneration.TypeScript.TypeScriptClientGenerator(document, settings, resolver);
             var client = generator.GenerateFile();
 
-            File.WriteAllLines(OutputPath + ".ts", new List<string> { client });
+            // Always LF with one trailing newline, so the committed file is identical whether the
+            // generator runs on Windows (Environment.NewLine is CRLF) or Linux.
+            client = client.Replace("\r\n", "\n");
+            if (!client.EndsWith("\n")) client += "\n";
+            File.WriteAllText(OutputPath + ".ts", client);
 
 
         }
