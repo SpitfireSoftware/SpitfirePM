@@ -106,12 +106,7 @@ unused imports/locals, dead `main.ts`/`CreateBundle.js`, stale `nswag.json`, com
 
 ## 5. Follow-on work outside this repo (from the survey; file as cases)
 
-- sfPMS `cscript/Util.js:2563`: retry `setTimeout` evaluates a quoted string, so `NPMLoaderPromise` can hang.
-- sfPMS `Util.js:625` `sfAPICheckPermit` and jqUtility `getDV` wrappers never reject.
-- sfPMS `PageClass.vb` never loads `version.js`, so `sfClient.ClientVersion` is undefined on classic pages.
-- sfPMS `tscript/XTSDocHelper.ts:152` (`depth++` passes the old value; polls forever) and `:211` (missing `()`).
-- PowerUX `models/document/document.ts:821`: `if (!Route.sfrc.IsLoggedIn())` tests a promise, always false.
-- PowerUX `.npmrc` has a committed auth token for `npm.webix.com`.
+- Filed: case 37177 (four sfPMS classic-page items) and case 37178 (two PowerUX items).
 - Deploys ship whatever is in a developer's `tscript/node_modules`, not the lockfile version.
 - Retire the Azure DevOps `TypeScriptClientGenerator` repo and `GenerateSwag2TS.cmd` once the in-repo
   generator is proven on Windows.
