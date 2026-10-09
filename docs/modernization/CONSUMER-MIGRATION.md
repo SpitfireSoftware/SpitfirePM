@@ -58,12 +58,19 @@ Everything jQuery-UI, SignalR, DOM, `sfPMSHubSignal.*` events, `sfClient.SetWCC_
    (grep `BuildViewModelForContext(` and `GetLookupResults(`) and add a `.catch` where a rejection would
    otherwise surface as an unhandled rejection in the console.
 6. `GAMonitorEvent` / `GAEvent` return values were never used; no change needed.
-6a. **`Property '$' does not exist on type 'Window'`** (seen in `modules/dynamicForm/dynamicForm.ts` on
-   `top.$`). The `Window.$`/`sfClient`/`sfPMSHub` augmentations live in `dist/globals.d.ts` and only reach a
-   file whose program loads that declaration. Append it to the existing `include` list in `tsconfig.json`
-   (keep every entry already there) rather than importing per file: `"node_modules/spitfirepm/dist/globals.d.ts"`. Vite does not type-check,
-   so this shows in `tsc --noEmit` and the editor, not in `vite build`. Under TypeScript 6 also list
-   `"types": ["jquery"]`, because `types` now defaults to none and `JQueryStatic` would lose its call signatures.
+6a. **`top.$` errors in the editor** (seen in `modules/dynamicForm/dynamicForm.ts:344`: TS2339 `'$' does
+   not exist on type 'Window'`, or TS2349 `JQueryStatic has no call signatures`). This is not a library
+   regression: the root cause is TypeScript 6, where `types` defaults to `[]`, so `@types/jquery` is no longer
+   loaded and every jQuery call loses its types (101 errors in PowerUX on the committed tsconfig). The fix
+   that worked, in `sources/tsconfig.json` (the real config; the root `tsconfig.json` is unused):
+   - add `"types": ["jquery"]` to `compilerOptions`;
+   - optionally append `"../node_modules/spitfirepm/dist/globals.d.ts"` to `include`. PowerUX already
+     reaches it through `sfRESTClient`/`APIClientBase` imports, so this is insurance, not the fix.
+
+   `include` paths resolve relative to the tsconfig's own folder, so from `sources/` the entries are
+   `"**/*.ts"` and `"../node_modules/..."`. Writing `"sources/**/*"` there matches nothing, drops every
+   source file from the project (the editor then shows whole files red), and makes `tsc --noEmit` pass
+   by checking nothing. Vite does not type-check, so use `npx tsc --noEmit -p sources` as the gate.
 7. Rebuild and run the type check (`vite build` / `tsc --noEmit`) before testing the three login paths,
    a document, a grid with batched DVs, an upload and a logout/login as another user.
 
