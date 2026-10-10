@@ -4,7 +4,7 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9774.21549"
+    "version": "2023.0.9778.40687"
   },
   "servers": [
     {
@@ -8231,7 +8231,7 @@
           "Catalog"
         ],
         "summary": "Accepts file upload in chunks.  Compatible with https://github.com/blueimp/jQuery-File-Upload",
-        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\r\n                                       </li><li><b>cfk</b> = folder key\r\n                                       </li><li><b>proj</b> = project id\r\n                                       </li><li><b>pk</b> = key, specifically user/contact\r\n                                       </li><li><b>fk</b> = key, specifically template file key\r\n                                       </li><li><b>DMK</b> = document key\r\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\r\n                                       </li><li><b>fromDS</b> = data set key\r\n                                       </li></ul><p>The request body should include a HttpPostedFile with ContentDisposition and ContentRange\r\n                                       <br/>The final chunk is automatically detected and the file is committed</p>",
+        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\n                                       </li><li><b>cfk</b> = folder key\n                                       </li><li><b>proj</b> = project id\n                                       </li><li><b>pk</b> = key, specifically user/contact\n                                       </li><li><b>fk</b> = key, specifically template file key\n                                       </li><li><b>DMK</b> = document key\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\n                                       </li><li><b>fromDS</b> = data set key\n                                       </li></ul><p>The request body should include a HttpPostedFile with ContentDisposition and ContentRange\n                                       <br/>The final chunk is automatically detected and the file is committed</p>",
         "operationId": "Catalog_UploadChunk",
         "responses": {
           "200": {
@@ -8366,7 +8366,7 @@
           "Catalog"
         ],
         "summary": "Accepts meta data and a file upload (up to 300MB) in a single request",
-        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\r\n                                       </li><li><b>cfk</b> = folder key\r\n                                       </li><li><b>proj</b> = project id\r\n                                       </li><li><b>pk</b> = key, specifically user/contact\r\n                                       </li><li><b>fk</b> = key, specifically template file key\r\n                                       </li><li><b>DMK</b> = document key\r\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\r\n                                       </li><li><b>fromDS</b> = data set key\r\n                                       </li><li><b>useKey</b> = when non-empty, will be used as the key for the upload file. Does not apply to new file versions\r\n                                       </li></ul><p>The request body should include a two parts (fileMeta and HttpPostedFile) with ContentDisposition \r\n                                       </p>",
+        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\n                                       </li><li><b>cfk</b> = folder key\n                                       </li><li><b>proj</b> = project id\n                                       </li><li><b>pk</b> = key, specifically user/contact\n                                       </li><li><b>fk</b> = key, specifically template file key\n                                       </li><li><b>DMK</b> = document key\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\n                                       </li><li><b>fromDS</b> = data set key\n                                       </li><li><b>useKey</b> = when non-empty, will be used as the key for the upload file. Does not apply to new file versions\n                                       </li></ul><p>The request body should include a two parts (fileMeta and HttpPostedFile) with ContentDisposition \n                                       </p>",
         "operationId": "Catalog_UploadFile",
         "responses": {
           "200": {
@@ -13716,6 +13716,343 @@
           },
           "409": {
             "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/doc-templates": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns every document template definition, without the binary",
+        "description": "Each TemplateKey is also the template's file catalog key, so the catalog routes serve its binary and revision history. Consumed by the Manage Templates tool",
+        "operationId": "Config_GetDocTemplates",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocTemplate"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Adds document template definitions, returning each as stored with its new key",
+        "description": "Send TemplateType and DocTypeKey at least; a blank name takes the type's conventional defaults. The binary is uploaded afterwards through api/catalog/upload?xm=template. Consumed by the Manage Templates tool",
+        "operationId": "Config_AddDocTemplates",
+        "requestBody": {
+          "x-name": "templates",
+          "description": "Definitions to add; keys are assigned by the server",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocTemplate"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocTemplate"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A template of that name already exists for that document type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Deletes document templates by key, returning how many were affected",
+        "description": "A template that attachments were generated from is kept as history and deactivated instead of removed; one with no history is deleted along with its catalog file. Consumed by the Manage Templates tool",
+        "operationId": "Config_DeleteDocTemplates",
+        "requestBody": {
+          "x-name": "templateKeys",
+          "description": "Template keys to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/doc-templates/{templateKey}": {
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one document template definition, returning it as stored",
+        "description": "Send the whole row. FromUser, binType, binLength, IsLoaded, Created and Updated are server-owned and ignored; a rename is carried into the catalog file name. Consumed by the Manage Templates tool",
+        "operationId": "Config_UpdateDocTemplate",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "description": "Template to update",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "template",
+          "description": "The definition as it should now read",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocTemplate"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/DocTemplate"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A template of that name already exists for that document type",
             "content": {
               "application/json": {
                 "schema": {
@@ -19905,43 +20242,6 @@
       }
     },
     "/api/document/{id}/addresses": {
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the addresses for the specified document",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocAddresses",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/DocAddress"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "delete": {
         "tags": [
           "Document"
@@ -20127,6 +20427,43 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the addresses for the specified document",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocAddresses",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocAddress"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/document/{id}/addresses/{key}/{fieldName}": {
@@ -20248,6 +20585,89 @@
       }
     },
     "/api/document/{id}/attachments": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the attachments for the specified document",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocAttachments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not currently authenticated or lacks authorization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Document not found, or not accessible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not acceptable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "Document"
@@ -20528,89 +20948,6 @@
           },
           "409": {
             "description": "Could not persist the insert",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the attachments for the specified document",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocAttachments",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No changes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Not currently authenticated or lacks authorization",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Document not found, or not accessible",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not acceptable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Could not persist the document",
             "content": {
               "application/json": {
                 "schema": {
@@ -42833,6 +43170,149 @@
           }
         }
       },
+      "DocTemplate": {
+        "type": "object",
+        "description": "One document template definition, for the Manage > Templates tool and its REST endpoints.",
+        "additionalProperties": false,
+        "required": [
+          "TemplateName",
+          "TemplateType"
+        ],
+        "properties": {
+          "TemplateKey": {
+            "type": "string",
+            "description": "Row key (xsfDocTemplate). Also the catalog file key once the template is loaded.\nEmpty on an insert.",
+            "format": "guid"
+          },
+          "DocTypeKey": {
+            "type": "string",
+            "description": "Document type the template serves; Guid.Empty means any",
+            "format": "guid"
+          },
+          "DocTypeKey_dv": {
+            "type": "string",
+            "description": "Display name of the document type, filled by the DocType DV when the controller applies DV properties.\nNamed per the house convention so the client uses it instead of resolving its own.",
+            "nullable": true
+          },
+          "FromUser": {
+            "type": "string",
+            "description": "Who last uploaded or saved. Server-owned; ignored on save.",
+            "format": "guid"
+          },
+          "TemplateName": {
+            "type": "string",
+            "description": "Template name, unique within the document type. Also the file name in the catalog.",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "Description": {
+            "type": "string",
+            "description": "Shown to users choosing a template",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "DivisionID": {
+            "type": "string",
+            "description": "Limits the template to one company / division; blank for all",
+            "maxLength": 30,
+            "nullable": true
+          },
+          "CustomerID": {
+            "type": "string",
+            "description": "Limits the template to one customer; blank for all",
+            "maxLength": 30,
+            "nullable": true
+          },
+          "TemplateType": {
+            "type": "string",
+            "description": "What the template produces (code set TemplateType): body, attachment, email, transmittal, cover ...",
+            "maxLength": 4,
+            "minLength": 1
+          },
+          "DefaultInclude": {
+            "type": "string",
+            "description": "Default inclusion: 0 no, 1 yes, P / M for transmittal and attachment conventions",
+            "maxLength": 1,
+            "nullable": true
+          },
+          "Subtype": {
+            "type": "string",
+            "description": "Limits the template to one document subtype; blank for all",
+            "maxLength": 8,
+            "nullable": true
+          },
+          "ProjectSubtype": {
+            "type": "string",
+            "description": "Limits the template to one project subtype; blank for all",
+            "maxLength": 8,
+            "nullable": true
+          },
+          "SourceID": {
+            "type": "string",
+            "description": "Limits the template to one source; blank for all",
+            "maxLength": 16,
+            "nullable": true
+          },
+          "DocReference": {
+            "type": "string",
+            "description": "Limits the template to one document reference key; null for all",
+            "format": "guid",
+            "nullable": true
+          },
+          "SeqData": {
+            "type": "integer",
+            "description": "Orders templates offered together"
+          },
+          "binType": {
+            "type": "string",
+            "description": "Extension of the current file. Server-owned; set by upload.",
+            "maxLength": 8,
+            "nullable": true
+          },
+          "binLength": {
+            "type": "integer",
+            "description": "Bytes in the current file. Server-owned; set by upload.",
+            "format": "int32"
+          },
+          "IsLoaded": {
+            "type": "boolean",
+            "description": "A file has been uploaded. Server-owned."
+          },
+          "ESign": {
+            "type": "boolean",
+            "description": "Output is routed for electronic signature"
+          },
+          "HasBookmarks": {
+            "type": "boolean",
+            "description": "The file carries bookmarks or named ranges that Spitfire fills"
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Active flag"
+          },
+          "Created": {
+            "type": "string",
+            "description": "When the template was defined",
+            "format": "date-time"
+          },
+          "Updated": {
+            "type": "string",
+            "description": "When the file or definition last changed",
+            "format": "date-time",
+            "nullable": true
+          },
+          "DocType": {
+            "type": "string",
+            "description": "Site name of the document type (display only)",
+            "nullable": true
+          },
+          "ETag": {
+            "type": "string",
+            "description": "eTag",
+            "nullable": true
+          }
+        }
+      },
       "DocTypeEntry": {
         "type": "object",
         "description": "A single document type.  Mirrors the DocTypeList table in LVData.xsd; consumed by the\nSystem Admin Dashboard Doc Types tool.  (Named DocTypeEntry, not DocType, because a\nmember may not share the enclosing type's name - CS0542.)",
@@ -53873,25 +54353,25 @@
   },
   "tags": [
     {
-      "name": "Catalog"
-    },
-    {
-      "name": "Excel"
-    },
-    {
-      "name": "Config"
-    },
-    {
-      "name": "Contact"
+      "name": "Project"
     },
     {
       "name": "Document"
     },
     {
-      "name": "Project"
+      "name": "Contact"
+    },
+    {
+      "name": "Excel"
     },
     {
       "name": "Account"
+    },
+    {
+      "name": "Catalog"
+    },
+    {
+      "name": "Config"
     }
   ]
 }
