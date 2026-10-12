@@ -4,7 +4,7 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9778.40687"
+    "version": "2023.0.9781.21241"
   },
   "servers": [
     {
@@ -20242,6 +20242,43 @@
       }
     },
     "/api/document/{id}/addresses": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the addresses for the specified document",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocAddresses",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocAddress"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "Document"
@@ -20422,43 +20459,6 @@
               "application/json": {
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the addresses for the specified document",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocAddresses",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/DocAddress"
-                  }
                 }
               }
             }
@@ -32711,6 +32711,59 @@
         }
       }
     },
+    "/api/system/atc": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns the sfATC's brief status (run state, queue, running tasks)",
+        "description": "System Info ATC line; poll while an update is being pulled",
+        "operationId": "System_GetATCStatus",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ATC could not be reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/atc/{atcAction}": {
       "post": {
         "tags": [
@@ -32765,7 +32818,7 @@
             }
           },
           "403": {
-            "description": "Admin Insert required, or action not enabled on this site",
+            "description": "Restart and ReadPopMail need SYS:Recycle; PullUpdate and PublishUpdate need SYS:Global Insert and {action}.Enabled",
             "content": {
               "application/json": {
                 "schema": {
@@ -33512,6 +33565,119 @@
         }
       }
     },
+    "/api/system/info": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns the System Info facts: version, license, databases (credentials removed), report server, ATC, inbound mail, full text, logging",
+        "description": "System Admin System Info tool; live figures come from api/system/stats, api/system/users/active and api/system/atc",
+        "operationId": "System_GetSystemInfo",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SystemInfoModel"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/log": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns a copy of this node's application log, as a text download or formatted HTML",
+        "description": "Open as a URL in a new window; the browser's session authenticates it",
+        "operationId": "System_GetApplicationLog",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "description": "html for the formatted view; anything else downloads the raw text",
+            "schema": {
+              "type": "string",
+              "default": "text",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SYS:Recycle required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "This site is not logging to a file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/logo": {
       "get": {
         "tags": [
@@ -33534,6 +33700,52 @@
           },
           "500": {
             "description": "Internal Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/modules": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns the assemblies loaded on this node (not System.*)",
+        "description": "System Info Loaded Modules tab",
+        "operationId": "System_GetLoadedModules",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/LoadedModuleInfo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin Required",
             "content": {
               "application/json": {
                 "schema": {
@@ -33939,6 +34151,106 @@
                   "additionalProperties": {
                     "type": "string"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/recycle": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Recycles the web application on THIS node only and returns the node name",
+        "description": "Disrupts every user on the node; it restarts on the next request. Other farm nodes are not touched.",
+        "operationId": "System_PostRecycleApplication",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SYS:Recycle required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/releases": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns the Spitfire releases around the running version, and whether an update is available",
+        "description": "Asks the Spitfire update service each time, so allow several seconds",
+        "operationId": "System_GetSystemReleases",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SystemReleaseList"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Spitfire update service could not be reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -45521,6 +45833,41 @@
           }
         }
       },
+      "InboundMailFacts": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "AsOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Status": {
+            "type": "string",
+            "nullable": true
+          },
+          "TotalDone": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Waiting": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LastDone": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Oldest": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "IsAlertWorthy": {
+            "type": "boolean"
+          }
+        }
+      },
       "InboundPMDoc": {
         "type": "object",
         "description": "One line of a peer project-cost transaction: the answer to GetPMTX (delivered in chunks) and the row shape of api/xts/data/inboundPMDoc. Lands in dbo.xtsStagedPMDoc; header fields repeat on every line.",
@@ -45764,6 +46111,53 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "LoadedModuleInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "Version": {
+            "type": "string",
+            "nullable": true
+          },
+          "FullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "InGac": {
+            "type": "boolean"
+          },
+          "Location": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "LogFileFacts": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "FileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "Created": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "LastWritten": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "SizeBytes": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -51711,6 +52105,173 @@
           }
         }
       },
+      "SystemInfoModel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Version": {
+            "type": "string",
+            "nullable": true
+          },
+          "LastPublishedVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "VersionMismatch": {
+            "type": "boolean"
+          },
+          "FarmNode": {
+            "type": "string",
+            "nullable": true
+          },
+          "LicenseValid": {
+            "type": "boolean"
+          },
+          "LicensedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "LicensedServer": {
+            "type": "string",
+            "nullable": true
+          },
+          "WebSessions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "WebSessionLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "MobileSessions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "MobileSessionLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "IisSessions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SqlClockOffsetMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "SpitfireDb": {
+            "type": "string",
+            "nullable": true
+          },
+          "ExternalDb": {
+            "type": "string",
+            "nullable": true
+          },
+          "ExternalDbIsIntegrated": {
+            "type": "boolean"
+          },
+          "ReportServerUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "ReportManagerUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "JVueUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "AtcHost": {
+            "type": "string",
+            "nullable": true
+          },
+          "AtcPort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "AtcLastCheckIn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "InboundMail": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/InboundMailFacts"
+              }
+            ]
+          },
+          "FullTextInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "FullTextError": {
+            "type": "string",
+            "nullable": true
+          },
+          "CodesAsOf": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LogFile": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LogFileFacts"
+              }
+            ]
+          }
+        }
+      },
+      "SystemReleaseInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ManifestName": {
+            "type": "string",
+            "nullable": true
+          },
+          "PrimaryVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "PrimaryDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnchorText": {
+            "type": "string",
+            "nullable": true
+          },
+          "IsRunning": {
+            "type": "boolean"
+          },
+          "ReleaseNotesUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SystemReleaseList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "UpdateAvailable": {
+            "type": "boolean"
+          },
+          "Releases": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/SystemReleaseInfo"
+            }
+          }
+        }
+      },
       "TabDisplay": {
         "type": "object",
         "description": "Legacy Site Authentication",
@@ -54362,16 +54923,16 @@
       "name": "Contact"
     },
     {
-      "name": "Excel"
+      "name": "Config"
     },
     {
       "name": "Account"
     },
     {
-      "name": "Catalog"
+      "name": "Excel"
     },
     {
-      "name": "Config"
+      "name": "Catalog"
     }
   ]
 }

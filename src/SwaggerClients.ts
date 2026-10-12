@@ -14418,6 +14418,48 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Returns the addresses for the specified document
+     * @param id Document Key
+     */
+    getDocAddresses(id: string): Promise<DocAddress[] | null> {
+        let url_ = this.baseUrl + "/api/document/{id}/addresses";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocAddresses(_response));
+        });
+    }
+
+    protected processGetDocAddresses(response: Response): Promise<DocAddress[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAddress[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocAddress[] | null>(null as any);
+    }
+
+    /**
      * Deletes the addresses on the specified document
      * @param id Document Key
      * @param addressKeys Address Keys
@@ -14565,48 +14607,6 @@ export class DocumentToolsClient extends APIClientBase {
             });
         }
         return Promise.resolve<string>(null as any);
-    }
-
-    /**
-     * Returns the addresses for the specified document
-     * @param id Document Key
-     */
-    getDocAddresses(id: string): Promise<DocAddress[] | null> {
-        let url_ = this.baseUrl + "/api/document/{id}/addresses";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocAddresses(_response));
-        });
-    }
-
-    protected processGetDocAddresses(response: Response): Promise<DocAddress[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAddress[];
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<DocAddress[] | null>(null as any);
     }
 
     /**
@@ -26965,6 +26965,62 @@ export class SystemClient extends APIClientBase {
     }
 
     /**
+     * Returns the sfATC's brief status (run state, queue, running tasks)
+     */
+    getATCStatus(): Promise<string | null> {
+        let url_ = this.baseUrl + "/api/system/atc";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetATCStatus(_response));
+        });
+    }
+
+    protected processGetATCStatus(response: Response): Promise<string | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Admin Required", status, _responseText, _headers, result403);
+            });
+        } else if (status === 503) {
+            return response.text().then((_responseText) => {
+            let result503: any = null;
+            result503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("ATC could not be reached", status, _responseText, _headers, result503);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string | null>(null as any);
+    }
+
+    /**
      * Sends a command to this site's sfATC and returns its reply
      * @param atcAction Restart | PullUpdate | PublishUpdate | ReadPopMail
      */
@@ -27014,7 +27070,7 @@ export class SystemClient extends APIClientBase {
             return response.text().then((_responseText) => {
             let result403: any = null;
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Admin Insert required, or action not enabled on this site", status, _responseText, _headers, result403);
+            return throwException("Restart and ReadPopMail need SYS:Recycle; PullUpdate and PublishUpdate need SYS:Global Insert and {action}.Enabled", status, _responseText, _headers, result403);
             });
         } else if (status === 409) {
             return response.text().then((_responseText) => {
@@ -27774,6 +27830,115 @@ export class SystemClient extends APIClientBase {
     }
 
     /**
+     * Returns the System Info facts: version, license, databases (credentials removed), report server, ATC, inbound mail, full text, logging
+     */
+    getSystemInfo(): Promise<SystemInfoModel | null> {
+        let url_ = this.baseUrl + "/api/system/info";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetSystemInfo(_response));
+        });
+    }
+
+    protected processGetSystemInfo(response: Response): Promise<SystemInfoModel | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SystemInfoModel;
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Admin Required", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SystemInfoModel | null>(null as any);
+    }
+
+    /**
+     * Returns a copy of this node's application log, as a text download or formatted HTML
+     * @param format (optional) html for the formatted view; anything else downloads the raw text
+     */
+    getApplicationLog(format?: string | null | undefined): Promise<any> {
+        let url_ = this.baseUrl + "/api/system/log?";
+        if (format !== undefined && format !== null)
+            url_ += "format=" + encodeURIComponent("" + format) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetApplicationLog(_response));
+        });
+    }
+
+    protected processGetApplicationLog(response: Response): Promise<any> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as any;
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("SYS:Recycle required", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("This site is not logging to a file", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<any>(null as any);
+    }
+
+    /**
      * Returns site logo URL
      */
     getSiteLogo(): Promise<string | null> {
@@ -27815,6 +27980,56 @@ export class SystemClient extends APIClientBase {
             });
         }
         return Promise.resolve<string | null>(null as any);
+    }
+
+    /**
+     * Returns the assemblies loaded on this node (not System.*)
+     */
+    getLoadedModules(): Promise<LoadedModuleInfo[] | null> {
+        let url_ = this.baseUrl + "/api/system/modules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLoadedModules(_response));
+        });
+    }
+
+    protected processGetLoadedModules(response: Response): Promise<LoadedModuleInfo[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LoadedModuleInfo[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Admin Required", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LoadedModuleInfo[] | null>(null as any);
     }
 
     /**
@@ -28218,6 +28433,112 @@ export class SystemClient extends APIClientBase {
             });
         }
         return Promise.resolve<{ [key: string]: string; } | null>(null as any);
+    }
+
+    /**
+     * Recycles the web application on THIS node only and returns the node name
+     */
+    postRecycleApplication(): Promise<string | null> {
+        let url_ = this.baseUrl + "/api/system/recycle";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPostRecycleApplication(_response));
+        });
+    }
+
+    protected processPostRecycleApplication(response: Response): Promise<string | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("SYS:Recycle required", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string | null>(null as any);
+    }
+
+    /**
+     * Returns the Spitfire releases around the running version, and whether an update is available
+     */
+    getSystemReleases(): Promise<SystemReleaseList | null> {
+        let url_ = this.baseUrl + "/api/system/releases";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetSystemReleases(_response));
+        });
+    }
+
+    protected processGetSystemReleases(response: Response): Promise<SystemReleaseList | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SystemReleaseList;
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Admin Required", status, _responseText, _headers, result403);
+            });
+        } else if (status === 503) {
+            return response.text().then((_responseText) => {
+            let result503: any = null;
+            result503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("The Spitfire update service could not be reached", status, _responseText, _headers, result503);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SystemReleaseList | null>(null as any);
     }
 
     /**
@@ -33895,6 +34216,16 @@ SQL: bigint */
     [key: string]: any;
 }
 
+export interface InboundMailFacts {
+    AsOf?: Date;
+    Status?: string | undefined;
+    TotalDone?: number;
+    Waiting?: number;
+    LastDone?: Date | undefined;
+    Oldest?: Date | undefined;
+    IsAlertWorthy?: boolean;
+}
+
 /** One line of a peer project-cost transaction: the answer to GetPMTX (delivered in chunks) and the row shape of api/xts/data/inboundPMDoc. Lands in dbo.xtsStagedPMDoc; header fields repeat on every line. */
 export interface InboundPMDoc {
     /** The peer alternate key for this item
@@ -34001,6 +34332,21 @@ SQL: bigint */
 export interface KeyValuePairOfStringAndIEnumerableOfString {
     Key?: string | undefined;
     Value?: string[] | undefined;
+}
+
+export interface LoadedModuleInfo {
+    Name?: string | undefined;
+    Version?: string | undefined;
+    FullName?: string | undefined;
+    InGac?: boolean;
+    Location?: string | undefined;
+}
+
+export interface LogFileFacts {
+    FileName?: string | undefined;
+    Created?: Date;
+    LastWritten?: Date;
+    SizeBytes?: number;
 }
 
 /** Defines a lookup - the grid/picker half of the Validation and Lookup Engine.  Where a LookupResult validates or describes one value, a Lookup presents a filterable list from which the user picks one. */
@@ -36347,6 +36693,50 @@ export interface SupportRequest {
     RequestKey?: string | undefined;
     /** eTag */
     ETag?: string | undefined;
+}
+
+export interface SystemInfoModel {
+    Version?: string | undefined;
+    LastPublishedVersion?: string | undefined;
+    VersionMismatch?: boolean;
+    FarmNode?: string | undefined;
+    LicenseValid?: boolean;
+    LicensedBy?: string | undefined;
+    LicensedServer?: string | undefined;
+    WebSessions?: number;
+    WebSessionLimit?: number;
+    MobileSessions?: number;
+    MobileSessionLimit?: number;
+    IisSessions?: number;
+    SqlClockOffsetMs?: number | undefined;
+    SpitfireDb?: string | undefined;
+    ExternalDb?: string | undefined;
+    ExternalDbIsIntegrated?: boolean;
+    ReportServerUrl?: string | undefined;
+    ReportManagerUrl?: string | undefined;
+    JVueUrl?: string | undefined;
+    AtcHost?: string | undefined;
+    AtcPort?: number;
+    AtcLastCheckIn?: Date | undefined;
+    InboundMail?: InboundMailFacts | undefined;
+    FullTextInfo?: string | undefined;
+    FullTextError?: string | undefined;
+    CodesAsOf?: Date | undefined;
+    LogFile?: LogFileFacts | undefined;
+}
+
+export interface SystemReleaseInfo {
+    ManifestName?: string | undefined;
+    PrimaryVersion?: string | undefined;
+    PrimaryDate?: string | undefined;
+    AnchorText?: string | undefined;
+    IsRunning?: boolean;
+    ReleaseNotesUrl?: string | undefined;
+}
+
+export interface SystemReleaseList {
+    UpdateAvailable?: boolean;
+    Releases?: SystemReleaseInfo[] | undefined;
 }
 
 /** Legacy Site Authentication */
