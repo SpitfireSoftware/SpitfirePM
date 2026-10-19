@@ -4,11 +4,11 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9781.21241"
+    "version": "2023.0.9787.33458"
   },
   "servers": [
     {
-      "url": "https://dev.spitfirepm.com:8443/SFPMS"
+      "url": "https://dev.spitfirepm.com:8443/sfPMS"
     }
   ],
   "paths": {
@@ -13737,6 +13737,338 @@
         }
       }
     },
+    "/api/configuration/date-types": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the list of document date types",
+        "description": "Consumed by the Manage Dashboard Date Types tool",
+        "operationId": "Config_GetDateTypes",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocDateType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts document date types",
+        "description": "Consumed by the Manage Dashboard Date Types tool",
+        "operationId": "Config_InsertDateTypes",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Date type rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocDateType"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocDateType"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the insert",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one document date type",
+        "description": "Consumed by the Manage Dashboard Date Types tool",
+        "operationId": "Config_PatchDateType",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Date type row to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocDateType"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/DocDateType"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Deletes document date types by key",
+        "description": "Consumed by the Manage Dashboard Date Types tool",
+        "operationId": "Config_DeleteDateTypes",
+        "requestBody": {
+          "x-name": "keys",
+          "description": "Date type row keys (GUIDs) to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuration/doc-templates": {
       "get": {
         "tags": [
@@ -16399,6 +16731,718 @@
         }
       }
     },
+    "/api/configuration/program-projects": {
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one program-to-project mapping",
+        "description": "Only Active changes; the program and project are what the row IS.  Consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_PatchProgramProject",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Mapping row to update (by PgmPjtMapKey)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectPrograms"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProjectPrograms"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Removes program-to-project mappings by key",
+        "description": "PgmPjtMapKey values; the program and the project both remain.  Consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_DeleteProgramProjects",
+        "requestBody": {
+          "x-name": "keys",
+          "description": "Mapping keys (PgmPjtMapKey GUIDs) to remove",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/programs": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the list of programs",
+        "description": "Every program, with its project count; consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_GetPrograms",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/Program"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts programs",
+        "description": "Consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_InsertPrograms",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Program rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Program"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/Program"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the insert",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one program",
+        "description": "Consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_PatchProgram",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Program row to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Program"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/Program"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Deletes programs by key",
+        "description": "A program with projects mapped to it is refused; consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_DeletePrograms",
+        "requestBody": {
+          "x-name": "keys",
+          "description": "Program row keys (GUIDs) to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/programs/{programKey}/projects": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the projects mapped to a program",
+        "description": "Consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_GetProgramProjects",
+        "parameters": [
+          {
+            "name": "programKey",
+            "in": "path",
+            "required": true,
+            "description": "Program key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectPrograms"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such program",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Maps projects to a program",
+        "description": "Project IDs or project keys; one already mapped is skipped.  Returns the program's projects; consumed by the Manage Dashboard Programs tool",
+        "operationId": "Config_AddProgramProjects",
+        "parameters": [
+          {
+            "name": "programKey",
+            "in": "path",
+            "required": true,
+            "description": "Program key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "projects",
+          "description": "Projects to map, by project ID or project key",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectPrograms"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such program, or no project recognized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the insert",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuration/queries": {
       "get": {
         "tags": [
@@ -16521,7 +17565,7 @@
           "Config"
         ],
         "summary": "Returns the list of regions",
-        "description": "Consumed by the Manage Dashboard Regions tool",
+        "description": "Consumed by the Manage Dashboard Region Maintenance tool",
         "operationId": "Config_GetRegions",
         "responses": {
           "200": {
@@ -16575,7 +17619,7 @@
           "Config"
         ],
         "summary": "Inserts regions",
-        "description": "Consumed by the Manage Dashboard Regions tool",
+        "description": "Consumed by the Manage Dashboard Region Maintenance tool",
         "operationId": "Config_InsertRegions",
         "requestBody": {
           "x-name": "data",
@@ -16665,7 +17709,7 @@
           "Config"
         ],
         "summary": "Updates one region",
-        "description": "Consumed by the Manage Dashboard Regions tool",
+        "description": "Consumed by the Manage Dashboard Region Maintenance tool",
         "operationId": "Config_PatchRegion",
         "requestBody": {
           "x-name": "data",
@@ -16763,7 +17807,7 @@
           "Config"
         ],
         "summary": "Deletes regions by key",
-        "description": "Consumed by the Manage Dashboard Regions tool",
+        "description": "Consumed by the Manage Dashboard Region Maintenance tool",
         "operationId": "Config_DeleteRegions",
         "requestBody": {
           "x-name": "keys",
@@ -22641,43 +23685,6 @@
       }
     },
     "/api/document/{id}/comments": {
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the comments for the specified document, most recent first.",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocComments",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/Comment"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "delete": {
         "tags": [
           "Document"
@@ -22972,6 +23979,43 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the comments for the specified document, most recent first.",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocComments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
                 }
               }
             }
@@ -41335,6 +42379,63 @@
           }
         }
       },
+      "DocDateType": {
+        "type": "object",
+        "description": "A single document date-type definition.  Mirrors the DocDateTypeList table in\nLVData.xsd; consumed by the Manage Dashboard Date Types tool.  (Not to be confused\nwith DocDate, which is a date instance on a document.)",
+        "additionalProperties": false,
+        "properties": {
+          "DocDateTypeKey": {
+            "type": "string",
+            "description": "Row key",
+            "format": "guid"
+          },
+          "DocTypeKey": {
+            "type": "string",
+            "description": "Optional document type this date type belongs to",
+            "format": "guid",
+            "nullable": true
+          },
+          "DocDateName": {
+            "type": "string",
+            "description": "Name of the date type",
+            "nullable": true
+          },
+          "Sequence": {
+            "type": "integer",
+            "description": "Display sequence"
+          },
+          "IncludeStart": {
+            "type": "boolean",
+            "description": "Includes a start date"
+          },
+          "IncludeFinish": {
+            "type": "boolean",
+            "description": "Includes a finish date"
+          },
+          "IsRequired": {
+            "type": "boolean",
+            "description": "Whether this date is required"
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Active flag"
+          },
+          "Alert": {
+            "type": "boolean",
+            "description": "Generate an alert"
+          },
+          "InUse": {
+            "type": "boolean",
+            "description": "Read-only: true if this date type is in use",
+            "nullable": true
+          },
+          "ETag": {
+            "type": "string",
+            "description": "eTag",
+            "nullable": true
+          }
+        }
+      },
       "DocFieldChange": {
         "allOf": [
           {
@@ -47490,6 +48591,48 @@
           }
         }
       },
+      "Program": {
+        "type": "object",
+        "description": "A single program definition.  Mirrors the ProgramList table in LVData.xsd; consumed\nby the Manage Dashboard Programs tool.  (The program-to-project mapping is a separate\ntable, modeled by ProjectPrograms.)",
+        "additionalProperties": false,
+        "properties": {
+          "ProgramKey": {
+            "type": "string",
+            "description": "Row key",
+            "format": "guid"
+          },
+          "ProgramID": {
+            "type": "string",
+            "description": "Program ID code",
+            "nullable": true
+          },
+          "ProgramTitle": {
+            "type": "string",
+            "description": "Program title",
+            "nullable": true
+          },
+          "Logo": {
+            "type": "string",
+            "description": "Optional logo file key",
+            "format": "guid",
+            "nullable": true
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Active flag"
+          },
+          "UseCnt": {
+            "type": "integer",
+            "description": "Read-only: number of projects using this program",
+            "format": "int32"
+          },
+          "ETag": {
+            "type": "string",
+            "description": "eTag",
+            "nullable": true
+          }
+        }
+      },
       "ProjKPIFact": {
         "type": "object",
         "description": "Primary Site Weather Now",
@@ -48865,6 +50008,11 @@
           "Active": {
             "type": "boolean",
             "description": "When True, this program is active "
+          },
+          "ProjectInfo": {
+            "type": "string",
+            "description": "37239 - Read-only \"PROJECT : Title\" text for the mapped project, as the Manage > Programs\nmap grid shows it (LVData.ProgramMap.ProjectInfo).  Null when the row came from the\nproject-scoped PMData.ProjectProgram table, which has no such column.",
+            "nullable": true
           },
           "ETag": {
             "type": "string",
@@ -54914,22 +56062,22 @@
   },
   "tags": [
     {
-      "name": "Project"
-    },
-    {
       "name": "Document"
-    },
-    {
-      "name": "Contact"
-    },
-    {
-      "name": "Config"
     },
     {
       "name": "Account"
     },
     {
+      "name": "Contact"
+    },
+    {
       "name": "Excel"
+    },
+    {
+      "name": "Project"
+    },
+    {
+      "name": "Config"
     },
     {
       "name": "Catalog"

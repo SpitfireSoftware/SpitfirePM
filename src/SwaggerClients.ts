@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -768,7 +768,7 @@ export class ActionItemsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -1157,7 +1157,7 @@ export class AlertsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -1506,7 +1506,7 @@ export class LookupClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -2706,7 +2706,7 @@ export class ARRClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -2925,7 +2925,7 @@ export class CatalogClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -5834,7 +5834,7 @@ export class ConfigClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -8942,6 +8942,287 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the list of document date types
+     */
+    getDateTypes(): Promise<DocDateType[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/date-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDateTypes(_response));
+        });
+    }
+
+    protected processGetDateTypes(response: Response): Promise<DocDateType[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocDateType[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocDateType[] | null>(null as any);
+    }
+
+    /**
+     * Inserts document date types
+     * @param data Date type rows to insert
+     */
+    insertDateTypes(data: DocDateType[]): Promise<DocDateType[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/date-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertDateTypes(_response));
+        });
+    }
+
+    protected processInsertDateTypes(response: Response): Promise<DocDateType[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocDateType[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocDateType[] | null>(null as any);
+    }
+
+    /**
+     * Updates one document date type
+     * @param data Date type row to update
+     */
+    patchDateType(data: DocDateType): Promise<DocDateType | null> {
+        let url_ = this.baseUrl + "/api/configuration/date-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPatchDateType(_response));
+        });
+    }
+
+    protected processPatchDateType(response: Response): Promise<DocDateType | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocDateType;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocDateType | null>(null as any);
+    }
+
+    /**
+     * Deletes document date types by key
+     * @param keys Date type row keys (GUIDs) to delete
+     */
+    deleteDateTypes(keys: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/api/configuration/date-types";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processDeleteDateTypes(_response));
+        });
+    }
+
+    protected processDeleteDateTypes(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
      * Returns every document template definition, without the binary
      */
     getDocTemplates(): Promise<DocTemplate[] | null> {
@@ -11164,6 +11445,588 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Updates one program-to-project mapping
+     * @param data Mapping row to update (by PgmPjtMapKey)
+     */
+    patchProgramProject(data: ProjectPrograms): Promise<ProjectPrograms | null> {
+        let url_ = this.baseUrl + "/api/configuration/program-projects";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPatchProgramProject(_response));
+        });
+    }
+
+    protected processPatchProgramProject(response: Response): Promise<ProjectPrograms | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ProjectPrograms;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProjectPrograms | null>(null as any);
+    }
+
+    /**
+     * Removes program-to-project mappings by key
+     * @param keys Mapping keys (PgmPjtMapKey GUIDs) to remove
+     */
+    deleteProgramProjects(keys: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/api/configuration/program-projects";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processDeleteProgramProjects(_response));
+        });
+    }
+
+    protected processDeleteProgramProjects(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Returns the list of programs
+     */
+    getPrograms(): Promise<Program[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/programs";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetPrograms(_response));
+        });
+    }
+
+    protected processGetPrograms(response: Response): Promise<Program[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Program[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Program[] | null>(null as any);
+    }
+
+    /**
+     * Inserts programs
+     * @param data Program rows to insert
+     */
+    insertPrograms(data: Program[]): Promise<Program[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/programs";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertPrograms(_response));
+        });
+    }
+
+    protected processInsertPrograms(response: Response): Promise<Program[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Program[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Program[] | null>(null as any);
+    }
+
+    /**
+     * Updates one program
+     * @param data Program row to update
+     */
+    patchProgram(data: Program): Promise<Program | null> {
+        let url_ = this.baseUrl + "/api/configuration/programs";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPatchProgram(_response));
+        });
+    }
+
+    protected processPatchProgram(response: Response): Promise<Program | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Program;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Program | null>(null as any);
+    }
+
+    /**
+     * Deletes programs by key
+     * @param keys Program row keys (GUIDs) to delete
+     */
+    deletePrograms(keys: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/api/configuration/programs";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processDeletePrograms(_response));
+        });
+    }
+
+    protected processDeletePrograms(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Returns the projects mapped to a program
+     * @param programKey Program key
+     */
+    getProgramProjects(programKey: string): Promise<ProjectPrograms[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/programs/{programKey}/projects";
+        if (programKey === undefined || programKey === null)
+            throw new globalThis.Error("The parameter 'programKey' must be defined.");
+        url_ = url_.replace("{programKey}", encodeURIComponent("" + programKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetProgramProjects(_response));
+        });
+    }
+
+    protected processGetProgramProjects(response: Response): Promise<ProjectPrograms[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ProjectPrograms[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such program", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProjectPrograms[] | null>(null as any);
+    }
+
+    /**
+     * Maps projects to a program
+     * @param programKey Program key
+     * @param projects Projects to map, by project ID or project key
+     */
+    addProgramProjects(programKey: string, projects: string[]): Promise<ProjectPrograms[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/programs/{programKey}/projects";
+        if (programKey === undefined || programKey === null)
+            throw new globalThis.Error("The parameter 'programKey' must be defined.");
+        url_ = url_.replace("{programKey}", encodeURIComponent("" + programKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(projects);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processAddProgramProjects(_response));
+        });
+    }
+
+    protected processAddProgramProjects(response: Response): Promise<ProjectPrograms[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ProjectPrograms[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such program, or no project recognized", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProjectPrograms[] | null>(null as any);
+    }
+
+    /**
      * Returns the dynamic queries this site defines, each with its parameters
      */
     getQueries(): Promise<QueryDefinition[] | null> {
@@ -13079,7 +13942,7 @@ export class ContactClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -13808,7 +14671,7 @@ export class DocumentToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -16289,48 +17152,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Returns the comments for the specified document, most recent first.
-     * @param id Document Key
-     */
-    getDocComments(id: string): Promise<Comment[] | null> {
-        let url_ = this.baseUrl + "/api/document/{id}/comments";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocComments(_response));
-        });
-    }
-
-    protected processGetDocComments(response: Response): Promise<Comment[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Comment[];
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Comment[] | null>(null as any);
-    }
-
-    /**
      * Deletes the comments on the specified document
      * @param id Document Key
      * @param commentKeys Comment Keys
@@ -16561,6 +17382,48 @@ export class DocumentToolsClient extends APIClientBase {
             });
         }
         return Promise.resolve<Comment | null>(null as any);
+    }
+
+    /**
+     * Returns the comments for the specified document, most recent first.
+     * @param id Document Key
+     */
+    getDocComments(id: string): Promise<Comment[] | null> {
+        let url_ = this.baseUrl + "/api/document/{id}/comments";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocComments(_response));
+        });
+    }
+
+    protected processGetDocComments(response: Response): Promise<Comment[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Comment[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Comment[] | null>(null as any);
     }
 
     /**
@@ -21415,7 +22278,7 @@ export class ExcelToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -22079,7 +22942,7 @@ export class ProjectToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -23965,7 +24828,7 @@ export class ProjectDocListClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -24241,7 +25104,7 @@ export class ProjectKPIClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -24313,7 +25176,7 @@ export class ProjectTeamClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -24770,7 +25633,7 @@ export class ProjectsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25210,7 +26073,7 @@ export class SessionClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -26961,7 +27824,7 @@ export class SystemClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -28902,7 +29765,7 @@ export class UICFGClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -29296,7 +30159,7 @@ export class XTSClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -32517,6 +33380,32 @@ export interface DocDate {
     ETag?: string | undefined;
 }
 
+/** A single document date-type definition.  Mirrors the DocDateTypeList table in LVData.xsd; consumed by the Manage Dashboard Date Types tool.  (Not to be confused with DocDate, which is a date instance on a document.) */
+export interface DocDateType {
+    /** Row key */
+    DocDateTypeKey?: string;
+    /** Optional document type this date type belongs to */
+    DocTypeKey?: string | undefined;
+    /** Name of the date type */
+    DocDateName?: string | undefined;
+    /** Display sequence */
+    Sequence?: number;
+    /** Includes a start date */
+    IncludeStart?: boolean;
+    /** Includes a finish date */
+    IncludeFinish?: boolean;
+    /** Whether this date is required */
+    IsRequired?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** Generate an alert */
+    Alert?: boolean;
+    /** Read-only: true if this date type is in use */
+    InUse?: boolean | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Describes new value for a document field */
 export interface DocFieldChange extends APIData {
     /** table */
@@ -34918,6 +35807,24 @@ export interface ProductInfoHeaderValue {
     Comment?: string | undefined;
 }
 
+/** A single program definition.  Mirrors the ProgramList table in LVData.xsd; consumed by the Manage Dashboard Programs tool.  (The program-to-project mapping is a separate table, modeled by ProjectPrograms.) */
+export interface Program {
+    /** Row key */
+    ProgramKey?: string;
+    /** Program ID code */
+    ProgramID?: string | undefined;
+    /** Program title */
+    ProgramTitle?: string | undefined;
+    /** Optional logo file key */
+    Logo?: string | undefined;
+    /** Active flag */
+    Active?: boolean;
+    /** Read-only: number of projects using this program */
+    UseCnt?: number;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
 /** Abstracted information about a project, see ProjectToolsClient.GetProjectDetail() */
 export interface ProjectAbstract {
     /** Project ID */
@@ -35424,6 +36331,10 @@ export interface ProjectPrograms {
     Created: Date;
     /** When True, this program is active  */
     Active?: boolean;
+    /** 37239 - Read-only "PROJECT : Title" text for the mapped project, as the Manage > Programs
+map grid shows it (LVData.ProgramMap.ProjectInfo).  Null when the row came from the
+project-scoped PMData.ProjectProgram table, which has no such column. */
+    ProjectInfo?: string | undefined;
     /** eTag */
     ETag?: string | undefined;
 }
