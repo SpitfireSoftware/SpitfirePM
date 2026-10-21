@@ -4,11 +4,11 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9787.33458"
+    "version": "2023.0.9790.22296"
   },
   "servers": [
     {
-      "url": "https://dev.spitfirepm.com:8443/sfPMS"
+      "url": "https://dev.spitfirepm.com:8443/SFPMS"
     }
   ],
   "paths": {
@@ -8231,7 +8231,7 @@
           "Catalog"
         ],
         "summary": "Accepts file upload in chunks.  Compatible with https://github.com/blueimp/jQuery-File-Upload",
-        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\n                                       </li><li><b>cfk</b> = folder key\n                                       </li><li><b>proj</b> = project id\n                                       </li><li><b>pk</b> = key, specifically user/contact\n                                       </li><li><b>fk</b> = key, specifically template file key\n                                       </li><li><b>DMK</b> = document key\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\n                                       </li><li><b>fromDS</b> = data set key\n                                       </li></ul><p>The request body should include a HttpPostedFile with ContentDisposition and ContentRange\n                                       <br/>The final chunk is automatically detected and the file is committed</p>",
+        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\r\n                                       </li><li><b>cfk</b> = folder key\r\n                                       </li><li><b>proj</b> = project id\r\n                                       </li><li><b>pk</b> = key, specifically user/contact\r\n                                       </li><li><b>fk</b> = key, specifically template file key\r\n                                       </li><li><b>DMK</b> = document key\r\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\r\n                                       </li><li><b>fromDS</b> = data set key\r\n                                       </li></ul><p>The request body should include a HttpPostedFile with ContentDisposition and ContentRange\r\n                                       <br/>The final chunk is automatically detected and the file is committed</p>",
         "operationId": "Catalog_UploadChunk",
         "responses": {
           "200": {
@@ -8366,7 +8366,7 @@
           "Catalog"
         ],
         "summary": "Accepts meta data and a file upload (up to 300MB) in a single request",
-        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\n                                       </li><li><b>cfk</b> = folder key\n                                       </li><li><b>proj</b> = project id\n                                       </li><li><b>pk</b> = key, specifically user/contact\n                                       </li><li><b>fk</b> = key, specifically template file key\n                                       </li><li><b>DMK</b> = document key\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\n                                       </li><li><b>fromDS</b> = data set key\n                                       </li><li><b>useKey</b> = when non-empty, will be used as the key for the upload file. Does not apply to new file versions\n                                       </li></ul><p>The request body should include a two parts (fileMeta and HttpPostedFile) with ContentDisposition \n                                       </p>",
+        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\r\n                                       </li><li><b>cfk</b> = folder key\r\n                                       </li><li><b>proj</b> = project id\r\n                                       </li><li><b>pk</b> = key, specifically user/contact\r\n                                       </li><li><b>fk</b> = key, specifically template file key\r\n                                       </li><li><b>DMK</b> = document key\r\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\r\n                                       </li><li><b>fromDS</b> = data set key\r\n                                       </li><li><b>useKey</b> = when non-empty, will be used as the key for the upload file. Does not apply to new file versions\r\n                                       </li></ul><p>The request body should include a two parts (fileMeta and HttpPostedFile) with ContentDisposition \r\n                                       </p>",
         "operationId": "Catalog_UploadFile",
         "responses": {
           "200": {
@@ -23072,43 +23072,6 @@
       }
     },
     "/api/document/{id}/attributes": {
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the attributes for the specified document",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocAttributes",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/DocAttribute"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "delete": {
         "tags": [
           "Document"
@@ -23393,6 +23356,43 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the attributes for the specified document",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocAttributes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocAttribute"
+                  }
                 }
               }
             }
@@ -23685,6 +23685,43 @@
       }
     },
     "/api/document/{id}/comments": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the comments for the specified document, most recent first.",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocComments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "Document"
@@ -23979,43 +24016,6 @@
               "application/json": {
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the comments for the specified document, most recent first.",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocComments",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/Comment"
-                  }
                 }
               }
             }
@@ -26535,7 +26535,7 @@
           "Document"
         ],
         "summary": "Creates a New document using the Create Next rules",
-        "description": "Documents",
+        "description": "Documents.  A Pay Request, Receipt or Change Order created next from a commitment may also receive that commitment's lines, per DocItemConfig | GetAllItems",
         "operationId": "DocumentTools_CreateNextDocument",
         "parameters": [
           {
@@ -35778,6 +35778,7 @@
           "UICFG"
         ],
         "summary": "Store updated UI CFG data for the specified part",
+        "description": "Returns the stored items, with their real keys",
         "operationId": "UICFG_StorePartUICFG",
         "parameters": [
           {
@@ -35831,6 +35832,20 @@
           "x-position": 4
         },
         "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/UIDisplayConfig"
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "unusable credentials",
             "content": {
@@ -53956,6 +53971,27 @@
             "type": "boolean",
             "description": "When true, this data is object is from internal defaults"
           },
+          "IsDistributed": {
+            "type": "boolean",
+            "description": "When true, the stored config row this item came from is distributed (shipped), not a site override.\nOutput only: never copied onto a row, so a client echoing it cannot change what is stored."
+          },
+          "UCFunctionKey": {
+            "type": "string",
+            "description": "Capability (xsfUCFunction) that decides Visible and IsReadOnly for each user from their permission on it.\nNot part of the row's key.  Never copied onto a row; StorePartUICFG sets it explicitly:\nnull leaves the row's value alone, the empty GUID clears it, any other key sets it.",
+            "format": "guid",
+            "nullable": true
+          },
+          "DocTypeKey": {
+            "type": "string",
+            "description": "Doc type of the stored row the item came from; null or empty when it applies to every doc type.\nOutput only: where a save lands comes from the PUT's route.",
+            "format": "guid",
+            "nullable": true
+          },
+          "Container": {
+            "type": "string",
+            "description": "Container (context) of the stored row the item came from; blank for the default.\nOutput only: where a save lands comes from the PUT's route.",
+            "nullable": true
+          },
           "RXPattern": {
             "type": "string",
             "description": "RX Pattern.  If specified, proposed values must match",
@@ -56062,25 +56098,25 @@
   },
   "tags": [
     {
-      "name": "Document"
+      "name": "Project"
     },
     {
-      "name": "Account"
+      "name": "Document"
     },
     {
       "name": "Contact"
     },
     {
+      "name": "Account"
+    },
+    {
       "name": "Excel"
     },
     {
-      "name": "Project"
+      "name": "Catalog"
     },
     {
       "name": "Config"
-    },
-    {
-      "name": "Catalog"
     }
   ]
 }

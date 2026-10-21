@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -768,7 +768,7 @@ export class ActionItemsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -1157,7 +1157,7 @@ export class AlertsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -1506,7 +1506,7 @@ export class LookupClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -2706,7 +2706,7 @@ export class ARRClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -2925,7 +2925,7 @@ export class CatalogClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -5834,7 +5834,7 @@ export class ConfigClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -13942,7 +13942,7 @@ export class ContactClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -14671,7 +14671,7 @@ export class DocumentToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -16683,48 +16683,6 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
-     * Returns the attributes for the specified document
-     * @param id Document Key
-     */
-    getDocAttributes(id: string): Promise<DocAttribute[] | null> {
-        let url_ = this.baseUrl + "/api/document/{id}/attributes";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocAttributes(_response));
-        });
-    }
-
-    protected processGetDocAttributes(response: Response): Promise<DocAttribute[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttribute[];
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<DocAttribute[] | null>(null as any);
-    }
-
-    /**
      * Deletes the attributes on the specified document
      * @param id Document Key
      * @param attributeKeys Attribute Keys
@@ -16952,6 +16910,48 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Returns the attributes for the specified document
+     * @param id Document Key
+     */
+    getDocAttributes(id: string): Promise<DocAttribute[] | null> {
+        let url_ = this.baseUrl + "/api/document/{id}/attributes";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocAttributes(_response));
+        });
+    }
+
+    protected processGetDocAttributes(response: Response): Promise<DocAttribute[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttribute[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocAttribute[] | null>(null as any);
+    }
+
+    /**
      * Returns the attachments for the specified document that have changed
      * @param id Document Key
      * @param lastStamp If the server data matches this number the data has not changed, pass 0 for always get, 1 for always (with optional refresh)
@@ -17149,6 +17149,48 @@ export class DocumentToolsClient extends APIClientBase {
             });
         }
         return Promise.resolve<DataDifferential>(null as any);
+    }
+
+    /**
+     * Returns the comments for the specified document, most recent first.
+     * @param id Document Key
+     */
+    getDocComments(id: string): Promise<Comment[] | null> {
+        let url_ = this.baseUrl + "/api/document/{id}/comments";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocComments(_response));
+        });
+    }
+
+    protected processGetDocComments(response: Response): Promise<Comment[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Comment[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Comment[] | null>(null as any);
     }
 
     /**
@@ -17382,48 +17424,6 @@ export class DocumentToolsClient extends APIClientBase {
             });
         }
         return Promise.resolve<Comment | null>(null as any);
-    }
-
-    /**
-     * Returns the comments for the specified document, most recent first.
-     * @param id Document Key
-     */
-    getDocComments(id: string): Promise<Comment[] | null> {
-        let url_ = this.baseUrl + "/api/document/{id}/comments";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocComments(_response));
-        });
-    }
-
-    protected processGetDocComments(response: Response): Promise<Comment[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Comment[];
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Comment[] | null>(null as any);
     }
 
     /**
@@ -22278,7 +22278,7 @@ export class ExcelToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -22942,7 +22942,7 @@ export class ProjectToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -24828,7 +24828,7 @@ export class ProjectDocListClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25104,7 +25104,7 @@ export class ProjectKPIClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25176,7 +25176,7 @@ export class ProjectTeamClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25633,7 +25633,7 @@ export class ProjectsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -26073,7 +26073,7 @@ export class SessionClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -27824,7 +27824,7 @@ export class SystemClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -29765,7 +29765,7 @@ export class UICFGClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -29838,7 +29838,7 @@ export class UICFGClient extends APIClientBase {
      * @param forContext context (subtype, container, etc, Or 0)
      * @param cFGData CFG Records
      */
-    storePartUICFG(partName: string | null, forDocType: string | null, forContext: string | null, cFGData: UIDisplayConfig[]): Promise<void> {
+    storePartUICFG(partName: string | null, forDocType: string | null, forContext: string | null, cFGData: UIDisplayConfig[]): Promise<UIDisplayConfig[] | null> {
         let url_ = this.baseUrl + "/api/uicfg/live/{partName}/{forDocType}/{forContext}";
         if (partName === undefined || partName === null)
             throw new globalThis.Error("The parameter 'partName' must be defined.");
@@ -29858,6 +29858,7 @@ export class UICFGClient extends APIClientBase {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             }
         };
 
@@ -29868,10 +29869,16 @@ export class UICFGClient extends APIClientBase {
         });
     }
 
-    protected processStorePartUICFG(response: Response): Promise<void> {
+    protected processStorePartUICFG(response: Response): Promise<UIDisplayConfig[] | null> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 401) {
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UIDisplayConfig[];
+            return result200;
+            });
+        } else if (status === 401) {
             return response.text().then((_responseText) => {
             let result401: any = null;
             result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
@@ -29894,7 +29901,7 @@ export class UICFGClient extends APIClientBase {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<void>(null as any);
+        return Promise.resolve<UIDisplayConfig[] | null>(null as any);
     }
 
     /**
@@ -30159,7 +30166,7 @@ export class XTSClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -37855,6 +37862,19 @@ export interface UIDisplayConfig {
     VisibleLocked?: boolean;
     /** When true, this data is object is from internal defaults */
     IsInternalDefault?: boolean;
+    /** When true, the stored config row this item came from is distributed (shipped), not a site override.
+Output only: never copied onto a row, so a client echoing it cannot change what is stored. */
+    IsDistributed?: boolean;
+    /** Capability (xsfUCFunction) that decides Visible and IsReadOnly for each user from their permission on it.
+Not part of the row's key.  Never copied onto a row; StorePartUICFG sets it explicitly:
+null leaves the row's value alone, the empty GUID clears it, any other key sets it. */
+    UCFunctionKey?: string | undefined;
+    /** Doc type of the stored row the item came from; null or empty when it applies to every doc type.
+Output only: where a save lands comes from the PUT's route. */
+    DocTypeKey?: string | undefined;
+    /** Container (context) of the stored row the item came from; blank for the default.
+Output only: where a save lands comes from the PUT's route. */
+    Container?: string | undefined;
     /** RX Pattern.  If specified, proposed values must match */
     RXPattern?: string | undefined;
     /** CSS to be applied */
