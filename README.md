@@ -40,6 +40,7 @@ in both. The generator needs the .NET 10 SDK; `nswag.json` is not used.
 ### Change Log
 
 ```
+23.9700.25  - Workflow Library endpoints
 23.9700.24  - Additional UI CFG attributes
 23.9700.23  - Additional configuration endpoints
 23.9700.22  - Additional system endpoints

@@ -10405,62 +10405,6 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the Lookup Results (DVs), each with its parameter slots
-     */
-    getLookupResults(): Promise<LookupResult[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookup-results";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResults(_response));
-        });
-    }
-
-    protected processGetLookupResults(response: Response): Promise<LookupResult[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LookupResult[] | null>(null as any);
-    }
-
-    /**
      * Updates one Lookup Result
      * @param data Lookup Result row to update
      */
@@ -10537,6 +10481,62 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<LookupResult | null>(null as any);
+    }
+
+    /**
+     * Returns the Lookup Results (DVs), each with its parameter slots
+     */
+    getLookupResults(): Promise<LookupResult[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResults(_response));
+        });
+    }
+
+    protected processGetLookupResults(response: Response): Promise<LookupResult[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LookupResult[] | null>(null as any);
     }
 
     /**
@@ -10693,72 +10693,6 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the parameter slots of one Lookup Result
-     * @param lookupResultKey Lookup Result key
-     */
-    getLookupResultParameters(lookupResultKey: string): Promise<LookupResultQP[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/parameters";
-        if (lookupResultKey === undefined || lookupResultKey === null)
-            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
-        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResultParameters(_response));
-        });
-    }
-
-    protected processGetLookupResultParameters(response: Response): Promise<LookupResultQP[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResultQP[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 404) {
-            return response.text().then((_responseText) => {
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not found", status, _responseText, _headers, result404);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LookupResultQP[] | null>(null as any);
-    }
-
-    /**
      * Replaces the parameter slots of one Lookup Result
      * @param lookupResultKey Lookup Result key
      * @param data Parameter slots, in call order
@@ -10820,6 +10754,72 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the change", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LookupResultQP[] | null>(null as any);
+    }
+
+    /**
+     * Returns the parameter slots of one Lookup Result
+     * @param lookupResultKey Lookup Result key
+     */
+    getLookupResultParameters(lookupResultKey: string): Promise<LookupResultQP[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/parameters";
+        if (lookupResultKey === undefined || lookupResultKey === null)
+            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
+        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResultParameters(_response));
+        });
+    }
+
+    protected processGetLookupResultParameters(response: Response): Promise<LookupResultQP[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResultQP[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -10903,62 +10903,6 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.
-     */
-    getLookups(): Promise<Lookup[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookups";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookups(_response));
-        });
-    }
-
-    protected processGetLookups(response: Response): Promise<Lookup[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Lookup[] | null>(null as any);
-    }
-
-    /**
      * Updates one Lookup
      * @param data Lookup row to update
      */
@@ -11035,6 +10979,62 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<Lookup | null>(null as any);
+    }
+
+    /**
+     * Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.
+     */
+    getLookups(): Promise<Lookup[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookups";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookups(_response));
+        });
+    }
+
+    protected processGetLookups(response: Response): Promise<Lookup[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Lookup[] | null>(null as any);
     }
 
     /**
@@ -11185,72 +11185,6 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.
-     * @param lookupKey Lookup key
-     */
-    getLookupFields(lookupKey: string): Promise<LookupField[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/fields";
-        if (lookupKey === undefined || lookupKey === null)
-            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
-        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupFields(_response));
-        });
-    }
-
-    protected processGetLookupFields(response: Response): Promise<LookupField[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupField[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 404) {
-            return response.text().then((_responseText) => {
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not found", status, _responseText, _headers, result404);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LookupField[] | null>(null as any);
-    }
-
-    /**
      * Replaces the fields of one Lookup
      * @param lookupKey Lookup key
      * @param data Field rows, in FieldSequence order
@@ -11312,6 +11246,72 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the change", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LookupField[] | null>(null as any);
+    }
+
+    /**
+     * Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.
+     * @param lookupKey Lookup key
+     */
+    getLookupFields(lookupKey: string): Promise<LookupField[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/fields";
+        if (lookupKey === undefined || lookupKey === null)
+            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
+        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupFields(_response));
+        });
+    }
+
+    protected processGetLookupFields(response: Response): Promise<LookupField[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupField[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -13653,6 +13653,287 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the list of workflow script events
+     */
+    getWorkflowScriptEvents(): Promise<WorkflowScriptEvent[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetWorkflowScriptEvents(_response));
+        });
+    }
+
+    protected processGetWorkflowScriptEvents(response: Response): Promise<WorkflowScriptEvent[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEvent[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkflowScriptEvent[] | null>(null as any);
+    }
+
+    /**
+     * Inserts workflow script events
+     * @param data Workflow script event rows to insert
+     */
+    insertWorkflowScriptEvents(data: WorkflowScriptEvent[]): Promise<WorkflowScriptEvent[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertWorkflowScriptEvents(_response));
+        });
+    }
+
+    protected processInsertWorkflowScriptEvents(response: Response): Promise<WorkflowScriptEvent[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEvent[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkflowScriptEvent[] | null>(null as any);
+    }
+
+    /**
+     * Updates one workflow script event
+     * @param data Workflow script event row to update
+     */
+    patchWorkflowScriptEvent(data: WorkflowScriptEvent): Promise<WorkflowScriptEvent | null> {
+        let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPatchWorkflowScriptEvent(_response));
+        });
+    }
+
+    protected processPatchWorkflowScriptEvent(response: Response): Promise<WorkflowScriptEvent | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEvent;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkflowScriptEvent | null>(null as any);
+    }
+
+    /**
+     * Deletes workflow script events by key
+     * @param keys Workflow script event row keys (GUIDs) to delete
+     */
+    deleteWorkflowScriptEvents(keys: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processDeleteWorkflowScriptEvents(_response));
+        });
+    }
+
+    protected processDeleteWorkflowScriptEvents(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
      * Returns the list of workflow scripts
      */
     getWorkflowScripts(): Promise<WorkflowScriptEntry[] | null> {
@@ -13931,6 +14212,73 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Checks a workflow script without running it
+     * @param data Script to check, and optionally the doc type it will be mapped to
+     */
+    checkWorkflowScript(data: WorkflowScriptCheckRequest): Promise<WorkflowScriptCheckResult | null> {
+        let url_ = this.baseUrl + "/api/configuration/workflow-scripts/check";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processCheckWorkflowScript(_response));
+        });
+    }
+
+    protected processCheckWorkflowScript(response: Response): Promise<WorkflowScriptCheckResult | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptCheckResult;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkflowScriptCheckResult | null>(null as any);
     }
 }
 
@@ -16683,6 +17031,48 @@ export class DocumentToolsClient extends APIClientBase {
     }
 
     /**
+     * Returns the attributes for the specified document
+     * @param id Document Key
+     */
+    getDocAttributes(id: string): Promise<DocAttribute[] | null> {
+        let url_ = this.baseUrl + "/api/document/{id}/attributes";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocAttributes(_response));
+        });
+    }
+
+    protected processGetDocAttributes(response: Response): Promise<DocAttribute[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttribute[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocAttribute[] | null>(null as any);
+    }
+
+    /**
      * Deletes the attributes on the specified document
      * @param id Document Key
      * @param attributeKeys Attribute Keys
@@ -16907,48 +17297,6 @@ export class DocumentToolsClient extends APIClientBase {
             });
         }
         return Promise.resolve<DocAttribute | null>(null as any);
-    }
-
-    /**
-     * Returns the attributes for the specified document
-     * @param id Document Key
-     */
-    getDocAttributes(id: string): Promise<DocAttribute[] | null> {
-        let url_ = this.baseUrl + "/api/document/{id}/attributes";
-        if (id === undefined || id === null)
-            throw new globalThis.Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocAttributes(_response));
-        });
-    }
-
-    protected processGetDocAttributes(response: Response): Promise<DocAttribute[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocAttribute[];
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<DocAttribute[] | null>(null as any);
     }
 
     /**
@@ -21404,7 +21752,7 @@ export class DocumentToolsClient extends APIClientBase {
     /**
      * Ends the Document Session (see also EndDocSessionViaPost)
      * @param id Document Key
-     * @param sessionID cache key or session
+     * @param sessionID DocSessionKey (from GetDocSession or the header) or the cache key
      */
     endDocSession(id: string, sessionID: string | null): Promise<HttpStatusCode> {
         let url_ = this.baseUrl + "/api/document/{id}/session?";
@@ -21463,6 +21811,12 @@ export class DocumentToolsClient extends APIClientBase {
             let result406: any = null;
             result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result406);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("sessionID is not the current session for this document; nothing was released", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -21654,7 +22008,7 @@ export class DocumentToolsClient extends APIClientBase {
     /**
      * Ends the Document Session (sendBeacon-friendly POST)
      * @param id Document Key
-     * @param sessionID cache key or session
+     * @param sessionID DocSessionKey (from GetDocSession or the header) or the cache key
      */
     endDocSessionViaPost(id: string, sessionID: string | null): Promise<HttpStatusCode> {
         let url_ = this.baseUrl + "/api/document/{id}/session/end?";
@@ -21713,6 +22067,12 @@ export class DocumentToolsClient extends APIClientBase {
             let result406: any = null;
             result406 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Not currently authenticated or lacks authorization", status, _responseText, _headers, result406);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("sessionID is not the current session for this document; nothing was released", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -29165,6 +29525,56 @@ export class SystemClient extends APIClientBase {
     }
 
     /**
+     * Returns the farm peers this node knows and whether it can reach each of them
+     */
+    getSystemPeers(): Promise<PeerStatusInfo[] | null> {
+        let url_ = this.baseUrl + "/api/system/peers";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetSystemPeers(_response));
+        });
+    }
+
+    protected processGetSystemPeers(response: Response): Promise<PeerStatusInfo[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as PeerStatusInfo[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Authentication required", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Admin Required", status, _responseText, _headers, result403);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PeerStatusInfo[] | null>(null as any);
+    }
+
+    /**
      * Returns list of active document/process types
      * @param key Use 00000000-0000-0000-0000-000000000000 for all active processes
      */
@@ -32786,9 +33196,10 @@ export interface ContactFilters {
     /** Phone Like (matches any phone number) */
     PhoneLike?: string | undefined;
     /** When true, result is limited to contacts who can log in to sfPMS (sfUser=1).
-These six flags COMBINE WITH AND, not OR - see the remarks on this class. */
+These seven flags COMBINE WITH AND, not OR - see the remarks on this class. */
     Users?: boolean;
-    /** When true, result is limited to customer contacts (ContactType='C'). */
+    /** When true, result is limited to customer contacts - contacts at a company whose
+ExternalType is 'C'. */
     Customers?: boolean;
     /** When true, result is limited to employees (ContactType='E'). */
     Employee?: boolean;
@@ -32800,6 +33211,11 @@ rather than a person at it (xsfContactCompany.PrimaryContactKey). */
     /** When true, result is limited to vendor contacts (ContactType='V', or any contact
 carrying a VendorID). */
     Vendors?: boolean;
+    /** When true, result is limited to contacts whose ContactType is '0' - not typed as a
+customer, employee or vendor (36996).
+Vendor is also lit by a VendorID, so a '0' contact carrying one matches both
+Other and Vendors.  Other with Employee is always empty; both read ContactType. */
+    Other?: boolean;
     /** 1==Active; 0==Inactive; 2==Both.  Omit (null) for active only.
 Null and 1 are the same thing.  The nullability exists because this is a
 short: before it was nullable a caller who simply left the field out sent 0 and
@@ -35691,6 +36107,12 @@ export interface PDSData extends APIData {
     UpdateReadOnly?: boolean;
 }
 
+/** Health of one peer as this process sees it (case 37262).  Kept apart from PeerMemberServerInfo, which is rebuilt from the presence files every few minutes and would lose the history. */
+export interface PeerStatusInfo {
+    /** a PDS engine other than this process whose most recent send failed */
+    IsUnreachable?: boolean;
+}
+
 /** General abstract information about an Period Distribution document */
 export interface PeriodDistributionAbstract {
     /** Project ID */
@@ -38294,9 +38716,40 @@ export interface WeatherAtLocation {
     ETag?: string | undefined;
 }
 
+/** One problem found in a workflow script. */
+export interface WorkflowScriptCheckFinding {
+    /** 1-based line number in the submitted script; 0 for the script as a whole */
+    LineNumber?: number;
+    /** Error, Warning or Info */
+    Severity?: string | undefined;
+    /** Short stable code for the rule that fired, e.g. ERRORIF-THIS */
+    Rule?: string | undefined;
+    /** What is wrong and how to fix it */
+    Message?: string | undefined;
+    /** Text of the offending line */
+    LineText?: string | undefined;
+}
+
+/** A workflow script to check without running it. */
+export interface WorkflowScriptCheckRequest {
+    /** Script body to check */
+    WorkflowScript: string;
+    /** Optional doc type the script will be mapped to; when given, table and field names are
+checked against that doc type */
+    DocTypeKey?: string | undefined;
+}
+
+/** Outcome of a workflow script check. */
+export interface WorkflowScriptCheckResult {
+    /** True when no finding has Severity Error */
+    IsValid?: boolean;
+    /** Errors, warnings and advice, in line order */
+    Findings?: WorkflowScriptCheckFinding[] | undefined;
+}
+
 /** A single workflow script.  Mirrors the WorkflowScriptLib table in LVData.xsd; consumed by the System Admin Dashboard Workflow Scripts tool.  (Named WorkflowScriptEntry because a member may not share the enclosing type's name - CS0542.) */
 export interface WorkflowScriptEntry {
-    /** Row key (xsfDocWorkflow) */
+    /** Row key (xsfWorkflowLib) */
     WorkflowScriptKey?: string;
     /** Script name */
     WorkflowScriptName: string;
@@ -38309,6 +38762,35 @@ export interface WorkflowScriptEntry {
     /** When the script last ran (computed) */
     LastRan?: Date | undefined;
     /** Whether this script is distributed */
+    IsDistributed?: boolean;
+    /** Active flag */
+    Active?: boolean;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** When a workflow script runs: one doc type and trigger mapping for a script.  Mirrors the WorkflowScriptEvents table in LVData.xsd; consumed by the System Admin Dashboard Workflow Scripts tool. */
+export interface WorkflowScriptEvent {
+    /** Row key (xsfDocWorkflow) */
+    DocWorkflowKey?: string;
+    /** The script that runs (WorkflowScriptEntry.WorkflowScriptKey) */
+    WorkflowScriptKey?: string;
+    /** Doc type whose saves fire this script */
+    DocTypeKey?: string;
+    /** Site name of the doc type */
+    DocTypeKey_dv?: string | undefined;
+    /** SFDocStates bitmask: Unsaved (first save) 1, Normal 2, Pending 4, ExpCommitted 8,
+RevCommitted 16, Closed 32, Approved 64, RouteForward 2048, ExactOnly 4096,
+OnCreateOnly 8192, OnRouteStage 16384.  Fires when any bit matches the document's
+state; with ExactOnly, only when all of them do. */
+    TriggerWhen?: number;
+    /** Run order among the scripts that fire for the same doc type */
+    Sequence?: number;
+    /** Reserved for trigger conditions; the engine does not support them yet */
+    TriggerWhere?: string | undefined;
+    /** Stop cascade flag */
+    StopCascade?: boolean;
+    /** Whether this mapping is distributed */
     IsDistributed?: boolean;
     /** Active flag */
     Active?: boolean;

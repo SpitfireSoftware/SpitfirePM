@@ -4,7 +4,7 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9790.22296"
+    "version": "2023.0.9795.34171"
   },
   "servers": [
     {
@@ -8366,7 +8366,7 @@
           "Catalog"
         ],
         "summary": "Accepts meta data and a file upload (up to 300MB) in a single request",
-        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactPhoto|doc|SitePhoto|template\r\n                                       </li><li><b>cfk</b> = folder key\r\n                                       </li><li><b>proj</b> = project id\r\n                                       </li><li><b>pk</b> = key, specifically user/contact\r\n                                       </li><li><b>fk</b> = key, specifically template file key\r\n                                       </li><li><b>DMK</b> = document key\r\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\r\n                                       </li><li><b>fromDS</b> = data set key\r\n                                       </li><li><b>useKey</b> = when non-empty, will be used as the key for the upload file. Does not apply to new file versions\r\n                                       </li></ul><p>The request body should include a two parts (fileMeta and HttpPostedFile) with ContentDisposition \r\n                                       </p>",
+        "description": "URL should include context for the upload, including<ul><li><b>xm</b> = Upload mode: catalog|ContactData|ContactPhoto|doc|SitePhoto|template\r\n                                       </li><li><b>cfk</b> = folder key\r\n                                       </li><li><b>proj</b> = project id\r\n                                       </li><li><b>pk</b> = key, specifically user/contact\r\n                                       </li><li><b>fk</b> = key, specifically template file key\r\n                                       </li><li><b>DMK</b> = document key\r\n                                       </li><li><b>itemKey</b> = item key (requires DMK)\r\n                                       </li><li><b>fromDS</b> = data set key\r\n                                       </li><li><b>useKey</b> = when non-empty, will be used as the key for the upload file. Does not apply to new file versions\r\n                                       </li></ul><p>The request body should include a two parts (fileMeta and HttpPostedFile) with ContentDisposition \r\n                                       </p>",
         "operationId": "Catalog_UploadFile",
         "responses": {
           "200": {
@@ -15472,60 +15472,6 @@
       }
     },
     "/api/configuration/lookup-results": {
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the Lookup Results (DVs), each with its parameter slots",
-        "description": "Editors receive the whole catalog; everyone else receives only the entries marked Audience 'Agent'",
-        "operationId": "Config_GetLookupResults",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/LookupResult"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "patch": {
         "tags": [
           "Config"
@@ -15604,6 +15550,60 @@
           },
           "409": {
             "description": "Could not persist the patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the Lookup Results (DVs), each with its parameter slots",
+        "description": "Editors receive the whole catalog; everyone else receives only the entries marked Audience 'Agent'",
+        "operationId": "Config_GetLookupResults",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/LookupResult"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -15902,83 +15902,6 @@
       }
     },
     "/api/configuration/lookup-results/{lookupResultKey}/parameters": {
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the parameter slots of one Lookup Result",
-        "description": "Slot 0 is @pv, slots 1-4 are @pD1..@pD4 in call order. Consumed by the System Admin Lookup Editor",
-        "operationId": "Config_GetLookupResultParameters",
-        "parameters": [
-          {
-            "name": "lookupResultKey",
-            "in": "path",
-            "required": true,
-            "description": "Lookup Result key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/LookupResultQP"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "Config"
@@ -16081,16 +16004,27 @@
             }
           }
         }
-      }
-    },
-    "/api/configuration/lookups": {
+      },
       "get": {
         "tags": [
           "Config"
         ],
-        "summary": "Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.",
-        "description": "Consumed by the System Admin Lookup Editor",
-        "operationId": "Config_GetLookups",
+        "summary": "Returns the parameter slots of one Lookup Result",
+        "description": "Slot 0 is @pv, slots 1-4 are @pD1..@pD4 in call order. Consumed by the System Admin Lookup Editor",
+        "operationId": "Config_GetLookupResultParameters",
+        "parameters": [
+          {
+            "name": "lookupResultKey",
+            "in": "path",
+            "required": true,
+            "description": "Lookup Result key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -16100,7 +16034,7 @@
                   "type": "array",
                   "nullable": true,
                   "items": {
-                    "$ref": "#/components/schemas/Lookup"
+                    "$ref": "#/components/schemas/LookupResultQP"
                   }
                 }
               }
@@ -16126,6 +16060,16 @@
               }
             }
           },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal failure; see response",
             "content": {
@@ -16137,7 +16081,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/configuration/lookups": {
       "patch": {
         "tags": [
           "Config"
@@ -16216,6 +16162,60 @@
           },
           "409": {
             "description": "Could not persist the patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.",
+        "description": "Consumed by the System Admin Lookup Editor",
+        "operationId": "Config_GetLookups",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/Lookup"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -16504,83 +16504,6 @@
       }
     },
     "/api/configuration/lookups/{lookupKey}/fields": {
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.",
-        "description": "Display columns plus the context parameters (PredicateMode 'I'). Consumed by the System Admin Lookup Editor",
-        "operationId": "Config_GetLookupFields",
-        "parameters": [
-          {
-            "name": "lookupKey",
-            "in": "path",
-            "required": true,
-            "description": "Lookup key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/LookupField"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "Config"
@@ -16664,6 +16587,83 @@
           },
           "409": {
             "description": "Could not persist the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.",
+        "description": "Display columns plus the context parameters (PredicateMode 'I'). Consumed by the System Admin Lookup Editor",
+        "operationId": "Config_GetLookupFields",
+        "parameters": [
+          {
+            "name": "lookupKey",
+            "in": "path",
+            "required": true,
+            "description": "Lookup key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/LookupField"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -19329,6 +19329,338 @@
         }
       }
     },
+    "/api/configuration/workflow-script-events": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the list of workflow script events",
+        "description": "Which doc type and trigger run which workflow script.  Consumed by the System Admin Dashboard Workflow Scripts tool",
+        "operationId": "Config_GetWorkflowScriptEvents",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowScriptEvent"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts workflow script events",
+        "description": "Consumed by the System Admin Dashboard Workflow Scripts tool",
+        "operationId": "Config_InsertWorkflowScriptEvents",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Workflow script event rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WorkflowScriptEvent"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowScriptEvent"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the insert",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one workflow script event",
+        "description": "Consumed by the System Admin Dashboard Workflow Scripts tool",
+        "operationId": "Config_PatchWorkflowScriptEvent",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Workflow script event row to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowScriptEvent"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/WorkflowScriptEvent"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Deletes workflow script events by key",
+        "description": "Consumed by the System Admin Dashboard Workflow Scripts tool",
+        "operationId": "Config_DeleteWorkflowScriptEvents",
+        "requestBody": {
+          "x-name": "keys",
+          "description": "Workflow script event row keys (GUIDs) to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuration/workflow-scripts": {
       "get": {
         "tags": [
@@ -19640,6 +19972,86 @@
           },
           "409": {
             "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/workflow-scripts/check": {
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Checks a workflow script without running it",
+        "description": "Reports errors, warnings and advice by line.  Consumed by the System Admin Dashboard Workflow Scripts tool and the MCP check_atc_script tool",
+        "operationId": "Config_CheckWorkflowScript",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Script to check, and optionally the doc type it will be mapped to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowScriptCheckRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/WorkflowScriptCheckResult"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -23072,6 +23484,43 @@
       }
     },
     "/api/document/{id}/attributes": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "summary": "Returns the attributes for the specified document",
+        "description": "Documents",
+        "operationId": "DocumentTools_GetDocAttributes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document Key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocAttribute"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "Document"
@@ -23356,43 +23805,6 @@
               "application/json": {
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Document"
-        ],
-        "summary": "Returns the attributes for the specified document",
-        "description": "Documents",
-        "operationId": "DocumentTools_GetDocAttributes",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Document Key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/DocAttribute"
-                  }
                 }
               }
             }
@@ -27829,7 +28241,7 @@
             "name": "sessionID",
             "in": "query",
             "required": true,
-            "description": "cache key or session",
+            "description": "DocSessionKey (from GetDocSession or the header) or the cache key",
             "schema": {
               "type": "string",
               "nullable": true
@@ -27880,6 +28292,16 @@
           },
           "406": {
             "description": "Not currently authenticated or lacks authorization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "sessionID is not the current session for this document; nothing was released",
             "content": {
               "application/json": {
                 "schema": {
@@ -28081,7 +28503,7 @@
             "name": "sessionID",
             "in": "query",
             "required": true,
-            "description": "cache key or session",
+            "description": "DocSessionKey (from GetDocSession or the header) or the cache key",
             "schema": {
               "type": "string",
               "nullable": true
@@ -28132,6 +28554,16 @@
           },
           "406": {
             "description": "Not currently authenticated or lacks authorization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "sessionID is not the current session for this document; nothing was released",
             "content": {
               "application/json": {
                 "schema": {
@@ -35082,6 +35514,52 @@
         }
       }
     },
+    "/api/system/peers": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns the farm peers this node knows and whether it can reach each of them",
+        "description": "Case 37262.  Members come from the presence files in the shared persisted-storage folder; health is this node's record of its posts to each peer (cache flushes, nop probes).  IsUnreachable means the most recent post to a web node failed, so cache changes made here are not reaching it.  Times are in the caller's time zone.",
+        "operationId": "System_GetSystemPeers",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/PeerStatusInfo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin Required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/process/{key}": {
       "get": {
         "tags": [
@@ -40912,11 +41390,11 @@
           },
           "Users": {
             "type": "boolean",
-            "description": "When true, result is limited to contacts who can log in to sfPMS (sfUser=1).\nThese six flags COMBINE WITH AND, not OR - see the remarks on this class."
+            "description": "When true, result is limited to contacts who can log in to sfPMS (sfUser=1).\nThese seven flags COMBINE WITH AND, not OR - see the remarks on this class."
           },
           "Customers": {
             "type": "boolean",
-            "description": "When true, result is limited to customer contacts (ContactType='C')."
+            "description": "When true, result is limited to customer contacts - contacts at a company whose\nExternalType is 'C'."
           },
           "Employee": {
             "type": "boolean",
@@ -40933,6 +41411,10 @@
           "Vendors": {
             "type": "boolean",
             "description": "When true, result is limited to vendor contacts (ContactType='V', or any contact\ncarrying a VendorID)."
+          },
+          "Other": {
+            "type": "boolean",
+            "description": "When true, result is limited to contacts whose ContactType is '0' - not typed as a\ncustomer, employee or vendor (36996).\nVendor is also lit by a VendorID, so a '0' contact carrying one matches both\nOther and Vendors.  Other with Employee is always empty; both read ContactType."
           },
           "ContactState": {
             "type": "integer",
@@ -48290,6 +48772,17 @@
         "type": "object",
         "additionalProperties": false
       },
+      "PeerStatusInfo": {
+        "type": "object",
+        "description": "Health of one peer as this process sees it (case 37262).  Kept apart from PeerMemberServerInfo, which is\nrebuilt from the presence files every few minutes and would lose the history.",
+        "additionalProperties": false,
+        "properties": {
+          "IsUnreachable": {
+            "type": "boolean",
+            "description": "a PDS engine other than this process whose most recent send failed"
+          }
+        }
+      },
       "PeriodDistributionAbstract": {
         "type": "object",
         "description": "General abstract information about an Period Distribution document",
@@ -55032,6 +55525,78 @@
           }
         }
       },
+      "WorkflowScriptCheckFinding": {
+        "type": "object",
+        "description": "One problem found in a workflow script.",
+        "additionalProperties": false,
+        "properties": {
+          "LineNumber": {
+            "type": "integer",
+            "description": "1-based line number in the submitted script; 0 for the script as a whole",
+            "format": "int32"
+          },
+          "Severity": {
+            "type": "string",
+            "description": "Error, Warning or Info",
+            "nullable": true
+          },
+          "Rule": {
+            "type": "string",
+            "description": "Short stable code for the rule that fired, e.g. ERRORIF-THIS",
+            "nullable": true
+          },
+          "Message": {
+            "type": "string",
+            "description": "What is wrong and how to fix it",
+            "nullable": true
+          },
+          "LineText": {
+            "type": "string",
+            "description": "Text of the offending line",
+            "nullable": true
+          }
+        }
+      },
+      "WorkflowScriptCheckRequest": {
+        "type": "object",
+        "description": "A workflow script to check without running it.",
+        "additionalProperties": false,
+        "required": [
+          "WorkflowScript"
+        ],
+        "properties": {
+          "WorkflowScript": {
+            "type": "string",
+            "description": "Script body to check",
+            "minLength": 1
+          },
+          "DocTypeKey": {
+            "type": "string",
+            "description": "Optional doc type the script will be mapped to; when given, table and field names are\nchecked against that doc type",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
+      "WorkflowScriptCheckResult": {
+        "type": "object",
+        "description": "Outcome of a workflow script check.",
+        "additionalProperties": false,
+        "properties": {
+          "IsValid": {
+            "type": "boolean",
+            "description": "True when no finding has Severity Error"
+          },
+          "Findings": {
+            "type": "array",
+            "description": "Errors, warnings and advice, in line order",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/WorkflowScriptCheckFinding"
+            }
+          }
+        }
+      },
       "WorkflowScriptEntry": {
         "type": "object",
         "description": "A single workflow script.  Mirrors the WorkflowScriptLib table in LVData.xsd; consumed\nby the System Admin Dashboard Workflow Scripts tool.  (Named WorkflowScriptEntry because\na member may not share the enclosing type's name - CS0542.)",
@@ -55043,7 +55608,7 @@
         "properties": {
           "WorkflowScriptKey": {
             "type": "string",
-            "description": "Row key (xsfDocWorkflow)",
+            "description": "Row key (xsfWorkflowLib)",
             "format": "guid"
           },
           "WorkflowScriptName": {
@@ -55076,6 +55641,64 @@
           "IsDistributed": {
             "type": "boolean",
             "description": "Whether this script is distributed"
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Active flag"
+          },
+          "ETag": {
+            "type": "string",
+            "description": "eTag",
+            "nullable": true
+          }
+        }
+      },
+      "WorkflowScriptEvent": {
+        "type": "object",
+        "description": "When a workflow script runs: one doc type and trigger mapping for a script.  Mirrors the\nWorkflowScriptEvents table in LVData.xsd; consumed by the System Admin Dashboard Workflow\nScripts tool.",
+        "additionalProperties": false,
+        "properties": {
+          "DocWorkflowKey": {
+            "type": "string",
+            "description": "Row key (xsfDocWorkflow)",
+            "format": "guid"
+          },
+          "WorkflowScriptKey": {
+            "type": "string",
+            "description": "The script that runs (WorkflowScriptEntry.WorkflowScriptKey)",
+            "format": "guid"
+          },
+          "DocTypeKey": {
+            "type": "string",
+            "description": "Doc type whose saves fire this script",
+            "format": "guid"
+          },
+          "DocTypeKey_dv": {
+            "type": "string",
+            "description": "Site name of the doc type",
+            "nullable": true
+          },
+          "TriggerWhen": {
+            "type": "integer",
+            "description": "SFDocStates bitmask: Unsaved (first save) 1, Normal 2, Pending 4, ExpCommitted 8,\nRevCommitted 16, Closed 32, Approved 64, RouteForward 2048, ExactOnly 4096,\nOnCreateOnly 8192, OnRouteStage 16384.  Fires when any bit matches the document's\nstate; with ExactOnly, only when all of them do."
+          },
+          "Sequence": {
+            "type": "integer",
+            "description": "Run order among the scripts that fire for the same doc type"
+          },
+          "TriggerWhere": {
+            "type": "string",
+            "description": "Reserved for trigger conditions; the engine does not support them yet",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "StopCascade": {
+            "type": "boolean",
+            "description": "Stop cascade flag"
+          },
+          "IsDistributed": {
+            "type": "boolean",
+            "description": "Whether this mapping is distributed"
           },
           "Active": {
             "type": "boolean",
@@ -56098,25 +56721,25 @@
   },
   "tags": [
     {
-      "name": "Project"
-    },
-    {
-      "name": "Document"
-    },
-    {
       "name": "Contact"
-    },
-    {
-      "name": "Account"
     },
     {
       "name": "Excel"
     },
     {
+      "name": "Document"
+    },
+    {
       "name": "Catalog"
     },
     {
+      "name": "Project"
+    },
+    {
       "name": "Config"
+    },
+    {
+      "name": "Account"
     }
   ]
 }
