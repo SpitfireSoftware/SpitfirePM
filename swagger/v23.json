@@ -4,7 +4,7 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9795.34171"
+    "version": "2023.0.9802.37007"
   },
   "servers": [
     {
@@ -20052,6 +20052,16 @@
           },
           "403": {
             "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DocMasterKey is not a document",
             "content": {
               "application/json": {
                 "schema": {
@@ -55575,6 +55585,12 @@
             "description": "Optional doc type the script will be mapped to; when given, table and field names are\nchecked against that doc type",
             "format": "guid",
             "nullable": true
+          },
+          "DocMasterKey": {
+            "type": "string",
+            "description": "37313 - Optional document the script is checked for.  It must exist; its project is the\nproject the check uses.  When omitted, the caller's last project is used.",
+            "format": "guid",
+            "nullable": true
           }
         }
       },
@@ -56724,22 +56740,22 @@
       "name": "Contact"
     },
     {
-      "name": "Excel"
-    },
-    {
-      "name": "Document"
-    },
-    {
       "name": "Catalog"
     },
     {
       "name": "Project"
     },
     {
+      "name": "Document"
+    },
+    {
       "name": "Config"
     },
     {
       "name": "Account"
+    },
+    {
+      "name": "Excel"
     }
   ]
 }

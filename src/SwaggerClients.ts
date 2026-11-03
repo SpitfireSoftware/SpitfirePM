@@ -14267,6 +14267,12 @@ export class ConfigClient extends APIClientBase {
             result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Access denied", status, _responseText, _headers, result403);
             });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("DocMasterKey is not a document", status, _responseText, _headers, result404);
+            });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
             let result500: any = null;
@@ -38737,6 +38743,9 @@ export interface WorkflowScriptCheckRequest {
     /** Optional doc type the script will be mapped to; when given, table and field names are
 checked against that doc type */
     DocTypeKey?: string | undefined;
+    /** 37313 - Optional document the script is checked for.  It must exist; its project is the
+project the check uses.  When omitted, the caller's last project is used. */
+    DocMasterKey?: string | undefined;
 }
 
 /** Outcome of a workflow script check. */
