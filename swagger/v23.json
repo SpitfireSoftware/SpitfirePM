@@ -4,11 +4,11 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9802.37007"
+    "version": "2023.0.9807.16467"
   },
   "servers": [
     {
-      "url": "https://dev.spitfirepm.com:8443/SFPMS"
+      "url": "https://dev.spitfirepm.com:8443/sfPMS"
     }
   ],
   "paths": {
@@ -15472,6 +15472,60 @@
       }
     },
     "/api/configuration/lookup-results": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the Lookup Results (DVs), each with its parameter slots",
+        "description": "Editors receive the whole catalog; everyone else receives only the entries marked Audience 'Agent'",
+        "operationId": "Config_GetLookupResults",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/LookupResult"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "tags": [
           "Config"
@@ -15550,60 +15604,6 @@
           },
           "409": {
             "description": "Could not persist the patch",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the Lookup Results (DVs), each with its parameter slots",
-        "description": "Editors receive the whole catalog; everyone else receives only the entries marked Audience 'Agent'",
-        "operationId": "Config_GetLookupResults",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/LookupResult"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -15902,6 +15902,83 @@
       }
     },
     "/api/configuration/lookup-results/{lookupResultKey}/parameters": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the parameter slots of one Lookup Result",
+        "description": "Slot 0 is @pv, slots 1-4 are @pD1..@pD4 in call order. Consumed by the System Admin Lookup Editor",
+        "operationId": "Config_GetLookupResultParameters",
+        "parameters": [
+          {
+            "name": "lookupResultKey",
+            "in": "path",
+            "required": true,
+            "description": "Lookup Result key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/LookupResultQP"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "Config"
@@ -16004,27 +16081,16 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/configuration/lookups": {
       "get": {
         "tags": [
           "Config"
         ],
-        "summary": "Returns the parameter slots of one Lookup Result",
-        "description": "Slot 0 is @pv, slots 1-4 are @pD1..@pD4 in call order. Consumed by the System Admin Lookup Editor",
-        "operationId": "Config_GetLookupResultParameters",
-        "parameters": [
-          {
-            "name": "lookupResultKey",
-            "in": "path",
-            "required": true,
-            "description": "Lookup Result key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
+        "summary": "Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.",
+        "description": "Consumed by the System Admin Lookup Editor",
+        "operationId": "Config_GetLookups",
         "responses": {
           "200": {
             "description": "",
@@ -16034,7 +16100,7 @@
                   "type": "array",
                   "nullable": true,
                   "items": {
-                    "$ref": "#/components/schemas/LookupResultQP"
+                    "$ref": "#/components/schemas/Lookup"
                   }
                 }
               }
@@ -16060,16 +16126,6 @@
               }
             }
           },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Internal failure; see response",
             "content": {
@@ -16081,9 +16137,7 @@
             }
           }
         }
-      }
-    },
-    "/api/configuration/lookups": {
+      },
       "patch": {
         "tags": [
           "Config"
@@ -16162,60 +16216,6 @@
           },
           "409": {
             "description": "Could not persist the patch",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.",
-        "description": "Consumed by the System Admin Lookup Editor",
-        "operationId": "Config_GetLookups",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/Lookup"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -16504,6 +16504,83 @@
       }
     },
     "/api/configuration/lookups/{lookupKey}/fields": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.",
+        "description": "Display columns plus the context parameters (PredicateMode 'I'). Consumed by the System Admin Lookup Editor",
+        "operationId": "Config_GetLookupFields",
+        "parameters": [
+          {
+            "name": "lookupKey",
+            "in": "path",
+            "required": true,
+            "description": "Lookup key",
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/LookupField"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "Config"
@@ -16587,83 +16664,6 @@
           },
           "409": {
             "description": "Could not persist the change",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.",
-        "description": "Display columns plus the context parameters (PredicateMode 'I'). Consumed by the System Admin Lookup Editor",
-        "operationId": "Config_GetLookupFields",
-        "parameters": [
-          {
-            "name": "lookupKey",
-            "in": "path",
-            "required": true,
-            "description": "Lookup key",
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/LookupField"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -19393,7 +19393,7 @@
         "operationId": "Config_InsertWorkflowScriptEvents",
         "requestBody": {
           "x-name": "data",
-          "description": "Workflow script event rows to insert",
+          "description": "Workflow script event rows to insert; a Sequence of 0 takes the next free one (highest + 10)",
           "content": {
             "application/json": {
               "schema": {
@@ -19483,7 +19483,7 @@
         "operationId": "Config_PatchWorkflowScriptEvent",
         "requestBody": {
           "x-name": "data",
-          "description": "Workflow script event row to update",
+          "description": "Workflow script event row to update; a Sequence of 0 keeps the current one",
           "content": {
             "application/json": {
               "schema": {
@@ -55662,6 +55662,20 @@
             "type": "boolean",
             "description": "Active flag"
           },
+          "UseCount": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "37290 - Read-only: how many times this server has run the script since its statistics\nwere last reset (the classic tool's Runs column).  Null when the script has no statistics.\nNot a WorkflowScriptLib column; the controller fills it from the command statistics.",
+            "format": "int32",
+            "nullable": true
+          },
+          "AvgMS": {
+            "type": "number",
+            "readOnly": true,
+            "description": "37290 - Read-only: average run time in milliseconds over those runs (the classic tool's\nAvg MS column).  Null when the script has no statistics.",
+            "format": "decimal",
+            "nullable": true
+          },
           "ETag": {
             "type": "string",
             "description": "eTag",
@@ -56737,13 +56751,10 @@
   },
   "tags": [
     {
-      "name": "Contact"
+      "name": "Project"
     },
     {
       "name": "Catalog"
-    },
-    {
-      "name": "Project"
     },
     {
       "name": "Document"
@@ -56753,6 +56764,9 @@
     },
     {
       "name": "Account"
+    },
+    {
+      "name": "Contact"
     },
     {
       "name": "Excel"

@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -768,7 +768,7 @@ export class ActionItemsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -1157,7 +1157,7 @@ export class AlertsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -1506,7 +1506,7 @@ export class LookupClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -2706,7 +2706,7 @@ export class ARRClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -2925,7 +2925,7 @@ export class CatalogClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -5834,7 +5834,7 @@ export class ConfigClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -10405,6 +10405,62 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the Lookup Results (DVs), each with its parameter slots
+     */
+    getLookupResults(): Promise<LookupResult[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResults(_response));
+        });
+    }
+
+    protected processGetLookupResults(response: Response): Promise<LookupResult[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LookupResult[] | null>(null as any);
+    }
+
+    /**
      * Updates one Lookup Result
      * @param data Lookup Result row to update
      */
@@ -10481,62 +10537,6 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<LookupResult | null>(null as any);
-    }
-
-    /**
-     * Returns the Lookup Results (DVs), each with its parameter slots
-     */
-    getLookupResults(): Promise<LookupResult[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookup-results";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResults(_response));
-        });
-    }
-
-    protected processGetLookupResults(response: Response): Promise<LookupResult[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResult[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LookupResult[] | null>(null as any);
     }
 
     /**
@@ -10693,6 +10693,72 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the parameter slots of one Lookup Result
+     * @param lookupResultKey Lookup Result key
+     */
+    getLookupResultParameters(lookupResultKey: string): Promise<LookupResultQP[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/parameters";
+        if (lookupResultKey === undefined || lookupResultKey === null)
+            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
+        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResultParameters(_response));
+        });
+    }
+
+    protected processGetLookupResultParameters(response: Response): Promise<LookupResultQP[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResultQP[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LookupResultQP[] | null>(null as any);
+    }
+
+    /**
      * Replaces the parameter slots of one Lookup Result
      * @param lookupResultKey Lookup Result key
      * @param data Parameter slots, in call order
@@ -10754,72 +10820,6 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the change", status, _responseText, _headers, result409);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LookupResultQP[] | null>(null as any);
-    }
-
-    /**
-     * Returns the parameter slots of one Lookup Result
-     * @param lookupResultKey Lookup Result key
-     */
-    getLookupResultParameters(lookupResultKey: string): Promise<LookupResultQP[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookup-results/{lookupResultKey}/parameters";
-        if (lookupResultKey === undefined || lookupResultKey === null)
-            throw new globalThis.Error("The parameter 'lookupResultKey' must be defined.");
-        url_ = url_.replace("{lookupResultKey}", encodeURIComponent("" + lookupResultKey));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupResultParameters(_response));
-        });
-    }
-
-    protected processGetLookupResultParameters(response: Response): Promise<LookupResultQP[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupResultQP[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 404) {
-            return response.text().then((_responseText) => {
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not found", status, _responseText, _headers, result404);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -10903,6 +10903,62 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.
+     */
+    getLookups(): Promise<Lookup[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookups";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookups(_response));
+        });
+    }
+
+    protected processGetLookups(response: Response): Promise<Lookup[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<Lookup[] | null>(null as any);
+    }
+
+    /**
      * Updates one Lookup
      * @param data Lookup row to update
      */
@@ -10979,62 +11035,6 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<Lookup | null>(null as any);
-    }
-
-    /**
-     * Returns the Lookups (pickers).  Users without LookupEditor permission only see 'Agent' lookups.
-     */
-    getLookups(): Promise<Lookup[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookups";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookups(_response));
-        });
-    }
-
-    protected processGetLookups(response: Response): Promise<Lookup[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as Lookup[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Lookup[] | null>(null as any);
     }
 
     /**
@@ -11185,6 +11185,72 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.
+     * @param lookupKey Lookup key
+     */
+    getLookupFields(lookupKey: string): Promise<LookupField[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/fields";
+        if (lookupKey === undefined || lookupKey === null)
+            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
+        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupFields(_response));
+        });
+    }
+
+    protected processGetLookupFields(response: Response): Promise<LookupField[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupField[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LookupField[] | null>(null as any);
+    }
+
+    /**
      * Replaces the fields of one Lookup
      * @param lookupKey Lookup key
      * @param data Field rows, in FieldSequence order
@@ -11246,72 +11312,6 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the change", status, _responseText, _headers, result409);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LookupField[] | null>(null as any);
-    }
-
-    /**
-     * Returns the fields of one Lookup.  Non LookupEditor users only see PredicateMode=I.
-     * @param lookupKey Lookup key
-     */
-    getLookupFields(lookupKey: string): Promise<LookupField[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/lookups/{lookupKey}/fields";
-        if (lookupKey === undefined || lookupKey === null)
-            throw new globalThis.Error("The parameter 'lookupKey' must be defined.");
-        url_ = url_.replace("{lookupKey}", encodeURIComponent("" + lookupKey));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetLookupFields(_response));
-        });
-    }
-
-    protected processGetLookupFields(response: Response): Promise<LookupField[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LookupField[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 404) {
-            return response.text().then((_responseText) => {
-            let result404: any = null;
-            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not found", status, _responseText, _headers, result404);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -13710,7 +13710,7 @@ export class ConfigClient extends APIClientBase {
 
     /**
      * Inserts workflow script events
-     * @param data Workflow script event rows to insert
+     * @param data Workflow script event rows to insert; a Sequence of 0 takes the next free one (highest + 10)
      */
     insertWorkflowScriptEvents(data: WorkflowScriptEvent[]): Promise<WorkflowScriptEvent[] | null> {
         let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
@@ -13783,7 +13783,7 @@ export class ConfigClient extends APIClientBase {
 
     /**
      * Updates one workflow script event
-     * @param data Workflow script event row to update
+     * @param data Workflow script event row to update; a Sequence of 0 keeps the current one
      */
     patchWorkflowScriptEvent(data: WorkflowScriptEvent): Promise<WorkflowScriptEvent | null> {
         let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
@@ -14296,7 +14296,7 @@ export class ContactClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -15025,7 +15025,7 @@ export class DocumentToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -22644,7 +22644,7 @@ export class ExcelToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -23308,7 +23308,7 @@ export class ProjectToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25194,7 +25194,7 @@ export class ProjectDocListClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25470,7 +25470,7 @@ export class ProjectKPIClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25542,7 +25542,7 @@ export class ProjectTeamClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25999,7 +25999,7 @@ export class ProjectsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -26439,7 +26439,7 @@ export class SessionClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -28190,7 +28190,7 @@ export class SystemClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -30181,7 +30181,7 @@ export class UICFGClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -30582,7 +30582,7 @@ export class XTSClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -38774,6 +38774,13 @@ export interface WorkflowScriptEntry {
     IsDistributed?: boolean;
     /** Active flag */
     Active?: boolean;
+    /** 37290 - Read-only: how many times this server has run the script since its statistics
+were last reset (the classic tool's Runs column).  Null when the script has no statistics.
+Not a WorkflowScriptLib column; the controller fills it from the command statistics. */
+    readonly UseCount?: number | undefined;
+    /** 37290 - Read-only: average run time in milliseconds over those runs (the classic tool's
+Avg MS column).  Null when the script has no statistics. */
+    readonly AvgMS?: number | undefined;
     /** eTag */
     ETag?: string | undefined;
 }
