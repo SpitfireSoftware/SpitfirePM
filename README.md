@@ -40,6 +40,7 @@ in both. The generator needs the .NET 10 SDK; `nswag.json` is not used.
 ### Change Log
 
 ```
+23.9800.3   - Recent documents fetched once per login, not on every session load
 23.9800.2   - Workflow Library endpoints
 23.9800.1   - Workflow Script endpoints
 23.9700.25  - Workflow Library endpoints

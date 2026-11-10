@@ -1040,9 +1040,53 @@ export class sfRestClient {
     /** maps Suggestion Group key to promise result */
     private static  RecentSuggestionResultMap:   Map<string,Promise<Suggestion[] | null>> = new Map();
     private static  RecentDocumentList :_SwaggerClientExports.MenuAction[];
+    // markClaude: recent docs belong to the login, not the page, so they are no longer refetched with every
+    // fresh getWCC (the home dashboard made three: startup, bottomNav.init and mainNav.urlChange).
+    // PopDoc() keeps the list current through UpdateRecentDocumentList; the lifespan only picks up docs
+    // opened in another tab or a classic page.
+    static readonly recentDocsCacheLifespan = 246800; // same as suggestionCacheLifespan
+    /** when RecentDocumentList was last requested; 0 = never */
+    private static  RecentDocsAsOf = 0;
+    /** LoginSessionKey the RecentDocumentList belongs to */
+    private static  RecentDocsForSession: string | undefined;
+    /** the in-flight getRecentDocs() shared by concurrent LoadUserSessionInfo() calls; null once settled */
+    private static  RecentDocsPending: Promise<void> | null = null;
     /** Returns list of recent documents from server as updated by PopDoc() calls */
     GetRecentDocuments() : _SwaggerClientExports.MenuAction[] {
         return sfRestClient.RecentDocumentList;
+    }
+    /** markClaude: a single disabled menu row standing in for the list */
+    private static _SetRecentDocsPlaceholder(itemText: string): void {
+        const placeholder = {} as _SwaggerClientExports.MenuAction;
+        placeholder.Enabled = false;
+        placeholder.ItemText = itemText;
+        sfRestClient.RecentDocumentList = [placeholder];
+    }
+    /** markClaude: fetches the recent documents list unless it is fresh for this login or already on its way */
+    private static _RefreshRecentDocs(api: SessionClient, forSession: string | undefined): void {
+        const sameLogin = sfRestClient.RecentDocsForSession === forSession;
+        if (sameLogin && sfRestClient.RecentDocsPending) return;
+        if (sameLogin && sfRestClient.RecentDocsAsOf > 0
+            && (Date.now() - sfRestClient.RecentDocsAsOf) < sfRestClient.recentDocsCacheLifespan) return;
+        if (!sameLogin) sfRestClient._SetRecentDocsPlaceholder(' (still loading...)'); // never show the previous login's list
+        sfRestClient.RecentDocsForSession = forSession;
+        sfRestClient.RecentDocsAsOf = Date.now();
+        const thisRequest: Promise<void> = api.getRecentDocs()
+            .then((recentList) => {
+                if (sfRestClient.RecentDocsForSession !== forSession) return; // a newer login took over
+                if (recentList) sfRestClient.RecentDocumentList = recentList;
+                else sfRestClient._SetRecentDocsPlaceholder('Documents will appear here as you open them');
+            })
+            .catch((reason) => {
+                console.warn('LoadUserSessionInfo().getRecentDocs()', reason);
+                if (sfRestClient.RecentDocsForSession !== forSession) return;
+                sfRestClient.RecentDocsAsOf = 0; // retry on the next session load
+                if (!sfRestClient.RecentDocumentList?.[0]?.Enabled) sfRestClient._SetRecentDocsPlaceholder('None available');
+            })
+            .finally(() => {
+                if (sfRestClient.RecentDocsPending === thisRequest) sfRestClient.RecentDocsPending = null;
+            });
+        sfRestClient.RecentDocsPending = thisRequest;
     }
     /**
      * Returns a View Model constructured for the result rows matching specified lookup context and filters
@@ -2333,19 +2377,13 @@ protected SessionStoragePathForImageName( imgStorageKey:string ):string | false 
                 if (sfRestClient._Options.LogLevel >= LoggingLevels.Debug) console.log(`LoadWCC(${RESTClient.ThisInstanceID}) Creating getWCC request for HREF hash ${ForPageHash}`);
                 apiResult = <Promise<WCCData | null>> api.getWCC(RESTClient.GetPageQueryContent(newHref));
                 sfRestClient._SessionClientGetWCC = new _SessionClientGetWCCShare(apiResult!,  ForPageHash);
-                sfRestClient.RecentDocumentList = [ {} as _SwaggerClientExports.MenuAction];
-                sfRestClient.RecentDocumentList[0].Enabled=false;
-                sfRestClient.RecentDocumentList[0].ItemText=' (still loading...)';
-                if (!RESTClient.IsDocumentPage())
-                    api.getRecentDocs()
-                    .then((recentList)=>{
-                        if (recentList) sfRestClient.RecentDocumentList = recentList
-                        else sfRestClient.RecentDocumentList[0].ItemText='Documents will appear here as you open them';
-                    })
-                    .catch((reason)=>{
-                        console.warn('LoadUserSessionInfo().getRecentDocs()',reason);
-                        sfRestClient.RecentDocumentList[0].ItemText='None available';
-                    });
+                if (!sfRestClient.RecentDocumentList) sfRestClient._SetRecentDocsPlaceholder(' (still loading...)');
+                // markClaude: once per login (plus lifespan), after getWCC says which login this is
+                if (!RESTClient.IsDocumentPage()) {
+                    const recentDocsAPI = api;
+                    apiResult.then((r) => { if (r?.SessionID) sfRestClient._RefreshRecentDocs(recentDocsAPI, r.LoginSessionKey); })
+                             .catch(() => { /* getWCC failures are reported below */ });
+                }
             }
             if (!apiResult) console.warn("LoadUserSessionInfo failed to getWCC");
             apiResult.then((r: WCCData | null) => {
