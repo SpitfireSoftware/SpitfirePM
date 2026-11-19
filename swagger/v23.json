@@ -4,11 +4,11 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9807.16467"
+    "version": "2023.0.9819.22240"
   },
   "servers": [
     {
-      "url": "https://dev.spitfirepm.com:8443/sfPMS"
+      "url": "https://dev.spitfirepm.com:8443/SFPMS"
     }
   ],
   "paths": {
@@ -26395,7 +26395,7 @@
           "Document"
         ],
         "summary": "Deletes all items on the specified document",
-        "description": "Delete ALL requires SYS|GLOBAL DELETE permission",
+        "description": "Delete ALL requires SYS|GLOBAL DELETE permission. If the document items already have constraint issues, use api/system/dri/<DMK>/false first (system controller)",
         "operationId": "DocumentTools_DeleteAllDocItems",
         "parameters": [
           {
@@ -39625,6 +39625,10 @@
           "rv": {
             "type": "string",
             "nullable": true
+          },
+          "ExpiresUtc": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -56751,22 +56755,22 @@
   },
   "tags": [
     {
-      "name": "Project"
-    },
-    {
-      "name": "Catalog"
-    },
-    {
-      "name": "Document"
+      "name": "Account"
     },
     {
       "name": "Config"
     },
     {
-      "name": "Account"
+      "name": "Document"
+    },
+    {
+      "name": "Catalog"
     },
     {
       "name": "Contact"
+    },
+    {
+      "name": "Project"
     },
     {
       "name": "Excel"

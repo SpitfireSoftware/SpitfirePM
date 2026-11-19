@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -768,7 +768,7 @@ export class ActionItemsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -1157,7 +1157,7 @@ export class AlertsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -1506,7 +1506,7 @@ export class LookupClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -2706,7 +2706,7 @@ export class ARRClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -2925,7 +2925,7 @@ export class CatalogClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -5834,7 +5834,7 @@ export class ConfigClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -14296,7 +14296,7 @@ export class ContactClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -15025,7 +15025,7 @@ export class DocumentToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -22644,7 +22644,7 @@ export class ExcelToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -23308,7 +23308,7 @@ export class ProjectToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25194,7 +25194,7 @@ export class ProjectDocListClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25470,7 +25470,7 @@ export class ProjectKPIClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25542,7 +25542,7 @@ export class ProjectTeamClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -25999,7 +25999,7 @@ export class ProjectsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -26439,7 +26439,7 @@ export class SessionClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -28190,7 +28190,7 @@ export class SystemClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -30181,7 +30181,7 @@ export class UICFGClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -30582,7 +30582,7 @@ export class XTSClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
     }
 
     /**
@@ -32586,6 +32586,7 @@ export interface AuthenticationExchangeData {
     TZOffset?: number;
     SiteID?: string | undefined;
     rv?: string | undefined;
+    ExpiresUtc?: Date;
 }
 
 export interface AuthenticationHeaderValue {

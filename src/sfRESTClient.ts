@@ -1756,6 +1756,21 @@ export class sfRestClient {
                 result(taskResult);
             };
 
+            /** 37453 pulls the server's explanation out of a failed upload's body: ThisReason (HttpResponseJsonContent), an XferFilesStatus error, or an ASP.NET Message */
+            const UploadFailureReason = function UploadFailureReason(responseText: string): string | undefined {
+                if (!responseText) return undefined;
+                try {
+                    const body = JSON.parse(responseText);
+                    const first = Array.isArray(body) ? body[0] : body;
+                    if (!first || typeof first !== "object") return undefined;
+                    const reason = first.ThisReason ?? first.error ?? first.ExceptionMessage ?? first.Message;
+                    return (typeof reason === "string" && reason.trim()) ? reason.trim() : undefined;
+                }
+                catch {
+                    return undefined; // not JSON (an IIS error page, say): fall back to the status
+                }
+            };
+
             /** POSTs the FormData to UploadURL; resolves the parsed JSON body (one XferFilesStatus or an array of them) */
             const SendToServer = async function UploadFileSendData(sendFD:FormData, headers?:{[key:string]:string} ): Promise<_SwaggerClientExports.XferFilesStatus[]> {
                 const uploadResponse = await fetch(UploadURL, {
@@ -1766,7 +1781,8 @@ export class sfRestClient {
                 });
                 const responseText = await uploadResponse.text();
                 if (!uploadResponse.ok) {
-                    throw new Error(uploadResponse.statusText || `HTTP ${uploadResponse.status}`);
+                    // 37453 the body says why (e.g. {"ThisStatus":500,"ThisReason":"Store failed: ... checked out by someone else."}); statusText is empty over HTTP/2
+                    throw new Error(UploadFailureReason(responseText) || uploadResponse.statusText || `HTTP ${uploadResponse.status}`);
                 }
                 const response: _SwaggerClientExports.XferFilesStatus[] | _SwaggerClientExports.XferFilesStatus = responseText ? JSON.parse(responseText) : [];
                 (Array.isArray(response) ? response : [response]).forEach(fileResponse => {
