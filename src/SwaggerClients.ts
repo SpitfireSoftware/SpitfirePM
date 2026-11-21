@@ -17,7 +17,7 @@ export class AccountClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -768,7 +768,7 @@ export class ActionItemsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -1157,7 +1157,7 @@ export class AlertsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -1506,7 +1506,7 @@ export class LookupClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -2706,7 +2706,7 @@ export class ARRClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -2925,7 +2925,7 @@ export class CatalogClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -5834,7 +5834,7 @@ export class ConfigClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -7531,136 +7531,7 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the list of code set values
-     */
-    getCodeSetValues(): Promise<CodeSetValue[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/code-set-values";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetCodeSetValues(_response));
-        });
-    }
-
-    protected processGetCodeSetValues(response: Response): Promise<CodeSetValue[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<CodeSetValue[] | null>(null as any);
-    }
-
-    /**
-     * Inserts code set values
-     * @param data Code set value rows to insert
-     */
-    insertCodeSetValues(data: CodeSetValue[]): Promise<CodeSetValue[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/code-set-values";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(data);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processInsertCodeSetValues(_response));
-        });
-    }
-
-    protected processInsertCodeSetValues(response: Response): Promise<CodeSetValue[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue[];
-            return result200;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Request malformed", status, _responseText, _headers, result400);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 409) {
-            return response.text().then((_responseText) => {
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<CodeSetValue[] | null>(null as any);
-    }
-
-    /**
-     * Updates one code set value
+     * Updates one global code set value
      * @param data Code set value row to update
      */
     patchCodeSetValue(data: CodeSetValue): Promise<CodeSetValue | null> {
@@ -7739,7 +7610,7 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Deletes code set values by key
+     * Deletes global code set values by key
      * @param keys Code set value row keys (GUIDs) to delete
      */
     deleteCodeSetValues(keys: string[]): Promise<number> {
@@ -7795,7 +7666,7 @@ export class ConfigClient extends APIClientBase {
             return response.text().then((_responseText) => {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            return throwException("A \'?\' value was named, or the delete could not be persisted", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -8003,7 +7874,7 @@ export class ConfigClient extends APIClientBase {
             return response.text().then((_responseText) => {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the patch", status, _responseText, _headers, result409);
+            return throwException("Could not persist the patch, or the set has values and its name or type would change", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -8076,7 +7947,7 @@ export class ConfigClient extends APIClientBase {
             return response.text().then((_responseText) => {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            return throwException("A set still has values, or the delete could not be persisted", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -8090,6 +7961,304 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Returns the values of a document-type-scoped (DocTypeSubcodes) code set
+     * @param setName Code set name (CodeSet.SetName)
+     */
+    getScopedCodeSetValues(setName: string | null): Promise<ScopedCodeSetValue[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/code-sets/{setName}/scoped-values";
+        if (setName === undefined || setName === null)
+            throw new globalThis.Error("The parameter 'setName' must be defined.");
+        url_ = url_.replace("{setName}", encodeURIComponent("" + setName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetScopedCodeSetValues(_response));
+        });
+    }
+
+    protected processGetScopedCodeSetValues(response: Response): Promise<ScopedCodeSetValue[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such code set", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ScopedCodeSetValue[] | null>(null as any);
+    }
+
+    /**
+     * Inserts values into a document-type-scoped (DocTypeSubcodes) code set
+     * @param setName Code set name (CodeSet.SetName)
+     * @param data Scoped code set value rows to insert
+     */
+    insertScopedCodeSetValues(setName: string | null, data: ScopedCodeSetValue[]): Promise<ScopedCodeSetValue[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/code-sets/{setName}/scoped-values";
+        if (setName === undefined || setName === null)
+            throw new globalThis.Error("The parameter 'setName' must be defined.");
+        url_ = url_.replace("{setName}", encodeURIComponent("" + setName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertScopedCodeSetValues(_response));
+        });
+    }
+
+    protected processInsertScopedCodeSetValues(response: Response): Promise<ScopedCodeSetValue[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such code set", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ScopedCodeSetValue[] | null>(null as any);
+    }
+
+    /**
+     * Returns the values of a global (CodeList) code set
+     * @param setName Code set name (CodeSet.SetName)
+     */
+    getCodeSetValues(setName: string | null): Promise<CodeSetValue[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/code-sets/{setName}/values";
+        if (setName === undefined || setName === null)
+            throw new globalThis.Error("The parameter 'setName' must be defined.");
+        url_ = url_.replace("{setName}", encodeURIComponent("" + setName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetCodeSetValues(_response));
+        });
+    }
+
+    protected processGetCodeSetValues(response: Response): Promise<CodeSetValue[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such code set", status, _responseText, _headers, result404);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CodeSetValue[] | null>(null as any);
+    }
+
+    /**
+     * Inserts values into a global (CodeList) code set
+     * @param setName Code set name (CodeSet.SetName)
+     * @param data Code set value rows to insert
+     */
+    insertCodeSetValues(setName: string | null, data: CodeSetValue[]): Promise<CodeSetValue[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/code-sets/{setName}/values";
+        if (setName === undefined || setName === null)
+            throw new globalThis.Error("The parameter 'setName' must be defined.");
+        url_ = url_.replace("{setName}", encodeURIComponent("" + setName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertCodeSetValues(_response));
+        });
+    }
+
+    protected processInsertCodeSetValues(response: Response): Promise<CodeSetValue[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CodeSetValue[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("No such code set", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<CodeSetValue[] | null>(null as any);
     }
 
     /**
@@ -9223,6 +9392,287 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
+     * Returns the list of document references (all document types)
+     */
+    getDocReferences(): Promise<DocReference[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/doc-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetDocReferences(_response));
+        });
+    }
+
+    protected processGetDocReferences(response: Response): Promise<DocReference[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocReference[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocReference[] | null>(null as any);
+    }
+
+    /**
+     * Inserts document references
+     * @param data Document reference rows to insert
+     */
+    insertDocReferences(data: DocReference[]): Promise<DocReference[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/doc-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertDocReferences(_response));
+        });
+    }
+
+    protected processInsertDocReferences(response: Response): Promise<DocReference[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocReference[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("The reference already exists for that document type, or the insert could not be persisted", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocReference[] | null>(null as any);
+    }
+
+    /**
+     * Updates one document reference
+     * @param data Document reference row to update
+     */
+    patchDocReference(data: DocReference): Promise<DocReference | null> {
+        let url_ = this.baseUrl + "/api/configuration/doc-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPatchDocReference(_response));
+        });
+    }
+
+    protected processPatchDocReference(response: Response): Promise<DocReference | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as DocReference;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("The reference already exists for that document type, or the patch could not be persisted", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocReference | null>(null as any);
+    }
+
+    /**
+     * Deletes document references by key
+     * @param keys Document reference row keys (GUIDs) to delete
+     */
+    deleteDocReferences(keys: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/api/configuration/doc-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processDeleteDocReferences(_response));
+        });
+    }
+
+    protected processDeleteDocReferences(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("A reference is in use, or the delete could not be persisted", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
      * Returns every document template definition, without the binary
      */
     getDocTemplates(): Promise<DocTemplate[] | null> {
@@ -10329,6 +10779,287 @@ export class ConfigClient extends APIClientBase {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
             return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Returns the list of global references
+     */
+    getGlobalReferences(): Promise<UniReference[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/global-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetGlobalReferences(_response));
+        });
+    }
+
+    protected processGetGlobalReferences(response: Response): Promise<UniReference[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UniReference[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UniReference[] | null>(null as any);
+    }
+
+    /**
+     * Inserts global references
+     * @param data Global reference rows to insert
+     */
+    insertGlobalReferences(data: UniReference[]): Promise<UniReference[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/global-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processInsertGlobalReferences(_response));
+        });
+    }
+
+    protected processInsertGlobalReferences(response: Response): Promise<UniReference[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UniReference[];
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("The reference already exists, or the insert could not be persisted", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UniReference[] | null>(null as any);
+    }
+
+    /**
+     * Updates one global reference
+     * @param data Global reference row to update
+     */
+    patchGlobalReference(data: UniReference): Promise<UniReference | null> {
+        let url_ = this.baseUrl + "/api/configuration/global-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(data);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processPatchGlobalReference(_response));
+        });
+    }
+
+    protected processPatchGlobalReference(response: Response): Promise<UniReference | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UniReference;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not found", status, _responseText, _headers, result404);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("The reference already exists, or the patch could not be persisted", status, _responseText, _headers, result409);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UniReference | null>(null as any);
+    }
+
+    /**
+     * Deletes global references by key
+     * @param keys Global reference row keys (GUIDs) to delete
+     */
+    deleteGlobalReferences(keys: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/api/configuration/global-references";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(keys);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processDeleteGlobalReferences(_response));
+        });
+    }
+
+    protected processDeleteGlobalReferences(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number;
+            return result200;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Request malformed", status, _responseText, _headers, result400);
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 409) {
+            return response.text().then((_responseText) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("A reference is in use, or the delete could not be persisted", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -13261,135 +13992,6 @@ export class ConfigClient extends APIClientBase {
     }
 
     /**
-     * Returns the list of scoped code set values
-     */
-    getScopedCodeSetValues(): Promise<ScopedCodeSetValue[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/scoped-code-set-values";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetScopedCodeSetValues(_response));
-        });
-    }
-
-    protected processGetScopedCodeSetValues(response: Response): Promise<ScopedCodeSetValue[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ScopedCodeSetValue[] | null>(null as any);
-    }
-
-    /**
-     * Inserts scoped code set values
-     * @param data Scoped code set value rows to insert
-     */
-    insertScopedCodeSetValues(data: ScopedCodeSetValue[]): Promise<ScopedCodeSetValue[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/scoped-code-set-values";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(data);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processInsertScopedCodeSetValues(_response));
-        });
-    }
-
-    protected processInsertScopedCodeSetValues(response: Response): Promise<ScopedCodeSetValue[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ScopedCodeSetValue[];
-            return result200;
-            });
-        } else if (status === 400) {
-            return response.text().then((_responseText) => {
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Request malformed", status, _responseText, _headers, result400);
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 409) {
-            return response.text().then((_responseText) => {
-            let result409: any = null;
-            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the insert", status, _responseText, _headers, result409);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ScopedCodeSetValue[] | null>(null as any);
-    }
-
-    /**
      * Updates one scoped code set value
      * @param data Scoped code set value row to update
      */
@@ -13525,7 +14127,7 @@ export class ConfigClient extends APIClientBase {
             return response.text().then((_responseText) => {
             let result409: any = null;
             result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Could not persist the delete", status, _responseText, _headers, result409);
+            return throwException("A \'?\' value was named, or the delete could not be persisted", status, _responseText, _headers, result409);
             });
         } else if (status === 500) {
             return response.text().then((_responseText) => {
@@ -13650,62 +14252,6 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<{ [key: string]: any; } | null>(null as any);
-    }
-
-    /**
-     * Returns the list of workflow script events
-     */
-    getWorkflowScriptEvents(): Promise<WorkflowScriptEvent[] | null> {
-        let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.transformOptions(options_).then(transformedOptions_ => {
-            return this.http.fetch(url_, transformedOptions_);
-        }).then((_response: Response) => {
-            return this.transformResult(url_, _response, (_response: Response) => this.processGetWorkflowScriptEvents(_response));
-        });
-    }
-
-    protected processGetWorkflowScriptEvents(response: Response): Promise<WorkflowScriptEvent[] | null> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEvent[];
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            let result401: any = null;
-            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Access denied", status, _responseText, _headers, result403);
-            });
-        } else if (status === 500) {
-            return response.text().then((_responseText) => {
-            let result500: any = null;
-            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
-            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<WorkflowScriptEvent[] | null>(null as any);
     }
 
     /**
@@ -13931,6 +14477,62 @@ export class ConfigClient extends APIClientBase {
             });
         }
         return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * Returns the list of workflow script events
+     */
+    getWorkflowScriptEvents(): Promise<WorkflowScriptEvent[] | null> {
+        let url_ = this.baseUrl + "/api/configuration/workflow-script-events";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.transformResult(url_, _response, (_response: Response) => this.processGetWorkflowScriptEvents(_response));
+        });
+    }
+
+    protected processGetWorkflowScriptEvents(response: Response): Promise<WorkflowScriptEvent[] | null> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WorkflowScriptEvent[];
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Not currently authenticated", status, _responseText, _headers, result401);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Access denied", status, _responseText, _headers, result403);
+            });
+        } else if (status === 500) {
+            return response.text().then((_responseText) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as string;
+            return throwException("Internal failure; see response", status, _responseText, _headers, result500);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WorkflowScriptEvent[] | null>(null as any);
     }
 
     /**
@@ -14296,7 +14898,7 @@ export class ContactClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -15025,7 +15627,7 @@ export class DocumentToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -22644,7 +23246,7 @@ export class ExcelToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -23308,7 +23910,7 @@ export class ProjectToolsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25194,7 +25796,7 @@ export class ProjectDocListClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25470,7 +26072,7 @@ export class ProjectKPIClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25542,7 +26144,7 @@ export class ProjectTeamClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -25999,7 +26601,7 @@ export class ProjectsClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -26439,7 +27041,7 @@ export class SessionClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -28190,7 +28792,7 @@ export class SystemClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -30181,7 +30783,7 @@ export class UICFGClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -30582,7 +31184,7 @@ export class XTSClient extends APIClientBase {
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         super();
         this.http = http ? http : window as any;
-        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/SFPMS", baseUrl);
+        this.baseUrl = this.getBaseUrl("https://dev.spitfirepm.com:8443/sfPMS", baseUrl);
     }
 
     /**
@@ -34524,6 +35126,26 @@ export interface DocMeetingAttendee {
     Note?: string | undefined;
     /** Collection of commands for this row */
     MenuCommands?: MenuAction[] | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A document reference (a per-doc-type reference code).  Mirrors the DocReferenceList table in LVData.xsd (dbo.xsfDocReference); consumed by the Manage Dashboard Reference tool (37470). */
+export interface DocReference {
+    /** Row key */
+    DocReferenceKey?: string;
+    /** Document type the reference belongs to; null (or Guid.Empty) means any document type */
+    DocTypeKey?: string | undefined;
+    /** The reference text; unique within the document type */
+    Description: string;
+    /** Reserved */
+    Future?: string | undefined;
+    /** Rollup code */
+    Rollup?: string | undefined;
+    /** Offered on documents */
+    Active?: boolean;
+    /** Read-only: the document type name (LVData expression column) */
+    DocType?: string | undefined;
     /** eTag */
     ETag?: string | undefined;
 }
@@ -38481,6 +39103,22 @@ D(ashboard);L(ayout);N(avigation);GG: multiple grid; CC: Combo Control */
     Active?: boolean;
     /** For client side cache expiration (when the stored value is less than the current value, reload) */
     LVMagicNumber?: string | undefined;
+    /** eTag */
+    ETag?: string | undefined;
+}
+
+/** A global (universal) reference: a reference code shared by every document type.  Mirrors the UniReferenceList table in LVData.xsd; consumed by the Manage Dashboard Global Reference tool. The classic UI labels these "Global Reference"; the data layer calls them UniReference. */
+export interface UniReference {
+    /** Row key */
+    UniReferenceKey?: string;
+    /** The reference text; unique */
+    Description: string;
+    /** Division code */
+    DivCode?: string | undefined;
+    /** Rollup code */
+    Rollup?: string | undefined;
+    /** Offered on documents */
+    Active?: boolean;
     /** eTag */
     ETag?: string | undefined;
 }

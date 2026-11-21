@@ -4,11 +4,11 @@
   "info": {
     "title": "sfPMS",
     "description": "Spitfire Project Management System",
-    "version": "2023.0.9819.22240"
+    "version": "2023.0.9821.19106"
   },
   "servers": [
     {
-      "url": "https://dev.spitfirepm.com:8443/SFPMS"
+      "url": "https://dev.spitfirepm.com:8443/sfPMS"
     }
   ],
   "paths": {
@@ -12068,156 +12068,12 @@
       }
     },
     "/api/configuration/code-set-values": {
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the list of code set values",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
-        "operationId": "Config_GetCodeSetValues",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/CodeSetValue"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Inserts code set values",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
-        "operationId": "Config_InsertCodeSetValues",
-        "requestBody": {
-          "x-name": "data",
-          "description": "Code set value rows to insert",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/CodeSetValue"
-                }
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/CodeSetValue"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Request malformed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Could not persist the insert",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "patch": {
         "tags": [
           "Config"
         ],
-        "summary": "Updates one code set value",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "summary": "Updates one global code set value",
+        "description": "By CodeValueKey; the value's SetName does not change.  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_PatchCodeSetValue",
         "requestBody": {
           "x-name": "data",
@@ -12314,8 +12170,8 @@
         "tags": [
           "Config"
         ],
-        "summary": "Deletes code set values by key",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "summary": "Deletes global code set values by key",
+        "description": "The '?' placeholder value of a set cannot be deleted; all or nothing.  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_DeleteCodeSetValues",
         "requestBody": {
           "x-name": "keys",
@@ -12377,7 +12233,7 @@
             }
           },
           "409": {
-            "description": "Could not persist the delete",
+            "description": "A '?' value was named, or the delete could not be persisted",
             "content": {
               "application/json": {
                 "schema": {
@@ -12405,7 +12261,7 @@
           "Config"
         ],
         "summary": "Returns the list of code sets",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "description": "Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_GetCodeSets",
         "responses": {
           "200": {
@@ -12459,7 +12315,7 @@
           "Config"
         ],
         "summary": "Inserts code sets",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "description": "An empty SetType means DocTypeSubcodes and a CodeSize of 0 means 8, as the classic Add did.  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_InsertCodeSets",
         "requestBody": {
           "x-name": "data",
@@ -12549,7 +12405,7 @@
           "Config"
         ],
         "summary": "Updates one code set",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "description": "The name and type of a set that already has values cannot change (its values are keyed by SetName).  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_PatchCodeSet",
         "requestBody": {
           "x-name": "data",
@@ -12621,7 +12477,7 @@
             }
           },
           "409": {
-            "description": "Could not persist the patch",
+            "description": "Could not persist the patch, or the set has values and its name or type would change",
             "content": {
               "application/json": {
                 "schema": {
@@ -12647,7 +12503,7 @@
           "Config"
         ],
         "summary": "Deletes code sets by key",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "description": "A set that still has values stays (the classic CanDeleteSet); all or nothing.  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_DeleteCodeSets",
         "requestBody": {
           "x-name": "keys",
@@ -12709,7 +12565,391 @@
             }
           },
           "409": {
-            "description": "Could not persist the delete",
+            "description": "A set still has values, or the delete could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/code-sets/{setName}/scoped-values": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the values of a document-type-scoped (DocTypeSubcodes) code set",
+        "description": "Consumed by the Manage Dashboard Code Maintenance tool",
+        "operationId": "Config_GetScopedCodeSetValues",
+        "parameters": [
+          {
+            "name": "setName",
+            "in": "path",
+            "required": true,
+            "description": "Code set name (CodeSet.SetName)",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/ScopedCodeSetValue"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such code set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts values into a document-type-scoped (DocTypeSubcodes) code set",
+        "description": "SetName in the body is ignored; the route's set wins.  Returns the rows stored; consumed by the Manage Dashboard Code Maintenance tool",
+        "operationId": "Config_InsertScopedCodeSetValues",
+        "parameters": [
+          {
+            "name": "setName",
+            "in": "path",
+            "required": true,
+            "description": "Code set name (CodeSet.SetName)",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "data",
+          "description": "Scoped code set value rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ScopedCodeSetValue"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/ScopedCodeSetValue"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such code set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the insert",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/code-sets/{setName}/values": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the values of a global (CodeList) code set",
+        "description": "Consumed by the Manage Dashboard Code Maintenance tool",
+        "operationId": "Config_GetCodeSetValues",
+        "parameters": [
+          {
+            "name": "setName",
+            "in": "path",
+            "required": true,
+            "description": "Code set name (CodeSet.SetName)",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/CodeSetValue"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such code set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts values into a global (CodeList) code set",
+        "description": "SetName in the body is ignored; the route's set wins.  Returns the rows stored; consumed by the Manage Dashboard Code Maintenance tool",
+        "operationId": "Config_InsertCodeSetValues",
+        "parameters": [
+          {
+            "name": "setName",
+            "in": "path",
+            "required": true,
+            "description": "Code set name (CodeSet.SetName)",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "data",
+          "description": "Code set value rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CodeSetValue"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/CodeSetValue"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such code set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Could not persist the insert",
             "content": {
               "application/json": {
                 "schema": {
@@ -14069,6 +14309,338 @@
         }
       }
     },
+    "/api/configuration/doc-references": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the list of document references (all document types)",
+        "description": "Consumed by the Manage Dashboard Reference tool",
+        "operationId": "Config_GetDocReferences",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocReference"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts document references",
+        "description": "A null or empty DocTypeKey means any document type.  Returns the rows stored; consumed by the Manage Dashboard Reference tool",
+        "operationId": "Config_InsertDocReferences",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Document reference rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocReference"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/DocReference"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reference already exists for that document type, or the insert could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one document reference",
+        "description": "Consumed by the Manage Dashboard Reference tool",
+        "operationId": "Config_PatchDocReference",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Document reference row to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocReference"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/DocReference"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reference already exists for that document type, or the patch could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Deletes document references by key",
+        "description": "A reference anything refers to (ReferenceIsUsed) stays; all or nothing.  Consumed by the Manage Dashboard Reference tool",
+        "operationId": "Config_DeleteDocReferences",
+        "requestBody": {
+          "x-name": "keys",
+          "description": "Document reference row keys (GUIDs) to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A reference is in use, or the delete could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuration/doc-templates": {
       "get": {
         "tags": [
@@ -15381,6 +15953,338 @@
           },
           "409": {
             "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuration/global-references": {
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the list of global references",
+        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "operationId": "Config_GetGlobalReferences",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/UniReference"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Inserts global references",
+        "description": "Returns the rows stored; consumed by the Manage Dashboard Global Reference tool",
+        "operationId": "Config_InsertGlobalReferences",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Global reference rows to insert",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UniReference"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/UniReference"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reference already exists, or the insert could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Updates one global reference",
+        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "operationId": "Config_PatchGlobalReference",
+        "requestBody": {
+          "x-name": "data",
+          "description": "Global reference row to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniReference"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/UniReference"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reference already exists, or the patch could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Deletes global references by key",
+        "description": "A reference anything refers to (UniRefIsUsed: items, documents, special routes) stays; all or nothing.  Consumed by the Manage Dashboard Global Reference tool",
+        "operationId": "Config_DeleteGlobalReferences",
+        "requestBody": {
+          "x-name": "keys",
+          "description": "Global reference row keys (GUIDs) to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A reference is in use, or the delete could not be persisted",
             "content": {
               "application/json": {
                 "schema": {
@@ -18888,156 +19792,12 @@
       }
     },
     "/api/configuration/scoped-code-set-values": {
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the list of scoped code set values",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
-        "operationId": "Config_GetScopedCodeSetValues",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/ScopedCodeSetValue"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Inserts scoped code set values",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
-        "operationId": "Config_InsertScopedCodeSetValues",
-        "requestBody": {
-          "x-name": "data",
-          "description": "Scoped code set value rows to insert",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ScopedCodeSetValue"
-                }
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/ScopedCodeSetValue"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Request malformed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Could not persist the insert",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "patch": {
         "tags": [
           "Config"
         ],
         "summary": "Updates one scoped code set value",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "description": "By DocSubtypeKey; the value's SetName does not change.  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_PatchScopedCodeSetValue",
         "requestBody": {
           "x-name": "data",
@@ -19135,7 +19895,7 @@
           "Config"
         ],
         "summary": "Deletes scoped code set values by key",
-        "description": "Consumed by the Manage Dashboard Global Reference tool",
+        "description": "The '?' placeholder value of a set cannot be deleted; all or nothing.  Consumed by the Manage Dashboard Code Maintenance tool",
         "operationId": "Config_DeleteScopedCodeSetValues",
         "requestBody": {
           "x-name": "keys",
@@ -19197,7 +19957,7 @@
             }
           },
           "409": {
-            "description": "Could not persist the delete",
+            "description": "A '?' value was named, or the delete could not be persisted",
             "content": {
               "application/json": {
                 "schema": {
@@ -19330,60 +20090,6 @@
       }
     },
     "/api/configuration/workflow-script-events": {
-      "get": {
-        "tags": [
-          "Config"
-        ],
-        "summary": "Returns the list of workflow script events",
-        "description": "Which doc type and trigger run which workflow script.  Consumed by the System Admin Dashboard Workflow Scripts tool",
-        "operationId": "Config_GetWorkflowScriptEvents",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "nullable": true,
-                  "items": {
-                    "$ref": "#/components/schemas/WorkflowScriptEvent"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not currently authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure; see response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "Config"
@@ -19640,6 +20346,60 @@
           },
           "409": {
             "description": "Could not persist the delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure; see response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Config"
+        ],
+        "summary": "Returns the list of workflow script events",
+        "description": "Which doc type and trigger run which workflow script.  Consumed by the System Admin Dashboard Workflow Scripts tool",
+        "operationId": "Config_GetWorkflowScriptEvents",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "nullable": true,
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowScriptEvent"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not currently authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -44854,6 +45614,59 @@
           }
         }
       },
+      "DocReference": {
+        "type": "object",
+        "description": "A document reference (a per-doc-type reference code).  Mirrors the DocReferenceList table in\nLVData.xsd (dbo.xsfDocReference); consumed by the Manage Dashboard Reference tool (37470).",
+        "additionalProperties": false,
+        "required": [
+          "Description"
+        ],
+        "properties": {
+          "DocReferenceKey": {
+            "type": "string",
+            "description": "Row key",
+            "format": "guid"
+          },
+          "DocTypeKey": {
+            "type": "string",
+            "description": "Document type the reference belongs to; null (or Guid.Empty) means any document type",
+            "format": "guid",
+            "nullable": true
+          },
+          "Description": {
+            "type": "string",
+            "description": "The reference text; unique within the document type",
+            "maxLength": 50,
+            "minLength": 1
+          },
+          "Future": {
+            "type": "string",
+            "description": "Reserved",
+            "maxLength": 2,
+            "nullable": true
+          },
+          "Rollup": {
+            "type": "string",
+            "description": "Rollup code",
+            "maxLength": 10,
+            "nullable": true
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Offered on documents"
+          },
+          "DocType": {
+            "type": "string",
+            "description": "Read-only: the document type name (LVData expression column)",
+            "nullable": true
+          },
+          "ETag": {
+            "type": "string",
+            "description": "eTag",
+            "nullable": true
+          }
+        }
+      },
       "DocRoute": {
         "type": "object",
         "description": "Describes a sequenced recipient in a document route  ",
@@ -54918,6 +55731,48 @@
           }
         }
       },
+      "UniReference": {
+        "type": "object",
+        "description": "A global (universal) reference: a reference code shared by every document type.  Mirrors the\nUniReferenceList table in LVData.xsd; consumed by the Manage Dashboard Global Reference tool.\nThe classic UI labels these \"Global Reference\"; the data layer calls them UniReference.",
+        "additionalProperties": false,
+        "required": [
+          "Description"
+        ],
+        "properties": {
+          "UniReferenceKey": {
+            "type": "string",
+            "description": "Row key",
+            "format": "guid"
+          },
+          "Description": {
+            "type": "string",
+            "description": "The reference text; unique",
+            "maxLength": 50,
+            "minLength": 1
+          },
+          "DivCode": {
+            "type": "string",
+            "description": "Division code",
+            "maxLength": 2,
+            "nullable": true
+          },
+          "Rollup": {
+            "type": "string",
+            "description": "Rollup code",
+            "maxLength": 10,
+            "nullable": true
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Offered on documents"
+          },
+          "ETag": {
+            "type": "string",
+            "description": "eTag",
+            "nullable": true
+          }
+        }
+      },
       "UserActionItem": {
         "type": "object",
         "description": "A document currently routed to a specific user ",
@@ -56755,13 +57610,16 @@
   },
   "tags": [
     {
-      "name": "Account"
+      "name": "Document"
+    },
+    {
+      "name": "Project"
+    },
+    {
+      "name": "Excel"
     },
     {
       "name": "Config"
-    },
-    {
-      "name": "Document"
     },
     {
       "name": "Catalog"
@@ -56770,10 +57628,7 @@
       "name": "Contact"
     },
     {
-      "name": "Project"
-    },
-    {
-      "name": "Excel"
+      "name": "Account"
     }
   ]
 }
